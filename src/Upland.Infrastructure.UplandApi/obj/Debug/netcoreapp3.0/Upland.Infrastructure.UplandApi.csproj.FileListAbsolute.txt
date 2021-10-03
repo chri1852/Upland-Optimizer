@@ -1,0 +1,11 @@
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\bin\Debug\netcoreapp3.0\Upland.Infrastructure.UplandApi.deps.json
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\bin\Debug\netcoreapp3.0\Upland.Infrastructure.UplandApi.dll
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\bin\Debug\netcoreapp3.0\Upland.Infrastructure.UplandApi.pdb
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\obj\Debug\netcoreapp3.0\Upland.Infrastructure.UplandApi.csprojAssemblyReference.cache
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\obj\Debug\netcoreapp3.0\Upland.Infrastructure.UplandApi.AssemblyInfoInputs.cache
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\obj\Debug\netcoreapp3.0\Upland.Infrastructure.UplandApi.AssemblyInfo.cs
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\obj\Debug\netcoreapp3.0\Upland.Infrastructure.UplandApi.dll
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\obj\Debug\netcoreapp3.0\Upland.Infrastructure.UplandApi.pdb
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\bin\Debug\netcoreapp3.0\Upland.Types.dll
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\bin\Debug\netcoreapp3.0\Upland.Types.pdb
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Infrastructure.UplandApi\obj\Debug\netcoreapp3.0\Upland.Infrastructure.UplandApi.csproj.CopyComplete

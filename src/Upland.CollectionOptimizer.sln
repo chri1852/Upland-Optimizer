@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29411.108
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.CollectionOptimizer", "Upland.CollectionOptimizer\Upland.CollectionOptimizer.csproj", "{C6132B4E-66FB-4070-986E-CD8CDDD1805A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Infrastructure.UplandApi", "Upland.Infrastructure.UplandApi\Upland.Infrastructure.UplandApi.csproj", "{0C9EB5FA-FA8B-4541-BA9C-F41969B9587F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Types", "Upland.Types\Upland.Types.csproj", "{0FA53C52-8AE0-47CA-B83E-2991AC2ADBC4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Infrastructure.LocalData", "Upland.Infrastructure.LocalData\Upland.Infrastructure.LocalData.csproj", "{4FF9A50E-D368-4E84-AD3D-2B1AB9D252B9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Infrastructure.Up2LandApi", "Upland.Infrastructure.Up2LandApi\Upland.Infrastructure.Up2LandApi.csproj", "{0ACC69DB-D9A2-468C-8279-157EC1CF28EE}"
+EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "UplandLocalData", "UplandLocalData\UplandLocalData.sqlproj", "{277FE176-222D-4E7E-80E3-B9F88C76DC4B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C6132B4E-66FB-4070-986E-CD8CDDD1805A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6132B4E-66FB-4070-986E-CD8CDDD1805A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6132B4E-66FB-4070-986E-CD8CDDD1805A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6132B4E-66FB-4070-986E-CD8CDDD1805A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C9EB5FA-FA8B-4541-BA9C-F41969B9587F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C9EB5FA-FA8B-4541-BA9C-F41969B9587F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C9EB5FA-FA8B-4541-BA9C-F41969B9587F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C9EB5FA-FA8B-4541-BA9C-F41969B9587F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FA53C52-8AE0-47CA-B83E-2991AC2ADBC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FA53C52-8AE0-47CA-B83E-2991AC2ADBC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FA53C52-8AE0-47CA-B83E-2991AC2ADBC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FA53C52-8AE0-47CA-B83E-2991AC2ADBC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FF9A50E-D368-4E84-AD3D-2B1AB9D252B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FF9A50E-D368-4E84-AD3D-2B1AB9D252B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FF9A50E-D368-4E84-AD3D-2B1AB9D252B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FF9A50E-D368-4E84-AD3D-2B1AB9D252B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0ACC69DB-D9A2-468C-8279-157EC1CF28EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0ACC69DB-D9A2-468C-8279-157EC1CF28EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0ACC69DB-D9A2-468C-8279-157EC1CF28EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0ACC69DB-D9A2-468C-8279-157EC1CF28EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{277FE176-222D-4E7E-80E3-B9F88C76DC4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{277FE176-222D-4E7E-80E3-B9F88C76DC4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{277FE176-222D-4E7E-80E3-B9F88C76DC4B}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{277FE176-222D-4E7E-80E3-B9F88C76DC4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{277FE176-222D-4E7E-80E3-B9F88C76DC4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{277FE176-222D-4E7E-80E3-B9F88C76DC4B}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AC6DD24E-A520-4758-ACD4-8E9CCF035E18}
+	EndGlobalSection
+EndGlobal

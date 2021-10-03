@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Upland.Infrastructure.LocalData\Upland.Infrastructure.LocalData.csproj" />
+    <ProjectReference Include="..\Upland.Infrastructure.Up2LandApi\Upland.Infrastructure.Up2LandApi.csproj" />
+    <ProjectReference Include="..\Upland.Infrastructure.UplandApi\Upland.Infrastructure.UplandApi.csproj" />
+  </ItemGroup>
+
+</Project>
