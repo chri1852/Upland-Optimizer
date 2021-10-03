@@ -1,0 +1,8 @@
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Types\bin\Release\netcoreapp3.0\Upland.Types.deps.json
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Types\bin\Release\netcoreapp3.0\Upland.Types.dll
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Types\bin\Release\netcoreapp3.0\Upland.Types.pdb
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Types\obj\Release\netcoreapp3.0\Upland.Types.csprojAssemblyReference.cache
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Types\obj\Release\netcoreapp3.0\Upland.Types.AssemblyInfoInputs.cache
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Types\obj\Release\netcoreapp3.0\Upland.Types.AssemblyInfo.cs
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Types\obj\Release\netcoreapp3.0\Upland.Types.dll
+C:\Github\Upland.CollectionOptimizer\Upland.CollectionOptimizer\Upland.Types\obj\Release\netcoreapp3.0\Upland.Types.pdb
