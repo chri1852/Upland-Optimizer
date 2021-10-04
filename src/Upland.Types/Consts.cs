@@ -10,7 +10,7 @@ namespace Upland.Types
         public static readonly string OuputFolder = @"C:\Users\chri1\Desktop\Upland\Optimizations";
         public static readonly string LocalDBConnectionString = @"Data Source=DESKTOP-BK6KAFH\SQLEXPRESS;Initial Catalog=UplandLocalData;Integrated Security=True;";
 
-        public static readonly string AuthToken = @"eyJhbGciOiJIUzI1NiIsInR5cCI6ImFjY2VzcyJ9.eyJ1c2VySWQiOiIzZDk1ZTk0MC0xMDhkLTExZWItYmQ3OS1iZmE2NzhmODI5YzciLCJ2YWxpZGF0aW9uVG9rZW4iOiJVeklnZWh1TUxSYWwwV05TbGY0Y1lITU9aVUNSclZwOFhWVEVGZklkS29HIiwiaWF0IjoxNjMxNjIxMzE1LCJleHAiOjE2NjMxNzg5MTUsImlzcyI6ImZlYXRoZXJzIiwic3ViIjoiM2Q5NWU5NDAtMTA4ZC0xMWViLWJkNzktYmZhNjc4ZjgyOWM3IiwianRpIjoiZGE2MTg5OTItODViNi00ZjNhLTlhMzUtOTY2MjBlYjQyYWZkIn0.INOS3cNg5PXn1gLLEZsPmpjdkbbvuefY2wi7b1tpzQg";
+        public static readonly string AuthToken = @"eyJhbGciOiJIUzI1NiIsInR5cCI6ImFjY2VzcyJ9.eyJ1c2VySWQiOiIzZDk1ZTk0MC0xMDhkLTExZWItYmQ3OS1iZmE2NzhmODI5YzciLCJ2YWxpZGF0aW9uVG9rZW4iOiJzVWs1aDlOaFNCWWkxSGlBbW5ua1lrU0w4Vng1ZVdJMW8zVnRJMGZRTjlwIiwiaWF0IjoxNjMzMzYzMTc4LCJleHAiOjE2NjQ5MjA3NzgsImlzcyI6ImZlYXRoZXJzIiwic3ViIjoiM2Q5NWU5NDAtMTA4ZC0xMWViLWJkNzktYmZhNjc4ZjgyOWM3IiwianRpIjoiZGViNzY2MTMtYjgyNC00YmU5LTgyMDAtNDczNWExMzc3NGZiIn0.OswtRoJhP888oEtXOqlhw0eg_yzn9hNZHqIE2D_VR9Y";
 
         public static readonly double ReturnRate = 0.1728;
 
@@ -26,11 +26,8 @@ namespace Upland.Types
         public static readonly int KingOfTheStreetId = 1;
         public static readonly int NewbieId = 7;
 
-        public static readonly List<int> StandardAndCityCollectionIds = new List<int>
+        public static readonly List<int> CityCollectionIds = new List<int>
         {
-            1,   // King of the Street
-            7,   // Newbie
-            21,  // City Pro
             11,  // San Franciscan
             22,  // New Yorker
             57,  // The Fresno
@@ -41,7 +38,35 @@ namespace Upland.Types
             135, // Chicagoan
             136, // Clevelander
             152, // Santa Claran
-            183  // Kansas City
+            183,  // Kansas City
         };
-}
+
+        public static readonly List<int> StandardCollectionIds = new List<int>
+        {
+            1,   // King of the Street
+            7,   // Newbie
+            21,  // City Pro
+        };
+
+        public static readonly Dictionary<int, string> Cities = new Dictionary<int, string>
+        {
+            { 1    , "San Francisco" },
+            { 3    , "Manhattan"     },
+            { 4    , "Queens"        },
+            { 5    , "Fresno"        },
+            { 6    , "Brooklyn"      },
+            { 7    , "Oakland"       },
+            { 8    , "Staten Island" },
+            { 9    , "Bakersfield"   },
+            { 10   , "Chicago"       },
+            { 11   , "Cleveland"     },
+            { 12   , "Santa Clara"   },
+            { 13   , "Rutherford"    },
+            { 14   , "Kansas"        },
+            { 15   , "New Orleans"   },
+            { 10000, "New York"      },
+            { 10001, "Clovis"        },
+            { 10002, "Piedmont"      },
+        };
+    }
 }

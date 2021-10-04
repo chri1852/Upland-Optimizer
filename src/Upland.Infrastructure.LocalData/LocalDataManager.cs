@@ -26,7 +26,7 @@ namespace Upland.Infrastructure.LocalData
             {
                 LocalDataRepository.CreateCollection(collection);
 
-                if (!Consts.StandardAndCityCollectionIds.Contains(collection.Id))
+                if (!Consts.StandardCollectionIds.Contains(collection.Id) && !Consts.CityCollectionIds.Contains(collection.Id))
                 {
                     List<long> propIds = new List<long>();
                     propIds.AddRange((await uplandApiRepository.GetUnlockedNotForSaleCollectionProperties(collection.Id)).Select(p => p.Prop_Id));

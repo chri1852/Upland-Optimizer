@@ -1,15 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Upland.Infrastructure.LocalData\Upland.Infrastructure.LocalData.csproj" />
+    <ProjectReference Include="..\Upland.CollectionOptimizer\Upland.CollectionOptimizer.csproj" />
     <ProjectReference Include="..\Upland.Infrastructure.UplandApi\Upland.Infrastructure.UplandApi.csproj" />
+    <ProjectReference Include="..\Upland.Types\Upland.Types.csproj" />
   </ItemGroup>
 
 </Project>

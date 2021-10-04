@@ -11,6 +11,6 @@ namespace Upland.Types
         public int CityId { get; set; }
         public int StreetId { get; set; }
         public int Size { get; set; }
-        public decimal MonthlyEarnings { get; set; }
+        public double MonthlyEarnings { get; set; }
     }
 }

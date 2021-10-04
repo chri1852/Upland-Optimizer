@@ -63,7 +63,7 @@ namespace Upland.Infrastructure.UplandApi
             property.CityId = udProperty.City.Id;
             property.StreetId = udProperty.Street.Id;
             property.Size = udProperty.Area;
-            property.MonthlyEarnings = new decimal(udProperty.Yield_Per_Hour * 720);
+            property.MonthlyEarnings = udProperty.Yield_Per_Hour * 720;
 
             return property;
         }

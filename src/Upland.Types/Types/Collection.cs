@@ -30,14 +30,14 @@ namespace Upland.Types
             Clone.Category = this.Category;
             Clone.Boost = this.Boost;
             Clone.NumberOfProperties = this.NumberOfProperties;
-            Clone.SlottedPropertyIds = new List<long>(this.SlottedPropertyIds);
-            Clone.EligablePropertyIds = new List<long>(this.EligablePropertyIds);
+            Clone.SlottedPropertyIds = this.SlottedPropertyIds == null ? new List<long>() : new List<long>(this.SlottedPropertyIds);
+            Clone.EligablePropertyIds = this.EligablePropertyIds == null ? new List<long>() : new List<long>(this.EligablePropertyIds);
             Clone.Description = this.Description;
             Clone.MonthlyUpx = this.MonthlyUpx;
-            Clone.CityIds = new List<int>(this.CityIds);
-            Clone.StreetIds = new List<int>(this.StreetIds);
-            Clone.NeighborhoodIds = new List<int>(this.NeighborhoodIds);
-            Clone.MatchingPropertyIds = new List<long>(this.MatchingPropertyIds);
+            Clone.CityIds = this.CityIds == null ? new List<int>() : new List<int>(this.CityIds);
+            Clone.StreetIds = this.StreetIds == null ? new List<int>() : new List<int>(this.StreetIds);
+            Clone.NeighborhoodIds = this.NeighborhoodIds == null ? new List<int>() : new List<int>(this.NeighborhoodIds);
+            Clone.MatchingPropertyIds = this.MatchingPropertyIds == null ? new List<long>() : new List<long>(this.MatchingPropertyIds);
             Clone.Reward = this.Reward;
             Clone.CityId = this.CityId;
 
