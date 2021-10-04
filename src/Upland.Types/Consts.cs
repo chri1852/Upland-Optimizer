@@ -26,11 +26,8 @@ namespace Upland.Types
         public static readonly int KingOfTheStreetId = 1;
         public static readonly int NewbieId = 7;
 
-        public static readonly List<int> StandardAndCityCollectionIds = new List<int>
+        public static readonly List<int> CityCollectionIds = new List<int>
         {
-            1,   // King of the Street
-            7,   // Newbie
-            21,  // City Pro
             11,  // San Franciscan
             22,  // New Yorker
             57,  // The Fresno
@@ -41,7 +38,35 @@ namespace Upland.Types
             135, // Chicagoan
             136, // Clevelander
             152, // Santa Claran
-            183  // Kansas City
+            183,  // Kansas City
+        };
+
+        public static readonly List<int> StandardCollectionIds = new List<int>
+        {
+            1,   // King of the Street
+            7,   // Newbie
+            21,  // City Pro
+        };
+
+        public static readonly Dictionary<int, string> Cities = new Dictionary<int, string>
+        {
+            { 1    , "San Francisco" },
+            { 3    , "Manhattan"     },
+            { 4    , "Queens"        },
+            { 5    , "Fresno"        },
+            { 6    , "Brooklyn"      },
+            { 7    , "Oakland"       },
+            { 8    , "Staten Island" },
+            { 9    , "Bakersfield"   },
+            { 10   , "Chicago"       },
+            { 11   , "Cleveland"     },
+            { 12   , "Santa Clara"   },
+            { 13   , "Rutherford"    },
+            { 14   , "Kansas"        },
+            { 15   , "New Orleans"   },
+            { 10000, "New York"      },
+            { 10001, "Clovis"        },
+            { 10002, "Piedmont"      },
         };
     }
 }

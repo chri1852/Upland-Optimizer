@@ -18,26 +18,72 @@ namespace Upland.CollectionOptimizer
         private Dictionary<int, Collection> FilledCollections;
 
         private Dictionary<int, Collection> AllCollections;
-        private Dictionary<int, string> AllCities;
-        private bool UseAlternateCollectionOptimization;
 
         private LocalDataManager localDataManager;
 
-        public CollectionOptimizer(Dictionary<int, Collection> collections, Dictionary<int, string> cities, bool useAlternateCollectionOptimization)
+        public CollectionOptimizer()
         {
             this.Properties = new Dictionary<long, Property>();
             this.Collections = new Dictionary<int, Collection>();
             this.SlottedPropertyIds = new List<long>();
             this.FilledCollections = new Dictionary<int, Collection>();
 
-            this.AllCollections = HelperFunctions.DeepCollectionClone(collections);
-            this.AllCities = cities;
-            this.UseAlternateCollectionOptimization = useAlternateCollectionOptimization;
+            PopulateAllCollections();
 
             this.localDataManager = new LocalDataManager();
         }
 
-        public async Task RunOptimization(string username, int qualityLevel)
+        public async Task OptimizerStartPoint()
+        {
+            string username;
+            string qualityLevel;
+            string repeat;
+
+            // Optimizer Quality goes from 1 to 8, you can run it higher but it will slow greatly expecially on larger profiles.
+            // For reference here is the output for ben68, net worth 82,216,080.62, with 4,094 properties at various quality levels
+
+            // |  Monthly UPX  | Quality |     Time     |
+            // | 1,686,660.00  |    -    |       -      |
+            // | 1,672,300.00  |    1    | 00:00:00.593 |
+            // | 1,679,993.64  |    2    | 00:00:00.843 |
+            // | 1,680,027.55  |    3    | 00:00:01.483 |
+            // | 1,680,027.55  |    4    | 00:00:04.199 |
+            // | 1,688,251.14  |    5    | 00:00:11.071 |
+            // | 1,688,285.05  |    6    | 00:00:53.180 |
+            // | 1,688,725.65  |    7    | 00:09:43.214 |
+            // | 1,688,725.65  |    8    | 01:09:59.996 |
+
+            Console.WriteLine();
+            Console.WriteLine("Collection Optimizer");
+            Console.WriteLine();
+            do
+            {
+                Console.Write("Enter the Upland Username: ");
+                username = Console.ReadLine();
+                Console.Write("Enter the Level (1-8)....: ");
+                qualityLevel = Console.ReadLine();
+                Console.WriteLine();
+
+                try
+                {
+                    await RunOptimization(username, int.Parse(qualityLevel));
+                }
+                catch
+                {
+                    Console.WriteLine();
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("An Error Occured. Bad Username Perhaps?");
+                    Console.ResetColor();
+                    Console.WriteLine();
+                }
+
+                Console.Write("Run Script Again (Y/N)...: ");
+                repeat = Console.ReadLine();
+                Console.WriteLine();
+            } while (repeat.ToUpper() != "N" && repeat.ToUpper() != "NO" && repeat.ToUpper() != "0");
+        }
+
+        private async Task RunOptimization(string username, int qualityLevel)
         {
             await PopulatePropertiesAndCollections(username);
             this.Collections = RebuildCollections(this.Collections, new List<long>());
@@ -83,12 +129,6 @@ namespace Upland.CollectionOptimizer
             double maxMonthly = 0;
             int maxCollectionId = -1;
             List<long> ignorePropertyIds = new List<long>();
-
-            if (this.UseAlternateCollectionOptimization)
-            {
-                ignorePropertyIds = AddPropIdsToIgnoreForCollectionsNotInProcess(conflictingCollections);
-                conflictingCollections = RebuildCollections(conflictingCollections, ignorePropertyIds);
-            }
 
             foreach (KeyValuePair<int, Collection> entry in conflictingCollections)
             {
@@ -152,6 +192,18 @@ namespace Upland.CollectionOptimizer
             }
         }
 
+        private void PopulateAllCollections()
+        {
+            this.AllCollections = new Dictionary<int, Collection>(); ;
+            LocalDataManager dataManager = new LocalDataManager();
+            List<Collection> collections = dataManager.GetCollections();
+
+            foreach (Collection collection in collections)
+            {
+                this.AllCollections.Add(collection.Id, collection);
+            }
+        }
+
         private async Task PopulatePropertiesAndCollections(string username)
         {
             this.Collections = new Dictionary<int, Collection>();
@@ -169,23 +221,11 @@ namespace Upland.CollectionOptimizer
             {
                 foreach (Property property in userProperties)
                 {
-                    /*
-                    if (entry.Value.CityIds.Contains(property.City_Id)
-                        || entry.Value.StreetIds.Contains(property.Street_Id)
-                        || entry.Value.NeighborhoodIds.Contains(property.Neighborhood_Id)
-                        || entry.Value.MatchingPropertyIds.Contains(property.Prop_Id))
-                    */
-                    if ((!Consts.StandardAndCityCollectionIds.Contains(entry.Value.Id) && entry.Value.MatchingPropertyIds.Contains(property.Id))
-                        || (Consts.StandardAndCityCollectionIds.Contains(entry.Value.Id) && !HelperFunctions.IsCollectionStd(entry.Value) && entry.Value.CityIds.Contains(property.CityId)))
+                    if ((!Consts.StandardCollectionIds.Contains(entry.Value.Id) && !Consts.CityCollectionIds.Contains(entry.Value.Id) && entry.Value.MatchingPropertyIds.Contains(property.Id))
+                        || (Consts.CityCollectionIds.Contains(entry.Value.Id) && entry.Value.CityId == property.CityId))
                     {
                         entry.Value.EligablePropertyIds.Add(property.Id);
                     }
-                    /*
-                    if (!entry.Value.EligablePropertyIds.Contains(property.Prop_Id) && property.collections.Any(c => c.Id == entry.Value.Id))
-                    {
-                        entry.Value.EligablePropertyIds.Add(property.Prop_Id);
-                    }
-                    */
                 }
 
                 if (entry.Value.EligablePropertyIds.Count >= entry.Value.NumberOfProperties)
@@ -399,9 +439,9 @@ namespace Upland.CollectionOptimizer
             Console.WriteLine();
             foreach (Collection collection in collections)
             {
-                if(!HelperFunctions.IsCollectionStd(collection))
+                if(!Consts.StandardCollectionIds.Contains(collection.Id))
                 {
-                    string collectionCity = this.AllCities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
+                    string collectionCity = Consts.Cities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.Write(collectionCity);
                     Console.ForegroundColor = ConsoleColor.Cyan;
@@ -464,42 +504,6 @@ namespace Upland.CollectionOptimizer
             Console.ResetColor();
 
             Console.WriteLine();
-
-            // DEBUG
-            //outputStrings = WriteOutAllPropertyData(outputStrings);
-            // END DEBUG
-
-            return outputStrings;
-        }
-
-        private List<string> WriteOutAllPropertyData(List<string> outputStrings)
-        {
-            List<Property> allProps = this.Properties.OrderBy(p => p.Value.CityId).Select(p => p.Value).ToList<Property>();
-            double stotal = 0;
-            double vTotal = 0;
-            foreach (Property prop in allProps)
-            {
-                if (this.SlottedPropertyIds.Contains(prop.Id))
-                {
-                    foreach (KeyValuePair<int, Collection> entry in this.FilledCollections)
-                    {
-                        if (entry.Value.SlottedPropertyIds.Contains(prop.Id))
-                        {
-                            outputStrings.Add(string.Format("{0} - {1} - {2:N2}", prop.CityId, prop.Address, prop.MonthlyEarnings * entry.Value.Boost));
-                            stotal += prop.MonthlyEarnings * entry.Value.Boost;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    outputStrings.Add(string.Format("{0} - {1} - {2:N2}", prop.CityId, prop.Address, prop.MonthlyEarnings));
-                    vTotal += prop.MonthlyEarnings;
-                }
-            }
-            outputStrings.Add("");
-            outputStrings.Add(string.Format("sTotal - {0}", stotal));
-            outputStrings.Add(string.Format("vTotal - {0}", vTotal));
 
             return outputStrings;
         }

@@ -146,7 +146,7 @@ namespace Upland.Infrastructure.UplandApi
             {
                 return JsonConvert.DeserializeObject<T>(responseJson);
             }
-            catch (Exception ex)
+            catch
             {
                 return (T)Activator.CreateInstance(typeof(T));
             }
