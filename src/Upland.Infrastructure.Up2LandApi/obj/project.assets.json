@@ -69,11 +69,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.Up2LandApi\\Upland.Infrastructure.Up2LandApi.csproj",
+      "projectUniqueName": "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.Up2LandApi\\Upland.Infrastructure.Up2LandApi.csproj",
       "projectName": "Upland.Infrastructure.Up2LandApi",
-      "projectPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.Up2LandApi\\Upland.Infrastructure.Up2LandApi.csproj",
+      "projectPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.Up2LandApi\\Upland.Infrastructure.Up2LandApi.csproj",
       "packagesPath": "C:\\Users\\chri1\\.nuget\\packages\\",
-      "outputPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.Up2LandApi\\obj\\",
+      "outputPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.Up2LandApi\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\chri1\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -89,8 +89,8 @@
       "frameworks": {
         "netcoreapp3.0": {
           "projectReferences": {
-            "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Types\\Upland.Types.csproj": {
-              "projectPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Types\\Upland.Types.csproj"
+            "C:\\Github\\Upland-Optimizer\\src\\Upland.Types\\Upland.Types.csproj": {
+              "projectPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Types\\Upland.Types.csproj"
             }
           }
         }

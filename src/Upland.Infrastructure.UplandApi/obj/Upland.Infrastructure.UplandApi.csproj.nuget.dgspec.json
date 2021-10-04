@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj": {}
+    "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj": {}
   },
   "projects": {
-    "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj": {
+    "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj",
+        "projectUniqueName": "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj",
         "projectName": "Upland.Infrastructure.UplandApi",
-        "projectPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj",
+        "projectPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj",
         "packagesPath": "C:\\Users\\chri1\\.nuget\\packages\\",
-        "outputPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.UplandApi\\obj\\",
+        "outputPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.UplandApi\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\chri1\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -27,8 +27,8 @@
         "frameworks": {
           "netcoreapp3.0": {
             "projectReferences": {
-              "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Types\\Upland.Types.csproj": {
-                "projectPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Types\\Upland.Types.csproj"
+              "C:\\Github\\Upland-Optimizer\\src\\Upland.Types\\Upland.Types.csproj": {
+                "projectPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Types\\Upland.Types.csproj"
               }
             }
           }
@@ -66,14 +66,14 @@
         }
       }
     },
-    "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Types\\Upland.Types.csproj": {
+    "C:\\Github\\Upland-Optimizer\\src\\Upland.Types\\Upland.Types.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Types\\Upland.Types.csproj",
+        "projectUniqueName": "C:\\Github\\Upland-Optimizer\\src\\Upland.Types\\Upland.Types.csproj",
         "projectName": "Upland.Types",
-        "projectPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Types\\Upland.Types.csproj",
+        "projectPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Types\\Upland.Types.csproj",
         "packagesPath": "C:\\Users\\chri1\\.nuget\\packages\\",
-        "outputPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Types\\obj\\",
+        "outputPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Types\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\chri1\\AppData\\Roaming\\NuGet\\NuGet.Config",

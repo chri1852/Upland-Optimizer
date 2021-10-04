@@ -699,11 +699,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer.csproj",
+      "projectUniqueName": "C:\\Github\\Upland-Optimizer\\src\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer.csproj",
       "projectName": "Upland.CollectionOptimizer",
-      "projectPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer.csproj",
+      "projectPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer.csproj",
       "packagesPath": "C:\\Users\\chri1\\.nuget\\packages\\",
-      "outputPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\obj\\",
+      "outputPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.CollectionOptimizer\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\chri1\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -719,14 +719,14 @@
       "frameworks": {
         "netcoreapp3.0": {
           "projectReferences": {
-            "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.LocalData\\Upland.Infrastructure.LocalData.csproj": {
-              "projectPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.LocalData\\Upland.Infrastructure.LocalData.csproj"
+            "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.LocalData\\Upland.Infrastructure.LocalData.csproj": {
+              "projectPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.LocalData\\Upland.Infrastructure.LocalData.csproj"
             },
-            "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.Up2LandApi\\Upland.Infrastructure.Up2LandApi.csproj": {
-              "projectPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.Up2LandApi\\Upland.Infrastructure.Up2LandApi.csproj"
+            "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.Up2LandApi\\Upland.Infrastructure.Up2LandApi.csproj": {
+              "projectPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.Up2LandApi\\Upland.Infrastructure.Up2LandApi.csproj"
             },
-            "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj": {
-              "projectPath": "C:\\Github\\Upland.CollectionOptimizer\\Upland.CollectionOptimizer\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj"
+            "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj": {
+              "projectPath": "C:\\Github\\Upland-Optimizer\\src\\Upland.Infrastructure.UplandApi\\Upland.Infrastructure.UplandApi.csproj"
             }
           }
         }
