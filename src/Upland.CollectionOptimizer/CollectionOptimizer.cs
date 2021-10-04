@@ -4,18 +4,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Upland.Infrastructure.Up2LandApi;
-using Upland.Infrastructure.UplandApi;
+using Upland.Infrastructure.LocalData;
 using Upland.Types;
-using Upland.Types.Up2LandApiTypes;
-using Upland.Types.UplandApiTypes;
 
 namespace Upland.CollectionOptimizer
 {
     public class CollectionOptimizer
     {
         // SEARCH TODO
-        private Dictionary<long, Up2LandProperty> Properties;
+        private Dictionary<long, Property> Properties;
         private Dictionary<int, Collection> Collections;
         private List<long> SlottedPropertyIds;
         private Dictionary<int, Collection> FilledCollections;
@@ -24,11 +21,11 @@ namespace Upland.CollectionOptimizer
         private Dictionary<int, string> AllCities;
         private bool UseAlternateCollectionOptimization;
 
-        private Up2LandApiRepository up2LandApiRepository;
+        private LocalDataManager localDataManager;
 
         public CollectionOptimizer(Dictionary<int, Collection> collections, Dictionary<int, string> cities, bool useAlternateCollectionOptimization)
         {
-            this.Properties = new Dictionary<long, Up2LandProperty>();
+            this.Properties = new Dictionary<long, Property>();
             this.Collections = new Dictionary<int, Collection>();
             this.SlottedPropertyIds = new List<long>();
             this.FilledCollections = new Dictionary<int, Collection>();
@@ -37,7 +34,7 @@ namespace Upland.CollectionOptimizer
             this.AllCities = cities;
             this.UseAlternateCollectionOptimization = useAlternateCollectionOptimization;
 
-            this.up2LandApiRepository = new Up2LandApiRepository();
+            this.localDataManager = new LocalDataManager();
         }
 
         public async Task RunOptimization(string username, int qualityLevel)
@@ -93,7 +90,7 @@ namespace Upland.CollectionOptimizer
                 conflictingCollections = RebuildCollections(conflictingCollections, ignorePropertyIds);
             }
 
-           foreach (KeyValuePair<int, Collection> entry in conflictingCollections)
+            foreach (KeyValuePair<int, Collection> entry in conflictingCollections)
             {
                 Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(conflictingCollections);
                 double collectionMax = RecursiveMaxUpxFinder(copiedCollections, entry.Value, ignorePropertyIds);
@@ -160,29 +157,28 @@ namespace Upland.CollectionOptimizer
             this.Collections = new Dictionary<int, Collection>();
             this.FilledCollections = new Dictionary<int, Collection>();
             this.SlottedPropertyIds = new List<long>();
-            this.Properties = new Dictionary<long, Up2LandProperty>();
+            this.Properties = new Dictionary<long, Property>();
 
             Dictionary<int, Collection> collections = HelperFunctions.DeepCollectionClone(this.AllCollections);
 
-            List<Up2LandProperty> userProperties = await this.up2LandApiRepository.GetUserProperties(username);
+            List<Property> userProperties = await this.localDataManager.GetPropertysByUsername(username);
 
-            userProperties = userProperties.OrderByDescending(p => p.Mint_Price).ToList();
+            userProperties = userProperties.OrderByDescending(p => p.MonthlyEarnings).ToList();
 
             foreach (KeyValuePair<int, Collection> entry in collections)
             {
-                foreach (Up2LandProperty property in userProperties)
+                foreach (Property property in userProperties)
                 {
-                    property.collections.RemoveAll(r => r.Id == Consts.CityProId || r.Id == Consts.KingOfTheStreetId || r.Id == Consts.NewbieId);
                     /*
                     if (entry.Value.CityIds.Contains(property.City_Id)
                         || entry.Value.StreetIds.Contains(property.Street_Id)
                         || entry.Value.NeighborhoodIds.Contains(property.Neighborhood_Id)
                         || entry.Value.MatchingPropertyIds.Contains(property.Prop_Id))
                     */
-                    if ((!Consts.StandardAndCityCollectionIds.Contains(entry.Value.Id) && entry.Value.MatchingPropertyIds.Contains(property.Prop_Id))
-                        || (Consts.StandardAndCityCollectionIds.Contains(entry.Value.Id) && !HelperFunctions.IsCollectionStd(entry.Value) && entry.Value.CityIds.Contains(property.City_Id)))
+                    if ((!Consts.StandardAndCityCollectionIds.Contains(entry.Value.Id) && entry.Value.MatchingPropertyIds.Contains(property.Id))
+                        || (Consts.StandardAndCityCollectionIds.Contains(entry.Value.Id) && !HelperFunctions.IsCollectionStd(entry.Value) && entry.Value.CityIds.Contains(property.CityId)))
                     {
-                        entry.Value.EligablePropertyIds.Add(property.Prop_Id);
+                        entry.Value.EligablePropertyIds.Add(property.Id);
                     }
                     /*
                     if (!entry.Value.EligablePropertyIds.Contains(property.Prop_Id) && property.collections.Any(c => c.Id == entry.Value.Id))
@@ -203,9 +199,9 @@ namespace Upland.CollectionOptimizer
                 }
             }
 
-            foreach (Up2LandProperty property in userProperties)
+            foreach (Property property in userProperties)
             {
-                this.Properties.Add(property.Prop_Id, property);
+                this.Properties.Add(property.Id, property);
             }
         }
 
@@ -224,7 +220,7 @@ namespace Upland.CollectionOptimizer
                     if (entry.Value.SlottedPropertyIds.Count < entry.Value.NumberOfProperties && !ignorePropertyIds.Contains(id))
                     {
                         entry.Value.SlottedPropertyIds.Add(id);
-                        entry.Value.MonthlyUpx += HelperFunctions.GetMonthlyUpxByMintAndBoost(this.Properties[id].Mint_Price, entry.Value.Boost);
+                        entry.Value.MonthlyUpx += this.Properties[id].MonthlyEarnings * entry.Value.Boost;
                     }
                 }
 
@@ -280,28 +276,28 @@ namespace Upland.CollectionOptimizer
             Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(collections);
             Dictionary<int, StandardCollectionBuilder> cityProCollections = new Dictionary<int, StandardCollectionBuilder>();
 
-            foreach (KeyValuePair<long, Up2LandProperty> entry in this.Properties)
+            foreach (KeyValuePair<long, Property> entry in this.Properties)
             {
-                if (this.SlottedPropertyIds.Contains(entry.Value.Prop_Id) || ignorePropertyIds.Contains(entry.Value.Prop_Id))
+                if (this.SlottedPropertyIds.Contains(entry.Value.Id) || ignorePropertyIds.Contains(entry.Value.Id))
                 {
                     continue;
                 }
 
-                if (!cityProCollections.Any(c => c.Key == entry.Value.City_Id))
+                if (!cityProCollections.Any(c => c.Key == entry.Value.CityId))
                 {
                     StandardCollectionBuilder newCityCollection = new StandardCollectionBuilder
                     {
-                        Id = entry.Value.City_Id,
+                        Id = entry.Value.CityId,
                         PropIds = new List<long>(),
                         MonthlyUpx = 0
                     };
                     cityProCollections.Add(newCityCollection.Id, newCityCollection);
                 }
 
-                if (cityProCollections[entry.Value.City_Id].PropIds.Count < 5)
+                if (cityProCollections[entry.Value.CityId].PropIds.Count < 5)
                 {
-                    cityProCollections[entry.Value.City_Id].PropIds.Add(entry.Value.Prop_Id);
-                    cityProCollections[entry.Value.City_Id].MonthlyUpx += HelperFunctions.GetMonthlyUpxByMintAndBoost(entry.Value.Mint_Price, Consts.CityProBoost);
+                    cityProCollections[entry.Value.CityId].PropIds.Add(entry.Value.Id);
+                    cityProCollections[entry.Value.CityId].MonthlyUpx += entry.Value.MonthlyEarnings * Consts.CityProBoost;
                 }
             }
 
@@ -331,28 +327,28 @@ namespace Upland.CollectionOptimizer
             Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(collections);
             Dictionary<int, StandardCollectionBuilder> kingOfTheStreetCollections = new Dictionary<int, StandardCollectionBuilder>();
 
-            foreach (KeyValuePair<long, Up2LandProperty> entry in this.Properties)
+            foreach (KeyValuePair<long, Property> entry in this.Properties)
             {
-                if (this.SlottedPropertyIds.Contains(entry.Value.Prop_Id) || ignorePropertyIds.Contains(entry.Value.Prop_Id) || entry.Value.Street_Id == null || entry.Value.Street_Id <= 0)
+                if (this.SlottedPropertyIds.Contains(entry.Value.Id) || ignorePropertyIds.Contains(entry.Value.Id) || entry.Value.StreetId <= 0)
                 {
                     continue;
                 }
 
-                if (!kingOfTheStreetCollections.Any(c => c.Key == entry.Value.Street_Id))
+                if (!kingOfTheStreetCollections.Any(c => c.Key == entry.Value.StreetId))
                 {
                     StandardCollectionBuilder newStreetCollection = new StandardCollectionBuilder
                     {
-                        Id = entry.Value.Street_Id,
+                        Id = entry.Value.StreetId,
                         PropIds = new List<long>(),
                         MonthlyUpx = 0
                     };
                     kingOfTheStreetCollections.Add(newStreetCollection.Id, newStreetCollection);
                 }
 
-                if (kingOfTheStreetCollections[entry.Value.Street_Id].PropIds.Count < 3)
+                if (kingOfTheStreetCollections[entry.Value.StreetId].PropIds.Count < 3)
                 {
-                    kingOfTheStreetCollections[entry.Value.Street_Id].PropIds.Add(entry.Value.Prop_Id);
-                    kingOfTheStreetCollections[entry.Value.Street_Id].MonthlyUpx += HelperFunctions.GetMonthlyUpxByMintAndBoost(entry.Value.Mint_Price, Consts.KingOfTheStreetBoost);
+                    kingOfTheStreetCollections[entry.Value.StreetId].PropIds.Add(entry.Value.Id);
+                    kingOfTheStreetCollections[entry.Value.StreetId].MonthlyUpx += entry.Value.MonthlyEarnings * Consts.KingOfTheStreetBoost;
                 }
             }
 
@@ -385,13 +381,13 @@ namespace Upland.CollectionOptimizer
                 Category = 1
             };
 
-            Up2LandProperty largestUnslotted = this.Properties.Where(p => !this.SlottedPropertyIds.Contains(p.Value.Prop_Id))?.FirstOrDefault().Value;
+            Property largestUnslotted = this.Properties.Where(p => !this.SlottedPropertyIds.Contains(p.Value.Id))?.FirstOrDefault().Value;
 
             if (largestUnslotted != null)
             {
-                newbie.SlottedPropertyIds.Add(largestUnslotted.Prop_Id);
-                newbie.MonthlyUpx += HelperFunctions.GetMonthlyUpxByMintAndBoost(largestUnslotted.Mint_Price, 1.1);
-                this.SlottedPropertyIds.Add(largestUnslotted.Prop_Id);
+                newbie.SlottedPropertyIds.Add(largestUnslotted.Id);
+                newbie.MonthlyUpx += largestUnslotted.MonthlyEarnings * 1.1;
+                this.SlottedPropertyIds.Add(largestUnslotted.Id);
                 this.FilledCollections.Add(newbie.Id, newbie);
             }
         }
@@ -405,7 +401,7 @@ namespace Upland.CollectionOptimizer
             {
                 if(!HelperFunctions.IsCollectionStd(collection))
                 {
-                    string collectionCity = this.AllCities[this.Properties[collection.SlottedPropertyIds[0]].City_Id];
+                    string collectionCity = this.AllCities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.Write(collectionCity);
                     Console.ForegroundColor = ConsoleColor.Cyan;
@@ -435,8 +431,8 @@ namespace Upland.CollectionOptimizer
 
                 foreach (long propertyId in collection.SlottedPropertyIds)
                 {
-                    outputStrings.Add(string.Format("     {0}", this.Properties[propertyId].Full_Address));
-                    Console.WriteLine("     {0}", this.Properties[propertyId].Full_Address);
+                    outputStrings.Add(string.Format("     {0}", this.Properties[propertyId].Address));
+                    Console.WriteLine("     {0}", this.Properties[propertyId].Address);
                 }
                 outputStrings.Add("");
             }
@@ -478,27 +474,27 @@ namespace Upland.CollectionOptimizer
 
         private List<string> WriteOutAllPropertyData(List<string> outputStrings)
         {
-            List<Up2LandProperty> allProps = this.Properties.OrderBy(p => p.Value.City_Id).Select(p => p.Value).ToList<Up2LandProperty>();
+            List<Property> allProps = this.Properties.OrderBy(p => p.Value.CityId).Select(p => p.Value).ToList<Property>();
             double stotal = 0;
             double vTotal = 0;
-            foreach (Up2LandProperty prop in allProps)
+            foreach (Property prop in allProps)
             {
-                if (this.SlottedPropertyIds.Contains(prop.Prop_Id))
+                if (this.SlottedPropertyIds.Contains(prop.Id))
                 {
                     foreach (KeyValuePair<int, Collection> entry in this.FilledCollections)
                     {
-                        if (entry.Value.SlottedPropertyIds.Contains(prop.Prop_Id))
+                        if (entry.Value.SlottedPropertyIds.Contains(prop.Id))
                         {
-                            outputStrings.Add(string.Format("{0} - {1} - {2:N2}", prop.City_Id, prop.Full_Address, prop.Mint_Price * entry.Value.Boost * Consts.ReturnRate / 12.0));
-                            stotal += prop.Mint_Price * entry.Value.Boost * Consts.ReturnRate / 12.0;
+                            outputStrings.Add(string.Format("{0} - {1} - {2:N2}", prop.CityId, prop.Address, prop.MonthlyEarnings * entry.Value.Boost));
+                            stotal += prop.MonthlyEarnings * entry.Value.Boost;
                             break;
                         }
                     }
                 }
                 else
                 {
-                    outputStrings.Add(string.Format("{0} - {1} - {2:N2}", prop.City_Id, prop.Full_Address, prop.Mint_Price * Consts.ReturnRate /12.0));
-                    vTotal += prop.Mint_Price * Consts.ReturnRate / 12.0;
+                    outputStrings.Add(string.Format("{0} - {1} - {2:N2}", prop.CityId, prop.Address, prop.MonthlyEarnings));
+                    vTotal += prop.MonthlyEarnings;
                 }
             }
             outputStrings.Add("");
@@ -543,7 +539,7 @@ namespace Upland.CollectionOptimizer
 
         private double CalulateBaseMonthlyUPX()
         {
-            return this.Properties.Sum(p => p.Value.Mint_Price) * Consts.ReturnRate / 12.0;
+            return this.Properties.Sum(p => p.Value.MonthlyEarnings);
         }
 
         private double CalcualteMonthylUpx()
@@ -551,7 +547,7 @@ namespace Upland.CollectionOptimizer
             double total = 0;
 
             total += this.FilledCollections.Sum(c => c.Value.MonthlyUpx);
-            total += this.Properties.Where(p => !this.SlottedPropertyIds.Contains(p.Value.Prop_Id)).Sum(p => p.Value.Mint_Price) * Consts.ReturnRate / 12.0;
+            total += this.Properties.Where(p => !this.SlottedPropertyIds.Contains(p.Value.Id)).Sum(p => p.Value.MonthlyEarnings);
 
             return total;
         }

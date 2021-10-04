@@ -7,11 +7,6 @@ namespace Upland.CollectionOptimizer
 {
     public static class HelperFunctions
     {
-        public static double GetMonthlyUpxByMintAndBoost(double mintPrice, double boost)
-        {
-            return mintPrice * Consts.ReturnRate / 12 * boost;
-        }
-
         public static bool IsCollectionStd(Collection collection)
         {
             return collection.Name == Consts.CityPro || collection.Name == Consts.KingOfTheStreet || collection.Name == Consts.Newbie;

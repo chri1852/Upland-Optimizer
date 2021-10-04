@@ -5,8 +5,10 @@
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT * 
-		FROM [UPL].[Property]
+		SELECT P.* 
+		FROM [UPL].[Property] P 
+			JOIN @PropertyIds PD
+				ON P.Id = PD.PropertyId
 	END TRY
 
 	BEGIN CATCH

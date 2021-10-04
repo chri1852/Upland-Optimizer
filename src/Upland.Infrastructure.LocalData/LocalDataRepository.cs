@@ -224,7 +224,8 @@ namespace Upland.Infrastructure.LocalData
                                     Address = (string)reader["Address"],
                                     CityId = (int)reader["CityId"],
                                     Size = (int)reader["Size"],
-                                    MonthlyEarnings = (decimal)reader["MonthlyEarnings"],
+                                    MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
+                                    StreetId = (int)reader["StreetId"]
                                 }
                              );
                         }

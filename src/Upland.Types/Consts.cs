@@ -10,7 +10,7 @@ namespace Upland.Types
         public static readonly string OuputFolder = @"C:\Users\chri1\Desktop\Upland\Optimizations";
         public static readonly string LocalDBConnectionString = @"Data Source=DESKTOP-BK6KAFH\SQLEXPRESS;Initial Catalog=UplandLocalData;Integrated Security=True;";
 
-        public static readonly string AuthToken = @"eyJhbGciOiJIUzI1NiIsInR5cCI6ImFjY2VzcyJ9.eyJ1c2VySWQiOiIzZDk1ZTk0MC0xMDhkLTExZWItYmQ3OS1iZmE2NzhmODI5YzciLCJ2YWxpZGF0aW9uVG9rZW4iOiJVeklnZWh1TUxSYWwwV05TbGY0Y1lITU9aVUNSclZwOFhWVEVGZklkS29HIiwiaWF0IjoxNjMxNjIxMzE1LCJleHAiOjE2NjMxNzg5MTUsImlzcyI6ImZlYXRoZXJzIiwic3ViIjoiM2Q5NWU5NDAtMTA4ZC0xMWViLWJkNzktYmZhNjc4ZjgyOWM3IiwianRpIjoiZGE2MTg5OTItODViNi00ZjNhLTlhMzUtOTY2MjBlYjQyYWZkIn0.INOS3cNg5PXn1gLLEZsPmpjdkbbvuefY2wi7b1tpzQg";
+        public static readonly string AuthToken = @"eyJhbGciOiJIUzI1NiIsInR5cCI6ImFjY2VzcyJ9.eyJ1c2VySWQiOiIzZDk1ZTk0MC0xMDhkLTExZWItYmQ3OS1iZmE2NzhmODI5YzciLCJ2YWxpZGF0aW9uVG9rZW4iOiJzVWs1aDlOaFNCWWkxSGlBbW5ua1lrU0w4Vng1ZVdJMW8zVnRJMGZRTjlwIiwiaWF0IjoxNjMzMzYzMTc4LCJleHAiOjE2NjQ5MjA3NzgsImlzcyI6ImZlYXRoZXJzIiwic3ViIjoiM2Q5NWU5NDAtMTA4ZC0xMWViLWJkNzktYmZhNjc4ZjgyOWM3IiwianRpIjoiZGViNzY2MTMtYjgyNC00YmU5LTgyMDAtNDczNWExMzc3NGZiIn0.OswtRoJhP888oEtXOqlhw0eg_yzn9hNZHqIE2D_VR9Y";
 
         public static readonly double ReturnRate = 0.1728;
 
