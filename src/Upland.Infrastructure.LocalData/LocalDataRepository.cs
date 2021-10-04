@@ -29,6 +29,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("NumberOfProperties", collection.NumberOfProperties));
                     sqlCmd.Parameters.Add(new SqlParameter("Description", collection.Description));
                     sqlCmd.Parameters.Add(new SqlParameter("Reward", collection.Reward));
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", collection.CityId));
 
                     sqlCmd.ExecuteNonQuery();
                 }

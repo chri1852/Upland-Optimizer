@@ -6,7 +6,8 @@
 	@Boost              DECIMAL(3,2),
 	@NumberOfProperties INT,
 	@Description        VARCHAR(1000),
-	@Reward             INT
+	@Reward             INT,
+	@CityId             INT = NULL
 )
 AS
 BEGIN
@@ -19,7 +20,8 @@ BEGIN
 			[Boost],
 			[NumberOfProperties],
 			[Description],
-			[Reward]
+			[Reward],
+			[CityId]
 		)
 		VALUES
 		(
@@ -29,7 +31,8 @@ BEGIN
 			@Boost,
 			@NumberOfProperties,
 			@Description,
-			@Reward
+			@Reward,
+			@CityId
 		)
 	END TRY
 

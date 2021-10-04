@@ -19,6 +19,7 @@ namespace Upland.Types
         public List<int> NeighborhoodIds { get; set; }
         public List<long> MatchingPropertyIds { get; set; }
         public int Reward { get; set; }
+        public int? CityId { get; set; }
 
         public Collection Clone()
         {
@@ -38,6 +39,7 @@ namespace Upland.Types
             Clone.NeighborhoodIds = new List<int>(this.NeighborhoodIds);
             Clone.MatchingPropertyIds = new List<long>(this.MatchingPropertyIds);
             Clone.Reward = this.Reward;
+            Clone.CityId = this.CityId;
 
             return Clone;
         }

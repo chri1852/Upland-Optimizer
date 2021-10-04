@@ -18,5 +18,6 @@ namespace Upland.Types.UplandApiTypes
         public List<string> Tags_Common { get; set; }
         public List<TagsAddressCommon> Tags_Address_Common { get; set; }
         public List<string> Tags_Address_Unique { get; set; }
+        public int? City_Id { get; set; }
     }
 }

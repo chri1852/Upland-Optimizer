@@ -37,6 +37,7 @@ namespace Upland.Infrastructure.UplandApi
             collection.NeighborhoodIds = GetNeighborhoodTags(uplandCollection);
             collection.MatchingPropertyIds = new List<long>();
             collection.Reward = uplandCollection.One_Time_Reward;
+            collection.CityId = uplandCollection.City_Id;
 
             return collection;
         }
