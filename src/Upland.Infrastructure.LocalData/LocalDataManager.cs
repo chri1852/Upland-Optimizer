@@ -43,6 +43,18 @@ namespace Upland.Infrastructure.LocalData
             return LocalDataRepository.GetCollectionPropertyIds(collectionId);
         }
 
+        public List<Collection> GetCollections()
+        {
+            List<Collection> collections = LocalDataRepository.GetCollections();
+
+            foreach (Collection collection in collections)
+            {
+                collection.MatchingPropertyIds = LocalDataRepository.GetCollectionPropertyIds(collection.Id);
+            }
+
+            return collections;
+        }
+
         public async Task<List<Property>> GetPropertysByUsername(string username)
         {
             List<UplandPropId> userPropIds = await uplandApiRepository.GetPropertyIdsByUsername(username);

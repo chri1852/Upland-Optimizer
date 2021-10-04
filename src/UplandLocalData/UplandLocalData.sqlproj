@@ -73,5 +73,6 @@
     <Build Include="Tables\UPL.Property.sql" />
     <Build Include="StoredProcedures\UPL.CreateProperty.sql" />
     <Build Include="StoredProcedures\UPL.GetProperties.sql" />
+    <Build Include="StoredProcedures\UPL.GetCollections.sql" />
   </ItemGroup>
 </Project>

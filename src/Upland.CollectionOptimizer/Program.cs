@@ -14,8 +14,8 @@ namespace Upland.CollectionOptimizer
     {
         static async Task Main(string[] args)
         {
-            await BuildCollectionDatabase();
-            return;
+          //  await BuildCollectionDatabase();
+           // return;
             string username;
             string qualityLevel;
             string repeat;
@@ -77,6 +77,7 @@ namespace Upland.CollectionOptimizer
 
             await localCollectionManager.GetPropertysByUsername("nebulus");
             //await localCollectionManager.PopulateDatabaseCollectionInfo();
+            List<Collection> collections = localCollectionManager.GetCollections();
         }
 
         private static async Task<Dictionary<int, Collection>> PopulateAllCollections(UplandApiRepository repository)

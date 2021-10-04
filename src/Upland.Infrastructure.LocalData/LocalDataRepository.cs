@@ -114,6 +114,55 @@ namespace Upland.Infrastructure.LocalData
             return propertyIds;
         }
 
+        public static List<Collection> GetCollections()
+        {
+            List<Collection> collections = new List<Collection>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCollections]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            collections.Add(
+                                new Collection
+                                {
+                                    Id = (int)reader["Id"],
+                                    Name = (string)reader["Name"],
+                                    Category = (int)reader["Category"],
+                                    Boost = decimal.ToDouble((decimal)reader["Boost"]),
+                                    NumberOfProperties = (int)reader["NumberOfProperties"],
+                                    Description = (string)reader["Description"],
+                                    Reward = (int)reader["Reward"],
+                                    CityId = (reader.IsDBNull("CityId") ? -1 : (int)reader["CityId"])
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return collections;
+            }
+        }
+
         public static void CreateProperty(Property property)
         {
             SqlConnection sqlConnection = GetSQLConnector();
