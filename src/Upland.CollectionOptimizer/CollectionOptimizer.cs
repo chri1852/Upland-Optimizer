@@ -83,6 +83,47 @@ namespace Upland.CollectionOptimizer
             } while (repeat.ToUpper() != "N" && repeat.ToUpper() != "NO" && repeat.ToUpper() != "0");
         }
 
+        /*
+        private Dictionary<int, Collection> GetConflictingCollections(int qualityLevel)
+        {
+            int firstCollection = 0;
+
+            if (this.Collections.Count <= qualityLevel)
+            {
+                return HelperFunctions.DeepCollectionClone(this.Collections);
+            }
+
+            Dictionary<int, Collection> conflictingCollections = new Dictionary<int, Collection>();
+
+            foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
+            {
+                // Don't use City Pro of King of the String as the first collection
+                if (Consts.StandardCollectionIds.Contains(entry.Value.Id))
+                {
+                    continue;
+                }
+
+                firstCollection = entry.Value.Id;
+                conflictingCollections.Add(entry.Value.Id, entry.Value.Clone());
+                break;
+            }
+
+            // We now have one collection lets loop through all collections til we have all the conflicts.
+            foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
+            {
+                // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
+                if (!conflictingCollections.ContainsKey(entry.Value.Id) 
+                    && DoesCollectionConflictWithList(entry.Value, conflictingCollections)
+                    && conflictingCollections.Count < qualityLevel)
+                {
+                    conflictingCollections.Add(entry.Key, entry.Value.Clone());
+                }
+            }
+
+            return conflictingCollections;
+        }
+        */
+
         private async Task RunOptimization(string username, int qualityLevel)
         {
             await PopulatePropertiesAndCollections(username);
@@ -92,10 +133,13 @@ namespace Upland.CollectionOptimizer
 
             while (this.Collections.Count > 0)
             {
+                
                 Dictionary<int, Collection> conflictingCollections = HelperFunctions.DeepCollectionClone(new Dictionary<int, Collection>(
                     this.Collections.OrderByDescending(c => c.Value.MonthlyUpx).Take(qualityLevel)
                 ));
                 
+                //Dictionary<int, Collection> conflictingCollections = GetConflictingCollections(qualityLevel);
+
                 int collectionToSlotId = RecursionWrapper(conflictingCollections);
 
                 WriteCollectionFinishTime(this.Collections[collectionToSlotId]);
@@ -106,7 +150,6 @@ namespace Upland.CollectionOptimizer
             timer.Stop();
 
             BuildBestNewbieCoollection();
-
 
             List<string> outputStrings = new List<string>();
             outputStrings.Add(string.Format("Collection Optimization Report - {0}", DateTime.Now.ToString("MM-dd-yyyy")));
@@ -135,7 +178,7 @@ namespace Upland.CollectionOptimizer
                 Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(conflictingCollections);
                 double collectionMax = RecursiveMaxUpxFinder(copiedCollections, entry.Value, ignorePropertyIds);
 
-                if (collectionMax > maxMonthly 
+                if (collectionMax > maxMonthly
                     || (collectionMax == maxMonthly && (maxCollectionId == 1 || maxCollectionId == 21)))
                 {
                     maxMonthly = collectionMax;
@@ -146,19 +189,23 @@ namespace Upland.CollectionOptimizer
             return maxCollectionId;
         }
 
-        private List<long> AddPropIdsToIgnoreForCollectionsNotInProcess(Dictionary<int, Collection> collections)
+        private bool DoesCollectionConflictWithList(Collection collection, IEnumerable<KeyValuePair<int, Collection>> conflictingList)
         {
-            List<long> ignorePropertyIds = new List<long>();
+            return Consts.StandardCollectionIds.Contains(collection.Id) ||
+                conflictingList.Any(e => e.Value.EligablePropertyIds.Any(p => collection.EligablePropertyIds.Contains(p)));
+        }
 
-            foreach (KeyValuePair<int, Collection> entry in this.Collections)
+        private bool TESTAnyCollectionConflict(Dictionary<int, Collection> collections)
+        {
+            foreach (KeyValuePair<int, Collection> entry in collections)
             {
-                if (!collections.Any(c => c.Value.Id == entry.Value.Id))
+                if(DoesCollectionConflictWithList(entry.Value, collections.Where(c => c.Key != entry.Value.Id)))
                 {
-                    ignorePropertyIds.AddRange(entry.Value.SlottedPropertyIds);
+                    return true;
                 }
             }
 
-            return ignorePropertyIds;
+            return false;
         }
 
         private double RecursiveMaxUpxFinder(Dictionary<int, Collection> collections, Collection collection, List<long> ignorePropertyIds)
@@ -169,6 +216,10 @@ namespace Upland.CollectionOptimizer
             }
             else
             {
+                if(!TESTAnyCollectionConflict(collections))
+                {
+                    return collections.Sum(c => c.Value.MonthlyUpx);
+                }
                 List<long> copiedIgnorePropertyIds = new List<long>(ignorePropertyIds);
                 Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(new Dictionary<int, Collection>(
                     collections.Where(c => c.Value.Id != collection.Id)
