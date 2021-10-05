@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using Upland.Types;
+using Upland.Types.Types;
 
 namespace Upland.Infrastructure.LocalData
 {
@@ -242,6 +243,112 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return properties;
+            }
+        }
+
+        public static void CreateOptimizationRun(OptimizationRun optimizationRun)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CreateOptimizationRun]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", optimizationRun.DiscordUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.Now));
+                    sqlCmd.Parameters.Add(new SqlParameter("Filename", optimizationRun.Filename));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static void SetOptimizationRunStatus(OptimizationRun optimizationRun)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[SetOptimizationRunStatus]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", optimizationRun.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("Status", optimizationRun.Status));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static OptimizationRun GetLatestOptimizationRun(long discordUserId)
+        {
+            OptimizationRun optimizationRun = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetLatestOptimizationRunForDiscordUserId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@DiscordUserId", discordUserId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            optimizationRun = new OptimizationRun
+                            {
+                                Id = (int)reader["Id"],
+                                DiscordUserId = (long)reader["DiscordUserId"],
+                                RequestedDateTime = (DateTime)reader["RequestedDateTime"],
+                                Filename = (string)reader["Filename"],
+                                Status = (string)reader["Status"],
+                            };
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return optimizationRun;
             }
         }
 

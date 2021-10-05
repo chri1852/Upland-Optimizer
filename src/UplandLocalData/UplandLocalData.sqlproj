@@ -74,5 +74,9 @@
     <Build Include="StoredProcedures\UPL.CreateProperty.sql" />
     <Build Include="StoredProcedures\UPL.GetProperties.sql" />
     <Build Include="StoredProcedures\UPL.GetCollections.sql" />
+    <Build Include="Tables\UPL.OptimizationRun.sql" />
+    <Build Include="StoredProcedures\UPL.CreateOptimizationRun.sql" />
+    <Build Include="StoredProcedures\UPL.SetOptimizationRunStatus.sql" />
+    <Build Include="StoredProcedures\UPL.GetLatestOptimizationRunForDiscordUserId.sql" />
   </ItemGroup>
 </Project>

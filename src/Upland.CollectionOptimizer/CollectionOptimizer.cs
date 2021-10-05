@@ -20,6 +20,7 @@ namespace Upland.CollectionOptimizer
         private Dictionary<int, Collection> AllCollections;
 
         private LocalDataManager localDataManager;
+        private bool supressConsoleOutput;
 
         public CollectionOptimizer()
         {
@@ -31,6 +32,13 @@ namespace Upland.CollectionOptimizer
             PopulateAllCollections();
 
             this.localDataManager = new LocalDataManager();
+            this.supressConsoleOutput = false;
+        }
+
+        public async Task RunAutoOptimization(string username, int qualityLevel, bool supressConsoleOutput = false)
+        {
+            this.supressConsoleOutput = supressConsoleOutput;
+            await RunOptimization(username, qualityLevel);
         }
 
         public async Task OptimizerStartPoint()
@@ -83,47 +91,6 @@ namespace Upland.CollectionOptimizer
             } while (repeat.ToUpper() != "N" && repeat.ToUpper() != "NO" && repeat.ToUpper() != "0");
         }
 
-        /*
-        private Dictionary<int, Collection> GetConflictingCollections(int qualityLevel)
-        {
-            int firstCollection = 0;
-
-            if (this.Collections.Count <= qualityLevel)
-            {
-                return HelperFunctions.DeepCollectionClone(this.Collections);
-            }
-
-            Dictionary<int, Collection> conflictingCollections = new Dictionary<int, Collection>();
-
-            foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
-            {
-                // Don't use City Pro of King of the String as the first collection
-                if (Consts.StandardCollectionIds.Contains(entry.Value.Id))
-                {
-                    continue;
-                }
-
-                firstCollection = entry.Value.Id;
-                conflictingCollections.Add(entry.Value.Id, entry.Value.Clone());
-                break;
-            }
-
-            // We now have one collection lets loop through all collections til we have all the conflicts.
-            foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
-            {
-                // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
-                if (!conflictingCollections.ContainsKey(entry.Value.Id) 
-                    && DoesCollectionConflictWithList(entry.Value, conflictingCollections)
-                    && conflictingCollections.Count < qualityLevel)
-                {
-                    conflictingCollections.Add(entry.Key, entry.Value.Clone());
-                }
-            }
-
-            return conflictingCollections;
-        }
-        */
-
         private async Task RunOptimization(string username, int qualityLevel)
         {
             await PopulatePropertiesAndCollections(username);
@@ -133,16 +100,18 @@ namespace Upland.CollectionOptimizer
 
             while (this.Collections.Count > 0)
             {
-                
+
                 Dictionary<int, Collection> conflictingCollections = HelperFunctions.DeepCollectionClone(new Dictionary<int, Collection>(
                     this.Collections.OrderByDescending(c => c.Value.MonthlyUpx).Take(qualityLevel)
                 ));
-                
-                //Dictionary<int, Collection> conflictingCollections = GetConflictingCollections(qualityLevel);
+
 
                 int collectionToSlotId = RecursionWrapper(conflictingCollections);
 
-                WriteCollectionFinishTime(this.Collections[collectionToSlotId]);
+                if (!this.supressConsoleOutput)
+                {
+                    WriteCollectionFinishTime(this.Collections[collectionToSlotId]);
+                }
 
                 SetFilledCollection(collectionToSlotId);
             }
@@ -161,10 +130,13 @@ namespace Upland.CollectionOptimizer
 
             File.WriteAllLines(string.Format("{0}\\{1}_lvl{2}_{3}.txt", Consts.OuputFolder, username, qualityLevel, DateTime.Now.ToString("MM-dd-yyyy")), outputStrings);
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write("Total Time - ");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("{0}", timer.Elapsed);
+            if (!this.supressConsoleOutput)
+            { 
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write("Total Time - ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("{0}", timer.Elapsed);
+            }
         }
 
         private int RecursionWrapper(Dictionary<int, Collection> conflictingCollections)
@@ -487,48 +459,61 @@ namespace Upland.CollectionOptimizer
         {
             int TotalCollectionRewards = 0;
             List<Collection> collections = this.FilledCollections.OrderByDescending(c => c.Value.MonthlyUpx).Select(c => c.Value).ToList();
-            Console.WriteLine();
+            if (!this.supressConsoleOutput)
+            {
+                Console.WriteLine();
+            }
             foreach (Collection collection in collections)
             {
                 if(!Consts.StandardCollectionIds.Contains(collection.Id))
                 {
                     string collectionCity = Consts.Cities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write(collectionCity);
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.Write(" - ");
+                    if (!this.supressConsoleOutput)
+                    {
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.Write(collectionCity);
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.Write(" - ");
+                    }
                     outputStrings.Add(string.Format("{0} - {1} - {2:N2} --> {3:N2}", collectionCity, collection.Name, collection.MonthlyUpx / collection.Boost, collection.MonthlyUpx));
                     TotalCollectionRewards += collection.Reward;
                 }
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write("Standard");
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.Write(" - ");
+                    if (!this.supressConsoleOutput)
+                    {
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.Write("Standard");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.Write(" - ");
+                    }
                     outputStrings.Add(string.Format("Standard - {0} - {1:N2} --> {2:N2}", collection.Name, collection.MonthlyUpx / collection.Boost, collection.MonthlyUpx));
                 }
 
-                WriteCollectionName(collection);
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write(" - ");
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("{0:N2}", collection.MonthlyUpx / collection.Boost);
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write(" --> ");
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("{0:N2}", collection.MonthlyUpx);
-                Console.ForegroundColor = ConsoleColor.Cyan;
+                if (!this.supressConsoleOutput)
+                {
+                    WriteCollectionName(collection);
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write(" - ");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write("{0:N2}", collection.MonthlyUpx / collection.Boost);
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write(" --> ");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("{0:N2}", collection.MonthlyUpx);
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                }
 
                 foreach (long propertyId in collection.SlottedPropertyIds)
                 {
                     outputStrings.Add(string.Format("     {0}", this.Properties[propertyId].Address));
-                    Console.WriteLine("     {0}", this.Properties[propertyId].Address);
+                    if (!this.supressConsoleOutput)
+                    {
+                        Console.WriteLine("     {0}", this.Properties[propertyId].Address);
+                    }
                 }
                 outputStrings.Add("");
             }
-
-            Console.WriteLine();
 
             string baseMonthlyUpx = string.Format("{0:N2}", CalulateBaseMonthlyUPX());
             string totalMonthlyUpx = string.Format("{0:N2}", CalcualteMonthylUpx());
@@ -539,23 +524,26 @@ namespace Upland.CollectionOptimizer
             //outputStrings.Add("");
             //outputStrings.Add(string.Format("Total Collection Reward UPX: {0:N2}", TotalCollectionRewards));
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write("Base Monthly UPX...........: ");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(baseMonthlyUpx);
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write("Total Monthly UPX..........: ");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(totalMonthlyUpx);
-            Console.WriteLine();
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write("Total Collection Reward UPX: ");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("{0:N2}", TotalCollectionRewards);
-            Console.ResetColor();
+            if (!this.supressConsoleOutput)
+            {
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write("Base Monthly UPX...........: ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(baseMonthlyUpx);
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write("Total Monthly UPX..........: ");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(totalMonthlyUpx);
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write("Total Collection Reward UPX: ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("{0:N2}", TotalCollectionRewards);
+                Console.ResetColor();
 
-            Console.WriteLine();
-
+                Console.WriteLine();
+            }
             return outputStrings;
         }
 

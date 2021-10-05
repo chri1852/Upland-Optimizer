@@ -6,6 +6,7 @@ using Upland.Infrastructure.UplandApi;
 using Upland.Types;
 using System.Linq;
 using Upland.Types.UplandApiTypes;
+using Upland.Types.Types;
 
 namespace Upland.Infrastructure.LocalData
 {
@@ -72,6 +73,21 @@ namespace Upland.Infrastructure.LocalData
             }
 
             return userProperties;
+        }
+
+        public void CreateOptimizationRun(OptimizationRun optimizationRun)
+        {
+            LocalDataRepository.CreateOptimizationRun(optimizationRun);
+        }
+
+        public void SetOptimizationRunStatus(OptimizationRun optimizationRun)
+        {
+            LocalDataRepository.SetOptimizationRunStatus(optimizationRun);
+        }
+
+        public OptimizationRun GetLatestOptimizationRun(long DiscordId)
+        {
+            return LocalDataRepository.GetLatestOptimizationRun(DiscordId);
         }
     }
 }
