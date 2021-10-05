@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[IncreaseRegisteredUserRunCount]
+﻿CREATE PROCEDURE [UPL].[GetRegisteredUser]
 (
 	@UplandUsername  VARCHAR(200)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		UPDATE [UPL].[RegisteredUser]
-		SET RunCount += 1
-		WHERE UplandUserName = @UplandUsername
+		SELECT TOP(1) * 
+		FROM [UPL].[RegisteredUser]
+		WHERE UplandUsername = @UplandUsername
 	END TRY
 
 	BEGIN CATCH

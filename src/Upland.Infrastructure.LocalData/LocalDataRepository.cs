@@ -352,6 +352,176 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static void CreateRegisteredUser(RegisteredUser registeredUser)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CreateRegisteredUser]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", registeredUser.DiscordUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", registeredUser.DiscordUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", registeredUser.UplandUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("PropertyId", registeredUser.PropertyId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.Price));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static void SetRegisteredUserPaid(string uplandUsername)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[SetRegisteredUserPaid]";
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static void SetRegisteredUserVerified(string uplandUsername)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[SetRegisteredUserVerified]";
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static void IncreaseRegisteredUserRunCount(string uplandUsername)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[IncreaseRegisteredUserRunCount]";
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static RegisteredUser GetRegisteredUser(string uplandUsername)
+        {
+            RegisteredUser registeredUser = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetRegisteredUser]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@UplandUsername", uplandUsername));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            registeredUser = new RegisteredUser
+                            {
+                                Id = (int)reader["Id"],
+                                DiscordUserId = (long)reader["DiscordUserId"],
+                                DiscordUsername = (string)reader["DiscordUsername"],
+                                UplandUsername = (string)reader["UplandUsername"],
+                                RunCount = (int)reader["RunCount"],
+                                Paid = (bool)reader["Paid"],
+                                PropertyId = (long)reader["PropertyId"],
+                                Price = (int)reader["Price"],
+                                Verified = (bool)reader["Verified"],
+                            };
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return registeredUser;
+            }
+        }
+
+
         private static DataTable CreatePropertyIdTable(List<long> propertyIds)
         {
             DataTable table = new DataTable();

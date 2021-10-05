@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Upland.CollectionOptimizer\Upland.CollectionOptimizer.csproj" />
+    <ProjectReference Include="..\Upland.DiscordBot\Upland.DiscordBot.csproj" />
     <ProjectReference Include="..\Upland.Infrastructure.UplandApi\Upland.Infrastructure.UplandApi.csproj" />
     <ProjectReference Include="..\Upland.Types\Upland.Types.csproj" />
   </ItemGroup>

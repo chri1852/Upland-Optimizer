@@ -85,9 +85,14 @@ namespace Upland.Infrastructure.LocalData
             LocalDataRepository.SetOptimizationRunStatus(optimizationRun);
         }
 
-        public OptimizationRun GetLatestOptimizationRun(long DiscordId)
+        public OptimizationRun GetLatestOptimizationRun(long discordId)
         {
-            return LocalDataRepository.GetLatestOptimizationRun(DiscordId);
+            return LocalDataRepository.GetLatestOptimizationRun(discordId);
+        }
+
+        public RegisteredUser GetRegisteredUser(string uplandUsername)
+        {
+            return LocalDataRepository.GetRegisteredUser(uplandUsername);
         }
     }
 }
