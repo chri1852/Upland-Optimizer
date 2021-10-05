@@ -94,5 +94,20 @@ namespace Upland.Infrastructure.LocalData
         {
             return LocalDataRepository.GetRegisteredUser(uplandUsername);
         }
+
+        public void IncreaseRegisteredUserRunCount(string uplandUsername)
+        {
+            LocalDataRepository.IncreaseRegisteredUserRunCount(uplandUsername);
+        }
+
+        public void SetRegisteredUserVerified(string uplandUsername)
+        {
+            LocalDataRepository.SetRegisteredUserVerified(uplandUsername);
+        }
+
+        public void SetRegisteredUserPaid(string uplandUsername)
+        {
+            LocalDataRepository.SetRegisteredUserPaid(uplandUsername);
+        }
     }
 }

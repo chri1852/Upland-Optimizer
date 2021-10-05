@@ -15,8 +15,6 @@ Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "UplandLocalData", "UplandLo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Startup", "Startup\Startup.csproj", "{E46DE09A-7795-46AF-B48D-D01CB8833856}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upland.DiscordBot", "Upland.DiscordBot\Upland.DiscordBot.csproj", "{27CC0C12-E3EA-4333-B41C-FF194BB218B7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,10 +47,6 @@ Global
 		{E46DE09A-7795-46AF-B48D-D01CB8833856}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E46DE09A-7795-46AF-B48D-D01CB8833856}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E46DE09A-7795-46AF-B48D-D01CB8833856}.Release|Any CPU.Build.0 = Release|Any CPU
-		{27CC0C12-E3EA-4333-B41C-FF194BB218B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{27CC0C12-E3EA-4333-B41C-FF194BB218B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{27CC0C12-E3EA-4333-B41C-FF194BB218B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{27CC0C12-E3EA-4333-B41C-FF194BB218B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

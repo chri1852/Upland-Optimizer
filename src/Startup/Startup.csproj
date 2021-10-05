@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,8 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Discord.Net.Commands" Version="2.4.0" />
+    <PackageReference Include="Discord.Net.Core" Version="2.4.0" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Upland.CollectionOptimizer\Upland.CollectionOptimizer.csproj" />
-    <ProjectReference Include="..\Upland.DiscordBot\Upland.DiscordBot.csproj" />
     <ProjectReference Include="..\Upland.Infrastructure.UplandApi\Upland.Infrastructure.UplandApi.csproj" />
     <ProjectReference Include="..\Upland.Types\Upland.Types.csproj" />
   </ItemGroup>
