@@ -536,8 +536,8 @@ namespace Upland.CollectionOptimizer
             outputStrings.Add("");
             outputStrings.Add(string.Format("Base Monthly UPX...........: {0}", baseMonthlyUpx));
             outputStrings.Add(string.Format("Total Monthly UPX..........: {0}", totalMonthlyUpx));
-            outputStrings.Add("");
-            outputStrings.Add(string.Format("Total Collection Reward UPX: {0:N2}", TotalCollectionRewards));
+            //outputStrings.Add("");
+            //outputStrings.Add(string.Format("Total Collection Reward UPX: {0:N2}", TotalCollectionRewards));
 
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.Write("Base Monthly UPX...........: ");
