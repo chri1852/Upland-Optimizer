@@ -375,7 +375,7 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("Hey there {0}! Thanks for being a supporter!{1}", GetRandomName(), Environment.NewLine));
             }
 
-            await ReplyAsync(string.Format("To Use the Collection Optimizer Simply run my !OptimizerRun command.{0}The Optimizer can take some time to run, especially if this is the first time you have run it.{0}You can check on the status of your run at anytime by running my !OptimizaterStatus command.{0}Once the run has a status of {1}, you can run my !OptimizerResults command.{0}If your run has a status of failed you can try running it again, or reach out to Grombrindal for troubleshooting.{0}", Environment.NewLine, Consts.RunStatusCompleted, Consts.RunStatusFailed));
+            await ReplyAsync(string.Format("To Use the Collection Optimizer Simply run my !OptimizerRun command.{0}The Optimizer can take some time to run, especially if this is the first time you have run it.{0}You can check on the status of your run at anytime by running my !OptimizerStatus command.{0}Once the run has a status of {1}, you can run my !OptimizerResults command.{0}If your run has a status of failed you can try running it again, or reach out to Grombrindal for troubleshooting.{0}", Environment.NewLine, Consts.RunStatusCompleted, Consts.RunStatusFailed));
         }
 
         private string GetRandomName()
