@@ -39,11 +39,11 @@ namespace Upland.Infrastructure.UplandApi
             return collection;
         }
 
-        public static List<Property> Map(List<UplandDistinctProperty> uplandDistinctProperties)
+        public static List<Property> Map(List<UplandProperty> uplandDistinctProperties)
         {
             List<Property> properties = new List<Property>();
 
-            foreach (UplandDistinctProperty property in uplandDistinctProperties)
+            foreach (UplandProperty property in uplandDistinctProperties)
             {
                 properties.Add(Map(property));
             }
@@ -51,7 +51,7 @@ namespace Upland.Infrastructure.UplandApi
             return properties;
         }
 
-        public static Property Map(UplandDistinctProperty udProperty)
+        public static Property Map(UplandProperty udProperty)
         {
             Property property = new Property();
 

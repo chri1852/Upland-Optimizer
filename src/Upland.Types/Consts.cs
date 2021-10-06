@@ -68,5 +68,7 @@ namespace Upland.Types
             { 10001, "Clovis"        },
             { 10002, "Piedmont"      },
         };
+
+        public static readonly int FreeRuns = 3;
     }
 }
