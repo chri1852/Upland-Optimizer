@@ -68,6 +68,56 @@ namespace Upland.CollectionOptimizer
                 });
             localDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
         }
+        
+        private Dictionary<int, Collection> GetConflictingCollections(int qualityLevel)
+        {
+            int firstCollection = 0;
+
+            if (this.Collections.Count <= qualityLevel)
+            {
+                return HelperFunctions.DeepCollectionClone(this.Collections);
+            }
+
+            Dictionary<int, Collection> conflictingCollections = new Dictionary<int, Collection>();
+
+            foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
+            {
+                // Don't use City Pro of King of the String as the first collection
+                if (Consts.StandardCollectionIds.Contains(entry.Value.Id))
+                {
+                    continue;
+                }
+
+                firstCollection = entry.Value.Id;
+                conflictingCollections.Add(entry.Value.Id, entry.Value.Clone());
+                break;
+            }
+
+            // We now have one collection lets loop through all collections til we have all the conflicts.
+            foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
+            {
+                // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
+                if (!conflictingCollections.ContainsKey(entry.Value.Id) 
+                    && DoCollectionsConflict(conflictingCollections[firstCollection], entry.Value)
+                    && conflictingCollections.Count < qualityLevel)
+                {
+                    conflictingCollections.Add(entry.Key, entry.Value.Clone());
+                }
+            }
+
+            // Now lets top off the conflicts with the chonkers
+            foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
+            {
+                // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
+                if (!conflictingCollections.ContainsKey(entry.Value.Id)
+                    && conflictingCollections.Count < qualityLevel)
+                {
+                    conflictingCollections.Add(entry.Key, entry.Value.Clone());
+                }
+            }
+
+            return conflictingCollections;
+        }
 
         private async Task<string> RunOptimization(string username, int qualityLevel)
         {
@@ -78,10 +128,13 @@ namespace Upland.CollectionOptimizer
 
             while (this.Collections.Count > 0)
             {
+                /*
                 Dictionary<int, Collection> conflictingCollections = HelperFunctions.DeepCollectionClone(new Dictionary<int, Collection>(
                     this.Collections.OrderByDescending(c => c.Value.MonthlyUpx).Take(qualityLevel)
                 ));
-
+                */
+                Dictionary<int, Collection> conflictingCollections = GetConflictingCollections(qualityLevel);
+                
                 int collectionToSlotId = RecursionWrapper(conflictingCollections);
 
                 SetFilledCollection(collectionToSlotId);
@@ -123,6 +176,12 @@ namespace Upland.CollectionOptimizer
 
             return maxCollectionId;
         }
+        
+        private bool DoCollectionsConflict(Collection firstCollection, Collection secondCollection)
+        {
+            return Consts.StandardCollectionIds.Contains(firstCollection.Id) ||
+                secondCollection.EligablePropertyIds.Any(p => firstCollection.EligablePropertyIds.Contains(p));
+        }
 
         private bool DoesCollectionConflictWithList(Collection collection, IEnumerable<KeyValuePair<int, Collection>> conflictingList)
         {
@@ -130,7 +189,7 @@ namespace Upland.CollectionOptimizer
                 conflictingList.Any(e => e.Value.EligablePropertyIds.Any(p => collection.EligablePropertyIds.Contains(p)));
         }
 
-        private bool TESTAnyCollectionConflict(Dictionary<int, Collection> collections)
+        private bool AnyCollectionConflict(Dictionary<int, Collection> collections)
         {
             foreach (KeyValuePair<int, Collection> entry in collections)
             {
@@ -151,7 +210,7 @@ namespace Upland.CollectionOptimizer
             }
             else
             {
-                if(!TESTAnyCollectionConflict(collections))
+                if(!AnyCollectionConflict(collections))
                 {
                     return collections.Sum(c => c.Value.MonthlyUpx);
                 }
