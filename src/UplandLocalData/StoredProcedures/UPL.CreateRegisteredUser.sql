@@ -12,7 +12,7 @@ BEGIN
 		INSERT INTO [UPL].[RegisteredUser]
 		(
 			[DiscordUserId],
-			[DiscordUserName], 
+			[DiscordUsername], 
 			[UplandUsername],
 			[RunCount],
 			[Paid],

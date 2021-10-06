@@ -7,7 +7,7 @@ BEGIN
 	BEGIN TRY		
 		SELECT TOP(1) * 
 		FROM [UPL].[OptimizationRun] (NOLOCK)
-		WHERE DiscordUSerId = @DiscordUserId
+		WHERE DiscordUserId = @DiscordUserId
 		ORDER BY RequestedDateTime DESC
 	END TRY
 

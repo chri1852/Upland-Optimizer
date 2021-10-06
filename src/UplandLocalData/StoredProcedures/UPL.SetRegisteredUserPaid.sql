@@ -7,7 +7,7 @@ BEGIN
 	BEGIN TRY		
 		UPDATE [UPL].[RegisteredUser]
 		SET Paid = 1
-		WHERE UplandUserName = @UplandUsername
+		WHERE UplandUsername = @UplandUsername
 	END TRY
 
 	BEGIN CATCH

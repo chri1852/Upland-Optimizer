@@ -28,7 +28,7 @@ class Program
             .AddSingleton(_commands)
             .BuildServiceProvider();
 
-        string token = "ODk0OTY5NDgyMzYyMTE0MDU5.YVxvSA.zTI76ztzS3L3vdOlyok0XouD4GQ";
+        string token = System.IO.File.ReadAllText(@"auth.txt");
 
         _client.Log += clientLog;
 
