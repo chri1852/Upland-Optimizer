@@ -307,7 +307,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static OptimizationRun GetLatestOptimizationRun(long discordUserId)
+        public static OptimizationRun GetLatestOptimizationRun(decimal discordUserId)
         {
             OptimizationRun optimizationRun = null;
             SqlConnection sqlConnection = GetSQLConnector();
@@ -330,7 +330,7 @@ namespace Upland.Infrastructure.LocalData
                             optimizationRun = new OptimizationRun
                             {
                                 Id = (int)reader["Id"],
-                                DiscordUserId = (long)reader["DiscordUserId"],
+                                DiscordUserId = (decimal)reader["DiscordUserId"],
                                 RequestedDateTime = (DateTime)reader["RequestedDateTime"],
                                 Filename = (string)reader["Filename"],
                                 Status = (string)reader["Status"],

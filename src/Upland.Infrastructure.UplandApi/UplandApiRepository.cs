@@ -117,7 +117,7 @@ namespace Upland.Infrastructure.UplandApi
             return property;
         }
 
-        public async Task<List<UplandAuthProperty>> GetPropertyIdsByUsername(string username)
+        public async Task<List<UplandAuthProperty>> GetPropertysByUsername(string username)
         {
             List<UplandAuthProperty> properties;
             string requestUri = @"https://api.upland.me/properties/list/" + username;

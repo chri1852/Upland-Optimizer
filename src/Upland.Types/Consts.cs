@@ -70,5 +70,8 @@ namespace Upland.Types
         };
 
         public static readonly int FreeRuns = 3;
+        public static readonly string RunStatusInProgress = "In Progress";
+        public static readonly string RunStatusCompleted= "Completed";
+        public static readonly string RunStatusFailed = "Failed";
     }
 }

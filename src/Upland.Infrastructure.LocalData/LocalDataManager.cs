@@ -58,7 +58,7 @@ namespace Upland.Infrastructure.LocalData
 
         public async Task<List<Property>> GetPropertysByUsername(string username)
         {
-            List<UplandAuthProperty> userPropIds = await uplandApiRepository.GetPropertyIdsByUsername(username);
+            List<UplandAuthProperty> userPropIds = await uplandApiRepository.GetPropertysByUsername(username);
 
             List<Property> userProperties = LocalDataRepository.GetProperties(userPropIds.Select(p => p.Prop_Id).ToList());
 

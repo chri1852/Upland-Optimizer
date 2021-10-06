@@ -58,7 +58,8 @@ namespace Startup.Commands
         public async Task RegisterMe(string uplandUserName)
         {
             LocalDataManager localDataManager = new LocalDataManager();
-            List<Property> properties;
+            UplandApiRepository uplandApiRepository = new UplandApiRepository();
+            List<UplandAuthProperty> properties;
 
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
@@ -69,22 +70,22 @@ namespace Startup.Commands
                 }
                 else
                 {
-                    properties = await localDataManager.GetPropertysByUsername(uplandUserName.ToLower());
+                    properties = await uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
                     await ReplyAsync(string.Format("Looks like you already registered {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
-                    await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:C2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Id == registeredUser.PropertyId).First().Address, registeredUser.Price));
+                    await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:C2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
                     await ReplyAsync(string.Format("2. Run my !ClearMe command to clear your unverified registration."));
                 }
                 return;
             }
 
-            properties = await localDataManager.GetPropertysByUsername(uplandUserName.ToLower());
-            if (properties.Count == 0)
+            properties = await uplandApiRepository.GetPropertysByUsername(uplandUserName.ToLower());
+            if (properties == null || properties.Count == 0)
             {
                 await ReplyAsync(string.Format("Looks like {0} is not a player {1}.", uplandUserName, GetRandomName()));
                 return;
             }
 
-            Property verifyProperty = properties[_random.Next(0, properties.Count)];
+            UplandAuthProperty verifyProperty = properties[_random.Next(0, properties.Count)];
             int verifyPrice = _random.Next(80000000, 90000000);
 
             RegisteredUser newUser = new RegisteredUser()
@@ -92,7 +93,7 @@ namespace Startup.Commands
                 DiscordUserId = Context.User.Id,
                 DiscordUsername = Context.User.Username,
                 UplandUsername = uplandUserName.ToLower(),
-                PropertyId = verifyProperty.Id,
+                PropertyId = verifyProperty.Prop_Id,
                 Price = verifyPrice
             };
 
@@ -107,7 +108,7 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Good News {0}! I have registered you as a user!", GetRandomName()));
-            await ReplyAsync(string.Format("To Continue place, {0}, up for sale for {1:C2} UPX, and then use my !VerifyMe command.", verifyProperty.Address, verifyPrice));
+            await ReplyAsync(string.Format("To Continue place, {0}, up for sale for {1:C2} UPX, and then use my !VerifyMe command.", verifyProperty.Full_Address, verifyPrice));
         }
 
         [Command("ClearMe")]
@@ -181,11 +182,10 @@ namespace Startup.Commands
             return;
         }
 
-        [Command("RunOptimizer")]
-        public async Task RunOptimizer()
+        [Command("OptimizerRun")]
+        public async Task OptimizerRun()
         {
             LocalDataManager localDataManager = new LocalDataManager();
-            UplandApiRepository uplandApiRepository = new UplandApiRepository();
 
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
             if (!await EnsureRegisteredAndVerified(registeredUser))
@@ -196,19 +196,92 @@ namespace Startup.Commands
             if (!registeredUser.Paid && registeredUser.RunCount >= Consts.FreeRuns)
             {
                 await ReplyAsync(string.Format("You've used all your {0} {1}. To learn how to support this tool try my !SupportMe command.", Consts.FreeRuns, GetRandomName()));
+                return;
+            }
+
+            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            if (currentRun != null && currentRun.Status != Consts.RunStatusInProgress)
+            {
+                await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", GetRandomName()));
+                return;
+            }
+            
+            if (currentRun != null)
+            {
+                //DELETE OLD RUN
+                //DELETE OLD FILES / OR DB ENTRY
+            }
+
+            try
+            {
+                //START RUN AND INFORM
+                //START IN CHILD TASK
+            }
+            catch
+            {
+                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", GetRandomName()));
+                return;
             }
         }
 
         [Command("OptimizerStatus")]
         public async Task OptimizerStatus()
         {
+            LocalDataManager localDataManager = new LocalDataManager();
 
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            if (currentRun != null)
+            {
+                await ReplyAsync(string.Format("Got it {0}. Your current run has a status of {1}.", GetRandomName(), currentRun.Status));
+                return;
+            }
+            else
+            {
+                await ReplyAsync(string.Format("I don't see any optimization runs for you {0}. Try using my !OptimizerRun command to run one.", GetRandomName()));
+                return;
+            }
         }
 
         [Command("OpitmizerResults")]
         public async Task OpitmizerResults()
         {
+            LocalDataManager localDataManager = new LocalDataManager();
 
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            if (currentRun == null)
+            {
+                await ReplyAsync(string.Format("I don't see any optimization runs for you {0}. Try using my !OptimizerRun command to run one.", GetRandomName()));
+                return;
+            }
+
+            if (currentRun.Status == Consts.RunStatusInProgress)
+            {
+                await ReplyAsync(string.Format("Looks like your optimizer run is still running {0}.", GetRandomName()));
+                return;
+            }
+
+            if (currentRun.Status == Consts.RunStatusFailed)
+            {
+                await ReplyAsync(string.Format("Looks like your optimizer run failed {0}. You can try running it again, or ping Grombrindal for help.", GetRandomName()));
+                return;
+            }
+
+            if (currentRun.Status == Consts.RunStatusCompleted)
+            {
+                // RETURN RUN AND INFORM
+            }
         }
 
         [Command("SupportMe")]
@@ -237,7 +310,7 @@ namespace Startup.Commands
         [Command("HelpMe")]
         public async Task Help()
         {
-
+            // WRITE HELP
         }
 
         private string GetRandomName()
