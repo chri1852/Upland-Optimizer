@@ -73,7 +73,7 @@ namespace Startup.Commands
                 {
                     properties = await uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
                     await ReplyAsync(string.Format("Looks like you already registered {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
-                    await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:C2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
+                    await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:N2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
                     await ReplyAsync(string.Format("2. Run my !ClearMe command to clear your unverified registration, and register again with !RegisterMe."));
                 }
                 return;
@@ -109,7 +109,7 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Good News {0}! I have registered you as a user!", GetRandomName()));
-            await ReplyAsync(string.Format("To Continue place, {0}, up for sale for {1:C2} UPX, and then use my !VerifyMe command.", verifyProperty.Full_Address, verifyPrice));
+            await ReplyAsync(string.Format("To Continue place, {0}, up for sale for {1:N2} UPX, and then use my !VerifyMe command.", verifyProperty.Full_Address, verifyPrice));
         }
 
         [Command("ClearMe")]
@@ -140,7 +140,7 @@ namespace Startup.Commands
                 return;
             }
 
-            await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command!", GetRandomName()));
+            await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe *Upland Username* command!", GetRandomName()));
         }
 
         [Command("VerifyMe")]
@@ -152,7 +152,7 @@ namespace Startup.Commands
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
-                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command!", GetRandomName()));
+                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe *Upland Username* command!", GetRandomName()));
                 return;
             }
 
@@ -165,13 +165,13 @@ namespace Startup.Commands
                 UplandProperty property = await uplandApiRepository.GetPropertyById(registeredUser.PropertyId);
                 if (property.on_market == null)
                 {
-                    await ReplyAsync(string.Format("Doesn't look like {0} is on sale for {1:C2}.", property.Full_Address, registeredUser.Price));
+                    await ReplyAsync(string.Format("Doesn't look like {0} is on sale for {1:N2}.", property.Full_Address, registeredUser.Price));
                     return;
                 }
 
                 if (property.on_market.token != string.Format("{0}.00 UPX", registeredUser.Price))
                 {
-                    await ReplyAsync(string.Format("{0} is on sale, but it not for {1:C2}", property.Full_Address, registeredUser.Price));
+                    await ReplyAsync(string.Format("{0} is on sale, but it not for {1:N2}", property.Full_Address, registeredUser.Price));
                     return;
                 }
                 else
@@ -349,7 +349,7 @@ namespace Startup.Commands
 
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
-                await ReplyAsync(string.Format("Looks like you don't exist {0}. To start try running !RegisterMe command with your Upland username!", GetRandomName()));
+                await ReplyAsync(string.Format("Looks like you don't exist {0}. To start try running !RegisterMe *Upland Username* command with your Upland username!", GetRandomName()));
                 return;
             }
 
@@ -359,7 +359,7 @@ namespace Startup.Commands
                 {
                     properties = await uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
                     await ReplyAsync(string.Format("Looks like you have registered, but not verified yet {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
-                    await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:C2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
+                    await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:N2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
                     await ReplyAsync(string.Format("2. Run my !ClearMe command to clear your unverified registration, and register again with !RegisterMe."));
                     return;
                 }
@@ -417,7 +417,7 @@ namespace Startup.Commands
         {
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
-                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command!", GetRandomName()));
+                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe *Upland Username* command!", GetRandomName()));
                 return false;
             }
 
