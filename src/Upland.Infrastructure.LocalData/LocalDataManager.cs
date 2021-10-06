@@ -85,9 +85,9 @@ namespace Upland.Infrastructure.LocalData
             LocalDataRepository.SetOptimizationRunStatus(optimizationRun);
         }
 
-        public OptimizationRun GetLatestOptimizationRun(long discordId)
+        public OptimizationRun GetLatestOptimizationRun(decimal discordUserId)
         {
-            return LocalDataRepository.GetLatestOptimizationRun(discordId);
+            return LocalDataRepository.GetLatestOptimizationRun(discordUserId);
         }
 
         public RegisteredUser GetRegisteredUser(decimal discordUserId)
@@ -100,9 +100,9 @@ namespace Upland.Infrastructure.LocalData
             LocalDataRepository.CreateRegisteredUser(registeredUser);
         }
 
-        public void IncreaseRegisteredUserRunCount(string uplandUsername)
+        public void IncreaseRegisteredUserRunCount(decimal discordUserId)
         {
-            LocalDataRepository.IncreaseRegisteredUserRunCount(uplandUsername);
+            LocalDataRepository.IncreaseRegisteredUserRunCount(discordUserId);
         }
 
         public void DeleteRegisteredUser(decimal discordUserId)
@@ -110,9 +110,14 @@ namespace Upland.Infrastructure.LocalData
             LocalDataRepository.DeleteRegisteredUser(discordUserId);
         }
 
-        public void SetRegisteredUserVerified(string uplandUsername)
+        public void DeleteOptimizerRuns(decimal discordUserId)
         {
-            LocalDataRepository.SetRegisteredUserVerified(uplandUsername);
+            LocalDataRepository.DeleteOptimizerRuns(discordUserId);
+        }
+
+        public void SetRegisteredUserVerified(decimal discordUserId)
+        {
+            LocalDataRepository.SetRegisteredUserVerified(discordUserId);
         }
 
         public void SetRegisteredUserPaid(string uplandUsername)

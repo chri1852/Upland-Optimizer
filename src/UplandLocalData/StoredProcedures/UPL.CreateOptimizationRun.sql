@@ -1,8 +1,7 @@
 ﻿CREATE PROCEDURE [UPL].[CreateOptimizationRun]
 (
 	@DiscordUserId     DECIMAL(20,0),
-	@RequestedDateTime DATETIME,
-	@Filename          VARCHAR(200)
+	@RequestedDateTime DATETIME
 )
 AS
 BEGIN
@@ -11,14 +10,12 @@ BEGIN
 		(
 			[DiscordUserId],
 			[RequestedDateTime],
-			[Filename],
 			[Status]
 		)
 		Values
 		(
 			@DiscordUserId,
 			@RequestedDateTime,
-			@Filename,
 			'Processing'
 		)
 	END TRY

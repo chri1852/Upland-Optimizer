@@ -262,7 +262,6 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandText = "[UPL].[CreateOptimizationRun]";
                     sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", optimizationRun.DiscordUserId));
                     sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.Now));
-                    sqlCmd.Parameters.Add(new SqlParameter("Filename", optimizationRun.Filename));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -293,6 +292,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandText = "[UPL].[SetOptimizationRunStatus]";
                     sqlCmd.Parameters.Add(new SqlParameter("Id", optimizationRun.Id));
                     sqlCmd.Parameters.Add(new SqlParameter("Status", optimizationRun.Status));
+                    sqlCmd.Parameters.Add(new SqlParameter("Results", optimizationRun.Results));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -332,7 +332,7 @@ namespace Upland.Infrastructure.LocalData
                                 Id = (int)reader["Id"],
                                 DiscordUserId = (decimal)reader["DiscordUserId"],
                                 RequestedDateTime = (DateTime)reader["RequestedDateTime"],
-                                Filename = (string)reader["Filename"],
+                                Results = reader["Results"] == DBNull.Value ? null : (byte[])reader["Results"],
                                 Status = (string)reader["Status"],
                             };
                         }
@@ -414,7 +414,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void SetRegisteredUserVerified(string uplandUsername)
+        public static void SetRegisteredUserVerified(decimal discordUserId)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -428,7 +428,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[SetRegisteredUserVerified]";
-                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -443,7 +443,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void IncreaseRegisteredUserRunCount(string uplandUsername)
+        public static void IncreaseRegisteredUserRunCount(decimal discordUserId)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -457,7 +457,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[IncreaseRegisteredUserRunCount]";
-                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -535,6 +535,35 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[DeleteRegisteredUser]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static void DeleteOptimizerRuns(decimal discordUserId)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[DeleteOptimizerRuns]";
                     sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
 
                     sqlCmd.ExecuteNonQuery();

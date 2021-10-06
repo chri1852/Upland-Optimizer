@@ -1,12 +1,12 @@
-﻿CREATE PROCEDURE [UPL].[SetRegisteredUserVerified]
+﻿CREATE PROCEDURE [UPL].[DeleteOptimizerRuns]
 (
 	@DiscordUserId DECIMAL(20,0)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		UPDATE [UPL].[RegisteredUser]
-		SET Verified = 1
+		DELETE 
+		FROM [UPL].[OptimizationRun]
 		WHERE DiscordUserId = @DiscordUserId
 	END TRY
 

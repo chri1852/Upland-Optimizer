@@ -69,7 +69,8 @@ namespace Upland.Types
             { 10002, "Piedmont"      },
         };
 
-        public static readonly int FreeRuns = 3;
+        public static readonly int WarningRuns = 2;
+        public static readonly int FreeRuns = 6;
         public static readonly string RunStatusInProgress = "In Progress";
         public static readonly string RunStatusCompleted= "Completed";
         public static readonly string RunStatusFailed = "Failed";

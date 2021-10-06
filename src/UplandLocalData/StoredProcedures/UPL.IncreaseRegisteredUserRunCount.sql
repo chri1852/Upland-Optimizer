@@ -1,13 +1,13 @@
 ﻿CREATE PROCEDURE [UPL].[IncreaseRegisteredUserRunCount]
 (
-	@UplandUsername  VARCHAR(200)
+	@DiscordUserId DECIMAL(20,0)
 )
 AS
 BEGIN
 	BEGIN TRY		
 		UPDATE [UPL].[RegisteredUser]
 		SET RunCount += 1
-		WHERE UplandUserName = @UplandUsername
+		WHERE DiscordUserId = @DiscordUserId
 	END TRY
 
 	BEGIN CATCH

@@ -9,7 +9,7 @@ namespace Upland.Types.Types
         public int Id { get; set; }
         public decimal DiscordUserId { get; set; }
         public DateTime RequestedDateTime { get; set; }
-        public string Filename { get; set; }
+        public byte[] Results { get; set; }
         public string Status { get; set; }
     }
 }

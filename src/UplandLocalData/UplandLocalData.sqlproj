@@ -85,5 +85,6 @@
     <Build Include="StoredProcedures\UPL.IncreaseRegisteredUserRunCount.sql" />
     <Build Include="StoredProcedures\UPL.GetRegisteredUser.sql" />
     <Build Include="StoredProcedures\UPL.DeleteRegisteredUser.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteOptimizerRuns.sql" />
   </ItemGroup>
 </Project>

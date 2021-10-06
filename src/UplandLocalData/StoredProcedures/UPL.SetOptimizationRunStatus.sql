@@ -1,13 +1,15 @@
 ﻿CREATE PROCEDURE [UPL].[SetOptimizationRunStatus]
 (
-	@Id     INT,
-	@Status VARCHAR(20)
+	@Id      INT,
+	@Status  VARCHAR(20),
+	@Results VARBINARY(MAX)
 )
 AS
 BEGIN
 	BEGIN TRY		
 		UPDATE [UPL].[OptimizationRun]
-		SET [Status] = @Status
+		SET [Status] = @Status,
+			[Results] = @Results
 		WHERE [Id] = @Id
 	END TRY
 
