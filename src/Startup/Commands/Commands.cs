@@ -109,7 +109,7 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Good News {0}! I have registered you as a user!", GetRandomName()));
-            await ReplyAsync(string.Format("To Continue place, {0}, up for sale for {1:N2} UPX, and then use my !VerifyMe command.", verifyProperty.Full_Address, verifyPrice));
+            await ReplyAsync(string.Format("To continue place, {0}, up for sale for {1:N2} UPX, and then use my !VerifyMe command.", verifyProperty.Full_Address, verifyPrice));
         }
 
         [Command("ClearMe")]
@@ -129,7 +129,7 @@ namespace Startup.Commands
                     try
                     {
                         localDataManager.DeleteRegisteredUser(Context.User.Id);
-                        await ReplyAsync(string.Format("I got you {0}. I have cleared your registration. Try again with my !RegisterMe command!", GetRandomName()));
+                        await ReplyAsync(string.Format("I got you {0}. I have cleared your registration. Try again with my !RegisterMe command with your Upland username", GetRandomName()));
                     }
                     catch
                     {
@@ -140,7 +140,7 @@ namespace Startup.Commands
                 return;
             }
 
-            await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe *Upland Username* command!", GetRandomName()));
+            await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username", GetRandomName()));
         }
 
         [Command("VerifyMe")]
@@ -152,7 +152,7 @@ namespace Startup.Commands
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
-                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe *Upland Username* command!", GetRandomName()));
+                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username", GetRandomName()));
                 return;
             }
 
@@ -349,7 +349,7 @@ namespace Startup.Commands
 
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
-                await ReplyAsync(string.Format("Looks like you don't exist {0}. To start try running !RegisterMe *Upland Username* command with your Upland username!", GetRandomName()));
+                await ReplyAsync(string.Format("Looks like you don't exist {0}. To start try running !RegisterMe with your Upland username!", GetRandomName()));
                 return;
             }
 
@@ -417,7 +417,7 @@ namespace Startup.Commands
         {
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
-                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe *Upland Username* command!", GetRandomName()));
+                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username!", GetRandomName()));
                 return false;
             }
 

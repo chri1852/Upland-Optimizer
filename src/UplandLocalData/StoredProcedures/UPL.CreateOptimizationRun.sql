@@ -16,7 +16,7 @@ BEGIN
 		(
 			@DiscordUserId,
 			@RequestedDateTime,
-			'Processing'
+			'In Progress'
 		)
 	END TRY
 
