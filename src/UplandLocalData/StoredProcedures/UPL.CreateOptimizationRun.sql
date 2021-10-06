@@ -1,8 +1,8 @@
 ﻿CREATE PROCEDURE [UPL].[CreateOptimizationRun]
 (
-	@DiscordUserId BIGINT,
+	@DiscordUserId     DECIMAL(20,0),
 	@RequestedDateTime DATETIME,
-	@Filename VARCHAR(200)
+	@Filename          VARCHAR(200)
 )
 AS
 BEGIN

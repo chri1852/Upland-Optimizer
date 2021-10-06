@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [UPL].[SetRegisteredUserVerified]
 (
-	@UplandUsername  VARCHAR(200)
+	@UplandUsername VARCHAR(200)
 )
 AS
 BEGIN

@@ -90,14 +90,24 @@ namespace Upland.Infrastructure.LocalData
             return LocalDataRepository.GetLatestOptimizationRun(discordId);
         }
 
-        public RegisteredUser GetRegisteredUser(string uplandUsername)
+        public RegisteredUser GetRegisteredUser(decimal discordUserId)
         {
-            return LocalDataRepository.GetRegisteredUser(uplandUsername);
+            return LocalDataRepository.GetRegisteredUser(discordUserId);
+        }
+
+        public void CreateRegisteredUser(RegisteredUser registeredUser)
+        {
+            LocalDataRepository.CreateRegisteredUser(registeredUser);
         }
 
         public void IncreaseRegisteredUserRunCount(string uplandUsername)
         {
             LocalDataRepository.IncreaseRegisteredUserRunCount(uplandUsername);
+        }
+
+        public void DeleteRegisteredUser(decimal discordUserId)
+        {
+            LocalDataRepository.DeleteRegisteredUser(discordUserId);
         }
 
         public void SetRegisteredUserVerified(string uplandUsername)

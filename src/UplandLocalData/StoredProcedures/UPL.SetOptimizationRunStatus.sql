@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [UPL].[SetOptimizationRunStatus]
 (
-	@Id INT,
+	@Id     INT,
 	@Status VARCHAR(20)
 )
 AS

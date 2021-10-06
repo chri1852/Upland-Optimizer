@@ -7,7 +7,7 @@ namespace Upland.Types.Types
     public class RegisteredUser
     {
         public int Id { get; set; }
-        public long DiscordUserId { get; set; }
+        public decimal DiscordUserId { get; set; }
         public string DiscordUsername { get; set; }
         public string UplandUsername { get; set; }
         public int RunCount { get; set; }

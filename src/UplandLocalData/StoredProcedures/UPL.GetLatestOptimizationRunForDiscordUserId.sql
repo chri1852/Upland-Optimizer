@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [UPL].[GetLatestOptimizationRunForDiscordUserId]
 (
-	@DiscordUserId BIGINT
+	@DiscordUserId DECIMAL(20,0)
 )
 AS
 BEGIN

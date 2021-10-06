@@ -84,5 +84,6 @@
     <Build Include="StoredProcedures\UPL.SetRegisteredUserVerified.sql" />
     <Build Include="StoredProcedures\UPL.IncreaseRegisteredUserRunCount.sql" />
     <Build Include="StoredProcedures\UPL.GetRegisteredUser.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteRegisteredUser.sql" />
   </ItemGroup>
 </Project>

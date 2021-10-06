@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [UPL].[CreateRegisteredUser]
 (
-	@DiscordUserId   BIGINT,
+	@DiscordUserId   DECIMAL(20,0),
 	@DiscordUsername VARCHAR(200),
 	@UplandUsername  VARCHAR(200),
 	@PropertyId      BIGINT,

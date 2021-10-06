@@ -472,7 +472,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static RegisteredUser GetRegisteredUser(string uplandUsername)
+        public static RegisteredUser GetRegisteredUser(decimal discordUserId)
         {
             RegisteredUser registeredUser = null;
             SqlConnection sqlConnection = GetSQLConnector();
@@ -487,7 +487,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[GetRegisteredUser]";
-                    sqlCmd.Parameters.Add(new SqlParameter("@UplandUsername", uplandUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("@DiscordUserId", discordUserId));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -495,7 +495,7 @@ namespace Upland.Infrastructure.LocalData
                             registeredUser = new RegisteredUser
                             {
                                 Id = (int)reader["Id"],
-                                DiscordUserId = (long)reader["DiscordUserId"],
+                                DiscordUserId = (decimal)reader["DiscordUserId"],
                                 DiscordUsername = (string)reader["DiscordUsername"],
                                 UplandUsername = (string)reader["UplandUsername"],
                                 RunCount = (int)reader["RunCount"],
@@ -521,6 +521,34 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static void DeleteRegisteredUser(decimal discordUserId)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[DeleteRegisteredUser]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
 
         private static DataTable CreatePropertyIdTable(List<long> propertyIds)
         {
