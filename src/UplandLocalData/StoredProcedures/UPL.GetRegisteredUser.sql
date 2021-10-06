@@ -6,7 +6,7 @@ AS
 BEGIN
 	BEGIN TRY		
 		SELECT TOP(1) * 
-		FROM [UPL].[RegisteredUser]
+		FROM [UPL].[RegisteredUser] (NOLOCK)
 		WHERE DiscordUserId = @DiscordUserId
 	END TRY
 

@@ -6,7 +6,7 @@ AS
 BEGIN
 	BEGIN TRY		
 		SELECT PropertyId 
-		FROM [UPL].[CollectionProperty]
+		FROM [UPL].[CollectionProperty] (NOLOCK)
 		WHERE CollectionId = @CollectionId
 	END TRY
 
