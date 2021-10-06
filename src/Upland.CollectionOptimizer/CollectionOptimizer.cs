@@ -114,7 +114,7 @@ namespace Upland.CollectionOptimizer
                 double collectionMax = RecursiveMaxUpxFinder(copiedCollections, entry.Value, ignorePropertyIds);
 
                 if (collectionMax > maxMonthly
-                    || (collectionMax == maxMonthly && (maxCollectionId == 1 || maxCollectionId == 21)))
+                    || (collectionMax == maxMonthly && (Consts.StandardCollectionIds.Contains(maxCollectionId) || Consts.CityCollectionIds.Contains(maxCollectionId))))
                 {
                     maxMonthly = collectionMax;
                     maxCollectionId = entry.Value.Id;
@@ -165,12 +165,15 @@ namespace Upland.CollectionOptimizer
                 copiedCollections = RebuildCollections(copiedCollections, copiedIgnorePropertyIds);
 
                 double maxMonthly = 0;
+                int maxId = -1;
                 foreach (KeyValuePair<int, Collection> entry in copiedCollections)
                 {
                     double newMax = RecursiveMaxUpxFinder(copiedCollections, entry.Value, copiedIgnorePropertyIds);
-                    if (newMax > maxMonthly)
+                    if (newMax > maxMonthly
+                        || (newMax == maxMonthly && (Consts.StandardCollectionIds.Contains(maxId) || Consts.CityCollectionIds.Contains(maxId))))
                     {
                         maxMonthly = newMax;
+                        maxId = entry.Value.Id;
                     }
                 }
 
