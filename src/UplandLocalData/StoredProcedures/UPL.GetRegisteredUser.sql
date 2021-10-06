@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertyIdsForCollectionId]
+﻿CREATE PROCEDURE [UPL].[GetRegisteredUser]
 (
-	@CollectionId INT
+	@DiscordUserId  DECIMAL(20,0)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT PropertyId 
-		FROM [UPL].[CollectionProperty] (NOLOCK)
-		WHERE CollectionId = @CollectionId
+		SELECT TOP(1) * 
+		FROM [UPL].[RegisteredUser] (NOLOCK)
+		WHERE DiscordUserId = @DiscordUserId
 	END TRY
 
 	BEGIN CATCH

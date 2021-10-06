@@ -3,7 +3,7 @@ AS
 BEGIN
 	BEGIN TRY		
 		SELECT *
-		FROM [UPL].[Collection]
+		FROM [UPL].[Collection] (NOLOCK)
 	END TRY
 
 	BEGIN CATCH

@@ -1,13 +1,14 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertyIdsForCollectionId]
+﻿CREATE PROCEDURE [UPL].[GetLatestOptimizationRunForDiscordUserId]
 (
-	@CollectionId INT
+	@DiscordUserId DECIMAL(20,0)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT PropertyId 
-		FROM [UPL].[CollectionProperty] (NOLOCK)
-		WHERE CollectionId = @CollectionId
+		SELECT TOP(1) * 
+		FROM [UPL].[OptimizationRun] (NOLOCK)
+		WHERE DiscordUSerId = @DiscordUserId
+		ORDER BY RequestedDateTime DESC
 	END TRY
 
 	BEGIN CATCH

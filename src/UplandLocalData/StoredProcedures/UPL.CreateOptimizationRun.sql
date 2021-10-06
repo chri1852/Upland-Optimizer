@@ -1,13 +1,23 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertyIdsForCollectionId]
+﻿CREATE PROCEDURE [UPL].[CreateOptimizationRun]
 (
-	@CollectionId INT
+	@DiscordUserId     DECIMAL(20,0),
+	@RequestedDateTime DATETIME
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT PropertyId 
-		FROM [UPL].[CollectionProperty] (NOLOCK)
-		WHERE CollectionId = @CollectionId
+		INSERT INTO [UPL].[OptimizationRun]
+		(
+			[DiscordUserId],
+			[RequestedDateTime],
+			[Status]
+		)
+		Values
+		(
+			@DiscordUserId,
+			@RequestedDateTime,
+			'Processing'
+		)
 	END TRY
 
 	BEGIN CATCH

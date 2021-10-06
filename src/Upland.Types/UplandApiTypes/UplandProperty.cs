@@ -8,8 +8,20 @@ namespace Upland.Types.UplandApiTypes
     {
         public long Prop_Id { get; set; }
         public string Full_Address { get; set; }
-        public string City_Id { get; set; }
-        public string Street_Id { get; set; }
-        public string Neighborhood_Id { get; set; }
+        public LocationInfo City { get; set; }
+        public LocationInfo Street { get; set; }
+        public MarketInfo on_market { get; set; }
+        public double Yield_Per_Hour { get; set; }
+        public int Area { get; set; }
+    }
+
+    public class LocationInfo
+    {
+        public int Id { get; set; }
+    }
+
+    public class MarketInfo
+    {
+        public string token;
     }
 }

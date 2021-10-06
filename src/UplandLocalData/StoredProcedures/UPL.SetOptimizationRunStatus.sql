@@ -1,13 +1,16 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertyIdsForCollectionId]
+﻿CREATE PROCEDURE [UPL].[SetOptimizationRunStatus]
 (
-	@CollectionId INT
+	@Id      INT,
+	@Status  VARCHAR(20),
+	@Results VARBINARY(MAX)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT PropertyId 
-		FROM [UPL].[CollectionProperty] (NOLOCK)
-		WHERE CollectionId = @CollectionId
+		UPDATE [UPL].[OptimizationRun]
+		SET [Status] = @Status,
+			[Results] = @Results
+		WHERE [Id] = @Id
 	END TRY
 
 	BEGIN CATCH

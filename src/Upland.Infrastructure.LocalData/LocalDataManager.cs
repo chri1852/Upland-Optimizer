@@ -6,6 +6,7 @@ using Upland.Infrastructure.UplandApi;
 using Upland.Types;
 using System.Linq;
 using Upland.Types.UplandApiTypes;
+using Upland.Types.Types;
 
 namespace Upland.Infrastructure.LocalData
 {
@@ -57,11 +58,11 @@ namespace Upland.Infrastructure.LocalData
 
         public async Task<List<Property>> GetPropertysByUsername(string username)
         {
-            List<UplandPropId> userPropIds = await uplandApiRepository.GetPropertyIdsByUsername(username);
+            List<UplandAuthProperty> userPropIds = await uplandApiRepository.GetPropertysByUsername(username);
 
             List<Property> userProperties = LocalDataRepository.GetProperties(userPropIds.Select(p => p.Prop_Id).ToList());
 
-            foreach (UplandPropId propId in userPropIds)
+            foreach (UplandAuthProperty propId in userPropIds)
             {
                 if (!userProperties.Any(p => p.Id == propId.Prop_Id))
                 {
@@ -72,6 +73,56 @@ namespace Upland.Infrastructure.LocalData
             }
 
             return userProperties;
+        }
+
+        public void CreateOptimizationRun(OptimizationRun optimizationRun)
+        {
+            LocalDataRepository.CreateOptimizationRun(optimizationRun);
+        }
+
+        public void SetOptimizationRunStatus(OptimizationRun optimizationRun)
+        {
+            LocalDataRepository.SetOptimizationRunStatus(optimizationRun);
+        }
+
+        public OptimizationRun GetLatestOptimizationRun(decimal discordUserId)
+        {
+            return LocalDataRepository.GetLatestOptimizationRun(discordUserId);
+        }
+
+        public RegisteredUser GetRegisteredUser(decimal discordUserId)
+        {
+            return LocalDataRepository.GetRegisteredUser(discordUserId);
+        }
+
+        public void CreateRegisteredUser(RegisteredUser registeredUser)
+        {
+            LocalDataRepository.CreateRegisteredUser(registeredUser);
+        }
+
+        public void IncreaseRegisteredUserRunCount(decimal discordUserId)
+        {
+            LocalDataRepository.IncreaseRegisteredUserRunCount(discordUserId);
+        }
+
+        public void DeleteRegisteredUser(decimal discordUserId)
+        {
+            LocalDataRepository.DeleteRegisteredUser(discordUserId);
+        }
+
+        public void DeleteOptimizerRuns(decimal discordUserId)
+        {
+            LocalDataRepository.DeleteOptimizerRuns(discordUserId);
+        }
+
+        public void SetRegisteredUserVerified(decimal discordUserId)
+        {
+            LocalDataRepository.SetRegisteredUserVerified(discordUserId);
+        }
+
+        public void SetRegisteredUserPaid(string uplandUsername)
+        {
+            LocalDataRepository.SetRegisteredUserPaid(uplandUsername);
         }
     }
 }

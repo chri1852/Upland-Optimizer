@@ -1,61 +1,69 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
-using Upland.CollectionOptimizer;
-using Upland.Infrastructure.LocalData;
-using Upland.Infrastructure.UplandApi;
-using Upland.Types;
-using Upland.Types.UplandApiTypes;
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Startup
+class Program
 {
-    class Program
+    private DiscordSocketClient _client;
+    private CommandService _commands;
+    private IServiceProvider _services;
+
+
+    static void Main(string[] args) 
+        => new Program().RunBotAsync().GetAwaiter().GetResult();
+  
+
+    public async Task RunBotAsync()
     {
-        static async Task Main(string[] args)
+        _client = new DiscordSocketClient();
+        _commands = new CommandService();
+
+        _services = new ServiceCollection()
+            .AddSingleton(_client)
+            .AddSingleton(_commands)
+            .BuildServiceProvider();
+
+        string token = "ODk0OTY5NDgyMzYyMTE0MDU5.YVxvSA.zTI76ztzS3L3vdOlyok0XouD4GQ";
+
+        _client.Log += clientLog;
+
+        await RegisterCommandsAsync();
+
+        await _client.LoginAsync(TokenType.Bot, token);
+
+        await _client.StartAsync();
+
+        await Task.Delay(-1);
+    }
+
+    private Task clientLog(LogMessage arg)
+    {
+        Console.WriteLine(arg);
+        return Task.CompletedTask;
+    }
+
+    public async Task RegisterCommandsAsync()
+    {
+        _client.MessageReceived += HandleCommandAsync;
+        await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+    }
+
+    private async Task HandleCommandAsync(SocketMessage arg)
+    {
+        SocketUserMessage message = arg as SocketUserMessage;
+        SocketCommandContext context = new SocketCommandContext(_client, message);
+        if (message.Author.IsBot) return;
+
+        int argPos = 0;
+        if (message.HasStringPrefix("!", ref argPos))
         {
-            string continueProgram = "Y";
-            CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
-
-            while (continueProgram.ToUpper() != "N" && continueProgram.ToUpper() != "NO" && continueProgram.ToUpper() != "0")
-            {
-                Console.WriteLine("Select a Program to Run");
-                Console.WriteLine("-----------------------");
-                Console.WriteLine("1. Collection Optimizer");
-                Console.WriteLine("2. Database Rebuild    ");
-                Console.WriteLine();
-                Console.Write    ("Choice...............: ");
-                string option = Console.ReadLine();
-
-                switch (option)
-                {
-                    case "1":
-                        await collectionOptimizer.OptimizerStartPoint();
-                        continueProgram = ContinueLoop();
-                        break;
-
-                    case "2":
-
-                        continueProgram = ContinueLoop();
-                        break;
-
-                    default:
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Invalid Selection");
-                        Console.WriteLine();
-                        Console.ResetColor();
-                        break;
-                }
-            }
-        }
-
-        private static string ContinueLoop()
-        {
-            Console.WriteLine();
-            Console.Write("Continue? (Y/N)...: ");
-            string continueProgram = Console.ReadLine();
-            Console.WriteLine();
-
-            return continueProgram.ToUpper();
+            var result = await _commands.ExecuteAsync(context, argPos, _services);
+            if (!result.IsSuccess) Console.WriteLine(result.ErrorReason);
         }
     }
 }

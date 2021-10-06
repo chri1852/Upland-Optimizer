@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertyIdsForCollectionId]
+﻿CREATE PROCEDURE [UPL].[SetRegisteredUserVerified]
 (
-	@CollectionId INT
+	@DiscordUserId DECIMAL(20,0)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT PropertyId 
-		FROM [UPL].[CollectionProperty] (NOLOCK)
-		WHERE CollectionId = @CollectionId
+		UPDATE [UPL].[RegisteredUser]
+		SET Verified = 1
+		WHERE DiscordUserId = @DiscordUserId
 	END TRY
 
 	BEGIN CATCH

@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertyIdsForCollectionId]
+﻿CREATE PROCEDURE [UPL].[SetRegisteredUserPaid]
 (
-	@CollectionId INT
+	@UplandUsername VARCHAR(200)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT PropertyId 
-		FROM [UPL].[CollectionProperty] (NOLOCK)
-		WHERE CollectionId = @CollectionId
+		UPDATE [UPL].[RegisteredUser]
+		SET Paid = 1
+		WHERE UplandUserName = @UplandUsername
 	END TRY
 
 	BEGIN CATCH

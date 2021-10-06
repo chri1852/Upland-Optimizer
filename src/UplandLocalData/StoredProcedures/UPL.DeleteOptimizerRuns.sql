@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertyIdsForCollectionId]
+﻿CREATE PROCEDURE [UPL].[DeleteOptimizerRuns]
 (
-	@CollectionId INT
+	@DiscordUserId DECIMAL(20,0)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT PropertyId 
-		FROM [UPL].[CollectionProperty] (NOLOCK)
-		WHERE CollectionId = @CollectionId
+		DELETE 
+		FROM [UPL].[OptimizationRun]
+		WHERE DiscordUserId = @DiscordUserId
 	END TRY
 
 	BEGIN CATCH

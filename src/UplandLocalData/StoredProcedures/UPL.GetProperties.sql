@@ -6,7 +6,7 @@ AS
 BEGIN
 	BEGIN TRY		
 		SELECT P.* 
-		FROM [UPL].[Property] P 
+		FROM [UPL].[Property] P  (NOLOCK)
 			JOIN @PropertyIds PD
 				ON P.Id = PD.PropertyId
 	END TRY

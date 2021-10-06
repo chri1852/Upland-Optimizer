@@ -67,22 +67,22 @@ namespace Upland.Infrastructure.UplandApi
             return street;
         }
 
-        public async Task<List<UplandProperty>> GetForSaleCollectionProperties(int collectionId)
+        public async Task<List<UplandAuthProperty>> GetForSaleCollectionProperties(int collectionId)
         {
-            List<UplandProperty> properties;
+            List<UplandAuthProperty> properties;
             string requestUri = @"https://api.upland.me/collections/match/reverse/unlocked/" + collectionId + "?limit=100000&offset=0";
 
-            properties = await CallApi<List<UplandProperty>>(requestUri, true);
+            properties = await CallApi<List<UplandAuthProperty>>(requestUri, true);
 
             return properties;
         }
 
-        public async Task<List<UplandProperty>> GetUnlockedNotForSaleCollectionProperties(int collectionId)
+        public async Task<List<UplandAuthProperty>> GetUnlockedNotForSaleCollectionProperties(int collectionId)
         {
-            List<UplandProperty> properties;
+            List<UplandAuthProperty> properties;
             string requestUri = @"https://api.upland.me/collections/match/reverse/owned/" + collectionId + "?limit=100000&offset=0";
 
-            properties = await CallApi<List<UplandProperty>>(requestUri, true);
+            properties = await CallApi<List<UplandAuthProperty>>(requestUri, true);
 
             return properties;
         }
@@ -97,32 +97,32 @@ namespace Upland.Infrastructure.UplandApi
             return collections;
         }
 
-        public async Task<List<UplandProperty>> GetMatchingCollectionsOwned(int collectionId)
+        public async Task<List<UplandAuthProperty>> GetMatchingCollectionsOwned(int collectionId)
         {
-            List<UplandProperty> properties;
+            List<UplandAuthProperty> properties;
             string requestUri = @"https://api.upland.me/collections/match/" + collectionId;
 
-            properties = await CallApi<List<UplandProperty>>(requestUri, true);
+            properties = await CallApi<List<UplandAuthProperty>>(requestUri, true);
 
             return properties;
         }
 
-        public async Task<UplandDistinctProperty> GetPropertyById(long propertyId)
+        public async Task<UplandProperty> GetPropertyById(long propertyId)
         {
-            UplandDistinctProperty property;
+            UplandProperty property;
             string requestUri = @"https://api.upland.me/properties/" + propertyId;
 
-            property = await CallApi<UplandDistinctProperty>(requestUri);
+            property = await CallApi<UplandProperty>(requestUri);
 
             return property;
         }
 
-        public async Task<List<UplandPropId>> GetPropertyIdsByUsername(string username)
+        public async Task<List<UplandAuthProperty>> GetPropertysByUsername(string username)
         {
-            List<UplandPropId> properties;
+            List<UplandAuthProperty> properties;
             string requestUri = @"https://api.upland.me/properties/list/" + username;
 
-            properties = await CallApi<List<UplandPropId>>(requestUri, true);
+            properties = await CallApi<List<UplandAuthProperty>>(requestUri, true);
 
             return properties;
         }

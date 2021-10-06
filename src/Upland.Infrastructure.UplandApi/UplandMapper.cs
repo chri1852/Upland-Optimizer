@@ -32,9 +32,6 @@ namespace Upland.Infrastructure.UplandApi
             collection.EligablePropertyIds = new List<long>();
             collection.Description = uplandCollection.Requirements;
             collection.MonthlyUpx = 0;
-            collection.CityIds = GetCityTags(uplandCollection);
-            collection.StreetIds = GetStreetTags(uplandCollection);
-            collection.NeighborhoodIds = GetNeighborhoodTags(uplandCollection);
             collection.MatchingPropertyIds = new List<long>();
             collection.Reward = uplandCollection.One_Time_Reward;
             collection.CityId = uplandCollection.City_Id;
@@ -42,11 +39,11 @@ namespace Upland.Infrastructure.UplandApi
             return collection;
         }
 
-        public static List<Property> Map(List<UplandDistinctProperty> uplandDistinctProperties)
+        public static List<Property> Map(List<UplandProperty> uplandDistinctProperties)
         {
             List<Property> properties = new List<Property>();
 
-            foreach (UplandDistinctProperty property in uplandDistinctProperties)
+            foreach (UplandProperty property in uplandDistinctProperties)
             {
                 properties.Add(Map(property));
             }
@@ -54,7 +51,7 @@ namespace Upland.Infrastructure.UplandApi
             return properties;
         }
 
-        public static Property Map(UplandDistinctProperty udProperty)
+        public static Property Map(UplandProperty udProperty)
         {
             Property property = new Property();
 
@@ -66,54 +63,6 @@ namespace Upland.Infrastructure.UplandApi
             property.MonthlyEarnings = udProperty.Yield_Per_Hour * 720;
 
             return property;
-        }
-
-        private static List<int> GetCityTags(UplandCollection uplandCollection)
-        {
-            List<int> ids = new List<int>();
-
-            foreach(TagsAddressCommon item in uplandCollection.Tags_Address_Common)
-            {
-                int idResult = 0;
-                if (int.TryParse(item.City, out idResult))
-                {
-                    ids.Add(idResult);
-                }
-            }
-
-            return ids;
-        }
-
-        private static List<int> GetStreetTags(UplandCollection uplandCollection)
-        {
-            List<int> ids = new List<int>();
-
-            foreach (TagsAddressCommon item in uplandCollection.Tags_Address_Common)
-            {
-                int idResult = 0;
-                if (int.TryParse(item.Street, out idResult))
-                {
-                    ids.Add(idResult);
-                }
-            }
-
-            return ids;
-        }
-
-        private static List<int> GetNeighborhoodTags(UplandCollection uplandCollection)
-        {
-            List<int> ids = new List<int>();
-
-            foreach (TagsAddressCommon item in uplandCollection.Tags_Address_Common)
-            {
-                int idResult = 0;
-                if (int.TryParse(item.Neighborhood, out idResult))
-                {
-                    ids.Add(idResult);
-                }
-            }
-
-            return ids;
         }
     }
 }

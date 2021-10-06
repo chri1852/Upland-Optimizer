@@ -10,7 +10,7 @@ namespace Upland.Types
         public static readonly string OuputFolder = @"C:\Users\chri1\Desktop\Upland\Optimizations";
         public static readonly string LocalDBConnectionString = @"Data Source=DESKTOP-BK6KAFH\SQLEXPRESS;Initial Catalog=UplandLocalData;Integrated Security=True;";
 
-        public static readonly string AuthToken = @"eyJhbGciOiJIUzI1NiIsInR5cCI6ImFjY2VzcyJ9.eyJ1c2VySWQiOiIzZDk1ZTk0MC0xMDhkLTExZWItYmQ3OS1iZmE2NzhmODI5YzciLCJ2YWxpZGF0aW9uVG9rZW4iOiJzVWs1aDlOaFNCWWkxSGlBbW5ua1lrU0w4Vng1ZVdJMW8zVnRJMGZRTjlwIiwiaWF0IjoxNjMzMzYzMTc4LCJleHAiOjE2NjQ5MjA3NzgsImlzcyI6ImZlYXRoZXJzIiwic3ViIjoiM2Q5NWU5NDAtMTA4ZC0xMWViLWJkNzktYmZhNjc4ZjgyOWM3IiwianRpIjoiZGViNzY2MTMtYjgyNC00YmU5LTgyMDAtNDczNWExMzc3NGZiIn0.OswtRoJhP888oEtXOqlhw0eg_yzn9hNZHqIE2D_VR9Y";
+        public static readonly string AuthToken = @"eyJhbGciOiJIUzI1NiIsInR5cCI6ImFjY2VzcyJ9.eyJ1c2VySWQiOiIzZDk1ZTk0MC0xMDhkLTExZWItYmQ3OS1iZmE2NzhmODI5YzciLCJ2YWxpZGF0aW9uVG9rZW4iOiJzVWs1aDlOaFNCWWkxSGlBbW5ua1lrU0w4Vng1ZVdJMW8zVnRJMGZRTjlwIiwiaWF0IjoxNjMzNDg2MjY1LCJleHAiOjE2NjUwNDM4NjUsImlzcyI6ImZlYXRoZXJzIiwic3ViIjoiM2Q5NWU5NDAtMTA4ZC0xMWViLWJkNzktYmZhNjc4ZjgyOWM3IiwianRpIjoiZjhhMTI5MDgtZmY3MS00MGNlLTllNTYtNjAwZTFjNGIwMWQ5In0.mxwDav99SM-v50T7lEqX8-T3mHtGNN1imbbFmH7qyiM";
 
         public static readonly double ReturnRate = 0.1728;
 
@@ -68,5 +68,11 @@ namespace Upland.Types
             { 10001, "Clovis"        },
             { 10002, "Piedmont"      },
         };
+
+        public static readonly int WarningRuns = 2;
+        public static readonly int FreeRuns = 6;
+        public static readonly string RunStatusInProgress = "In Progress";
+        public static readonly string RunStatusCompleted= "Completed";
+        public static readonly string RunStatusFailed = "Failed";
     }
 }
