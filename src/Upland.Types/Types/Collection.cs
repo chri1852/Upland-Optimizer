@@ -14,9 +14,6 @@ namespace Upland.Types
         public List<long> EligablePropertyIds { get; set; }
         public string Description { get; set; }
         public double MonthlyUpx { get; set; }
-        public List<int> CityIds { get; set; }
-        public List<int> StreetIds { get; set; }
-        public List<int> NeighborhoodIds { get; set; }
         public List<long> MatchingPropertyIds { get; set; }
         public int Reward { get; set; }
         public int? CityId { get; set; }
@@ -34,9 +31,6 @@ namespace Upland.Types
             Clone.EligablePropertyIds = this.EligablePropertyIds == null ? new List<long>() : new List<long>(this.EligablePropertyIds);
             Clone.Description = this.Description;
             Clone.MonthlyUpx = this.MonthlyUpx;
-            Clone.CityIds = this.CityIds == null ? new List<int>() : new List<int>(this.CityIds);
-            Clone.StreetIds = this.StreetIds == null ? new List<int>() : new List<int>(this.StreetIds);
-            Clone.NeighborhoodIds = this.NeighborhoodIds == null ? new List<int>() : new List<int>(this.NeighborhoodIds);
             Clone.MatchingPropertyIds = this.MatchingPropertyIds == null ? new List<long>() : new List<long>(this.MatchingPropertyIds);
             Clone.Reward = this.Reward;
             Clone.CityId = this.CityId;

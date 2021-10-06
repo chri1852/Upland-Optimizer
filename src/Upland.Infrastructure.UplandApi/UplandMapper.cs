@@ -32,9 +32,6 @@ namespace Upland.Infrastructure.UplandApi
             collection.EligablePropertyIds = new List<long>();
             collection.Description = uplandCollection.Requirements;
             collection.MonthlyUpx = 0;
-            collection.CityIds = GetCityTags(uplandCollection);
-            collection.StreetIds = GetStreetTags(uplandCollection);
-            collection.NeighborhoodIds = GetNeighborhoodTags(uplandCollection);
             collection.MatchingPropertyIds = new List<long>();
             collection.Reward = uplandCollection.One_Time_Reward;
             collection.CityId = uplandCollection.City_Id;
