@@ -64,53 +64,5 @@ namespace Upland.Infrastructure.UplandApi
 
             return property;
         }
-
-        private static List<int> GetCityTags(UplandCollection uplandCollection)
-        {
-            List<int> ids = new List<int>();
-
-            foreach(TagsAddressCommon item in uplandCollection.Tags_Address_Common)
-            {
-                int idResult = 0;
-                if (int.TryParse(item.City, out idResult))
-                {
-                    ids.Add(idResult);
-                }
-            }
-
-            return ids;
-        }
-
-        private static List<int> GetStreetTags(UplandCollection uplandCollection)
-        {
-            List<int> ids = new List<int>();
-
-            foreach (TagsAddressCommon item in uplandCollection.Tags_Address_Common)
-            {
-                int idResult = 0;
-                if (int.TryParse(item.Street, out idResult))
-                {
-                    ids.Add(idResult);
-                }
-            }
-
-            return ids;
-        }
-
-        private static List<int> GetNeighborhoodTags(UplandCollection uplandCollection)
-        {
-            List<int> ids = new List<int>();
-
-            foreach (TagsAddressCommon item in uplandCollection.Tags_Address_Common)
-            {
-                int idResult = 0;
-                if (int.TryParse(item.Neighborhood, out idResult))
-                {
-                    ids.Add(idResult);
-                }
-            }
-
-            return ids;
-        }
     }
 }
