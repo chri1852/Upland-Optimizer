@@ -52,7 +52,7 @@ namespace Upland.CollectionOptimizer
 
             try
             {
-                results = await RunOptimization(registeredUser.UplandUsername, 7);
+                results = await RunOptimization(registeredUser.UplandUsername, qualityLevel);
             }
             catch
             {

@@ -375,7 +375,7 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("Hey there {0}! Thanks for being a supporter!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
             }
 
-            await ReplyAsync(string.Format("To Use the Collection Optimizer Simply run my !OptimizerRun command.{0}The Optimizer can take some time to run, especially if this is the first time you have run it.{0}You can check on the status of your run at anytime by running my !OptimizerStatus command.{0}Once the run has a status of {1}, you can run my !OptimizerResults command.{0}If your run has a status of failed you can try running it again, or reach out to Grombrindal for troubleshooting.{0}", Environment.NewLine, Consts.RunStatusCompleted, Consts.RunStatusFailed));
+            await ReplyAsync(string.Format("To Use the Collection Optimizer Simply run my !OptimizerRun command.{0}The Optimizer can take some time to run, especially if this is the first time you have run it.{0}You can check on the status of your run at anytime by running my !OptimizerStatus command.{0}Once the run has a status of {1}, you can run my !OptimizerResults command.{0}If your run has a status of failed you can try running it again, or reach out to Grombrindal for troubleshooting.{0}{0}Supports have access to my !OptimizerLevelRun command which allows you to specify the quality of your run. For the most part 7 is good for everyone, but using this command you can specify between 3 and 10. Note that 10 takes upwards of an hour or more to complete.", Environment.NewLine, Consts.RunStatusCompleted, Consts.RunStatusFailed));
         }
 
         private async Task<bool> EnsureRegisteredAndVerified(RegisteredUser registeredUser)
