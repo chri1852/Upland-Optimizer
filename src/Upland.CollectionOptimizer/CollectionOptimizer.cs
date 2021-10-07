@@ -40,7 +40,7 @@ namespace Upland.CollectionOptimizer
             this.localDataManager = new LocalDataManager();
         }
 
-        public async Task RunAutoOptimization(RegisteredUser registeredUser)
+        public async Task RunAutoOptimization(RegisteredUser registeredUser, int qualityLevel)
         {
             string results = "";
             localDataManager.CreateOptimizationRun(
@@ -476,8 +476,9 @@ namespace Upland.CollectionOptimizer
             }
 
             Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(collections);
-            
+
             if (this.KingOfTheStreetCollections.Any(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 3))
+            {
                 StandardCollectionBuilder topKingOfTheStreetCollection =
                     this.KingOfTheStreetCollections.Where(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 3).First();
                 copiedCollections[Consts.KingOfTheStreetId].SlottedPropertyIds = topKingOfTheStreetCollection.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Select(p => p.Key).Take(3).ToList();
