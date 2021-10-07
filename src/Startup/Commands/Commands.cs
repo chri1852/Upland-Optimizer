@@ -29,28 +29,28 @@ namespace Startup.Commands
             switch (rand)
             {
                 case 0:
-                    await ReplyAsync(string.Format("Knock it off {0}!", GetRandomName()));
+                    await ReplyAsync(string.Format("Knock it off {0}!", HelperFunctions.GetRandomName(_random)));
                     break;
                 case 1:
-                    await ReplyAsync(string.Format("Cool it {0}!", GetRandomName()));
+                    await ReplyAsync(string.Format("Cool it {0}!", HelperFunctions.GetRandomName(_random)));
                     break;
                 case 2:
-                    await ReplyAsync(string.Format("Put a sock in it {0}!", GetRandomName()));
+                    await ReplyAsync(string.Format("Put a sock in it {0}!", HelperFunctions.GetRandomName(_random)));
                     break;
                 case 3:
-                    await ReplyAsync(string.Format("Quit it {0}!", GetRandomName()));
+                    await ReplyAsync(string.Format("Quit it {0}!", HelperFunctions.GetRandomName(_random)));
                     break;
                 case 4:
-                    await ReplyAsync(string.Format("Easy there {0}!", GetRandomName()));
+                    await ReplyAsync(string.Format("Easy there {0}!", HelperFunctions.GetRandomName(_random)));
                     break;
                 case 5:
-                    await ReplyAsync(string.Format("Dial it back {0}!", GetRandomName()));
+                    await ReplyAsync(string.Format("Dial it back {0}!", HelperFunctions.GetRandomName(_random)));
                     break;
                 case 6:
-                    await ReplyAsync(string.Format("Cool your jets {0}!", GetRandomName()));
+                    await ReplyAsync(string.Format("Cool your jets {0}!", HelperFunctions.GetRandomName(_random)));
                     break;
                 case 7:
-                    await ReplyAsync(string.Format("Calm down {0}!", GetRandomName()));
+                    await ReplyAsync(string.Format("Calm down {0}!", HelperFunctions.GetRandomName(_random)));
                     break;
             }
         }
@@ -82,7 +82,7 @@ namespace Startup.Commands
             properties = await uplandApiRepository.GetPropertysByUsername(uplandUserName.ToLower());
             if (properties == null || properties.Count == 0)
             {
-                await ReplyAsync(string.Format("Looks like {0} is not a player {1}.", uplandUserName, GetRandomName()));
+                await ReplyAsync(string.Format("Looks like {0} is not a player {1}.", uplandUserName, HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
@@ -104,11 +104,11 @@ namespace Startup.Commands
             }
             catch
             {
-                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", GetRandomName()));
+                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
-            await ReplyAsync(string.Format("Good News {0}! I have registered you as a user!", GetRandomName()));
+            await ReplyAsync(string.Format("Good News {0}! I have registered you as a user!", HelperFunctions.GetRandomName(_random)));
             await ReplyAsync(string.Format("To continue place, {0}, up for sale for {1:N2} UPX, and then use my !VerifyMe command.", verifyProperty.Full_Address, verifyPrice));
         }
 
@@ -122,25 +122,25 @@ namespace Startup.Commands
             {
                 if (registeredUser.Verified)
                 {
-                    await ReplyAsync(string.Format("Looks like you are already verified {0}. Try contacting Grombrindal.", GetRandomName()));
+                    await ReplyAsync(string.Format("Looks like you are already verified {0}. Try contacting Grombrindal.", HelperFunctions.GetRandomName(_random)));
                 }
                 else
                 {
                     try
                     {
                         localDataManager.DeleteRegisteredUser(Context.User.Id);
-                        await ReplyAsync(string.Format("I got you {0}. I have cleared your registration. Try again with my !RegisterMe command with your Upland username", GetRandomName()));
+                        await ReplyAsync(string.Format("I got you {0}. I have cleared your registration. Try again with my !RegisterMe command with your Upland username", HelperFunctions.GetRandomName(_random)));
                     }
                     catch
                     {
-                        await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", GetRandomName()));
+                        await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
                         return;
                     }
                 }
                 return;
             }
 
-            await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username", GetRandomName()));
+            await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username", HelperFunctions.GetRandomName(_random)));
         }
 
         [Command("VerifyMe")]
@@ -152,13 +152,13 @@ namespace Startup.Commands
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
-                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username", GetRandomName()));
+                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username", HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
             if (registeredUser.Verified)
             {
-                await ReplyAsync(string.Format("Looks like you are already verified {0}.", GetRandomName()));
+                await ReplyAsync(string.Format("Looks like you are already verified {0}.", HelperFunctions.GetRandomName(_random)));
             }
             else
             {
@@ -177,7 +177,7 @@ namespace Startup.Commands
                 else
                 {
                     localDataManager.SetRegisteredUserVerified(registeredUser.DiscordUserId);
-                    await ReplyAsync(string.Format("You are now Verified {0}! You can remove the property from sale, or don't. I'm not your dad.", GetRandomName()));
+                    await ReplyAsync(string.Format("You are now Verified {0}! You can remove the property from sale, or don't. I'm not your dad.", HelperFunctions.GetRandomName(_random)));
                 }
             }
             return;
@@ -196,18 +196,18 @@ namespace Startup.Commands
 
             if (!registeredUser.Paid && registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < Consts.FreeRuns)
             {
-                await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, Consts.FreeRuns, GetRandomName()));
+                await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, Consts.FreeRuns, HelperFunctions.GetRandomName(_random)));
             }
             else if (!registeredUser.Paid && registeredUser.RunCount == Consts.FreeRuns)
             {
-                await ReplyAsync(string.Format("You've used all {0} of your free runs {1}. To learn how to support this tool try my !SupportMe command.", Consts.FreeRuns, GetRandomName()));
+                await ReplyAsync(string.Format("You've used all {0} of your free runs {1}. To learn how to support this tool try my !SupportMe command.", Consts.FreeRuns, HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
             OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
-                await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", GetRandomName()));
+                await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
             
@@ -225,12 +225,12 @@ namespace Startup.Commands
                     await optimizer.RunAutoOptimization(registeredUser);
                 });
 
-                await ReplyAsync(string.Format("Got it {0}! I have started your optimization run.", GetRandomName()));
+                await ReplyAsync(string.Format("Got it {0}! I have started your optimization run.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
             catch
             {
-                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", GetRandomName()));
+                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
                 return;
             }
         }
@@ -249,12 +249,12 @@ namespace Startup.Commands
             OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun != null)
             {
-                await ReplyAsync(string.Format("Got it {0}. Your current run has a status of {1}.", GetRandomName(), currentRun.Status));
+                await ReplyAsync(string.Format("Got it {0}. Your current run has a status of {1}.", HelperFunctions.GetRandomName(_random), currentRun.Status));
                 return;
             }
             else
             {
-                await ReplyAsync(string.Format("I don't see any optimization runs for you {0}. Try using my !OptimizerRun command to run one.", GetRandomName()));
+                await ReplyAsync(string.Format("I don't see any optimization runs for you {0}. Try using my !OptimizerRun command to run one.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
         }
@@ -273,25 +273,25 @@ namespace Startup.Commands
             OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun == null)
             {
-                await ReplyAsync(string.Format("I don't see any optimization runs for you {0}. Try using my !OptimizerRun command to run one.", GetRandomName()));
+                await ReplyAsync(string.Format("I don't see any optimization runs for you {0}. Try using my !OptimizerRun command to run one.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
             if (currentRun.Status == Consts.RunStatusInProgress)
             {
-                await ReplyAsync(string.Format("Looks like your optimizer run is still running {0}.", GetRandomName()));
+                await ReplyAsync(string.Format("Looks like your optimizer run is still running {0}.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
             if (currentRun.Status == Consts.RunStatusFailed)
             {
-                await ReplyAsync(string.Format("Looks like your optimizer run failed {0}. You can try running it again, or ping Grombrindal for help.", GetRandomName()));
+                await ReplyAsync(string.Format("Looks like your optimizer run failed {0}. You can try running it again, or ping Grombrindal for help.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
             if (currentRun.Status == Consts.RunStatusCompleted)
             {
-                await ReplyAsync(string.Format("I got you {0}. Let me post those results for you.{1}", GetRandomName(), Environment.NewLine));
+                await ReplyAsync(string.Format("I got you {0}. Let me post those results for you.{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
 
                 List<string> results = Encoding.UTF8.GetString(currentRun.Results).Split(Environment.NewLine).ToList();
                 string message = "";
@@ -329,13 +329,13 @@ namespace Startup.Commands
 
             if (registeredUser.Paid)
             {
-                await ReplyAsync(string.Format("You are already a supporter {0}. Thanks for helping out!", GetRandomName()));
+                await ReplyAsync(string.Format("You are already a supporter {0}. Thanks for helping out!", HelperFunctions.GetRandomName(_random)));
             }
             else
             {
-                await ReplyAsync(string.Format("Hey {0}, Sounds like you really like this tool, to help support this tool why don't you ping Grombrindal.", GetRandomName()));
-                await ReplyAsync(string.Format("For the low price of $5 you will get perpetual access to run this when ever you like, access to new premium features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs.", GetRandomName()));
-                await ReplyAsync(string.Format("USD, UPX, Waxp, Ham Sandwiches, MTG Bulk Rares, and more are all accepted in payment.", GetRandomName()));
+                await ReplyAsync(string.Format("Hey {0}, Sounds like you really like this tool, to help support this tool why don't you ping Grombrindal.", HelperFunctions.GetRandomName(_random)));
+                await ReplyAsync(string.Format("For the low price of $5 you will get perpetual access to run this when ever you like, access to new premium features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs.", HelperFunctions.GetRandomName(_random)));
+                await ReplyAsync(string.Format("USD, UPX, Waxp, Ham Sandwiches, MTG Bulk Rares, and more are all accepted in payment.", HelperFunctions.GetRandomName(_random)));
             }
         }
 
@@ -349,7 +349,7 @@ namespace Startup.Commands
 
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
-                await ReplyAsync(string.Format("Looks like you don't exist {0}. To start try running !RegisterMe with your Upland username!", GetRandomName()));
+                await ReplyAsync(string.Format("Looks like you don't exist {0}. To start try running !RegisterMe with your Upland username!", HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
@@ -368,62 +368,27 @@ namespace Startup.Commands
             // They are registered now, display help
             if (!registeredUser.Paid)
             {
-                await ReplyAsync(string.Format("Hello {0}! Everyone gets {1} free runs of the optimizer, you've used {2} of them. To learn how to support this tool try my !SupportMe command.{3}", GetRandomName(), Consts.FreeRuns, registeredUser.RunCount, Environment.NewLine));
+                await ReplyAsync(string.Format("Hello {0}! Everyone gets {1} free runs of the optimizer, you've used {2} of them. To learn how to support this tool try my !SupportMe command.{3}", HelperFunctions.GetRandomName(_random), Consts.FreeRuns, registeredUser.RunCount, Environment.NewLine));
             }
             else
             {
-                await ReplyAsync(string.Format("Hey there {0}! Thanks for being a supporter!{1}", GetRandomName(), Environment.NewLine));
+                await ReplyAsync(string.Format("Hey there {0}! Thanks for being a supporter!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
             }
 
             await ReplyAsync(string.Format("To Use the Collection Optimizer Simply run my !OptimizerRun command.{0}The Optimizer can take some time to run, especially if this is the first time you have run it.{0}You can check on the status of your run at anytime by running my !OptimizerStatus command.{0}Once the run has a status of {1}, you can run my !OptimizerResults command.{0}If your run has a status of failed you can try running it again, or reach out to Grombrindal for troubleshooting.{0}", Environment.NewLine, Consts.RunStatusCompleted, Consts.RunStatusFailed));
-        }
-
-        private string GetRandomName()
-        {
-            List<string> names = new List<string>
-            {
-                "Friendo",
-                "Chief",
-                "Slugger",
-                "Boss",
-                "Champ",
-                "Amigo",
-                "Guy",
-                "Buddy",
-                "Sport",
-                "My Dude",
-                "Pal",
-                "Buddy",
-                "Bud",
-                "Big Guy",
-                "Tiger",
-                "Scooter",
-                "Shooter",
-                "Ace",
-                "Partner",
-                "Slick",
-                "Hombre",
-                "Hoss",
-                "Bub",
-                "Buster",
-                "Partner",
-                "Fam"
-            };
-
-            return names[_random.Next(names.Count)];
         }
 
         private async Task<bool> EnsureRegisteredAndVerified(RegisteredUser registeredUser)
         {
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
-                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username!", GetRandomName()));
+                await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username!", HelperFunctions.GetRandomName(_random)));
                 return false;
             }
 
             if (!registeredUser.Verified)
             {
-                await ReplyAsync(string.Format("Looks like you are not verified {0}. Try Again with my !VerifyMe command.", GetRandomName()));
+                await ReplyAsync(string.Format("Looks like you are not verified {0}. Try Again with my !VerifyMe command.", HelperFunctions.GetRandomName(_random)));
                 return false;
             }
 

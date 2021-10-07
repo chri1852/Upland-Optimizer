@@ -74,5 +74,7 @@ namespace Upland.Types
         public static readonly string RunStatusInProgress = "In Progress";
         public static readonly string RunStatusCompleted= "Completed";
         public static readonly string RunStatusFailed = "Failed";
+        public static readonly ulong AdminDiscordId = 313795907755704321;
+        public static readonly ulong TestUserDiscordId = 1;
     }
 }
