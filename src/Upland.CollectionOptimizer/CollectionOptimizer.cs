@@ -18,6 +18,7 @@ namespace Upland.CollectionOptimizer
         private Dictionary<int, Collection> Collections;
         private List<long> SlottedPropertyIds;
         private Dictionary<int, Collection> FilledCollections;
+        private Dictionary<int, Collection> UnfilledCollections;
 
         private Dictionary<int, Collection> AllCollections;
 
@@ -29,6 +30,7 @@ namespace Upland.CollectionOptimizer
             this.Collections = new Dictionary<int, Collection>();
             this.SlottedPropertyIds = new List<long>();
             this.FilledCollections = new Dictionary<int, Collection>();
+            this.UnfilledCollections = new Dictionary<int, Collection>();
 
             PopulateAllCollections();
 
@@ -122,7 +124,7 @@ namespace Upland.CollectionOptimizer
         private async Task<string> RunOptimization(string username, int qualityLevel)
         {
             await PopulatePropertiesAndCollections(username);
-            this.Collections = RebuildCollections(this.Collections, new List<long>());
+            this.Collections = RebuildCollections(this.Collections, new List<long>(), false);
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
@@ -221,7 +223,7 @@ namespace Upland.CollectionOptimizer
                 copiedIgnorePropertyIds.AddRange(collection.SlottedPropertyIds);
 
                 copiedCollections = RemoveIdsFromCollections(copiedCollections, collection.SlottedPropertyIds);
-                copiedCollections = RebuildCollections(copiedCollections, copiedIgnorePropertyIds);
+                copiedCollections = RebuildCollections(copiedCollections, copiedIgnorePropertyIds, false);
 
                 double maxMonthly = 0;
                 int maxId = -1;
@@ -293,7 +295,7 @@ namespace Upland.CollectionOptimizer
             }
         }
 
-        private Dictionary<int, Collection> RebuildCollections(Dictionary<int, Collection> collections, List<long> ignorePropertyIds)
+        private Dictionary<int, Collection> RebuildCollections(Dictionary<int, Collection> collections, List<long> ignorePropertyIds, bool placeRemovedInUnfilled)
         {
             Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(collections);
             List<int> removeCollectionIds = new List<int>();
@@ -322,6 +324,10 @@ namespace Upland.CollectionOptimizer
 
             foreach (int id in removeCollectionIds)
             {
+                if (placeRemovedInUnfilled)
+                {
+                    this.UnfilledCollections.Add(id, copiedCollections[id]);
+                }
                 copiedCollections.Remove(id);
             }
 
@@ -338,7 +344,8 @@ namespace Upland.CollectionOptimizer
             this.Collections.Remove(collectionId);
 
             this.Collections = RemoveIdsFromCollections(this.Collections, this.FilledCollections[collectionId].SlottedPropertyIds);
-            this.Collections = RebuildCollections(this.Collections, new List<long>());
+            this.UnfilledCollections = RemoveIdsFromCollections(this.UnfilledCollections, this.FilledCollections[collectionId].SlottedPropertyIds);
+            this.Collections = RebuildCollections(this.Collections, new List<long>(), true);
         }
 
         private Dictionary<int, Collection> RemoveIdsFromCollections(Dictionary<int, Collection> collections, List<long> ids)
