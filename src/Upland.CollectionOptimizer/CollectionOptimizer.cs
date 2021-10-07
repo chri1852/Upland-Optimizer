@@ -20,6 +20,7 @@ namespace Upland.CollectionOptimizer
         private Dictionary<int, Collection> UnfilledCollections;
         private List<StandardCollectionBuilder> CityProCollections;
         private List<StandardCollectionBuilder> KingOfTheStreetCollections;
+        private Dictionary<int, Collection> UnoptimizedCollections;
 
         private Dictionary<int, Collection> AllCollections;
 
@@ -34,6 +35,7 @@ namespace Upland.CollectionOptimizer
             this.UnfilledCollections = new Dictionary<int, Collection>();
             this.CityProCollections = new List<StandardCollectionBuilder>();
             this.KingOfTheStreetCollections = new List<StandardCollectionBuilder>();
+            this.UnoptimizedCollections = new Dictionary<int, Collection>();
 
             PopulateAllCollections();
 
@@ -268,6 +270,7 @@ namespace Upland.CollectionOptimizer
             this.UnfilledCollections = new Dictionary<int, Collection>();
             this.CityProCollections = new List<StandardCollectionBuilder>();
             this.KingOfTheStreetCollections = new List<StandardCollectionBuilder>();
+            this.UnoptimizedCollections = new Dictionary<int, Collection>();
 
             Dictionary<int, Collection> collections = HelperFunctions.DeepCollectionClone(this.AllCollections);
 
@@ -301,7 +304,15 @@ namespace Upland.CollectionOptimizer
             {
                 this.Properties.Add(property.Id, property);
             }
-            
+
+            foreach (KeyValuePair<int, Collection> entry in collections)
+            {
+                if (entry.Value.EligablePropertyIds.Count < entry.Value.NumberOfProperties && entry.Value.EligablePropertyIds.Count > 0)
+                {
+                    this.UnoptimizedCollections.Add(entry.Key, entry.Value.Clone());
+                }
+            }
+
             BuildAllCityProCollections();
             BuildAllKingOfTheStreetCollections();
         }
