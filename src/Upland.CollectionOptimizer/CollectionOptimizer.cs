@@ -467,7 +467,7 @@ namespace Upland.CollectionOptimizer
             if (this.CityProCollections.Any(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 5))
             {
                 StandardCollectionBuilder topCityProCollection =
-                    this.CityProCollections.Where(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 5).First();
+                    this.CityProCollections.Where(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 5).OrderByDescending(c => c.MonthlyUpx(ignorePropertyIds)).First();
                 copiedCollections[Consts.CityProId].SlottedPropertyIds = topCityProCollection.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Select(p => p.Key).Take(5).ToList();
                 copiedCollections[Consts.CityProId].MonthlyUpx = topCityProCollection.MonthlyUpx(ignorePropertyIds);
             }
@@ -491,7 +491,7 @@ namespace Upland.CollectionOptimizer
             if (this.KingOfTheStreetCollections.Any(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 3))
             {
                 StandardCollectionBuilder topKingOfTheStreetCollection =
-                    this.KingOfTheStreetCollections.Where(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 3).First();
+                    this.KingOfTheStreetCollections.Where(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 3).OrderByDescending(c => c.MonthlyUpx(ignorePropertyIds)).First();
                 copiedCollections[Consts.KingOfTheStreetId].SlottedPropertyIds = topKingOfTheStreetCollection.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Select(p => p.Key).Take(3).ToList();
                 copiedCollections[Consts.KingOfTheStreetId].MonthlyUpx = topKingOfTheStreetCollection.MonthlyUpx(ignorePropertyIds);
             }
