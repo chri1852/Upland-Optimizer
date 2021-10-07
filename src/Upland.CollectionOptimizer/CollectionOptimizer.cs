@@ -13,12 +13,13 @@ namespace Upland.CollectionOptimizer
 {
     public class CollectionOptimizer
     {
-        // SEARCH TODO
         private Dictionary<long, Property> Properties;
         private Dictionary<int, Collection> Collections;
         private List<long> SlottedPropertyIds;
         private Dictionary<int, Collection> FilledCollections;
         private Dictionary<int, Collection> UnfilledCollections;
+        private List<StandardCollectionBuilder> CityProCollections;
+        private List<StandardCollectionBuilder> KingOfTheStreetCollections;
 
         private Dictionary<int, Collection> AllCollections;
 
@@ -31,13 +32,15 @@ namespace Upland.CollectionOptimizer
             this.SlottedPropertyIds = new List<long>();
             this.FilledCollections = new Dictionary<int, Collection>();
             this.UnfilledCollections = new Dictionary<int, Collection>();
+            this.CityProCollections = new List<StandardCollectionBuilder>();
+            this.KingOfTheStreetCollections = new List<StandardCollectionBuilder>();
 
             PopulateAllCollections();
 
             this.localDataManager = new LocalDataManager();
         }
 
-        public async Task RunAutoOptimization(RegisteredUser registeredUser)
+        public async Task RunAutoOptimization(RegisteredUser registeredUser, int qualityLevel)
         {
             string results = "";
             localDataManager.CreateOptimizationRun(
@@ -84,8 +87,8 @@ namespace Upland.CollectionOptimizer
 
             foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
             {
-                // Don't use City Pro of King of the String as the first collection
-                if (Consts.StandardCollectionIds.Contains(entry.Value.Id))
+                // Don't use Standard or City Collections as the first collection
+                if (Consts.StandardCollectionIds.Contains(entry.Value.Id) || Consts.CityCollectionIds.Contains(entry.Value.Id))
                 {
                     continue;
                 }
@@ -94,13 +97,26 @@ namespace Upland.CollectionOptimizer
                 conflictingCollections.Add(entry.Value.Id, entry.Value.Clone());
                 break;
             }
+            
+            // If the first collection is 0 all thats left is standard and city collections
+            if (firstCollection == 0)
+            {
+                foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
+                {
+                    if (conflictingCollections.Count() < qualityLevel)
+                    {
+                        conflictingCollections.Add(entry.Key, entry.Value.Clone());
+                    }
+                }
+                return conflictingCollections;
+            }
 
             // We now have one collection lets loop through all collections til we have all the conflicts.
             foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
             {
                 // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
                 if (!conflictingCollections.ContainsKey(entry.Value.Id) 
-                    && DoCollectionsConflict(conflictingCollections[firstCollection], entry.Value)
+                    && DoesCollectionConflictWithList(entry.Value, conflictingCollections)
                     && conflictingCollections.Count < qualityLevel)
                 {
                     conflictingCollections.Add(entry.Key, entry.Value.Clone());
@@ -130,11 +146,6 @@ namespace Upland.CollectionOptimizer
 
             while (this.Collections.Count > 0)
             {
-                /*
-                Dictionary<int, Collection> conflictingCollections = HelperFunctions.DeepCollectionClone(new Dictionary<int, Collection>(
-                    this.Collections.OrderByDescending(c => c.Value.MonthlyUpx).Take(qualityLevel)
-                ));
-                */
                 Dictionary<int, Collection> conflictingCollections = GetConflictingCollections(qualityLevel);
                 
                 int collectionToSlotId = RecursionWrapper(conflictingCollections);
@@ -177,12 +188,6 @@ namespace Upland.CollectionOptimizer
             }
 
             return maxCollectionId;
-        }
-        
-        private bool DoCollectionsConflict(Collection firstCollection, Collection secondCollection)
-        {
-            return Consts.StandardCollectionIds.Contains(firstCollection.Id) ||
-                secondCollection.EligablePropertyIds.Any(p => firstCollection.EligablePropertyIds.Contains(p));
         }
 
         private bool DoesCollectionConflictWithList(Collection collection, IEnumerable<KeyValuePair<int, Collection>> conflictingList)
@@ -260,6 +265,9 @@ namespace Upland.CollectionOptimizer
             this.FilledCollections = new Dictionary<int, Collection>();
             this.SlottedPropertyIds = new List<long>();
             this.Properties = new Dictionary<long, Property>();
+            this.UnfilledCollections = new Dictionary<int, Collection>();
+            this.CityProCollections = new List<StandardCollectionBuilder>();
+            this.KingOfTheStreetCollections = new List<StandardCollectionBuilder>();
 
             Dictionary<int, Collection> collections = HelperFunctions.DeepCollectionClone(this.AllCollections);
 
@@ -293,6 +301,80 @@ namespace Upland.CollectionOptimizer
             {
                 this.Properties.Add(property.Id, property);
             }
+            
+            BuildAllCityProCollections();
+            BuildAllKingOfTheStreetCollections();
+        }
+        
+        private void BuildAllCityProCollections()
+        {
+            IEnumerable<KeyValuePair<int, int>> cityList = this.Properties
+                .GroupBy(p => p.Value.CityId)
+                .Where(g => g.Count() >= 5)
+                .Select(group => new KeyValuePair<int, int>(group.Key, group.Count()));
+
+            foreach (KeyValuePair<int, int> cities in cityList)
+            {
+                List<KeyValuePair<long, double>> props = this.Properties
+                        .Where(p => p.Value.CityId == cities.Key)
+                        .OrderByDescending(p => p.Value.MonthlyEarnings)
+                        .Select(p => new KeyValuePair<long, double>(p.Value.Id, p.Value.MonthlyEarnings)).ToList();
+
+                StandardCollectionBuilder newCityCollection = new StandardCollectionBuilder
+                {
+                    Id = cities.Key,
+                    Props = props,
+                    Boost = 1.4,
+                    NumberOfProps = 5
+                };
+                this.CityProCollections.Add(newCityCollection);
+            }
+            this.CityProCollections = this.CityProCollections.OrderByDescending(c => c.MonthlyUpx(new List<long>())).ToList();
+        }
+
+        private void BuildAllKingOfTheStreetCollections()
+        {
+            IEnumerable<KeyValuePair<int, int>> streetList = this.Properties
+                .GroupBy(p => p.Value.StreetId)
+                .Where(g => g.Count() >= 3)
+                .Select(group => new KeyValuePair<int, int>(group.Key, group.Count()));
+
+            foreach (KeyValuePair<int, int> streets in streetList)
+            {
+                List<KeyValuePair<long, double>> props = this.Properties
+                        .Where(p => p.Value.StreetId == streets.Key)
+                        .OrderByDescending(p => p.Value.MonthlyEarnings)
+                        .Select(p => new KeyValuePair<long, double>(p.Value.Id, p.Value.MonthlyEarnings)).ToList();
+
+                StandardCollectionBuilder newStreetCollection = new StandardCollectionBuilder
+                {
+                    Id = streets.Key,
+                    Props = props,
+                    Boost = 1.3,
+                    NumberOfProps = 3
+                };
+                this.KingOfTheStreetCollections.Add(newStreetCollection);
+            }
+            this.KingOfTheStreetCollections = this.KingOfTheStreetCollections.OrderByDescending(c => c.MonthlyUpx(new List<long>())).ToList();
+        }
+
+        private void RemovePropIdsFromStandardCollections(List<long> removeIds)
+        { 
+            foreach (StandardCollectionBuilder collection in this.CityProCollections)
+            {
+                collection.Props.RemoveAll(p => removeIds.Contains(p.Key));
+            }
+
+            this.CityProCollections.RemoveAll(c => c.Props.Count < 5);
+            this.CityProCollections = this.CityProCollections.OrderByDescending(c => c.MonthlyUpx(new List<long>())).ToList();
+
+            foreach (StandardCollectionBuilder collection in this.KingOfTheStreetCollections)
+            {
+                collection.Props.RemoveAll(p => removeIds.Contains(p.Key));
+            }
+
+            this.KingOfTheStreetCollections.RemoveAll(c => c.Props.Count < 3);
+            this.KingOfTheStreetCollections = this.KingOfTheStreetCollections.OrderByDescending(c => c.MonthlyUpx(new List<long>())).ToList();
         }
 
         private Dictionary<int, Collection> RebuildCollections(Dictionary<int, Collection> collections, List<long> ignorePropertyIds, bool placeRemovedInUnfilled)
@@ -345,6 +427,7 @@ namespace Upland.CollectionOptimizer
 
             this.Collections = RemoveIdsFromCollections(this.Collections, this.FilledCollections[collectionId].SlottedPropertyIds);
             this.UnfilledCollections = RemoveIdsFromCollections(this.UnfilledCollections, this.FilledCollections[collectionId].SlottedPropertyIds);
+            RemovePropIdsFromStandardCollections(this.FilledCollections[collectionId].SlottedPropertyIds);
             this.Collections = RebuildCollections(this.Collections, new List<long>(), true);
         }
 
@@ -369,40 +452,13 @@ namespace Upland.CollectionOptimizer
             }
 
             Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(collections);
-            Dictionary<int, StandardCollectionBuilder> cityProCollections = new Dictionary<int, StandardCollectionBuilder>();
-
-            foreach (KeyValuePair<long, Property> entry in this.Properties)
+            
+            if (this.CityProCollections.Any(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 5))
             {
-                if (this.SlottedPropertyIds.Contains(entry.Value.Id) || ignorePropertyIds.Contains(entry.Value.Id))
-                {
-                    continue;
-                }
-
-                if (!cityProCollections.Any(c => c.Key == entry.Value.CityId))
-                {
-                    StandardCollectionBuilder newCityCollection = new StandardCollectionBuilder
-                    {
-                        Id = entry.Value.CityId,
-                        PropIds = new List<long>(),
-                        MonthlyUpx = 0
-                    };
-                    cityProCollections.Add(newCityCollection.Id, newCityCollection);
-                }
-
-                if (cityProCollections[entry.Value.CityId].PropIds.Count < 5)
-                {
-                    cityProCollections[entry.Value.CityId].PropIds.Add(entry.Value.Id);
-                    cityProCollections[entry.Value.CityId].MonthlyUpx += entry.Value.MonthlyEarnings * Consts.CityProBoost;
-                }
-            }
-
-            if (cityProCollections.Any(c => c.Value.PropIds.Count == 5))
-            {
-                StandardCollectionBuilder topCityProCollection = cityProCollections
-                    .Where(c => c.Value.PropIds.Count == 5)
-                    .OrderByDescending(c => c.Value.MonthlyUpx).First().Value;
-                copiedCollections[Consts.CityProId].SlottedPropertyIds = topCityProCollection.PropIds;
-                copiedCollections[Consts.CityProId].MonthlyUpx = topCityProCollection.MonthlyUpx;
+                StandardCollectionBuilder topCityProCollection =
+                    this.CityProCollections.Where(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 5).First();
+                copiedCollections[Consts.CityProId].SlottedPropertyIds = topCityProCollection.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Select(p => p.Key).Take(5).ToList();
+                copiedCollections[Consts.CityProId].MonthlyUpx = topCityProCollection.MonthlyUpx(ignorePropertyIds);
             }
             else
             {
@@ -420,40 +476,13 @@ namespace Upland.CollectionOptimizer
             }
 
             Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(collections);
-            Dictionary<int, StandardCollectionBuilder> kingOfTheStreetCollections = new Dictionary<int, StandardCollectionBuilder>();
 
-            foreach (KeyValuePair<long, Property> entry in this.Properties)
+            if (this.KingOfTheStreetCollections.Any(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 3))
             {
-                if (this.SlottedPropertyIds.Contains(entry.Value.Id) || ignorePropertyIds.Contains(entry.Value.Id) || entry.Value.StreetId <= 0)
-                {
-                    continue;
-                }
-
-                if (!kingOfTheStreetCollections.Any(c => c.Key == entry.Value.StreetId))
-                {
-                    StandardCollectionBuilder newStreetCollection = new StandardCollectionBuilder
-                    {
-                        Id = entry.Value.StreetId,
-                        PropIds = new List<long>(),
-                        MonthlyUpx = 0
-                    };
-                    kingOfTheStreetCollections.Add(newStreetCollection.Id, newStreetCollection);
-                }
-
-                if (kingOfTheStreetCollections[entry.Value.StreetId].PropIds.Count < 3)
-                {
-                    kingOfTheStreetCollections[entry.Value.StreetId].PropIds.Add(entry.Value.Id);
-                    kingOfTheStreetCollections[entry.Value.StreetId].MonthlyUpx += entry.Value.MonthlyEarnings * Consts.KingOfTheStreetBoost;
-                }
-            }
-
-            if (kingOfTheStreetCollections.Any(c => c.Value.PropIds.Count == 3))
-            {
-                StandardCollectionBuilder topKingOfTheStreetCollection = kingOfTheStreetCollections
-                    .Where(c => c.Value.PropIds.Count == 3)
-                    .OrderByDescending(c => c.Value.MonthlyUpx).First().Value;
-                copiedCollections[Consts.KingOfTheStreetId].SlottedPropertyIds = topKingOfTheStreetCollection.PropIds;
-                copiedCollections[Consts.KingOfTheStreetId].MonthlyUpx = topKingOfTheStreetCollection.MonthlyUpx;
+                StandardCollectionBuilder topKingOfTheStreetCollection =
+                    this.KingOfTheStreetCollections.Where(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 3).First();
+                copiedCollections[Consts.KingOfTheStreetId].SlottedPropertyIds = topKingOfTheStreetCollection.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Select(p => p.Key).Take(3).ToList();
+                copiedCollections[Consts.KingOfTheStreetId].MonthlyUpx = topKingOfTheStreetCollection.MonthlyUpx(ignorePropertyIds);
             }
             else
             {

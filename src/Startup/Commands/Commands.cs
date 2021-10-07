@@ -222,7 +222,7 @@ namespace Startup.Commands
                 Task child = Task.Factory.StartNew(async () =>
                 {
                     CollectionOptimizer optimizer = new CollectionOptimizer();
-                    await optimizer.RunAutoOptimization(registeredUser);
+                    await optimizer.RunAutoOptimization(registeredUser, 7);
                 });
 
                 await ReplyAsync(string.Format("Got it {0}! I have started your optimization run.", HelperFunctions.GetRandomName(_random)));

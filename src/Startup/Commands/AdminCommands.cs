@@ -63,7 +63,8 @@ namespace Startup.Commands
                         DiscordUserId = Consts.TestUserDiscordId,
                         DiscordUsername = "TEST_USER_NAME",
                         UplandUsername = uplandUsername
-                    });
+                    },
+                    7);
                 });
 
                 await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername));
