@@ -54,7 +54,6 @@ namespace Startup.Commands
 
             try
             {
-                //START IN CHILD TASK
                 Task child = Task.Factory.StartNew(async () =>
                 {
                     CollectionOptimizer optimizer = new CollectionOptimizer();
@@ -110,6 +109,30 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("{0}", message));
 
                 return;
+            }
+        }
+
+        [Command("AdminPopulateCollections")]
+        public async Task AdminPopulateCollections()
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            LocalDataManager localDataManager = new LocalDataManager();
+
+            try
+            {
+                Task child = Task.Factory.StartNew(async () =>
+                {
+                    await localDataManager.PopulateDatabaseCollectionInfo();
+                });
+                await ReplyAsync(string.Format("Running Collection Update in Child Task"));
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(string.Format("Update Failed: {0}", ex.Message));
             }
         }
     }

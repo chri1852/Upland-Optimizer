@@ -56,7 +56,6 @@ namespace Startup.Commands
 
             try
             {
-                //START IN CHILD TASK
                 Task child = Task.Factory.StartNew(async () =>
                 {
                     CollectionOptimizer optimizer = new CollectionOptimizer();

@@ -2,6 +2,7 @@
 using System;
 using Upland.Types;
 using Upland.Types.UplandApiTypes;
+using System.Linq;
 
 namespace Upland.Infrastructure.UplandApi
 {
@@ -35,6 +36,7 @@ namespace Upland.Infrastructure.UplandApi
             collection.MatchingPropertyIds = new List<long>();
             collection.Reward = uplandCollection.One_Time_Reward;
             collection.CityId = uplandCollection.City_Id;
+            collection.IsCityCollection = uplandCollection.Tags_Address_Common.First()?.City != null && uplandCollection.Tags_Address_Common.First()?.City != "same";
 
             return collection;
         }

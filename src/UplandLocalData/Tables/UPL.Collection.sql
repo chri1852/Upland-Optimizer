@@ -7,7 +7,8 @@
 	[NumberOfProperties] INT           NOT NULL,
 	[Description]        VARCHAR(1000) NOT NULL,
 	[Reward]             INT           NOT NULL,
-	[CityId]             INT 
+	[CityId]             INT                   ,
+	[IsCityCollection]   BIT           NOT NULL
 
 	CONSTRAINT pk_CollectionId PRIMARY KEY(Id)
 )

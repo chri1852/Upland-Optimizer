@@ -17,6 +17,7 @@ namespace Upland.Types
         public List<long> MatchingPropertyIds { get; set; }
         public int Reward { get; set; }
         public int? CityId { get; set; }
+        public bool IsCityCollection { get; set; }
 
         public Collection Clone()
         {
