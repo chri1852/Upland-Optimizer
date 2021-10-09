@@ -14,8 +14,6 @@ namespace Upland.Types
         public static readonly string KingOfTheStreet = "King of the Street";
         public static readonly string Newbie = "Newbie";
 
-        public static readonly double CityProBoost = 1.4;
-        public static readonly double KingOfTheStreetBoost = 1.3;
         public static readonly double NewbieBoost = 1.1;
 
         public static readonly int CityProId = 21;

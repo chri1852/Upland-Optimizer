@@ -48,6 +48,13 @@ namespace Upland.Infrastructure.LocalData
                     }
                 }
             }
+
+            // Now lets populate the collection Properties in the property table
+            existingCollections = GetCollections();
+            foreach(Collection collection in existingCollections)
+            {
+
+            }
         }
 
         public List<long> GetPropertyIdsByCollectionId(int collectionId)
