@@ -137,7 +137,7 @@ namespace Startup.Commands
         }
 
         [Command("AdminPopulateCollectionProperty")]
-        public async Task AdminPopulateCollections(int collectionId)
+        public async Task AdminPopulateCollectionProperty(int collectionId)
         {
             if (!await checkIfAdmin(Context.User.Id))
             {
