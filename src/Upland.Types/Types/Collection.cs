@@ -17,6 +17,7 @@ namespace Upland.Types
         public List<long> MatchingPropertyIds { get; set; }
         public int Reward { get; set; }
         public int? CityId { get; set; }
+        public bool IsCityCollection { get; set; }
 
         public Collection Clone()
         {
@@ -34,6 +35,7 @@ namespace Upland.Types
             Clone.MatchingPropertyIds = this.MatchingPropertyIds == null ? new List<long>() : new List<long>(this.MatchingPropertyIds);
             Clone.Reward = this.Reward;
             Clone.CityId = this.CityId;
+            Clone.IsCityCollection = this.IsCityCollection;
 
             return Clone;
         }

@@ -144,7 +144,8 @@ namespace Upland.Infrastructure.LocalData
                                     NumberOfProperties = (int)reader["NumberOfProperties"],
                                     Description = (string)reader["Description"],
                                     Reward = (int)reader["Reward"],
-                                    CityId = (reader.IsDBNull("CityId") ? -1 : (int)reader["CityId"])
+                                    CityId = (reader.IsDBNull("CityId") ? -1 : (int)reader["CityId"]),
+                                    IsCityCollection = (bool)reader["IsCityCollection"]
                                 }
                              );
                         }

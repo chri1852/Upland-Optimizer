@@ -90,7 +90,7 @@ namespace Upland.CollectionOptimizer
             foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
             {
                 // Don't use Standard or City Collections as the first collection
-                if (Consts.StandardCollectionIds.Contains(entry.Value.Id) || Consts.CityCollectionIds.Contains(entry.Value.Id))
+                if (Consts.StandardCollectionIds.Contains(entry.Value.Id) || entry.Value.IsCityCollection)
                 {
                     continue;
                 }
@@ -174,6 +174,7 @@ namespace Upland.CollectionOptimizer
         {
             double maxMonthly = 0;
             int maxCollectionId = -1;
+            bool isMaxCityCollection = false;
             List<long> ignorePropertyIds = new List<long>();
 
             foreach (KeyValuePair<int, Collection> entry in conflictingCollections)
@@ -182,10 +183,11 @@ namespace Upland.CollectionOptimizer
                 double collectionMax = RecursiveMaxUpxFinder(copiedCollections, entry.Value, ignorePropertyIds);
 
                 if (collectionMax > maxMonthly
-                    || (collectionMax == maxMonthly && (Consts.StandardCollectionIds.Contains(maxCollectionId) || Consts.CityCollectionIds.Contains(maxCollectionId))))
+                    || (collectionMax == maxMonthly && (Consts.StandardCollectionIds.Contains(maxCollectionId) || isMaxCityCollection)))
                 {
                     maxMonthly = collectionMax;
                     maxCollectionId = entry.Value.Id;
+                    isMaxCityCollection = entry.Value.IsCityCollection;
                 }
             }
 
@@ -234,14 +236,16 @@ namespace Upland.CollectionOptimizer
 
                 double maxMonthly = 0;
                 int maxId = -1;
+                bool isMaxCityCollection = false;
                 foreach (KeyValuePair<int, Collection> entry in copiedCollections)
                 {
                     double newMax = RecursiveMaxUpxFinder(copiedCollections, entry.Value, copiedIgnorePropertyIds);
                     if (newMax > maxMonthly
-                        || (newMax == maxMonthly && (Consts.StandardCollectionIds.Contains(maxId) || Consts.CityCollectionIds.Contains(maxId))))
+                        || (newMax == maxMonthly && (Consts.StandardCollectionIds.Contains(maxId) || isMaxCityCollection)))
                     {
                         maxMonthly = newMax;
                         maxId = entry.Value.Id;
+                        isMaxCityCollection = entry.Value.IsCityCollection;
                     }
                 }
 
@@ -282,8 +286,8 @@ namespace Upland.CollectionOptimizer
             {
                 foreach (Property property in userProperties)
                 {
-                    if ((!Consts.StandardCollectionIds.Contains(entry.Value.Id) && !Consts.CityCollectionIds.Contains(entry.Value.Id) && entry.Value.MatchingPropertyIds.Contains(property.Id))
-                        || (Consts.CityCollectionIds.Contains(entry.Value.Id) && entry.Value.CityId == property.CityId))
+                    if ((!Consts.StandardCollectionIds.Contains(entry.Value.Id) && !entry.Value.IsCityCollection && entry.Value.MatchingPropertyIds.Contains(property.Id))
+                        || (entry.Value.IsCityCollection && entry.Value.CityId == property.CityId))
                     {
                         entry.Value.EligablePropertyIds.Add(property.Id);
                     }

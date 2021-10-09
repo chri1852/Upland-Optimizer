@@ -22,19 +22,30 @@ namespace Upland.Infrastructure.LocalData
         public async Task PopulateDatabaseCollectionInfo()
         {
             List<Collection> collections = UplandMapper.Map(await uplandApiRepository.GetCollections());
+            List<Collection> existingCollections = GetCollections();
 
             foreach (Collection collection in collections)
             {
-                LocalDataRepository.CreateCollection(collection);
+                if (!existingCollections.Any(c => c.Id == collection.Id))
+                { 
+                    LocalDataRepository.CreateCollection(collection);
+                }
 
-                if (!Consts.StandardCollectionIds.Contains(collection.Id) && !Consts.CityCollectionIds.Contains(collection.Id))
+                if (!Consts.StandardCollectionIds.Contains(collection.Id) && !collection.IsCityCollection)
                 {
                     List<long> propIds = new List<long>();
                     propIds.AddRange((await uplandApiRepository.GetUnlockedNotForSaleCollectionProperties(collection.Id)).Select(p => p.Prop_Id));
                     propIds.AddRange((await uplandApiRepository.GetForSaleCollectionProperties(collection.Id)).Select(p => p.Prop_Id));
                     propIds.AddRange((await uplandApiRepository.GetMatchingCollectionsOwned(collection.Id)).Select(p => p.Prop_Id));
 
-                    LocalDataRepository.CreateCollectionProperties(collection.Id, propIds);
+                    if (!existingCollections.Any(c => c.Id == collection.Id))
+                    {
+                        LocalDataRepository.CreateCollectionProperties(collection.Id, propIds);
+                    }
+                    else
+                    {
+                        LocalDataRepository.CreateCollectionProperties(collection.Id, propIds.Where(p => !collection.MatchingPropertyIds.Contains(p)).ToList());
+                    }
                 }
             }
         }

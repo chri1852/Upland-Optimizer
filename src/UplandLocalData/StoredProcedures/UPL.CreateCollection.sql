@@ -1,13 +1,14 @@
 ﻿CREATE PROCEDURE [UPL].[CreateCollection]
 (
-	@Id                 INT,
-	@Name               VARCHAR(200),
-	@Category           INT,
-	@Boost              DECIMAL(3,2),
-	@NumberOfProperties INT,
+	@Id                 INT          ,
+	@Name               VARCHAR(200) ,
+	@Category           INT          ,
+	@Boost              DECIMAL(3,2) ,
+	@NumberOfProperties INT          ,
 	@Description        VARCHAR(1000),
-	@Reward             INT,
-	@CityId             INT = NULL
+	@Reward             INT          ,
+	@CityId             INT = NULL   ,
+	@IsCityCollection   Bit          
 )
 AS
 BEGIN
@@ -21,7 +22,8 @@ BEGIN
 			[NumberOfProperties],
 			[Description],
 			[Reward],
-			[CityId]
+			[CityId],
+			[IsCityCollection]
 		)
 		VALUES
 		(
@@ -32,7 +34,8 @@ BEGIN
 			@NumberOfProperties,
 			@Description,
 			@Reward,
-			@CityId
+			@CityId,
+			@IsCityCollection
 		)
 	END TRY
 
