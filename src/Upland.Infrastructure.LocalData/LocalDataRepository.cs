@@ -247,6 +247,54 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static List<Property> GetPropertiesByCollectionId(int collectionId)
+        {
+            List<Property> properties = new List<Property>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertiesByCollectionId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CollectionId", collectionId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            properties.Add(
+                                new Property
+                                {
+                                    Id = (long)reader["Id"],
+                                    Address = (string)reader["Address"],
+                                    CityId = (int)reader["CityId"],
+                                    Size = (int)reader["Size"],
+                                    MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
+                                    StreetId = (int)reader["StreetId"]
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return properties;
+            }
+        }
+
         public static void CreateOptimizationRun(OptimizationRun optimizationRun)
         {
             SqlConnection sqlConnection = GetSQLConnector();

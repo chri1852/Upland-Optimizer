@@ -6,6 +6,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 //using Upland.CollectionOptimizer;  // ONLY UNCOMMENT FOR DEBUGING
+//using Upland.Infrastructure.LocalData;  // ONLY UNCOMMENT FOR DEBUGING
 
 class Program
 {
@@ -20,19 +21,22 @@ class Program
         string username;
         string qualityLevel;
 
-        Console.Write("Enter the Upland Username: ");
-        username = Console.ReadLine();
-        Console.Write("Enter the Level (1-8)....: ");
-        qualityLevel = Console.ReadLine();
+        LocalDataManager localDataManager = new LocalDataManager();
+        await localDataManager.PopulateDatabaseCollectionInfo();
 
-        await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
+        //Console.Write("Enter the Upland Username: ");
+        //username = Console.ReadLine();
+        //Console.Write("Enter the Level (1-8)....: ");
+        //qualityLevel = Console.ReadLine();
+
+
+        // await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
     }
     */
     
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
     
-
     public async Task RunBotAsync()
     {
         _client = new DiscordSocketClient();

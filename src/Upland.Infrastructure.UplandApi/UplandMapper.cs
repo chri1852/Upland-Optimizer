@@ -36,7 +36,7 @@ namespace Upland.Infrastructure.UplandApi
             collection.MatchingPropertyIds = new List<long>();
             collection.Reward = uplandCollection.One_Time_Reward;
             collection.CityId = uplandCollection.City_Id;
-            collection.IsCityCollection = uplandCollection.Tags_Address_Common.First()?.City != null && uplandCollection.Tags_Address_Common.First()?.City != "same";
+            collection.IsCityCollection = IsCollectionCityCollection(uplandCollection);
 
             return collection;
         }
@@ -65,6 +65,21 @@ namespace Upland.Infrastructure.UplandApi
             property.MonthlyEarnings = udProperty.Yield_Per_Hour * 720;
 
             return property;
+        }
+
+        private static bool IsCollectionCityCollection(UplandCollection uplandCollection)
+        {
+            if (uplandCollection.Tags_Address_Common == null || uplandCollection.Tags_Address_Common.Count == 0)
+            {
+                return false;
+            }
+
+            if (uplandCollection.Tags_Address_Common.First()?.City != null && uplandCollection.Tags_Address_Common.First()?.City != "same")
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

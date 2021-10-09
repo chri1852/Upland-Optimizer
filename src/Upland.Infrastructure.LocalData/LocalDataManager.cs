@@ -21,7 +21,7 @@ namespace Upland.Infrastructure.LocalData
 
         public async Task PopulateDatabaseCollectionInfo()
         {
-            List<Collection> collections = UplandMapper.Map(await uplandApiRepository.GetCollections());
+            List<Collection> collections = UplandMapper.Map((await uplandApiRepository.GetCollections()).Where(c => c.Name != "Not Available").ToList());
             List<Collection> existingCollections = GetCollections();
 
             foreach (Collection collection in collections)
@@ -44,16 +44,29 @@ namespace Upland.Infrastructure.LocalData
                     }
                     else
                     {
-                        LocalDataRepository.CreateCollectionProperties(collection.Id, propIds.Where(p => !collection.MatchingPropertyIds.Contains(p)).ToList());
+                        List<long> newPropIds = propIds.Where(p => !existingCollections.Where(c => c.Id == collection.Id).First().MatchingPropertyIds.Contains(p)).ToList();
+                        if (newPropIds.Count > 0)
+                        {
+                            LocalDataRepository.CreateCollectionProperties(collection.Id, newPropIds);
+                        }
                     }
                 }
             }
+        }
 
-            // Now lets populate the collection Properties in the property table
-            existingCollections = GetCollections();
-            foreach(Collection collection in existingCollections)
+        public async Task PopulationCollectionPropertyData(int collectionId)
+        {
+            Collection collection = GetCollections().Where(c => c.Id == collectionId).First();
+
+            List<Property> existingCollectionProperties = GetPropertiesByCollectionId(collection.Id);
+
+            foreach (long propId in collection.MatchingPropertyIds)
             {
-
+                if (!existingCollectionProperties.Any(p => p.Id == propId))
+                {
+                    Property prop = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propId));
+                    LocalDataRepository.CreateProperty(prop);
+                }
             }
         }
 
@@ -61,6 +74,12 @@ namespace Upland.Infrastructure.LocalData
         {
             return LocalDataRepository.GetCollectionPropertyIds(collectionId);
         }
+
+        public List<Property> GetPropertiesByCollectionId(int collectionId)
+        {
+            return LocalDataRepository.GetPropertiesByCollectionId(collectionId);
+        }
+
 
         public List<Collection> GetCollections()
         {
