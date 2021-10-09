@@ -5,6 +5,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+//using Upland.CollectionOptimizer;  // ONLY UNCOMMENT FOR DEBUGING
 
 class Program
 {
@@ -12,8 +13,25 @@ class Program
     private CommandService _commands;
     private IServiceProvider _services;
 
+    /*
+    static async Task Main(string[] args) // DEBUG FUNCTION
+    {
+        CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
+        string username;
+        string qualityLevel;
+
+        Console.Write("Enter the Upland Username: ");
+        username = Console.ReadLine();
+        Console.Write("Enter the Level (1-8)....: ");
+        qualityLevel = Console.ReadLine();
+
+        await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
+    }
+    */
+    
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
+    
 
     public async Task RunBotAsync()
     {

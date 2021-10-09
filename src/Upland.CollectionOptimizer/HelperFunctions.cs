@@ -18,5 +18,121 @@ namespace Upland.CollectionOptimizer
 
             return clonedCollections;
         }
+
+        public static double CalculateBaseMonthlyUPX(Dictionary<long, Property> Properties)
+        {
+            return Properties.Sum(p => p.Value.MonthlyEarnings);
+        }
+
+        public static double CalculateMonthlyUpx(Dictionary<int, Collection> FilledCollections, Dictionary<long, Property> Properties, List<long> SlottedPropertyIds)
+        {
+            double total = 0;
+
+            total += FilledCollections.Sum(c => c.Value.MonthlyUpx);
+            total += Properties.Where(p => !SlottedPropertyIds.Contains(p.Value.Id)).Sum(p => p.Value.MonthlyEarnings);
+
+            return total;
+        }
+
+        #region /* Debug Console Functions */
+
+        public static void WriteCollecitonToConsole(Dictionary<int, Collection> FilledCollections, Dictionary<long, Property> Properties, List<long> SlottedPropertyIds)
+        {
+            int TotalCollectionRewards = 0;
+            List<Collection> collections = FilledCollections.OrderByDescending(c => c.Value.MonthlyUpx).Select(c => c.Value).ToList();
+            Console.WriteLine();
+            foreach (Collection collection in collections)
+            {
+                if (!Consts.StandardCollectionIds.Contains(collection.Id))
+                {
+                    string collectionCity = Consts.Cities[Properties[collection.SlottedPropertyIds[0]].CityId];
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write(collectionCity);
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write(" - ");
+                    TotalCollectionRewards += collection.Reward;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write("Standard");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write(" - ");
+                }
+
+                WriteCollectionName(collection);
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write(" - ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("{0:N2}", collection.MonthlyUpx / collection.Boost);
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write(" --> ");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("{0:N2}", collection.MonthlyUpx);
+                Console.ForegroundColor = ConsoleColor.Cyan;
+
+                foreach (long propertyId in collection.SlottedPropertyIds)
+                {
+                    Console.WriteLine("     {0}", Properties[propertyId].Address);
+                }
+            }
+
+            Console.WriteLine();
+
+            string baseMonthlyUpx = string.Format("{0:N2}", CalculateBaseMonthlyUPX(Properties));
+            string totalMonthlyUpx = string.Format("{0:N2}", CalculateMonthlyUpx(FilledCollections, Properties, SlottedPropertyIds));
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("Base Monthly UPX...........: ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(baseMonthlyUpx);
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("Total Monthly UPX..........: ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(totalMonthlyUpx);
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("Total Collection Reward UPX: ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("{0:N2}", TotalCollectionRewards);
+            Console.ResetColor();
+
+            Console.WriteLine();
+        }
+
+        private static void WriteCollectionName(Collection collection)
+        {
+            switch (collection.Category)
+            {
+                case 1:
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    break;
+                case 2:
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    break;
+                case 3:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    break;
+                case 4:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    break;
+                case 5:
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    break;
+            }
+            Console.Write(collection.Name);
+            Console.ResetColor();
+        }
+
+        public static void WriteCollectionFinishTime(Collection collection)
+        {
+            WriteCollectionName(collection);
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(" - ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss"));
+        }
+
+        #endregion /* Debug Console Functions */
     }
 }

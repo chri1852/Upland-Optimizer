@@ -21,10 +21,9 @@ namespace Upland.CollectionOptimizer
         private List<StandardCollectionBuilder> CityProCollections;
         private List<StandardCollectionBuilder> KingOfTheStreetCollections;
         private Dictionary<int, Collection> UnoptimizedCollections;
-
         private Dictionary<int, Collection> AllCollections;
-
-        private LocalDataManager localDataManager;
+        private LocalDataManager LocalDataManager;
+        private bool DebugMode;
 
         public CollectionOptimizer()
         {
@@ -39,18 +38,25 @@ namespace Upland.CollectionOptimizer
 
             PopulateAllCollections();
 
-            this.localDataManager = new LocalDataManager();
+            this.LocalDataManager = new LocalDataManager();
+            this.DebugMode = false;
+        }
+
+        public async Task RunDebugOptimization(string username, int qualityLevel)
+        {
+            this.DebugMode = true;
+            string results = await RunOptimization(username, qualityLevel);
         }
 
         public async Task RunAutoOptimization(RegisteredUser registeredUser, int qualityLevel)
         {
             string results = "";
-            localDataManager.CreateOptimizationRun(
+            LocalDataManager.CreateOptimizationRun(
                 new OptimizationRun
                 {
                     DiscordUserId = registeredUser.DiscordUserId
                 });
-            OptimizationRun optimizationRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun optimizationRun = LocalDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
 
             try
             {
@@ -58,7 +64,7 @@ namespace Upland.CollectionOptimizer
             }
             catch
             {
-                localDataManager.SetOptimizationRunStatus(
+                LocalDataManager.SetOptimizationRunStatus(
                     new OptimizationRun
                     {
                         Id = optimizationRun.Id,
@@ -66,14 +72,14 @@ namespace Upland.CollectionOptimizer
                     });
             }
 
-            localDataManager.SetOptimizationRunStatus(
+            LocalDataManager.SetOptimizationRunStatus(
                 new OptimizationRun
                 {
                     Id = optimizationRun.Id,
                     Status = Consts.RunStatusCompleted,
                     Results = Encoding.UTF8.GetBytes(results)
                 });
-            localDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
+            LocalDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
         }
         
         private Dictionary<int, Collection> GetConflictingCollections(int qualityLevel)
@@ -152,6 +158,11 @@ namespace Upland.CollectionOptimizer
                 
                 int collectionToSlotId = RecursionWrapper(conflictingCollections);
 
+                if (this.DebugMode)
+                {
+                    HelperFunctions.WriteCollectionFinishTime(this.Collections[collectionToSlotId]);
+                }
+
                 SetFilledCollection(collectionToSlotId);
             }
 
@@ -159,13 +170,12 @@ namespace Upland.CollectionOptimizer
 
             BuildBestNewbieCoollection();
 
-            List<string> outputStrings = new List<string>();
-            outputStrings.Add(string.Format("Collection Optimization Report - {0}", DateTime.Now.ToString("MM-dd-yyyy")));
-            outputStrings.Add("-------------------------------------------");
-            outputStrings.Add(string.Format("Ran for {0} at Quality Level {1}", username, qualityLevel));
-            outputStrings.Add(string.Format("Run Time - {0}", timer.Elapsed));
-            outputStrings.Add("");
-            outputStrings = WriteCollecitonToConsole(outputStrings);
+            List<string> outputStrings = BuildOutput(timer, username, qualityLevel);
+
+            if (this.DebugMode)
+            {
+                HelperFunctions.WriteCollecitonToConsole(this.FilledCollections, this.Properties, this.SlottedPropertyIds);
+            }
 
             return string.Join(Environment.NewLine, outputStrings);
         }
@@ -278,7 +288,7 @@ namespace Upland.CollectionOptimizer
 
             Dictionary<int, Collection> collections = HelperFunctions.DeepCollectionClone(this.AllCollections);
 
-            List<Property> userProperties = await this.localDataManager.GetPropertysByUsername(username);
+            List<Property> userProperties = await this.LocalDataManager.GetPropertysByUsername(username);
 
             userProperties = userProperties.OrderByDescending(p => p.MonthlyEarnings).ToList();
 
@@ -531,10 +541,17 @@ namespace Upland.CollectionOptimizer
             }
         }
 
-        private List<string> WriteCollecitonToConsole(List<string> outputStrings)
+        private List<string> BuildOutput(Stopwatch timer, string username, int qualityLevel)
         {
             int TotalCollectionRewards = 0;
+            List<string> outputStrings = new List<string>();
             List<Collection> collections = this.FilledCollections.OrderByDescending(c => c.Value.MonthlyUpx).Select(c => c.Value).ToList();
+
+            outputStrings.Add(string.Format("Collection Optimization Report - {0}", DateTime.Now.ToString("MM-dd-yyyy")));
+            outputStrings.Add("-------------------------------------------");
+            outputStrings.Add(string.Format("Ran for {0} at Quality Level {1}", username, qualityLevel));
+            outputStrings.Add(string.Format("Run Time - {0}", timer.Elapsed));
+            outputStrings.Add("");
 
             foreach (Collection collection in collections)
             {
@@ -556,29 +573,14 @@ namespace Upland.CollectionOptimizer
                 outputStrings.Add("");
             }
 
-            string baseMonthlyUpx = string.Format("{0:N2}", CalulateBaseMonthlyUPX());
-            string totalMonthlyUpx = string.Format("{0:N2}", CalcualteMonthylUpx());
+            string baseMonthlyUpx = string.Format("{0:N2}", HelperFunctions.CalculateBaseMonthlyUPX(Properties));
+            string totalMonthlyUpx = string.Format("{0:N2}", HelperFunctions.CalculateMonthlyUpx(FilledCollections, Properties, SlottedPropertyIds));
 
             outputStrings.Add("");
             outputStrings.Add(string.Format("Base Monthly UPX...........: {0}", baseMonthlyUpx));
             outputStrings.Add(string.Format("Total Monthly UPX..........: {0}", totalMonthlyUpx));
 
             return outputStrings;
-        }
-
-        private double CalulateBaseMonthlyUPX()
-        {
-            return this.Properties.Sum(p => p.Value.MonthlyEarnings);
-        }
-
-        private double CalcualteMonthylUpx()
-        {
-            double total = 0;
-
-            total += this.FilledCollections.Sum(c => c.Value.MonthlyUpx);
-            total += this.Properties.Where(p => !this.SlottedPropertyIds.Contains(p.Value.Id)).Sum(p => p.Value.MonthlyEarnings);
-
-            return total;
         }
     }
 }
