@@ -1,10 +1,12 @@
 ﻿using Discord.Commands;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Upland.CollectionOptimizer;
+using Upland.InformationProcessor;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types;
@@ -109,7 +111,7 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Good News {0}! I have registered you as a user!", HelperFunctions.GetRandomName(_random)));
-            await ReplyAsync(string.Format("To continue place, {0}, up for sale for {1:N2} UPX, and then use my !VerifyMe command.", verifyProperty.Full_Address, verifyPrice));
+            await ReplyAsync(string.Format("To continue place, {0}, up for sale for {1:N2} UPX, and then use my !VerifyMe command. If you can't place the propery for sale run my !ClearMe command.", verifyProperty.Full_Address, verifyPrice));
         }
 
         [Command("ClearMe")]
@@ -292,26 +294,13 @@ namespace Startup.Commands
             {
                 await ReplyAsync(string.Format("I got you {0}. Let me post those results for you.{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
 
-                List<string> results = Encoding.UTF8.GetString(currentRun.Results).Split(Environment.NewLine).ToList();
-                string message = "";
-                foreach (string entry in results)
+                byte[] resultBytes = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(currentRun.Results));
+                using (Stream stream = new MemoryStream())
                 {
-                    if(message.Length + entry.Length + 1 < 2000)
-                    {
-                        message += entry;
-                        message += Environment.NewLine;
-                    }
-                    else
-                    {
-                        await ReplyAsync(string.Format("{0}", message));
-                        message = entry;
-                        message += Environment.NewLine;
-                    }
+                    stream.Write(resultBytes, 0, resultBytes.Length);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await Context.Channel.SendFileAsync(stream, "CollectionInfo.txt");
                 }
-
-                await ReplyAsync(string.Format("{0}", message));
-
-                return;
             }
         }
 
@@ -332,9 +321,65 @@ namespace Startup.Commands
             }
             else
             {
-                await ReplyAsync(string.Format("Hey {0}, Sounds like you really like this tool, to help support this tool why don't you ping Grombrindal.", HelperFunctions.GetRandomName(_random)));
-                await ReplyAsync(string.Format("For the low price of $5 you will get perpetual access to run this when ever you like, access to new premium features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs.", HelperFunctions.GetRandomName(_random)));
-                await ReplyAsync(string.Format("USD, UPX, Waxp, Ham Sandwiches, MTG Bulk Rares, and more are all accepted in payment.", HelperFunctions.GetRandomName(_random)));
+                await ReplyAsync(string.Format("Hey {0}, Sounds like you really like this tool, to help support this tool why don't you ping Grombrindal.{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
+                await ReplyAsync(string.Format("For the low price of $5 you will get perpetual access to run this when ever you like, access to new premium features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs. USD, UPX, Waxp, Ham Sandwiches, MTG Bulk Rares, and more are all accepted in payment."));
+            }
+        }
+
+        [Command("CollectionInfo")]
+        public async Task CollectionInfo()
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            InformationProcessor informationProcessor = new InformationProcessor();
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            List<string> collectionData = informationProcessor.GetCollectionInformation();
+
+            await ReplyAsync(string.Format("Here you go {0}!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, collectionData));
+            using(Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, "CollectionInfo.txt");
+            }
+        }
+
+        [Command("PropertyInfo")]
+        public async Task PropertyInfo()
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            InformationProcessor informationProcessor = new InformationProcessor();
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            if (currentRun == null)
+            {
+                await ReplyAsync(string.Format("Run an Optimization Run first {0}.", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            List<string> propertyData = await informationProcessor.GetMyPropertyInfo(registeredUser.UplandUsername);
+
+            await ReplyAsync(string.Format("Here you go {0}!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, propertyData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, "PropertyInfo.txt");
             }
         }
 
@@ -367,14 +412,102 @@ namespace Startup.Commands
             // They are registered now, display help
             if (!registeredUser.Paid)
             {
-                await ReplyAsync(string.Format("Hello {0}! Everyone gets {1} free runs of the optimizer, you've used {2} of them. To learn how to support this tool try my !SupportMe command.{3}", HelperFunctions.GetRandomName(_random), Consts.FreeRuns, registeredUser.RunCount, Environment.NewLine));
+                await ReplyAsync(string.Format("Hello {0}! Everyone gets {1} free runs of the optimizer, you've used {2} of them. To learn how to support this tool try my !SupportMe command.{3}{3}", HelperFunctions.GetRandomName(_random), Consts.FreeRuns, registeredUser.RunCount, Environment.NewLine));
             }
             else
             {
-                await ReplyAsync(string.Format("Hey there {0}! Thanks for being a supporter!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
+                await ReplyAsync(string.Format("Hey there {0}! Thanks for being a supporter!{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
             }
 
-            await ReplyAsync(string.Format("To Use the Collection Optimizer Simply run my !OptimizerRun command.{0}The Optimizer can take some time to run, especially if this is the first time you have run it.{0}You can check on the status of your run at anytime by running my !OptimizerStatus command.{0}Once the run has a status of {1}, you can run my !OptimizerResults command.{0}If your run has a status of failed you can try running it again, or reach out to Grombrindal for troubleshooting.{0}{0}Supports have access to my !OptimizerLevelRun command which allows you to specify the quality of your run. For the most part 7 is good for everyone, but using this command you can specify between 3 and 10. Note that 10 takes upwards of an hour or more to complete.", Environment.NewLine, Consts.RunStatusCompleted, Consts.RunStatusFailed));
+            List<string> helpMenu = new List<string>();
+
+            helpMenu.Add("Below are the functions you can run use my !Help command and specify the number of the command you want more information on, like !Help 2.");
+            helpMenu.Add("");
+            helpMenu.Add("Standard Commands");
+            helpMenu.Add("   1. !OptimizerRun");
+            helpMenu.Add("   2. !OptimizerStatus");
+            helpMenu.Add("   3. !OptimizerResults");
+            helpMenu.Add("   4. !CollectionInfo");
+            helpMenu.Add("   5. !PropertyInfo");
+            helpMenu.Add("   6. !SupportMe");
+            helpMenu.Add("");
+            helpMenu.Add("Premium Commands");
+            helpMenu.Add("   7. !OptimizerLevelRun");
+            helpMenu.Add("");
+            await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
+        }
+
+        [Command("Help")]
+        public async Task Help(string command)
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            UplandApiRepository uplandApiRepository = new UplandApiRepository();
+            List<UplandAuthProperty> properties;
+
+            if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
+            {
+                await ReplyAsync(string.Format("Looks like you don't exist {0}. To start try running !RegisterMe with your Upland username!", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
+            {
+                if (!registeredUser.Verified)
+                {
+                    properties = await uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
+                    await ReplyAsync(string.Format("Looks like you have registered, but not verified yet {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
+                    await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:N2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
+                    await ReplyAsync(string.Format("2. Run my !ClearMe command to clear your unverified registration, and register again with !RegisterMe."));
+                    return;
+                }
+            }
+
+            List<string> helpOutput = new List<string>();
+            switch (command)
+            {
+                case "1":
+                    helpOutput.Add(string.Format("!OptimizerRun"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will start an optimizer run for you. Standard users get 6 free runs, while premium users can run this as many times as they like. To get your results or check on the status run the !OptimizerResults or !OptimizerStatus commands. The first time your run the optimizer it may take some extra time as the system retrieves your property information from Upland."));
+                    break;
+                case "2":
+                    helpOutput.Add(string.Format("!OptimizerStatus"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will return the status of your current run, it can be either In Progress, Failed, or Completed. If it fails reach out to Grombrindal."));
+                    break;
+                case "3":
+                    helpOutput.Add(string.Format("!OptimizerResults"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will return a text file with the results of your optimizer run."));
+                    break;
+                case "4":
+                    helpOutput.Add(string.Format("!CollectionInfo"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will return a text file with information on all collections. Note that the property count does not include any locked properties, city and standard collections will also have a property count of 0."));
+                    break;
+                case "5":
+                    helpOutput.Add(string.Format("!PropertyInfo"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will return a text file with all of your properties."));
+                    break;
+                case "6":
+                    helpOutput.Add(string.Format("!SupportMe"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will let you know how to support the development of this tool."));
+                    break;
+                case "7":
+                    helpOutput.Add(string.Format("!OptimizerLevelRun"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
+                    helpOutput.Add("EX: !OptimizerLevelRun 5");
+                    break;
+                default:
+                    helpOutput.Add(string.Format("Not sure what command you are refering to {0}. Try running my !Help command.", HelperFunctions.GetRandomName(_random)));
+                    break;
+            }
+
+            await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpOutput)));
         }
 
         private async Task<bool> EnsureRegisteredAndVerified(RegisteredUser registeredUser)

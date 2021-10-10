@@ -1,6 +1,7 @@
 ﻿using Discord.Commands;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -89,26 +90,13 @@ namespace Startup.Commands
 
             if (currentRun.Status == Consts.RunStatusCompleted)
             {
-                List<string> results = Encoding.UTF8.GetString(currentRun.Results).Split(Environment.NewLine).ToList();
-                string message = "";
-                foreach (string entry in results)
+                byte[] resultBytes = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(currentRun.Results));
+                using (Stream stream = new MemoryStream())
                 {
-                    if (message.Length + entry.Length + 1 < 2000)
-                    {
-                        message += entry;
-                        message += Environment.NewLine;
-                    }
-                    else
-                    {
-                        await ReplyAsync(string.Format("{0}", message));
-                        message = entry;
-                        message += Environment.NewLine;
-                    }
+                    stream.Write(resultBytes, 0, resultBytes.Length);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await Context.Channel.SendFileAsync(stream, "CollectionInfo.txt");
                 }
-
-                await ReplyAsync(string.Format("{0}", message));
-
-                return;
             }
         }
 

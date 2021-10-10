@@ -20,7 +20,7 @@ namespace Startup.Commands
         }
 
         [Command("OptimizerLevelRun")]
-        public async Task OptimizerRun(int qualityLevel)
+        public async Task OptimizerLevelRun(int qualityLevel)
         {
             LocalDataManager localDataManager = new LocalDataManager();
 

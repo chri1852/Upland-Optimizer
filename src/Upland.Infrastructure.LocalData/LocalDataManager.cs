@@ -80,7 +80,6 @@ namespace Upland.Infrastructure.LocalData
             return LocalDataRepository.GetPropertiesByCollectionId(collectionId);
         }
 
-
         public List<Collection> GetCollections()
         {
             List<Collection> collections = LocalDataRepository.GetCollections();
