@@ -95,7 +95,7 @@ namespace Startup.Commands
                 {
                     stream.Write(resultBytes, 0, resultBytes.Length);
                     stream.Seek(0, SeekOrigin.Begin);
-                    await Context.Channel.SendFileAsync(stream, "CollectionInfo.txt");
+                    await Context.Channel.SendFileAsync(stream, "AdminOptimizerResults.txt");
                 }
             }
         }
