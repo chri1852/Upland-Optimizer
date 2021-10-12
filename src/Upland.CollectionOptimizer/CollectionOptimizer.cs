@@ -21,7 +21,7 @@ namespace Upland.CollectionOptimizer
         private List<StandardCollectionBuilder> CityProCollections;
         private List<StandardCollectionBuilder> KingOfTheStreetCollections;
         private Dictionary<int, Collection> UnoptimizedCollections;
-        private Dictionary<int, Collection> AllCollections;
+        private Dictionary<int, Collection> MissingCollections;
         private LocalDataManager LocalDataManager;
         private bool DebugMode;
 
@@ -31,24 +31,26 @@ namespace Upland.CollectionOptimizer
             this.Collections = new Dictionary<int, Collection>();
             this.SlottedPropertyIds = new List<long>();
             this.FilledCollections = new Dictionary<int, Collection>();
-            this.UnfilledCollections = new Dictionary<int, Collection>();
+    
             this.CityProCollections = new List<StandardCollectionBuilder>();
             this.KingOfTheStreetCollections = new List<StandardCollectionBuilder>();
-            this.UnoptimizedCollections = new Dictionary<int, Collection>();
 
-            PopulateAllCollections();
+            this.UnfilledCollections = new Dictionary<int, Collection>();
+            this.UnoptimizedCollections = new Dictionary<int, Collection>();
+            this.MissingCollections = new Dictionary<int, Collection>();
 
             this.LocalDataManager = new LocalDataManager();
             this.DebugMode = false;
         }
 
-        public async Task RunDebugOptimization(string username, int qualityLevel)
+        public async Task RunDebugOptimization(string username, int qualityLevel, int collectionId = -1, int numberOfProperties = -1, double averageMonthlyUpx = -1)
         {
             this.DebugMode = true;
-            string results = await RunOptimization(username, qualityLevel);
+            await SetDataForOptimization(username, collectionId, numberOfProperties, averageMonthlyUpx);
+            string results = RunOptimization(username, qualityLevel);
         }
 
-        public async Task RunAutoOptimization(RegisteredUser registeredUser, int qualityLevel)
+        public async Task RunAutoOptimization(RegisteredUser registeredUser, int qualityLevel, int collectionId = -1, int numberOfProperties = -1, double averageMonthlyUpx = -1)
         {
             string results = "";
             LocalDataManager.CreateOptimizationRun(
@@ -60,7 +62,8 @@ namespace Upland.CollectionOptimizer
 
             try
             {
-                results = await RunOptimization(registeredUser.UplandUsername, qualityLevel);
+                await SetDataForOptimization(registeredUser.UplandUsername, collectionId, numberOfProperties, averageMonthlyUpx);
+                results = RunOptimization(registeredUser.UplandUsername, qualityLevel);
             }
             catch
             {
@@ -82,6 +85,22 @@ namespace Upland.CollectionOptimizer
             LocalDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
         }
         
+        private void CreateHypotheicalProperties(int collectionId, int numberOfProperties, double averageMonthlyUpx)
+        {
+            if(Consts.StandardCollectionIds.Contains(collectionId))
+            {
+                return;
+            }
+
+            List<Property> properties = HelperFunctions.BuildHypotheicalProperties(this.Collections[collectionId].CityId.Value, numberOfProperties, averageMonthlyUpx);
+
+            foreach (Property property in properties)
+            {
+                this.Collections[collectionId].MatchingPropertyIds.Add(property.Id);
+                this.Properties.Add(property.Id, property);
+            }
+        }
+
         private Dictionary<int, Collection> GetConflictingCollections(int qualityLevel)
         {
             int firstCollection = 0;
@@ -147,10 +166,27 @@ namespace Upland.CollectionOptimizer
             return conflictingCollections;
         }
 
-        private async Task<string> RunOptimization(string username, int qualityLevel)
+        private async Task SetDataForOptimization(string username, int collectionId = -1, int numberOfProperties = -1, double averageMonthlyUpx = -1)
         {
-            await PopulatePropertiesAndCollections(username);
+            LoadCollections();
+            await LoadUserProperties(username);
+
+            // Only build the hypotheticals if requested
+            if (collectionId != -1 && numberOfProperties != -1 && averageMonthlyUpx != -1)
+            {
+                CreateHypotheicalProperties(collectionId, numberOfProperties, averageMonthlyUpx);
+            }
+
+            PopulatePropertiesAndCollections();
+
+            BuildAllCityProCollections();
+            BuildAllKingOfTheStreetCollections();
+
             this.Collections = RebuildCollections(this.Collections, new List<long>(), false);
+        }
+
+        private string RunOptimization(string username, int qualityLevel)
+        {
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
@@ -176,7 +212,7 @@ namespace Upland.CollectionOptimizer
 
             if (this.DebugMode)
             {
-                HelperFunctions.WriteCollecitonToConsole(this.FilledCollections, this.Properties, this.SlottedPropertyIds, this.UnfilledCollections, this.UnoptimizedCollections);
+                HelperFunctions.WriteCollecitonToConsole(this.FilledCollections, this.Properties, this.SlottedPropertyIds, this.UnfilledCollections, this.UnoptimizedCollections, this.MissingCollections);
             }
 
             return string.Join(Environment.NewLine, outputStrings);
@@ -265,72 +301,67 @@ namespace Upland.CollectionOptimizer
             }
         }
 
-        private void PopulateAllCollections()
+        private async Task LoadUserProperties(string username)
         {
-            this.AllCollections = new Dictionary<int, Collection>(); ;
-            LocalDataManager dataManager = new LocalDataManager();
-            List<Collection> collections = dataManager.GetCollections();
-
-            foreach (Collection collection in collections)
-            {
-                this.AllCollections.Add(collection.Id, collection);
-            }
-        }
-
-        private async Task PopulatePropertiesAndCollections(string username)
-        {
-            this.Collections = new Dictionary<int, Collection>();
-            this.FilledCollections = new Dictionary<int, Collection>();
-            this.SlottedPropertyIds = new List<long>();
             this.Properties = new Dictionary<long, Property>();
-            this.UnfilledCollections = new Dictionary<int, Collection>();
-            this.CityProCollections = new List<StandardCollectionBuilder>();
-            this.KingOfTheStreetCollections = new List<StandardCollectionBuilder>();
-            this.UnoptimizedCollections = new Dictionary<int, Collection>();
-
-            Dictionary<int, Collection> collections = HelperFunctions.DeepCollectionClone(this.AllCollections);
 
             List<Property> userProperties = await this.LocalDataManager.GetPropertysByUsername(username);
 
             userProperties = userProperties.OrderByDescending(p => p.MonthlyEarnings).ToList();
 
-            foreach (KeyValuePair<int, Collection> entry in collections)
-            {
-                foreach (Property property in userProperties)
-                {
-                    if ((!Consts.StandardCollectionIds.Contains(entry.Value.Id) && !entry.Value.IsCityCollection && entry.Value.MatchingPropertyIds.Contains(property.Id))
-                        || (entry.Value.IsCityCollection && entry.Value.CityId == property.CityId))
-                    {
-                        entry.Value.EligablePropertyIds.Add(property.Id);
-                    }
-                }
-
-                if (entry.Value.EligablePropertyIds.Count >= entry.Value.NumberOfProperties)
-                {
-                    this.Collections.Add(entry.Value.Id, entry.Value);
-                }
-
-                if (entry.Value.Name == Consts.CityPro || entry.Value.Name == Consts.KingOfTheStreet)
-                {
-                    this.Collections.Add(entry.Value.Id, entry.Value);
-                }
-            }
-
             foreach (Property property in userProperties)
             {
                 this.Properties.Add(property.Id, property);
             }
+        }
 
-            foreach (KeyValuePair<int, Collection> entry in collections)
+        private void LoadCollections()
+        {
+            this.Collections = new Dictionary<int, Collection>();
+
+            LocalDataManager dataManager = new LocalDataManager();
+            List<Collection> collections = dataManager.GetCollections();
+
+            foreach (Collection collection in collections)
+            {
+                this.Collections.Add(collection.Id, collection);
+            }
+        }
+
+        private void PopulatePropertiesAndCollections()
+        {
+            this.FilledCollections = new Dictionary<int, Collection>();
+            this.SlottedPropertyIds = new List<long>();
+            this.UnfilledCollections = new Dictionary<int, Collection>();
+            this.CityProCollections = new List<StandardCollectionBuilder>();
+            this.KingOfTheStreetCollections = new List<StandardCollectionBuilder>();
+            this.UnoptimizedCollections = new Dictionary<int, Collection>();
+            this.MissingCollections = new Dictionary<int, Collection>();
+
+            foreach (KeyValuePair<int, Collection> entry in this.Collections)
+            {
+                foreach (KeyValuePair<long, Property> property in this.Properties)
+                {
+                    if ((!Consts.StandardCollectionIds.Contains(entry.Value.Id) && !entry.Value.IsCityCollection && entry.Value.MatchingPropertyIds.Contains(property.Value.Id))
+                        || (entry.Value.IsCityCollection && entry.Value.CityId == property.Value.CityId))
+                    {
+                        entry.Value.EligablePropertyIds.Add(property.Value.Id);
+                    }
+                }
+            }
+
+            foreach (KeyValuePair<int, Collection> entry in this.Collections)
             {
                 if (entry.Value.EligablePropertyIds.Count < entry.Value.NumberOfProperties && entry.Value.EligablePropertyIds.Count > 0)
                 {
                     this.UnoptimizedCollections.Add(entry.Key, entry.Value.Clone());
                 }
-            }
 
-            BuildAllCityProCollections();
-            BuildAllKingOfTheStreetCollections();
+                if (entry.Value.EligablePropertyIds.Count == 0 && !Consts.StandardCollectionIds.Contains(entry.Value.Id))
+                {
+                    this.MissingCollections.Add(entry.Key, entry.Value.Clone());
+                }
+            }
         }
         
         private void BuildAllCityProCollections()
@@ -582,7 +613,7 @@ namespace Upland.CollectionOptimizer
             outputStrings.Add(string.Format("Base Monthly UPX...........: {0}", baseMonthlyUpx));
             outputStrings.Add(string.Format("Total Monthly UPX..........: {0}", totalMonthlyUpx));
 
-            if (UnfilledCollections.Count > 0 || UnoptimizedCollections.Count > 0)
+            if (UnfilledCollections.Count > 0 || UnoptimizedCollections.Count > 0) // || MissingCollections.Count > 0)
             {
                 outputStrings.Add("");
 
@@ -592,7 +623,7 @@ namespace Upland.CollectionOptimizer
                     outputStrings.Add(string.Format("Unfilled Collections"));
                     foreach (KeyValuePair<int, Collection> entry in this.UnfilledCollections)
                     {
-                        outputStrings.Add(string.Format("     {0}", entry.Value.Name));
+                        outputStrings.Add(string.Format("     {0} - Missing Props {1}", entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
                     }
                 }
 
@@ -605,6 +636,19 @@ namespace Upland.CollectionOptimizer
                         outputStrings.Add(string.Format("     {0} - Missing Props {1}", entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
                     }
                 }
+
+                // Takes Up too much space on the report, can reenable later
+                /*
+                if (MissingCollections.Count > 0)
+                {
+                    outputStrings.Add("");
+                    outputStrings.Add("Missing Collections");
+                    foreach (KeyValuePair<int, Collection> entry in this.MissingCollections)
+                    {
+                        outputStrings.Add(string.Format("     {0} - Missing Props {1}", entry.Value.Name, entry.Value.NumberOfProperties));
+                    }
+                }
+                */
             }
 
             return outputStrings;

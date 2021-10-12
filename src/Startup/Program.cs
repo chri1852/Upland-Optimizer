@@ -21,16 +21,16 @@ class Program
         string username;
         string qualityLevel;
 
-        LocalDataManager localDataManager = new LocalDataManager();
-        await localDataManager.PopulateDatabaseCollectionInfo();
+        //LocalDataManager localDataManager = new LocalDataManager();
+        //await localDataManager.PopulateDatabaseCollectionInfo();
 
-        //Console.Write("Enter the Upland Username: ");
-        //username = Console.ReadLine();
-        //Console.Write("Enter the Level (1-8)....: ");
-        //qualityLevel = Console.ReadLine();
+        Console.Write("Enter the Upland Username: ");
+        username = Console.ReadLine();
+        Console.Write("Enter the Level (1-8)....: ");
+        qualityLevel = Console.ReadLine();
 
 
-        // await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
+        await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
     }
     */
     
