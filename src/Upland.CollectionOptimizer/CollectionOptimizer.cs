@@ -136,7 +136,9 @@ namespace Upland.CollectionOptimizer
             {
                 // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
                 if (!conflictingCollections.ContainsKey(entry.Value.Id)
-                    && conflictingCollections.Count < qualityLevel)
+                    && conflictingCollections.Count < qualityLevel
+                    && !Consts.StandardCollectionIds.Contains(entry.Value.Id)
+                    && !entry.Value.IsCityCollection)
                 {
                     conflictingCollections.Add(entry.Key, entry.Value.Clone());
                 }
@@ -174,7 +176,7 @@ namespace Upland.CollectionOptimizer
 
             if (this.DebugMode)
             {
-                HelperFunctions.WriteCollecitonToConsole(this.FilledCollections, this.Properties, this.SlottedPropertyIds);
+                HelperFunctions.WriteCollecitonToConsole(this.FilledCollections, this.Properties, this.SlottedPropertyIds, this.UnfilledCollections, this.UnoptimizedCollections);
             }
 
             return string.Join(Environment.NewLine, outputStrings);
@@ -579,6 +581,31 @@ namespace Upland.CollectionOptimizer
             outputStrings.Add("");
             outputStrings.Add(string.Format("Base Monthly UPX...........: {0}", baseMonthlyUpx));
             outputStrings.Add(string.Format("Total Monthly UPX..........: {0}", totalMonthlyUpx));
+
+            if (UnfilledCollections.Count > 0 || UnoptimizedCollections.Count > 0)
+            {
+                outputStrings.Add("");
+
+                if (UnfilledCollections.Count > 0)
+                {
+                    outputStrings.Add("");
+                    outputStrings.Add(string.Format("Unfilled Collections"));
+                    foreach (KeyValuePair<int, Collection> entry in this.UnfilledCollections)
+                    {
+                        outputStrings.Add(string.Format("     {0}", entry.Value.Name));
+                    }
+                }
+
+                if (UnoptimizedCollections.Count > 0)
+                {
+                    outputStrings.Add("");
+                    outputStrings.Add("Unoptimized Collections");
+                    foreach (KeyValuePair<int, Collection> entry in this.UnoptimizedCollections)
+                    {
+                        outputStrings.Add(string.Format("     {0} - Missing Props {1}", entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                    }
+                }
+            }
 
             return outputStrings;
         }

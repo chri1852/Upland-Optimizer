@@ -32,7 +32,7 @@ namespace Startup.Commands
         }
 
         [Command("AdminOptimizerRun")]
-        public async Task OptimizerRun(string uplandUsername)
+        public async Task AdminOptimizerRun(string uplandUsername, int qualityLevel)
         {
             if (!await checkIfAdmin(Context.User.Id))
             {
@@ -64,7 +64,7 @@ namespace Startup.Commands
                         DiscordUsername = "TEST_USER_NAME",
                         UplandUsername = uplandUsername
                     },
-                    7);
+                    qualityLevel);
                 });
 
                 await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername));

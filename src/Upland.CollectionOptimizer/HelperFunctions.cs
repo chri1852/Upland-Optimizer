@@ -36,7 +36,7 @@ namespace Upland.CollectionOptimizer
 
         #region /* Debug Console Functions */
 
-        public static void WriteCollecitonToConsole(Dictionary<int, Collection> FilledCollections, Dictionary<long, Property> Properties, List<long> SlottedPropertyIds)
+        public static void WriteCollecitonToConsole(Dictionary<int, Collection> FilledCollections, Dictionary<long, Property> Properties, List<long> SlottedPropertyIds, Dictionary<int, Collection> UnfilledCollections, Dictionary<int, Collection> UnoptimizedCollections)
         {
             int TotalCollectionRewards = 0;
             List<Collection> collections = FilledCollections.OrderByDescending(c => c.Value.MonthlyUpx).Select(c => c.Value).ToList();
@@ -95,6 +95,35 @@ namespace Upland.CollectionOptimizer
             Console.Write("Total Collection Reward UPX: ");
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("{0:N2}", TotalCollectionRewards);
+
+            if (UnfilledCollections.Count > 0 || UnoptimizedCollections.Count > 0)
+            {
+                Console.WriteLine("");
+
+                if (UnfilledCollections.Count > 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("");
+                    Console.WriteLine(string.Format("Unfilled Collections"));
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    foreach (KeyValuePair<int, Collection> entry in UnfilledCollections)
+                    {
+                        Console.WriteLine(string.Format("     {0} - {1}", entry.Value.Id, entry.Value.Name));
+                    }
+                }
+
+                if (UnoptimizedCollections.Count > 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("");
+                    Console.WriteLine("Unoptimized Collections");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    foreach (KeyValuePair<int, Collection> entry in UnoptimizedCollections)
+                    {
+                        Console.WriteLine(string.Format("     {0} - {1} - Missing Props {2}", entry.Value.Id, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                    }
+                }
+            }
             Console.ResetColor();
 
             Console.WriteLine();
