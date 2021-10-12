@@ -142,6 +142,8 @@ namespace Upland.Infrastructure.LocalData
                                     Category = (int)reader["Category"],
                                     Boost = decimal.ToDouble((decimal)reader["Boost"]),
                                     NumberOfProperties = (int)reader["NumberOfProperties"],
+                                    SlottedPropertyIds = new List<long>(),
+                                    EligablePropertyIds = new List<long>(),
                                     Description = (string)reader["Description"],
                                     Reward = (int)reader["Reward"],
                                     CityId = (reader.IsDBNull("CityId") ? -1 : (int)reader["CityId"]),

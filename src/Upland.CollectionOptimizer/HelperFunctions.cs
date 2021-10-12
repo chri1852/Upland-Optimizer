@@ -34,9 +34,36 @@ namespace Upland.CollectionOptimizer
             return total;
         }
 
+        public static List<Property> BuildHypotheicalProperties(int cityId, int numberOfProperties, double averageMonthlyUpx)
+        {
+            List<Property> properties = new List<Property>();
+            for (int i = 0; i < numberOfProperties; i++)
+            {
+                Property prop = new Property
+                {
+                    Id = 10000 + i,
+                    Address = string.Format("TEST PROPERTY {0}", i),
+                    CityId = cityId,
+                    StreetId = -1 * i,
+                    Size = 1,
+                    MonthlyEarnings = averageMonthlyUpx
+                };
+
+                properties.Add(prop);
+            }
+
+            return properties;
+        }
+
         #region /* Debug Console Functions */
 
-        public static void WriteCollecitonToConsole(Dictionary<int, Collection> FilledCollections, Dictionary<long, Property> Properties, List<long> SlottedPropertyIds, Dictionary<int, Collection> UnfilledCollections, Dictionary<int, Collection> UnoptimizedCollections)
+        public static void WriteCollecitonToConsole(
+            Dictionary<int, Collection> FilledCollections, 
+            Dictionary<long, Property> Properties, 
+            List<long> SlottedPropertyIds, 
+            Dictionary<int, Collection> UnfilledCollections, 
+            Dictionary<int, Collection> UnoptimizedCollections, 
+            Dictionary<int, Collection> MissingCollections)
         {
             int TotalCollectionRewards = 0;
             List<Collection> collections = FilledCollections.OrderByDescending(c => c.Value.MonthlyUpx).Select(c => c.Value).ToList();
@@ -96,7 +123,7 @@ namespace Upland.CollectionOptimizer
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("{0:N2}", TotalCollectionRewards);
 
-            if (UnfilledCollections.Count > 0 || UnoptimizedCollections.Count > 0)
+            if (UnfilledCollections.Count > 0 || UnoptimizedCollections.Count > 0 || MissingCollections.Count > 0)
             {
                 Console.WriteLine("");
 
@@ -119,6 +146,18 @@ namespace Upland.CollectionOptimizer
                     Console.WriteLine("Unoptimized Collections");
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     foreach (KeyValuePair<int, Collection> entry in UnoptimizedCollections)
+                    {
+                        Console.WriteLine(string.Format("     {0} - {1} - Missing Props {2}", entry.Value.Id, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                    }
+                }
+
+                if (MissingCollections.Count > 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("");
+                    Console.WriteLine("Missing Collections");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    foreach (KeyValuePair<int, Collection> entry in MissingCollections)
                     {
                         Console.WriteLine(string.Format("     {0} - {1} - Missing Props {2}", entry.Value.Id, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
                     }

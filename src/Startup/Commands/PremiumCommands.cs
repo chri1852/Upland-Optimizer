@@ -72,6 +72,53 @@ namespace Startup.Commands
             }
         }
 
+        [Command("OptimizerWhatIfRun")]
+        public async Task OptimizerWhatIfRun(int collectionId, int numberOfProps, double averageMonthlyUpx)
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            if (!await EnsureRegisteredVerifiedAndPaid(registeredUser))
+            {
+                return;
+            }
+
+            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
+            {
+                await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            if (Consts.StandardCollectionIds.Contains(collectionId))
+            {
+                await ReplyAsync(string.Format("This command doesn't work on standard collections {0}.", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            if (currentRun != null)
+            {
+                localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
+            }
+
+            try
+            {
+                Task child = Task.Factory.StartNew(async () =>
+                {
+                    CollectionOptimizer optimizer = new CollectionOptimizer();
+                    await optimizer.RunAutoOptimization(registeredUser, 7, collectionId, numberOfProps, averageMonthlyUpx);
+                });
+
+                await ReplyAsync(string.Format("Bingo {0}! I have started your level What If optimization run.", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+            catch
+            {
+                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+        }
+
         private async Task<bool> EnsureRegisteredVerifiedAndPaid(RegisteredUser registeredUser)
         {
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")

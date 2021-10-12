@@ -250,7 +250,7 @@ namespace Startup.Commands
             OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun != null)
             {
-                await ReplyAsync(string.Format("Got it {0}. Your current run has a status of {1}.", HelperFunctions.GetRandomName(_random), currentRun.Status));
+                await ReplyAsync(string.Format("Roger that {0}. Your current run has a status of {1}.", HelperFunctions.GetRandomName(_random), currentRun.Status));
                 return;
             }
             else
@@ -433,6 +433,7 @@ namespace Startup.Commands
             helpMenu.Add("");
             helpMenu.Add("Premium Commands");
             helpMenu.Add("   7. !OptimizerLevelRun");
+            helpMenu.Add("   8. !OptimizerWhatIfRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -479,7 +480,7 @@ namespace Startup.Commands
                 case "3":
                     helpOutput.Add(string.Format("!OptimizerResults"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will return a text file with the results of your optimizer run."));
+                    helpOutput.Add(string.Format("This command will return a text file with the results of your optimizer run. It will also list off Unfilled Collections, which you can fill, but the algorithm decided not to, and Unoptimized Collections, which you own at least one property in, but not enough to fill them."));
                     break;
                 case "4":
                     helpOutput.Add(string.Format("!CollectionInfo"));
@@ -501,6 +502,13 @@ namespace Startup.Commands
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
+                    break;
+                case "8":
+                    helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
+                    helpOutput.Add("EX: !OptimizerWhatIfRun 188 3 250.10");
+                    helpOutput.Add("The above command will run a WhatIfRun with your currenty properties, and 3 fake properties in the French Quarter collection with an average monthly upx earnings of 250.10 upx.");
                     break;
                 default:
                     helpOutput.Add(string.Format("Not sure what command you are refering to {0}. Try running my !Help command.", HelperFunctions.GetRandomName(_random)));
