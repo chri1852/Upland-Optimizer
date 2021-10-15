@@ -98,8 +98,11 @@ class Program
         int argPos = 0;
         if (message.HasStringPrefix("!", ref argPos))
         {
-            var result = await _commands.ExecuteAsync(context, argPos, _services);
-            if (!result.IsSuccess) Console.WriteLine(result.ErrorReason);
+            Task child = Task.Factory.StartNew(async () =>
+            {
+                var result = await _commands.ExecuteAsync(context, argPos, _services);
+                if (!result.IsSuccess) Console.WriteLine(result.ErrorReason);
+            });
         }
     }
 }

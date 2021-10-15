@@ -222,11 +222,8 @@ namespace Startup.Commands
 
             try
             {
-                Task child = Task.Factory.StartNew(async () =>
-                {
-                    CollectionOptimizer optimizer = new CollectionOptimizer();
-                    await optimizer.RunAutoOptimization(registeredUser, 7);
-                });
+                CollectionOptimizer optimizer = new CollectionOptimizer();
+                await optimizer.RunAutoOptimization(registeredUser, 7);
 
                 await ReplyAsync(string.Format("Got it {0}! I have started your optimization run.", HelperFunctions.GetRandomName(_random)));
                 return;
@@ -294,8 +291,6 @@ namespace Startup.Commands
 
             if (currentRun.Status == Consts.RunStatusCompleted)
             {
-                await ReplyAsync(string.Format("I got you {0}. Let me post those results for you.{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
-
                 byte[] resultBytes = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(currentRun.Results));
                 using (Stream stream = new MemoryStream())
                 {
@@ -341,8 +336,6 @@ namespace Startup.Commands
 
             List<string> collectionData = _informationProcessor.GetCollectionInformation();
 
-            await ReplyAsync(string.Format("Here you go {0}!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
-
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, collectionData));
             using(Stream stream = new MemoryStream())
             {
@@ -372,8 +365,6 @@ namespace Startup.Commands
 
             List<string> propertyData = await _informationProcessor.GetMyPropertyInfo(registeredUser.UplandUsername);
 
-            await ReplyAsync(string.Format("Here you go {0}!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
-
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, propertyData));
             using (Stream stream = new MemoryStream())
             {
@@ -394,6 +385,7 @@ namespace Startup.Commands
                 return;
             }
 
+            await ReplyAsync(string.Format("Sounds Good {0}! Lets find out whats for sale!", HelperFunctions.GetRandomName(_random)));
             List<string> collectionReport = await _informationProcessor.GetCollectionPropertiesForSale(collectionId, orderBy.ToUpper(), currency.ToUpper());
 
             if(collectionReport.Count == 1)
@@ -403,14 +395,12 @@ namespace Startup.Commands
                 return;
             }
 
-            await ReplyAsync(string.Format("Here it is {0}!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
-
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, collectionReport));
             using (Stream stream = new MemoryStream())
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, "CollectionSalesData.txt");
+                await Context.Channel.SendFileAsync(stream, string.Format("Collection_{0}_SalesData.txt", collectionId));
             }
         }
 

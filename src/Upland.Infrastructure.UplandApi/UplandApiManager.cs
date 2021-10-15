@@ -45,6 +45,11 @@ namespace Upland.Infrastructure.UplandApi
             return string.Format("{0:MM/dd/yyy HH:mm:ss}", _saleCache[cityId].Item1);
         }
 
+        public void ClearSalesCache()
+        {
+            _saleCache = new Dictionary<int, Tuple<DateTime, List<UplandForSaleProp>>>();
+        }
+
         private async Task RefreshCache(int cityId)
         {
             List<UplandForSaleProp> cityProps = await CallApiForSalePropsByArea(cityId);

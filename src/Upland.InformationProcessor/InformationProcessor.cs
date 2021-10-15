@@ -144,7 +144,7 @@ namespace Upland.InformationProcessor
             }
 
             // Finally we are ready to write the output
-            int pricePad = 10;
+            int pricePad = 11;
             int markupPad = 9;
             int mintPad = 10;
             int addressPad = properties.Max(p => p.Value.Address.Length);
@@ -179,6 +179,11 @@ namespace Upland.InformationProcessor
             }
 
             return output;
+        }
+
+        public void ClearSalesCache()
+        {
+            uplandApiManager.ClearSalesCache();
         }
     }
 }

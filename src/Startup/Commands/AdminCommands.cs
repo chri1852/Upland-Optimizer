@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Upland.CollectionOptimizer;
+using Upland.InformationProcessor;
 using Upland.Infrastructure.LocalData;
 using Upland.Types;
 using Upland.Types.Types;
@@ -15,10 +16,12 @@ namespace Startup.Commands
     public class AdminCommands : ModuleBase<SocketCommandContext>
     {
         private readonly Random _random;
+        private readonly InformationProcessor _informationProcessor;
 
-        public AdminCommands()
+        public AdminCommands(InformationProcessor informationProcessor)
         {
             _random = new Random();
+            _informationProcessor = informationProcessor;
         }
 
         private async Task<bool> checkIfAdmin(ulong discordUserId)
@@ -55,17 +58,14 @@ namespace Startup.Commands
 
             try
             {
-                Task child = Task.Factory.StartNew(async () =>
+                CollectionOptimizer optimizer = new CollectionOptimizer();
+                await optimizer.RunAutoOptimization(new RegisteredUser
                 {
-                    CollectionOptimizer optimizer = new CollectionOptimizer();
-                    await optimizer.RunAutoOptimization(new RegisteredUser
-                    {
-                        DiscordUserId = Consts.TestUserDiscordId,
-                        DiscordUsername = "TEST_USER_NAME",
-                        UplandUsername = uplandUsername
-                    },
-                    qualityLevel);
-                });
+                    DiscordUserId = Consts.TestUserDiscordId,
+                    DiscordUsername = "TEST_USER_NAME",
+                    UplandUsername = uplandUsername
+                },
+                qualityLevel);
 
                 await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername));
                 return;
@@ -112,10 +112,7 @@ namespace Startup.Commands
 
             try
             {
-                Task child = Task.Factory.StartNew(async () =>
-                {
-                    await localDataManager.PopulateDatabaseCollectionInfo();
-                });
+                await localDataManager.PopulateDatabaseCollectionInfo();
                 await ReplyAsync(string.Format("Running Collection Update in Child Task"));
             }
             catch (Exception ex)
@@ -143,15 +140,31 @@ namespace Startup.Commands
 
             try
             {
-                Task child = Task.Factory.StartNew(async () =>
-                {
-                    await localDataManager.PopulationCollectionPropertyData(collectionId);
-                });
+                await localDataManager.PopulationCollectionPropertyData(collectionId);
                 await ReplyAsync(string.Format("Running Collection Property Update in Child Task for CollectionId {0}.", collectionId));
             }
             catch (Exception ex)
             {
                 await ReplyAsync(string.Format("Update Failed: {0}", ex.Message));
+            }
+        }
+
+        [Command("AdminClearSalesCache")]
+        public async Task AdminClearSalesCache()
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                _informationProcessor.ClearSalesCache();
+                await ReplyAsync(string.Format("Sales Cache Cleared."));
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(string.Format("Failed Clearing Sales Cache: {0}", ex.Message));
             }
         }
     }

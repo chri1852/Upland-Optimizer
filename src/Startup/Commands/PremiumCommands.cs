@@ -56,11 +56,8 @@ namespace Startup.Commands
 
             try
             {
-                Task child = Task.Factory.StartNew(async () =>
-                {
-                    CollectionOptimizer optimizer = new CollectionOptimizer();
-                    await optimizer.RunAutoOptimization(registeredUser, qualityLevel);
-                });
+                CollectionOptimizer optimizer = new CollectionOptimizer();
+                await optimizer.RunAutoOptimization(registeredUser, qualityLevel);
 
                 await ReplyAsync(string.Format("Got it {0}! I have started your level {1} optimization run.", HelperFunctions.GetRandomName(_random), qualityLevel));
                 return;
@@ -103,11 +100,8 @@ namespace Startup.Commands
 
             try
             {
-                Task child = Task.Factory.StartNew(async () =>
-                {
-                    CollectionOptimizer optimizer = new CollectionOptimizer();
-                    await optimizer.RunAutoOptimization(registeredUser, 7, collectionId, numberOfProps, averageMonthlyUpx);
-                });
+                CollectionOptimizer optimizer = new CollectionOptimizer();
+                await optimizer.RunAutoOptimization(registeredUser, 7, collectionId, numberOfProps, averageMonthlyUpx);
 
                 await ReplyAsync(string.Format("Bingo {0}! I have started your level What If optimization run.", HelperFunctions.GetRandomName(_random)));
                 return;
