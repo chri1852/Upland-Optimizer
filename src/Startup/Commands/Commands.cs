@@ -18,10 +18,12 @@ namespace Startup.Commands
     public class Commands : ModuleBase<SocketCommandContext>
     {
         private readonly Random _random;
+        private readonly InformationProcessor _informationProcessor;
 
-        public Commands()
+        public Commands(InformationProcessor informationProcessor)
         {
             _random = new Random();
+            _informationProcessor = informationProcessor;
         }
 
         [Command("Ping")]
@@ -322,7 +324,7 @@ namespace Startup.Commands
             else
             {
                 await ReplyAsync(string.Format("Hey {0}, Sounds like you really like this tool, to help support this tool why don't you ping Grombrindal.{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
-                await ReplyAsync(string.Format("For the low price of $5 you will get perpetual access to run this when ever you like, access to new premium features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs. USD, UPX, Waxp, Ham Sandwiches, MTG Bulk Rares, and more are all accepted in payment."));
+                await ReplyAsync(string.Format("For the low price of $5 you will get perpetual access to run this when ever you like, access to additional features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs. USD, UPX, Waxp, Ham Sandwiches, MTG Bulk Rares, and more are all accepted in payment."));
             }
         }
 
@@ -331,14 +333,13 @@ namespace Startup.Commands
         {
             LocalDataManager localDataManager = new LocalDataManager();
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
-            InformationProcessor informationProcessor = new InformationProcessor();
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
                 return;
             }
 
-            List<string> collectionData = informationProcessor.GetCollectionInformation();
+            List<string> collectionData = _informationProcessor.GetCollectionInformation();
 
             await ReplyAsync(string.Format("Here you go {0}!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
 
@@ -356,7 +357,6 @@ namespace Startup.Commands
         {
             LocalDataManager localDataManager = new LocalDataManager();
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
-            InformationProcessor informationProcessor = new InformationProcessor();
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -370,7 +370,7 @@ namespace Startup.Commands
                 return;
             }
 
-            List<string> propertyData = await informationProcessor.GetMyPropertyInfo(registeredUser.UplandUsername);
+            List<string> propertyData = await _informationProcessor.GetMyPropertyInfo(registeredUser.UplandUsername);
 
             await ReplyAsync(string.Format("Here you go {0}!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
 
@@ -380,6 +380,37 @@ namespace Startup.Commands
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
                 await Context.Channel.SendFileAsync(stream, "PropertyInfo.txt");
+            }
+        }
+
+        [Command("CollectionsForSale")]
+        public async Task CollectionsForSale(int collectionId, string orderBy, string currency = "ALL")
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            List<string> collectionReport = await _informationProcessor.GetCollectionPropertiesForSale(collectionId, orderBy.ToUpper(), currency.ToUpper());
+
+            if(collectionReport.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), collectionReport));
+                return;
+            }
+
+            await ReplyAsync(string.Format("Here it is {0}!{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, collectionReport));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, "CollectionSalesData.txt");
             }
         }
 
@@ -430,10 +461,11 @@ namespace Startup.Commands
             helpMenu.Add("   4. !CollectionInfo");
             helpMenu.Add("   5. !PropertyInfo");
             helpMenu.Add("   6. !SupportMe");
+            helpMenu.Add("   7. !CollectionsForSale");
             helpMenu.Add("");
-            helpMenu.Add("Premium Commands");
-            helpMenu.Add("   7. !OptimizerLevelRun");
-            helpMenu.Add("   8. !OptimizerWhatIfRun");
+            helpMenu.Add("Supporter Commands");
+            helpMenu.Add("   8. !OptimizerLevelRun");
+            helpMenu.Add("   9. !OptimizerWhatIfRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -470,7 +502,7 @@ namespace Startup.Commands
                 case "1":
                     helpOutput.Add(string.Format("!OptimizerRun"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will start an optimizer run for you. Standard users get 6 free runs, while premium users can run this as many times as they like. To get your results or check on the status run the !OptimizerResults or !OptimizerStatus commands. The first time your run the optimizer it may take some extra time as the system retrieves your property information from Upland."));
+                    helpOutput.Add(string.Format("This command will start an optimizer run for you. Standard users get 6 free runs, while supporters can run this as many times as they like. To get your results or check on the status, run the !OptimizerResults or !OptimizerStatus commands. The first time your run the optimizer it may take some extra time as the system retrieves your property information from Upland."));
                     break;
                 case "2":
                     helpOutput.Add(string.Format("!OptimizerStatus"));
@@ -498,12 +530,23 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("This command will let you know how to support the development of this tool."));
                     break;
                 case "7":
+                    helpOutput.Add(string.Format("!CollectionsForSale"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will find props for sale in the given collection id (not standard or city collections), and return a text file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again."));
+                    helpOutput.Add("EX: !CollectionsForSale 177 MARKUP UPX");
+                    helpOutput.Add("The above command finds all properties for sale for UPX in the Kansas City Main St collection, and returns a list form lowest to greatest markup");
+                    helpOutput.Add("EX: !CollectionsForSale 177 PRICE ALL");
+                    helpOutput.Add("The above command finds all properties for sale in the Kansas City Main St collection, and returns a list form lowest to greatest price (USD = UPX * 1000).");
+                    helpOutput.Add("EX: !CollectionsForSale 177 PRICE USD");
+                    helpOutput.Add("The above command finds all properties for sale for USD in the Kansas City Main St collection, and returns a list form lowest to greatest price.");
+                    break;
+                case "8":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
-                case "8":
+                case "9":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));

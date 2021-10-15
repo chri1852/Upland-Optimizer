@@ -5,18 +5,27 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-//using Upland.CollectionOptimizer;  // ONLY UNCOMMENT FOR DEBUGING
-//using Upland.Infrastructure.LocalData;  // ONLY UNCOMMENT FOR DEBUGING
+using Upland.InformationProcessor;
+
+/*
+// ONLY UNCOMMENT FOR DEBUGING
+using Upland.CollectionOptimizer;  
+using Upland.Infrastructure.LocalData;
+using System.Collections.Generic;
+using System.IO;
+*/
 
 class Program
 {
     private DiscordSocketClient _client;
     private CommandService _commands;
     private IServiceProvider _services;
+    private InformationProcessor _informationProcessor;
 
     /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
+        
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
         string username;
         string qualityLevel;
@@ -30,7 +39,13 @@ class Program
         qualityLevel = Console.ReadLine();
 
 
-        await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
+        await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel), 201, 20, 1000);
+        
+        
+        InformationProcessor informationProcessor = new InformationProcessor();
+
+        List<string> output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
+        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
     }
     */
     
@@ -41,8 +56,10 @@ class Program
     {
         _client = new DiscordSocketClient();
         _commands = new CommandService();
+        _informationProcessor = new InformationProcessor();
 
         _services = new ServiceCollection()
+            .AddSingleton(_informationProcessor)
             .AddSingleton(_client)
             .AddSingleton(_commands)
             .BuildServiceProvider();
