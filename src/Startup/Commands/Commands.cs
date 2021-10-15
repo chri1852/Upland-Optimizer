@@ -223,9 +223,9 @@ namespace Startup.Commands
             try
             {
                 CollectionOptimizer optimizer = new CollectionOptimizer();
+                await ReplyAsync(string.Format("Got it {0}! I have started your optimization run.", HelperFunctions.GetRandomName(_random)));
                 await optimizer.RunAutoOptimization(registeredUser, 7);
 
-                await ReplyAsync(string.Format("Got it {0}! I have started your optimization run.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
             catch

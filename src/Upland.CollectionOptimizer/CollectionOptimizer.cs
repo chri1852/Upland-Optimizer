@@ -71,8 +71,10 @@ namespace Upland.CollectionOptimizer
                     new OptimizationRun
                     {
                         Id = optimizationRun.Id,
-                        Status = Consts.RunStatusFailed
+                        Status = Consts.RunStatusFailed,
+                        Results = new byte[] { }
                     });
+                return;
             }
 
             LocalDataManager.SetOptimizationRunStatus(

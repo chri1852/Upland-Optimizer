@@ -57,9 +57,9 @@ namespace Startup.Commands
             try
             {
                 CollectionOptimizer optimizer = new CollectionOptimizer();
-                await optimizer.RunAutoOptimization(registeredUser, qualityLevel);
-
                 await ReplyAsync(string.Format("Got it {0}! I have started your level {1} optimization run.", HelperFunctions.GetRandomName(_random), qualityLevel));
+
+                await optimizer.RunAutoOptimization(registeredUser, qualityLevel);
                 return;
             }
             catch
@@ -101,9 +101,10 @@ namespace Startup.Commands
             try
             {
                 CollectionOptimizer optimizer = new CollectionOptimizer();
+                await ReplyAsync(string.Format("Bingo {0}! I have started your level What If optimization run.", HelperFunctions.GetRandomName(_random)));
+
                 await optimizer.RunAutoOptimization(registeredUser, 7, collectionId, numberOfProps, averageMonthlyUpx);
 
-                await ReplyAsync(string.Format("Bingo {0}! I have started your level What If optimization run.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
             catch

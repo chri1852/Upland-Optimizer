@@ -46,6 +46,7 @@ class Program
 
         List<string> output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
         await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
+        
     }
     */
     

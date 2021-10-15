@@ -58,6 +58,8 @@ namespace Startup.Commands
 
             try
             {
+                await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername));
+
                 CollectionOptimizer optimizer = new CollectionOptimizer();
                 await optimizer.RunAutoOptimization(new RegisteredUser
                 {
@@ -67,12 +69,11 @@ namespace Startup.Commands
                 },
                 qualityLevel);
 
-                await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername));
                 return;
             }
-            catch
+            catch (Exception ex)
             {
-                await ReplyAsync(string.Format("Test Run Has Failed For: {0}", uplandUsername));
+                await ReplyAsync(string.Format("Test Run Has Failed For: {0} - {1}", uplandUsername, ex.Message));
                 return;
             }
         }
@@ -112,8 +113,8 @@ namespace Startup.Commands
 
             try
             {
-                await localDataManager.PopulateDatabaseCollectionInfo();
                 await ReplyAsync(string.Format("Running Collection Update in Child Task"));
+                await localDataManager.PopulateDatabaseCollectionInfo();
             }
             catch (Exception ex)
             {
