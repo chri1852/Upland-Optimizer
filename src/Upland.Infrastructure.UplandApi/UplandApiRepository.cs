@@ -57,6 +57,17 @@ namespace Upland.Infrastructure.UplandApi
             return neighborhoods;
         }
 
+        public async Task<List<UplandForSaleProp>> GetForSalePropsInArea(double north, double south, double east, double west)
+        {
+            UplandForSalePropWrapper props;
+            string requestUri = @"https://api.upland.me/properties/list-view?";
+            requestUri = string.Format("{0}north={1}&south={2}&east={3}&west={4}&offset=0&limit=20&sort=asc", requestUri, north, south, east, west);
+
+            props = await CallApi<UplandForSalePropWrapper>(requestUri);
+
+            return props.Properties;
+        }
+
         public async Task<UplandStreet> GetStreetById(int streetId)
         {
             UplandStreet street;

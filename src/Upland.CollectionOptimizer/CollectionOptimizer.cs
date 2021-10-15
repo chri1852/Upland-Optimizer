@@ -93,10 +93,15 @@ namespace Upland.CollectionOptimizer
             }
 
             List<Property> properties = HelperFunctions.BuildHypotheicalProperties(this.Collections[collectionId].CityId.Value, numberOfProperties, averageMonthlyUpx);
+            int matchingCityCollectionId = this.Collections.Where(c => c.Value.IsCityCollection && c.Value.CityId == this.Collections[collectionId].CityId.Value).First().Value.Id;
 
             foreach (Property property in properties)
             {
                 this.Collections[collectionId].MatchingPropertyIds.Add(property.Id);
+                if (matchingCityCollectionId != collectionId)
+                {
+                    this.Collections[matchingCityCollectionId].MatchingPropertyIds.Add(property.Id);
+                }
                 this.Properties.Add(property.Id, property);
             }
         }
@@ -169,7 +174,6 @@ namespace Upland.CollectionOptimizer
         private async Task SetDataForOptimization(string username, int collectionId = -1, int numberOfProperties = -1, double averageMonthlyUpx = -1)
         {
             LoadCollections();
-            await LoadUserProperties(username);
 
             // Only build the hypotheticals if requested
             if (collectionId != -1 && numberOfProperties != -1 && averageMonthlyUpx != -1)
@@ -177,6 +181,7 @@ namespace Upland.CollectionOptimizer
                 CreateHypotheicalProperties(collectionId, numberOfProperties, averageMonthlyUpx);
             }
 
+            await LoadUserProperties(username);
             PopulatePropertiesAndCollections();
 
             BuildAllCityProCollections();
@@ -303,12 +308,17 @@ namespace Upland.CollectionOptimizer
 
         private async Task LoadUserProperties(string username)
         {
-            this.Properties = new Dictionary<long, Property>();
-
             List<Property> userProperties = await this.LocalDataManager.GetPropertysByUsername(username);
+
+            // Loads Hypothetical properties if any
+            foreach (KeyValuePair<long, Property> entry in this.Properties)
+            {
+                userProperties.Add(entry.Value);
+            }
 
             userProperties = userProperties.OrderByDescending(p => p.MonthlyEarnings).ToList();
 
+            this.Properties = new Dictionary<long, Property>();
             foreach (Property property in userProperties)
             {
                 this.Properties.Add(property.Id, property);
