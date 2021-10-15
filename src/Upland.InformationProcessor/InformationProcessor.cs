@@ -181,6 +181,95 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public List<string> GetCityIds()
+        {
+            List<string> array = new List<string>();
+            array.Add("Id - Name");
+            array.AddRange(Consts.Cities.Select(c => string.Format("{0} - {1}", c.Key.ToString().PadLeft(2), c.Value)).ToList());
+            return array;
+        }
+
+        public async Task<List<string>> GetCollectionsSalesDataByCityId(int cityId)
+        {
+            List<string> output = new List<string>();
+
+            if (cityId != 0 && !Consts.Cities.ContainsKey(cityId))
+            {
+                output.Add(string.Format("{0} is not a valid cityId.", cityId));
+                return output;
+            }
+
+            List<Collection> collections = localDataManager.GetCollections();
+            Dictionary<long, Property> propDictionary = new Dictionary<long, Property>();
+            List<UplandForSaleProp> forSaleProps = new List<UplandForSaleProp>();
+
+            if (cityId == 0)
+            {
+                foreach (int cId in Consts.Cities.Keys)
+                {
+                    forSaleProps.AddRange(await uplandApiManager.GetForSalePropsByCityId(cId));
+                }
+
+                List<Property> allProperties = new List<Property>();
+
+                foreach (Collection collection in collections.Where(c => c.CityId.HasValue && !c.IsCityCollection))
+                {
+                    allProperties.AddRange(localDataManager.GetPropertiesByCollectionId(collection.Id));
+                      //  .Where(p => forSaleProps.Any(f => f.Prop_Id == p.Id)));
+                }
+
+                propDictionary = allProperties.GroupBy(p => p.Id).Select(p => p.First()).ToDictionary(p => p.Id);
+                forSaleProps = forSaleProps.Where(p => propDictionary.ContainsKey(p.Prop_Id)).ToList();
+            }
+            else
+            {
+                forSaleProps.AddRange(await uplandApiManager.GetForSalePropsByCityId(cityId));
+                List<Property> allProperties = new List<Property>();
+
+                foreach (Collection collection in collections.Where(c => c.CityId.Value == cityId && !c.IsCityCollection))
+                {
+                    allProperties.AddRange(localDataManager.GetPropertiesByCollectionId(collection.Id)
+                        .Where(p => forSaleProps.Any(f => f.Prop_Id == p.Id)));
+                }
+
+                propDictionary = allProperties.GroupBy(p => p.Id).Select(p => p.First()).ToDictionary(p => p.Id);
+                forSaleProps = forSaleProps.Where(p => propDictionary.ContainsKey(p.Prop_Id)).ToList();
+            }
+
+            if (forSaleProps.Count == 0)
+            {
+                output.Add(string.Format("No Props Found, I bet you tried to run this on Piedmont or something."));
+                return output;
+            }
+
+            output.Add("Price,Currency,Mint,Markup,CityId,Address,Owner");
+
+            foreach (UplandForSaleProp prop in forSaleProps)
+            {
+                string propString = "";
+
+                if (prop.Currency == "USD")
+                {
+                    propString += string.Format("{0:N2},", prop.Price);
+                }
+                else
+                {
+                    propString += string.Format("{0:N0},", prop.Price);
+                }
+
+                propString += string.Format("{0},", prop.Currency.ToUpper());
+                propString += string.Format("{0:N0},", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
+                propString += string.Format("{0:N0}%,", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
+                propString += string.Format("{0},", propDictionary[prop.Prop_Id].CityId);
+                propString += string.Format("{0},", propDictionary[prop.Prop_Id].Address);
+                propString += string.Format("{0}", prop.Owner);
+
+                output.Add(propString);
+            }
+
+            return output;
+        }
+        
         public void ClearSalesCache()
         {
             uplandApiManager.ClearSalesCache();

@@ -404,6 +404,65 @@ namespace Startup.Commands
             }
         }
 
+        [Command("GetCityIds")]
+        public async Task GetCityIds()
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            List<string> cities = _informationProcessor.GetCityIds();
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, cities));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("CitiesIds.txt"));
+            }
+        }
+
+        [Command("GetCollectionsSalesDataByCityId")]
+        public async Task GetCollectionsSalesDataByCityId(int cityId)
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            if (cityId == 0)
+            {
+                await ReplyAsync(string.Format("Hold tight {0}, this may take a bit.", HelperFunctions.GetRandomName(_random)));
+            }
+            else
+            {
+                await ReplyAsync(string.Format("Running that query now {0}!", HelperFunctions.GetRandomName(_random)));
+            }
+            List<string> salesData = await _informationProcessor.GetCollectionsSalesDataByCityId(cityId);
+
+            if (salesData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), salesData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, salesData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("CitysForSaleData.csv"));
+            }
+        }
+
         [Command("Help")]
         public async Task Help()
         {
@@ -445,17 +504,19 @@ namespace Startup.Commands
             helpMenu.Add("Below are the functions you can run use my !Help command and specify the number of the command you want more information on, like !Help 2.");
             helpMenu.Add("");
             helpMenu.Add("Standard Commands");
-            helpMenu.Add("   1. !OptimizerRun");
-            helpMenu.Add("   2. !OptimizerStatus");
-            helpMenu.Add("   3. !OptimizerResults");
-            helpMenu.Add("   4. !CollectionInfo");
-            helpMenu.Add("   5. !PropertyInfo");
-            helpMenu.Add("   6. !SupportMe");
-            helpMenu.Add("   7. !CollectionsForSale");
+            helpMenu.Add("   1.  !OptimizerRun");
+            helpMenu.Add("   2.  !OptimizerStatus");
+            helpMenu.Add("   3.  !OptimizerResults");
+            helpMenu.Add("   4.  !CollectionInfo");
+            helpMenu.Add("   5.  !PropertyInfo");
+            helpMenu.Add("   6.  !GetCityIds");
+            helpMenu.Add("   7.  !SupportMe");
+            helpMenu.Add("   8.  !CollectionsForSale");
+            helpMenu.Add("   9.  !GetCollectionsSalesDataByCityId");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   8. !OptimizerLevelRun");
-            helpMenu.Add("   9. !OptimizerWhatIfRun");
+            helpMenu.Add("   10. !OptimizerLevelRun");
+            helpMenu.Add("   11. !OptimizerWhatIfRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -515,11 +576,16 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("This command will return a text file with all of your properties."));
                     break;
                 case "6":
+                    helpOutput.Add(string.Format("!GetCityIds"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will return a text file with all cityIds and Names."));
+                    break;
+                case "7":
                     helpOutput.Add(string.Format("!SupportMe"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will let you know how to support the development of this tool."));
                     break;
-                case "7":
+                case "8":
                     helpOutput.Add(string.Format("!CollectionsForSale"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will find props for sale in the given collection id (not standard or city collections), and return a text file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again."));
@@ -530,13 +596,22 @@ namespace Startup.Commands
                     helpOutput.Add("EX: !CollectionsForSale 177 PRICE USD");
                     helpOutput.Add("The above command finds all properties for sale for USD in the Kansas City Main St collection, and returns a list form lowest to greatest price.");
                     break;
-                case "8":
+                case "9":
+                    helpOutput.Add(string.Format("!GetCollectionsSalesDataByCityId"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will will drop a csv file you can open in excel with information on all collection props for sale in a given cityId. To get a list of CityIds run !GetCityIds."));
+                    helpOutput.Add("EX: !GetCollectionsSalesDataByCityId 11");
+                    helpOutput.Add("The above command will return a csv file containing all for sale collection props in cleveland");
+                    helpOutput.Add("EX: !GetCollectionsSalesDataByCityId 0");
+                    helpOutput.Add("The above command will return a csv file containing all for sale collection props in all cities. Note this could take a bit to run if the cache is mostly expired.");
+                    break;
+                case "10":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
-                case "9":
+                case "11":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));

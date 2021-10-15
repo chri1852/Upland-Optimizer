@@ -32,7 +32,7 @@ class Program
 
         //LocalDataManager localDataManager = new LocalDataManager();
         //await localDataManager.PopulateDatabaseCollectionInfo();
-
+        
         Console.Write("Enter the Upland Username: ");
         username = Console.ReadLine();
         Console.Write("Enter the Level (1-8)....: ");
@@ -47,6 +47,9 @@ class Program
         List<string> output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
         await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
         
+        InformationProcessor informationProcessor = new InformationProcessor();
+        List<string> output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
+        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
     }
     */
     
