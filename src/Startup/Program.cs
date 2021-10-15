@@ -102,7 +102,16 @@ class Program
             Task child = Task.Factory.StartNew(async () =>
             {
                 var result = await _commands.ExecuteAsync(context, argPos, _services);
-                if (!result.IsSuccess) Console.WriteLine(result.ErrorReason);
+                if (!result.IsSuccess)
+                {
+                    Console.WriteLine(result.ErrorReason);
+                    Console.WriteLine(string.Format("{0}: {1}", message.Author.Username, message.Content));
+                }
+                else
+                {
+                    Console.WriteLine(string.Format("{0}: {1}", message.Author.Username, message.Content));
+                }
+
             });
         }
     }
