@@ -250,16 +250,16 @@ namespace Upland.InformationProcessor
 
                 if (prop.Currency == "USD")
                 {
-                    propString += string.Format("{0:N2},", prop.Price);
+                    propString += string.Format("{0:F2},", prop.Price);
                 }
                 else
                 {
-                    propString += string.Format("{0:N0},", prop.Price);
+                    propString += string.Format("{0:F0},", prop.Price);
                 }
 
                 propString += string.Format("{0},", prop.Currency.ToUpper());
-                propString += string.Format("{0:N0},", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
-                propString += string.Format("{0:N0}%,", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
+                propString += string.Format("{0:F0},", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
+                propString += string.Format("{0:F0}%,", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].CityId);
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].Address);
                 propString += string.Format("{0}", prop.Owner);
