@@ -215,10 +215,16 @@ namespace Upland.InformationProcessor
                 foreach (Collection collection in collections.Where(c => c.CityId.HasValue && !c.IsCityCollection))
                 {
                     allProperties.AddRange(localDataManager.GetPropertiesByCollectionId(collection.Id));
-                      //  .Where(p => forSaleProps.Any(f => f.Prop_Id == p.Id)));
                 }
 
-                propDictionary = allProperties.GroupBy(p => p.Id).Select(p => p.First()).ToDictionary(p => p.Id);
+                foreach (Property prop in allProperties)
+                {
+                    if (!propDictionary.ContainsKey(prop.Id))
+                    {
+                        propDictionary.Add(prop.Id, prop);
+                    }
+                }
+
                 forSaleProps = forSaleProps.Where(p => propDictionary.ContainsKey(p.Prop_Id)).ToList();
             }
             else
@@ -228,11 +234,17 @@ namespace Upland.InformationProcessor
 
                 foreach (Collection collection in collections.Where(c => c.CityId.Value == cityId && !c.IsCityCollection))
                 {
-                    allProperties.AddRange(localDataManager.GetPropertiesByCollectionId(collection.Id)
-                        .Where(p => forSaleProps.Any(f => f.Prop_Id == p.Id)));
+                    allProperties.AddRange(localDataManager.GetPropertiesByCollectionId(collection.Id));
                 }
 
-                propDictionary = allProperties.GroupBy(p => p.Id).Select(p => p.First()).ToDictionary(p => p.Id);
+                foreach (Property prop in allProperties)
+                {
+                    if (!propDictionary.ContainsKey(prop.Id))
+                    {
+                        propDictionary.Add(prop.Id, prop);
+                    }
+                }
+
                 forSaleProps = forSaleProps.Where(p => propDictionary.ContainsKey(p.Prop_Id)).ToList();
             }
 
@@ -242,11 +254,22 @@ namespace Upland.InformationProcessor
                 return output;
             }
 
-            output.Add("Price,Currency,Mint,Markup,CityId,Address,Owner");
-
+            Dictionary<long, UplandForSaleProp> forSaleDictionary = new Dictionary<long, UplandForSaleProp>();
             foreach (UplandForSaleProp prop in forSaleProps)
             {
+                if (!forSaleDictionary.ContainsKey(prop.Prop_Id))
+                {
+                    forSaleDictionary.Add(prop.Prop_Id, prop);
+                }
+            }
+
+            output.Add("PropertyId,Price,Currency,Mint,Markup,CityId,Address,Owner");
+
+            foreach (UplandForSaleProp prop in forSaleDictionary.Values)
+            {
                 string propString = "";
+
+                propString += string.Format("{0},", prop.Prop_Id);
 
                 if (prop.Currency == "USD")
                 {

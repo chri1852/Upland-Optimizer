@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Upland.Types.UplandApiTypes
 {
@@ -7,7 +9,7 @@ namespace Upland.Types.UplandApiTypes
         public List<UplandForSaleProp> Properties { get; set; }
     }
 
-    public class UplandForSaleProp
+    public class UplandForSaleProp : IEquatable<UplandForSaleProp>
     {
         public long Prop_Id { get; set; }
         public double Price { get; set; }
@@ -25,6 +27,11 @@ namespace Upland.Types.UplandApiTypes
                 SortValue = this.SortValue,
                 Owner = this.Owner
             };
+        }
+
+        public bool Equals(UplandForSaleProp other)
+        {
+            return other.Prop_Id == this.Prop_Id;
         }
     }
 }

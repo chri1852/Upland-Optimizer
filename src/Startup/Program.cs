@@ -114,7 +114,6 @@ class Program
                 {
                     Console.WriteLine(string.Format("{0}: {1}", message.Author.Username, message.Content));
                 }
-
             });
         }
     }
