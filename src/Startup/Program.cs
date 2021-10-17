@@ -7,13 +7,14 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Upland.InformationProcessor;
 
-/*
+
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
 using System.Collections.Generic;
 using System.IO;
-*/
+using Upland.Types.Types;
+using System.Linq;
 
 class Program
 {
@@ -22,9 +23,16 @@ class Program
     private IServiceProvider _services;
     private InformationProcessor _informationProcessor;
 
-    /*
+    
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
+        //LocalDataManager localDataManager = new LocalDataManager();
+        // await localDataManager.PopulateNeighborhoods();
+        //await localDataManager.PopulateNeighborhoods();
+
+        //List<Neighborhood> hoods = localDataManager.GetNeighborhoods();
+
+       // Neighborhood hood = hoods.Where(h => h.Name == "STREETERVILLE").First();
         
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
         string username;
@@ -40,7 +48,7 @@ class Program
 
 
         await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel), 201, 20, 1000);
-        
+        /*
         
         InformationProcessor informationProcessor = new InformationProcessor();
 
@@ -50,12 +58,13 @@ class Program
         InformationProcessor informationProcessor = new InformationProcessor();
         List<string> output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
         await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
+        */
     }
-    */
     
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    
+    */
     public async Task RunBotAsync()
     {
         _client = new DiscordSocketClient();

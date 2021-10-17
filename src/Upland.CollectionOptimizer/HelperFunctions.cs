@@ -147,7 +147,8 @@ namespace Upland.CollectionOptimizer
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     foreach (KeyValuePair<int, Collection> entry in UnoptimizedCollections)
                     {
-                        Console.WriteLine(string.Format("     {0} - {1} - Missing Props {2}", entry.Value.Id, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                        string collectionCity = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
+                        Console.WriteLine(string.Format("     {0} - {1} - Missing Props {2}", collectionCity, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
                     }
                 }
 
@@ -159,7 +160,8 @@ namespace Upland.CollectionOptimizer
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     foreach (KeyValuePair<int, Collection> entry in MissingCollections)
                     {
-                        Console.WriteLine(string.Format("     {0} - {1} - Missing Props {2}", entry.Value.Id, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                        string collectionCity = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
+                        Console.WriteLine(string.Format("     {0} - {1} - Missing Props {2}", collectionCity, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
                     }
                 }
             }

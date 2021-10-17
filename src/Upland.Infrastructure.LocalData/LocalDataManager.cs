@@ -7,6 +7,7 @@ using Upland.Types;
 using System.Linq;
 using Upland.Types.UplandApiTypes;
 using Upland.Types.Types;
+using System.Text.Json;
 
 namespace Upland.Infrastructure.LocalData
 {
@@ -17,6 +18,34 @@ namespace Upland.Infrastructure.LocalData
         public LocalDataManager()
         {
             uplandApiRepository = new UplandApiRepository();
+        }
+
+        public async Task PopulateNeighborhoods()
+        {
+            List<Neighborhood> existingNeighborhoods = GetNeighborhoods();
+            List<Neighborhood> neighborhoods = await uplandApiRepository.GetNeighborhoods();
+
+            foreach(Neighborhood neighborhood in neighborhoods)
+            {
+                if (!existingNeighborhoods.Any(n => n.Id == neighborhood.Id))
+                {
+                    if (neighborhood.Boundaries == null)
+                    {
+                        neighborhood.Coordinates = new List<List<List<List<double>>>>();
+                    }
+                    else if (neighborhood.Boundaries.Type == "Polygon")
+                    {
+                        neighborhood.Coordinates = new List<List<List<List<double>>>>();
+                        neighborhood.Coordinates.Add(JsonSerializer.Deserialize<List<List<List<double>>>>(neighborhood.Boundaries.Coordinates.ToString()));
+                    }
+                    else if (neighborhood.Boundaries.Type == "MultiPolygon")
+                    {
+                        neighborhood.Coordinates = JsonSerializer.Deserialize<List<List<List<List<double>>>>>(neighborhood.Boundaries.Coordinates.ToString());
+                    }
+
+                    LocalDataRepository.CreateNeighborhood(neighborhood);
+                }
+            }
         }
 
         public async Task PopulateDatabaseCollectionInfo()
@@ -114,6 +143,16 @@ namespace Upland.Infrastructure.LocalData
         public void CreateOptimizationRun(OptimizationRun optimizationRun)
         {
             LocalDataRepository.CreateOptimizationRun(optimizationRun);
+        }
+
+        public void CreateNeighborhood(Neighborhood neighborhood)
+        {
+            LocalDataRepository.CreateNeighborhood(neighborhood);
+        }
+
+        public List<Neighborhood> GetNeighborhoods()
+        {
+            return LocalDataRepository.GetNeighborhoods();
         }
 
         public void SetOptimizationRunStatus(OptimizationRun optimizationRun)

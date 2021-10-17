@@ -13,6 +13,9 @@ namespace Upland.Types
         public int StreetId { get; set; }
         public int Size { get; set; }
         public double MonthlyEarnings { get; set; }
+        public int NeighborhoodId { get; set; }
+        public decimal Latitude { get; set; }
+        public decimal Longitude { get; set; }
 
         public bool Equals(Property other)
         {

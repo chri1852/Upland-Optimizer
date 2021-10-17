@@ -187,6 +187,9 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("StreetId", property.StreetId));
                     sqlCmd.Parameters.Add(new SqlParameter("Size", property.Size));
                     sqlCmd.Parameters.Add(new SqlParameter("MonthlyEarnings", property.MonthlyEarnings));
+                    sqlCmd.Parameters.Add(new SqlParameter("NeighborhoodId", property.NeighborhoodId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Latitude", property.Latitude));
+                    sqlCmd.Parameters.Add(new SqlParameter("Longitude", property.Longitude));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -229,7 +232,10 @@ namespace Upland.Infrastructure.LocalData
                                     CityId = (int)reader["CityId"],
                                     Size = (int)reader["Size"],
                                     MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
-                                    StreetId = (int)reader["StreetId"]
+                                    StreetId = (int)reader["StreetId"],
+                                    NeighborhoodId = (int)reader["NeighborhoodId"],
+                                    Latitude = (decimal)reader["Latitude"],
+                                    Longitude = (decimal)reader["Longitude"],
                                 }
                              );
                         }
@@ -277,7 +283,10 @@ namespace Upland.Infrastructure.LocalData
                                     CityId = (int)reader["CityId"],
                                     Size = (int)reader["Size"],
                                     MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
-                                    StreetId = (int)reader["StreetId"]
+                                    StreetId = (int)reader["StreetId"],
+                                    NeighborhoodId = (int)reader["NeighborhoodId"],
+                                    Latitude = (decimal)reader["Latitude"],
+                                    Longitude = (decimal)reader["Longitude"],
                                 }
                              );
                         }
@@ -324,6 +333,83 @@ namespace Upland.Infrastructure.LocalData
                 {
                     sqlConnection.Close();
                 }
+            }
+        }
+
+        public static void CreateNeighborhood(Neighborhood neighborhood)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CreateNeighborhood]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", neighborhood.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("Name", neighborhood.Name));
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", neighborhood.City_Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("Coordinates", Newtonsoft.Json.JsonConvert.SerializeObject(neighborhood.Coordinates)));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static List<Neighborhood> GetNeighborhoods()
+        {
+            List<Neighborhood> neighborhoods = new List<Neighborhood>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNeighborhoods]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            neighborhoods.Add(
+                                new Neighborhood
+                                {
+                                    Id = (int)reader["Id"],
+                                    Name = (string)reader["Name"],
+                                    CityId = (int)reader["CityId"],
+                                    Coordinates = Newtonsoft.Json.JsonConvert.DeserializeObject<List<List<List<List<double>>>>>((string)reader["Coordinates"])
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return neighborhoods;
             }
         }
 

@@ -5,7 +5,10 @@
 	@CityId          INT,
 	@StreetId        INT,
 	@Size            INT,
-	@MonthlyEarnings DECIMAL(11,2)
+	@MonthlyEarnings DECIMAL(11,2),
+	@NeighborhoodId  INT,
+	@Latitude        DECIMAL(19,3),
+	@Longitude       DECIMAL(19,3)
 )
 AS
 BEGIN
@@ -17,7 +20,10 @@ BEGIN
 			[CityId],
 			[StreetId],
 			[Size],
-			[MonthlyEarnings]
+			[MonthlyEarnings],
+			[NeighborhoodId],
+			[Latitude],
+			[Longitude]
 		)
 		Values
 		(
@@ -26,7 +32,10 @@ BEGIN
 			@CityId,
 			@StreetId,
 			@Size,
-			@MonthlyEarnings
+			@MonthlyEarnings,
+			@NeighborhoodId,
+			@Latitude,
+			@Longitude   
 		)
 	END TRY
 

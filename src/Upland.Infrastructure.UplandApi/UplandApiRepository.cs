@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Upland.Types;
+using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.Infrastructure.UplandApi
@@ -47,12 +48,12 @@ namespace Upland.Infrastructure.UplandApi
             return cities;
         }
 
-        public async Task<List<UplandNeighborhood>> GetNeighborhoods()
+        public async Task<List<Neighborhood>> GetNeighborhoods()
         {
-            List<UplandNeighborhood> neighborhoods;
+            List<Neighborhood> neighborhoods;
             string requestUri = @"https://api.upland.me/neighborhood";
 
-            neighborhoods = await CallApi<List<UplandNeighborhood>>(requestUri);
+            neighborhoods = await CallApi<List<Neighborhood>>(requestUri);
 
             return neighborhoods;
         }
