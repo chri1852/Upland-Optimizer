@@ -6,7 +6,6 @@
 	@StreetId        INT,
 	@Size            INT,
 	@MonthlyEarnings DECIMAL(11,2),
-	@NeighborhoodId  INT,
 	@Latitude        DECIMAL(19,3),
 	@Longitude       DECIMAL(19,3)
 )
@@ -21,7 +20,6 @@ BEGIN
 			[StreetId],
 			[Size],
 			[MonthlyEarnings],
-			[NeighborhoodId],
 			[Latitude],
 			[Longitude]
 		)
@@ -33,7 +31,6 @@ BEGIN
 			@StreetId,
 			@Size,
 			@MonthlyEarnings,
-			@NeighborhoodId,
 			@Latitude,
 			@Longitude   
 		)
