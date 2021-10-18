@@ -139,6 +139,17 @@ namespace Upland.Infrastructure.UplandApi
             return properties;
         }
 
+        public async Task<List<UplandProperty>> GetPropertiesByArea(double north, double west)
+        {
+            List<UplandProperty> properties;
+            double defaultStep = 0.02;
+            string requestUri = @"https://api.upland.me/map?north=" + north + "&south=" + (north - defaultStep) + "&east=" + (west + defaultStep) + "&west=" + west + "&marker=true";
+
+            properties = await CallApi<List<UplandProperty>>(requestUri);
+
+            return properties;
+        }
+
         private async Task<T> CallApi<T>(string requestUri, bool useAuth = false)
         {
             HttpResponseMessage httpResponse;

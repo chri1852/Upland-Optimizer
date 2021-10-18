@@ -16,6 +16,7 @@ using System.IO;
 using Upland.Types.Types;
 using System.Linq;
 
+
 class Program
 {
     private DiscordSocketClient _client;
@@ -32,8 +33,8 @@ class Program
 
         //List<Neighborhood> hoods = localDataManager.GetNeighborhoods();
 
-       // Neighborhood hood = hoods.Where(h => h.Name == "STREETERVILLE").First();
-        
+        // Neighborhood hood = hoods.Where(h => h.Name == "STREETERVILLE").First();
+        /*
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
         string username;
         string qualityLevel;
@@ -48,7 +49,7 @@ class Program
 
 
         await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel), 201, 20, 1000);
-        /*
+        
         
         InformationProcessor informationProcessor = new InformationProcessor();
 
@@ -59,9 +60,12 @@ class Program
         List<string> output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
         await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
         */
+        LocalDataManager localDataManager = new LocalDataManager();
+        //localDataManager.DetermineNeighborhoodIdsForCity(12);
+        await localDataManager.PopulateAllPropertiesInArea(42.11264759895798, 41.58238862582928, -87.0736963824263, -88.43397342182176);
     }
     
-    /*
+    /*   
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
     */

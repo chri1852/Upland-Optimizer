@@ -90,5 +90,7 @@
     <Build Include="Tables\UPL.Neighborhood.sql" />
     <Build Include="StoredProcedures\UPL.CreateNeighborhood.sql" />
     <Build Include="StoredProcedures\UPL.GetNeighborhoods.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertProperty.sql" />
+    <Build Include="StoredProcedures\GetPropertiesByCityId.sql" />
   </ItemGroup>
 </Project>

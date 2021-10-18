@@ -20,6 +20,67 @@ namespace Upland.Infrastructure.LocalData
             uplandApiRepository = new UplandApiRepository();
         }
 
+        public async Task PopulateAllPropertiesInArea(double north, double south, double east, double west)
+        {
+            List<long> retryIds = new List<long>();
+            List<long> loadedProps = new List<long>();
+            double defaultStep = 0.02;
+            
+            for (double y = north; y > south + defaultStep; y -= defaultStep)
+            {
+                for (double x = west; x < east + defaultStep; x += defaultStep)
+                {
+                    List<UplandProperty> sectorProps = await uplandApiRepository.GetPropertiesByArea(y, x);
+
+                    foreach (UplandProperty prop in sectorProps)
+                    {
+                        if (loadedProps.Contains(prop.Prop_Id)) 
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                            LocalDataRepository.UpsertProperty(property);
+                            loadedProps.Add(prop.Prop_Id);
+                        }
+                        catch
+                        {
+                            retryIds.Add(prop.Prop_Id);
+
+                        }
+                    }
+                }
+            }
+
+            while (retryIds.Count > 0)
+            {
+                retryIds = await RetryPopulate(retryIds);
+            }
+        }
+
+        public async Task<List<long>> RetryPopulate(List<long> retryIds)
+        {
+            List<long> nextRetryIds = new List<long>();
+
+            foreach (long Id in retryIds)
+            {
+                try
+                {
+                    Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(Id));
+                    LocalDataRepository.UpsertProperty(property);
+                }
+                catch
+                {
+                    nextRetryIds.Add(Id);
+                }
+                System.Threading.Thread.Sleep(200);
+            }
+
+            return nextRetryIds;
+        }
+
         public async Task PopulateNeighborhoods()
         {
             List<Neighborhood> existingNeighborhoods = GetNeighborhoods();
@@ -99,6 +160,62 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void DetermineNeighborhoodIdsForCity(int cityId)
+        {
+            List<Neighborhood> neighborhoods = GetNeighborhoods();
+            List<Property> properties = LocalDataRepository.GetPropertiesByCityId(cityId);
+
+            neighborhoods = neighborhoods.Where(n => n.CityId == cityId).ToList();
+            properties = properties.Where(p => p.NeighborhoodId == null).ToList();
+
+            foreach(Property prop in properties)
+            {
+                foreach(Neighborhood neighborhood in neighborhoods)
+                {
+                    if (IsPropertyInNeighborhood(neighborhood, prop))
+                    {
+                        prop.NeighborhoodId = neighborhood.Id;
+                        LocalDataRepository.UpsertProperty(prop);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private bool IsPropertyInNeighborhood(Neighborhood neighborhood, Property property)
+        {
+            foreach (List<List<double>> polygon in neighborhood.Coordinates[0])
+            {
+                if (IsPointInPolygon(polygon, property))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        
+        private bool IsPointInPolygon(List<List<double>> polygon, Property property)
+        {
+            int i, j = polygon.Count - 1;
+            bool oddNodes = false;
+            double y = (double)property.Latitude.Value;
+            double x = (double)property.Longitude.Value;
+
+            for (i = 0; i < polygon.Count; i++)
+            {
+                if ((polygon[i][1] < y && polygon[j][1] >= y
+                || polygon[j][1] < y && polygon[i][1] >= y)
+                && (polygon[i][0] <= x || polygon[j][0] <= x))
+                {
+                    oddNodes ^= (polygon[i][0] + (y - polygon[i][1]) / (polygon[j][1] - polygon[i][1]) * (polygon[j][0] - polygon[i][0]) < x);
+                }
+                j = i;
+            }
+
+            return oddNodes;
+        }
+        
         public List<long> GetPropertyIdsByCollectionId(int collectionId)
         {
             return LocalDataRepository.GetCollectionPropertyIds(collectionId);
