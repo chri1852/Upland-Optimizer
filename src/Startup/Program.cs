@@ -7,7 +7,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Upland.InformationProcessor;
 
-
+/*
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.IO;
 using Upland.Types.Types;
 using System.Linq;
-
+*/
 
 class Program
 {
@@ -24,7 +24,7 @@ class Program
     private IServiceProvider _services;
     private InformationProcessor _informationProcessor;
 
-    
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         //LocalDataManager localDataManager = new LocalDataManager();
@@ -34,7 +34,7 @@ class Program
         //List<Neighborhood> hoods = localDataManager.GetNeighborhoods();
 
         // Neighborhood hood = hoods.Where(h => h.Name == "STREETERVILLE").First();
-        /*
+
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
         string username;
         string qualityLevel;
@@ -59,16 +59,19 @@ class Program
         InformationProcessor informationProcessor = new InformationProcessor();
         List<string> output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
         await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
-        */
+
+        InformationProcessor informationProcessor = new InformationProcessor();
         LocalDataManager localDataManager = new LocalDataManager();
-        //localDataManager.DetermineNeighborhoodIdsForCity(12);
-        await localDataManager.PopulateAllPropertiesInArea(42.11264759895798, 41.58238862582928, -87.0736963824263, -88.43397342182176);
+        List<string> neighborhoodReport = await informationProcessor.GetNeighborhoodPropertiesForSale(889, "Markup", "UPX");
+
+        //localDataManager.DetermineNeighborhoodIdsForCity(10);
+        //await localDataManager.PopulateAllPropertiesInArea(42.036944, 41.631243, -87.513617, -87.950324);
     }
+    */
     
-    /*   
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    
     public async Task RunBotAsync()
     {
         _client = new DiscordSocketClient();

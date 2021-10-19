@@ -24,17 +24,23 @@ namespace Upland.Infrastructure.LocalData
         {
             List<long> retryIds = new List<long>();
             List<long> loadedProps = new List<long>();
-            double defaultStep = 0.02;
+
+            #region /* IgnoreIds */
+            List<long> ignoreIds = LocalDataRepository.GetPropertiesByCityId(10).Where(p => p.Latitude.HasValue).Select(p => p.Id).ToList();
+            #endregion /* IgnoreIds */
+
+            double defaultStep = 0.005;
+            int totalprops = 0;
             
-            for (double y = north; y > south + defaultStep; y -= defaultStep)
+            for (double y = north; y > south - defaultStep; y -= defaultStep)
             {
                 for (double x = west; x < east + defaultStep; x += defaultStep)
                 {
-                    List<UplandProperty> sectorProps = await uplandApiRepository.GetPropertiesByArea(y, x);
-
+                    List<UplandProperty> sectorProps = await uplandApiRepository.GetPropertiesByArea(y, x, defaultStep);
+                    totalprops += sectorProps.Count;
                     foreach (UplandProperty prop in sectorProps)
                     {
-                        if (loadedProps.Contains(prop.Prop_Id)) 
+                        if (loadedProps.Contains(prop.Prop_Id) || ignoreIds.Contains(prop.Prop_Id)) 
                         {
                             continue;
                         }
@@ -60,7 +66,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public async Task<List<long>> RetryPopulate(List<long> retryIds)
+        private async Task<List<long>> RetryPopulate(List<long> retryIds)
         {
             List<long> nextRetryIds = new List<long>();
 
@@ -75,7 +81,6 @@ namespace Upland.Infrastructure.LocalData
                 {
                     nextRetryIds.Add(Id);
                 }
-                System.Threading.Thread.Sleep(200);
             }
 
             return nextRetryIds;
@@ -166,7 +171,7 @@ namespace Upland.Infrastructure.LocalData
             List<Property> properties = LocalDataRepository.GetPropertiesByCityId(cityId);
 
             neighborhoods = neighborhoods.Where(n => n.CityId == cityId).ToList();
-            properties = properties.Where(p => p.NeighborhoodId == null).ToList();
+            properties = properties.Where(p => p.NeighborhoodId == null && p.Latitude != null).ToList();
 
             foreach(Property prop in properties)
             {
@@ -195,6 +200,7 @@ namespace Upland.Infrastructure.LocalData
             return false;
         }
         
+        // Stack Overflow Black Magic
         private bool IsPointInPolygon(List<List<double>> polygon, Property property)
         {
             int i, j = polygon.Count - 1;
@@ -219,6 +225,11 @@ namespace Upland.Infrastructure.LocalData
         public List<long> GetPropertyIdsByCollectionId(int collectionId)
         {
             return LocalDataRepository.GetCollectionPropertyIds(collectionId);
+        }
+
+        public List<Property> GetPropertiesByCityId(int cityId)
+        {
+            return LocalDataRepository.GetPropertiesByCityId(cityId);
         }
 
         public List<Property> GetPropertiesByCollectionId(int collectionId)

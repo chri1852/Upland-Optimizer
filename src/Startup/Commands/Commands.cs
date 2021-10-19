@@ -374,6 +374,35 @@ namespace Startup.Commands
             }
         }
 
+        [Command("NeighborhoodInfo")]
+        public async Task NeighborhoodInfo()
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            List<string> neighborhoodData = _informationProcessor.GetNeighborhoodInformation();
+
+            if (neighborhoodData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), neighborhoodData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, neighborhoodData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, "NeighborhoodInfo.txt");
+            }
+        }
+
         [Command("CollectionsForSale")]
         public async Task CollectionsForSale(int collectionId, string orderBy, string currency = "ALL")
         {
@@ -401,6 +430,36 @@ namespace Startup.Commands
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
                 await Context.Channel.SendFileAsync(stream, string.Format("Collection_{0}_SalesData.txt", collectionId));
+            }
+        }
+
+        [Command("NeighborhoodsForSale")]
+        public async Task NeighborhoodsForSale(int neighborhoodId, string orderBy, string currency = "ALL")
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            await ReplyAsync(string.Format("Sounds Good {0}! Lets find out whats for sale!", HelperFunctions.GetRandomName(_random)));
+            List<string> neighborhoodReport = await _informationProcessor.GetNeighborhoodPropertiesForSale(neighborhoodId, orderBy.ToUpper(), currency.ToUpper());
+
+            if (neighborhoodReport.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), neighborhoodReport));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, neighborhoodReport));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("Neighborhood_{0}_SalesData.txt", neighborhoodId));
             }
         }
 
@@ -509,14 +568,16 @@ namespace Startup.Commands
             helpMenu.Add("   3.  !OptimizerResults");
             helpMenu.Add("   4.  !CollectionInfo");
             helpMenu.Add("   5.  !PropertyInfo");
-            helpMenu.Add("   6.  !GetCityIds");
-            helpMenu.Add("   7.  !SupportMe");
-            helpMenu.Add("   8.  !CollectionsForSale");
-            helpMenu.Add("   9.  !GetCollectionsSalesDataByCityId");
+            helpMenu.Add("   6.  !NeighborhoodInfo");
+            helpMenu.Add("   7.  !GetCityIds");
+            helpMenu.Add("   8.  !SupportMe");
+            helpMenu.Add("   9.  !CollectionsForSale");
+            helpMenu.Add("   10. !NeighborhoodsForSale");
+            helpMenu.Add("   11. !GetCollectionsSalesDataByCityId");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   10. !OptimizerLevelRun");
-            helpMenu.Add("   11. !OptimizerWhatIfRun");
+            helpMenu.Add("   12. !OptimizerLevelRun");
+            helpMenu.Add("   13. !OptimizerWhatIfRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -576,16 +637,21 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("This command will return a text file with all of your properties."));
                     break;
                 case "6":
+                    helpOutput.Add(string.Format("!NeighborhoodInfo"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will return a text file with information on all Neighborhoods."));
+                    break;
+                case "7":
                     helpOutput.Add(string.Format("!GetCityIds"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will return a text file with all cityIds and Names."));
                     break;
-                case "7":
+                case "8":
                     helpOutput.Add(string.Format("!SupportMe"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will let you know how to support the development of this tool."));
                     break;
-                case "8":
+                case "9":
                     helpOutput.Add(string.Format("!CollectionsForSale"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will find props for sale in the given collection id (not standard or city collections), and return a text file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again."));
@@ -596,7 +662,18 @@ namespace Startup.Commands
                     helpOutput.Add("EX: !CollectionsForSale 177 PRICE USD");
                     helpOutput.Add("The above command finds all properties for sale for USD in the Kansas City Main St collection, and returns a list form lowest to greatest price.");
                     break;
-                case "9":
+                case "10":
+                    helpOutput.Add(string.Format("!NeighborhoodsForSale"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will find props for sale in the given neighborhood id, and return a text file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again."));
+                    helpOutput.Add("EX: !NeighborhoodsForSale 810 MARKUP UPX");
+                    helpOutput.Add("The above command finds all properties for sale for UPX in the Chicago Ashburn neighborhood, and returns a list form lowest to greatest markup");
+                    helpOutput.Add("EX: !NeighborhoodsForSale 810 PRICE ALL");
+                    helpOutput.Add("The above command finds all properties for sale in the Chicago Ashburn neighborhood, and returns a list form lowest to greatest price (USD = UPX * 1000).");
+                    helpOutput.Add("EX: !NeighborhoodsForSale 810 PRICE USD");
+                    helpOutput.Add("The above command finds all properties for sale for USD in the Chicago Ashburn neighborhood, and returns a list form lowest to greatest price.");
+                    break;
+                case "11":
                     helpOutput.Add(string.Format("!GetCollectionsSalesDataByCityId"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will will drop a csv file you can open in excel with information on all collection props for sale in a given cityId. To get a list of CityIds run !GetCityIds."));
@@ -605,13 +682,13 @@ namespace Startup.Commands
                     helpOutput.Add("EX: !GetCollectionsSalesDataByCityId 0");
                     helpOutput.Add("The above command will return a csv file containing all for sale collection props in all cities. Note this could take a bit to run if the cache is mostly expired.");
                     break;
-                case "10":
+                case "12":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
-                case "11":
+                case "13":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
