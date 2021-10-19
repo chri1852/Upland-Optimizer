@@ -25,7 +25,7 @@ namespace Upland.InformationProcessor
         public static List<string> CreateForSaleCSVString(Dictionary<long, UplandForSaleProp> forSaleDictionary, Dictionary<long, Property> propDictionary)
         {
             List<string> output = new List<string>();
-            output.Add("PropertyId,Price,Currency,Mint,Markup,CityId,Address,Owner");
+            output.Add("PropertyId,Price,Currency,Mint,Markup,CityId,Address,Owner,NeighborhoodId");
 
             foreach (UplandForSaleProp prop in forSaleDictionary.Values)
             {
@@ -47,7 +47,8 @@ namespace Upland.InformationProcessor
                 propString += string.Format("{0:F0}%,", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].CityId);
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].Address);
-                propString += string.Format("{0}", prop.Owner);
+                propString += string.Format("{0},", prop.Owner);
+                propString += string.Format("{0}", propDictionary[prop.Prop_Id].NeighborhoodId.HasValue ? propDictionary[prop.Prop_Id].NeighborhoodId.Value.ToString() : "-1");
 
                 output.Add(propString);
             }
@@ -66,7 +67,7 @@ namespace Upland.InformationProcessor
             int ownerPad = forSaleProps.Max(p => p.Owner.Length);
             output.Add(string.Format("For Sale Report for {0} in {1}. Data expires at {2}", reportName, cityName, expireDate));
             output.Add("");
-            output.Add(string.Format("{0} - Currency - {1} - {2} - {3} - {4}", "Price".PadLeft(pricePad), "Mint".PadLeft(mintPad), "Markup".PadLeft(markupPad), "Address".PadLeft(addressPad), "Owner".PadLeft(ownerPad)));
+            output.Add(string.Format("{0} - Currency - {1} - {2} - {3} - {4} - {5}", "Price".PadLeft(pricePad), "Mint".PadLeft(mintPad), "Markup".PadLeft(markupPad), "Address".PadLeft(addressPad), "Owner".PadLeft(ownerPad), "NeighborhoodId"));
 
             foreach (UplandForSaleProp prop in forSaleProps)
             {
@@ -89,6 +90,8 @@ namespace Upland.InformationProcessor
                 propString += string.Format("{0}", properties[prop.Prop_Id].Address).PadLeft(addressPad);
                 propString += " - ";
                 propString += string.Format("{0}", prop.Owner).PadLeft(ownerPad);
+                propString += " - ";
+                propString += string.Format("{0}", properties[prop.Prop_Id].NeighborhoodId.HasValue ? properties[prop.Prop_Id].NeighborhoodId.Value.ToString().PadLeft(4) : "-1");
 
                 output.Add(propString);
             }

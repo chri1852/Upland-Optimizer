@@ -26,7 +26,7 @@ namespace Upland.Infrastructure.LocalData
             List<long> loadedProps = new List<long>();
 
             #region /* IgnoreIds */
-            List<long> ignoreIds = LocalDataRepository.GetPropertiesByCityId(10).Where(p => p.Latitude.HasValue).Select(p => p.Id).ToList();
+            List<long> ignoreIds = LocalDataRepository.GetPropertiesByCityId(11).Where(p => p.Latitude.HasValue).Select(p => p.Id).ToList();
             #endregion /* IgnoreIds */
 
             double defaultStep = 0.005;

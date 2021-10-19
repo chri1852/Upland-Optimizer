@@ -485,8 +485,8 @@ namespace Startup.Commands
             }
         }
 
-        [Command("GetCollectionsSalesDataByCityId")]
-        public async Task GetCollectionsSalesDataByCityId(int cityId)
+        [Command("GetSalesDataByCityId")]
+        public async Task GetSalesDataByCityId(int cityId)
         {
             LocalDataManager localDataManager = new LocalDataManager();
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
@@ -496,15 +496,9 @@ namespace Startup.Commands
                 return;
             }
 
-            if (cityId == 0)
-            {
-                await ReplyAsync(string.Format("Hold tight {0}, this may take a bit.", HelperFunctions.GetRandomName(_random)));
-            }
-            else
-            {
-                await ReplyAsync(string.Format("Running that query now {0}!", HelperFunctions.GetRandomName(_random)));
-            }
-            List<string> salesData = await _informationProcessor.GetCollectionsSalesDataByCityId(cityId);
+            await ReplyAsync(string.Format("Running that query now {0}!", HelperFunctions.GetRandomName(_random)));
+
+            List<string> salesData = await _informationProcessor.GetSalesDataByCityId(cityId);
 
             if (salesData.Count == 1)
             {
@@ -573,7 +567,7 @@ namespace Startup.Commands
             helpMenu.Add("   8.  !SupportMe");
             helpMenu.Add("   9.  !CollectionsForSale");
             helpMenu.Add("   10. !NeighborhoodsForSale");
-            helpMenu.Add("   11. !GetCollectionsSalesDataByCityId");
+            helpMenu.Add("   11. !GetSalesDataByCityId");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
             helpMenu.Add("   12. !OptimizerLevelRun");
@@ -674,13 +668,11 @@ namespace Startup.Commands
                     helpOutput.Add("The above command finds all properties for sale for USD in the Chicago Ashburn neighborhood, and returns a list form lowest to greatest price.");
                     break;
                 case "11":
-                    helpOutput.Add(string.Format("!GetCollectionsSalesDataByCityId"));
+                    helpOutput.Add(string.Format("!GetSalesDataByCityId"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will will drop a csv file you can open in excel with information on all collection props for sale in a given cityId. To get a list of CityIds run !GetCityIds."));
-                    helpOutput.Add("EX: !GetCollectionsSalesDataByCityId 11");
-                    helpOutput.Add("The above command will return a csv file containing all for sale collection props in cleveland");
-                    helpOutput.Add("EX: !GetCollectionsSalesDataByCityId 0");
-                    helpOutput.Add("The above command will return a csv file containing all for sale collection props in all cities. Note this could take a bit to run if the cache is mostly expired.");
+                    helpOutput.Add(string.Format("This command will will drop a csv file you can open in excel with information on all props for sale in a given cityId. To get a list of CityIds run !GetCityIds."));
+                    helpOutput.Add("EX: !GetSalesDataByCityId 11");
+                    helpOutput.Add("The above command will return a csv file containing all for sale props in cleveland");
                     break;
                 case "12":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));

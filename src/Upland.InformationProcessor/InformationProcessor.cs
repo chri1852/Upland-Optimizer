@@ -97,7 +97,7 @@ namespace Upland.InformationProcessor
 
             properties = properties.OrderBy(p => p.Address).OrderBy(p => p.CityId).ToList();
 
-            output.Add("                 Id -   Size - Monthly Earnings - Address");
+            output.Add("                 Id -   Size - Monthly Earnings - NeighborhoodId - Address");
 
             int? cityId = -1;
             foreach (Property property in properties)
@@ -109,10 +109,11 @@ namespace Upland.InformationProcessor
                     output.Add(Consts.Cities[cityId.Value]);
                 }
 
-                output.Add(string.Format("     {0} - {1} - {2:} - {3}"
+                output.Add(string.Format("     {0} - {1} - {2:} - {3} - {4}"
                     , property.Id
                     , string.Format("{0:N0}", property.Size).ToString().PadLeft(6)
                     , string.Format("{0:N2}", property.MonthlyEarnings).ToString().PadLeft(10)
+                    , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString().PadLeft(4) : "-1")
                     , property.Address
                 ));
             }
@@ -237,64 +238,35 @@ namespace Upland.InformationProcessor
             return array;
         }
 
-        public async Task<List<string>> GetCollectionsSalesDataByCityId(int cityId)
+        public async Task<List<string>> GetSalesDataByCityId(int cityId)
         {
             List<string> output = new List<string>();
 
-            if (cityId != 0 && !Consts.Cities.ContainsKey(cityId))
+            if (!Consts.Cities.ContainsKey(cityId))
             {
                 output.Add(string.Format("{0} is not a valid cityId.", cityId));
                 return output;
             }
 
-            List<Collection> collections = localDataManager.GetCollections();
             Dictionary<long, Property> propDictionary = new Dictionary<long, Property>();
             List<UplandForSaleProp> forSaleProps = new List<UplandForSaleProp>();
 
-            if (cityId == 0)
+
+            forSaleProps.AddRange(await uplandApiManager.GetForSalePropsByCityId(cityId));
+            List<Property> allProperties = new List<Property>();
+
+            allProperties.AddRange(localDataManager.GetPropertiesByCityId(cityId));
+                
+            foreach (Property prop in allProperties)
             {
-                foreach (int cId in Consts.Cities.Keys)
+                if (!propDictionary.ContainsKey(prop.Id))
                 {
-                    forSaleProps.AddRange(await uplandApiManager.GetForSalePropsByCityId(cId));
+                    propDictionary.Add(prop.Id, prop);
                 }
-
-                List<Property> allProperties = new List<Property>();
-
-                foreach (Collection collection in collections.Where(c => c.CityId.HasValue && !c.IsCityCollection))
-                {
-                    allProperties.AddRange(localDataManager.GetPropertiesByCollectionId(collection.Id));
-                }
-
-                foreach (Property prop in allProperties)
-                {
-                    if (!propDictionary.ContainsKey(prop.Id))
-                    {
-                        propDictionary.Add(prop.Id, prop);
-                    }
-                }
-
-                forSaleProps = forSaleProps.Where(p => propDictionary.ContainsKey(p.Prop_Id)).ToList();
             }
-            else
-            {
-                forSaleProps.AddRange(await uplandApiManager.GetForSalePropsByCityId(cityId));
-                List<Property> allProperties = new List<Property>();
 
-                foreach (Collection collection in collections.Where(c => c.CityId.Value == cityId && !c.IsCityCollection))
-                {
-                    allProperties.AddRange(localDataManager.GetPropertiesByCollectionId(collection.Id));
-                }
-
-                foreach (Property prop in allProperties)
-                {
-                    if (!propDictionary.ContainsKey(prop.Id))
-                    {
-                        propDictionary.Add(prop.Id, prop);
-                    }
-                }
-
-                forSaleProps = forSaleProps.Where(p => propDictionary.ContainsKey(p.Prop_Id)).ToList();
-            }
+            forSaleProps = forSaleProps.Where(p => propDictionary.ContainsKey(p.Prop_Id)).ToList();
+            
 
             if (forSaleProps.Count == 0)
             {

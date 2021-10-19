@@ -34,7 +34,7 @@ class Program
         //List<Neighborhood> hoods = localDataManager.GetNeighborhoods();
 
         // Neighborhood hood = hoods.Where(h => h.Name == "STREETERVILLE").First();
-
+        
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
         string username;
         string qualityLevel;
@@ -59,13 +59,13 @@ class Program
         InformationProcessor informationProcessor = new InformationProcessor();
         List<string> output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
         await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
-
+        
         InformationProcessor informationProcessor = new InformationProcessor();
         LocalDataManager localDataManager = new LocalDataManager();
-        List<string> neighborhoodReport = await informationProcessor.GetNeighborhoodPropertiesForSale(889, "Markup", "UPX");
+        //List<string> neighborhoodReport = await informationProcessor.GetNeighborhoodPropertiesForSale(889, "Markup", "UPX");
 
         //localDataManager.DetermineNeighborhoodIdsForCity(10);
-        //await localDataManager.PopulateAllPropertiesInArea(42.036944, 41.631243, -87.513617, -87.950324);
+        await localDataManager.PopulateAllPropertiesInArea(41.605934, 41.386330, -81.528364, -81.884733);
     }
     */
     
