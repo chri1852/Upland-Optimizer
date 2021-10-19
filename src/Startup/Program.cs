@@ -13,6 +13,8 @@ using Upland.CollectionOptimizer;
 using Upland.Infrastructure.LocalData;
 using System.Collections.Generic;
 using System.IO;
+using Upland.Types.Types;
+using System.Linq;
 */
 
 class Program
@@ -25,7 +27,14 @@ class Program
     /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
-        
+        //LocalDataManager localDataManager = new LocalDataManager();
+        // await localDataManager.PopulateNeighborhoods();
+        //await localDataManager.PopulateNeighborhoods();
+
+        //List<Neighborhood> hoods = localDataManager.GetNeighborhoods();
+
+        // Neighborhood hood = hoods.Where(h => h.Name == "STREETERVILLE").First();
+
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
         string username;
         string qualityLevel;
@@ -50,6 +59,13 @@ class Program
         InformationProcessor informationProcessor = new InformationProcessor();
         List<string> output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
         await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
+
+        InformationProcessor informationProcessor = new InformationProcessor();
+        LocalDataManager localDataManager = new LocalDataManager();
+        List<string> neighborhoodReport = await informationProcessor.GetNeighborhoodPropertiesForSale(889, "Markup", "UPX");
+
+        //localDataManager.DetermineNeighborhoodIdsForCity(10);
+        //await localDataManager.PopulateAllPropertiesInArea(42.036944, 41.631243, -87.513617, -87.950324);
     }
     */
     

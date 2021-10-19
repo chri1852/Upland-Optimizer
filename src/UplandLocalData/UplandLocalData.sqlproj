@@ -87,5 +87,10 @@
     <Build Include="StoredProcedures\UPL.DeleteRegisteredUser.sql" />
     <Build Include="StoredProcedures\UPL.DeleteOptimizerRuns.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertiesByCollectionId.sql" />
+    <Build Include="Tables\UPL.Neighborhood.sql" />
+    <Build Include="StoredProcedures\UPL.CreateNeighborhood.sql" />
+    <Build Include="StoredProcedures\UPL.GetNeighborhoods.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertProperty.sql" />
+    <Build Include="StoredProcedures\GetPropertiesByCityId.sql" />
   </ItemGroup>
 </Project>

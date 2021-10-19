@@ -635,7 +635,8 @@ namespace Upland.CollectionOptimizer
                     outputStrings.Add(string.Format("Unfilled Collections"));
                     foreach (KeyValuePair<int, Collection> entry in this.UnfilledCollections)
                     {
-                        outputStrings.Add(string.Format("     {0} - Missing Props {1}", entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                        string collectionCity = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
+                        outputStrings.Add(string.Format("     {0} - {1} - Missing Props {2}", collectionCity, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
                     }
                 }
 
@@ -645,7 +646,8 @@ namespace Upland.CollectionOptimizer
                     outputStrings.Add("Unoptimized Collections");
                     foreach (KeyValuePair<int, Collection> entry in this.UnoptimizedCollections)
                     {
-                        outputStrings.Add(string.Format("     {0} - Missing Props {1}", entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                        string collectionCity = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
+                        outputStrings.Add(string.Format("     {0} - {1} - Missing Props {2}", collectionCity, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
                     }
                 }
 

@@ -11,8 +11,10 @@ namespace Upland.Types.UplandApiTypes
         public LocationInfo City { get; set; }
         public LocationInfo Street { get; set; }
         public MarketInfo on_market { get; set; }
-        public double Yield_Per_Hour { get; set; }
-        public int Area { get; set; }
+        public double? Yield_Per_Hour { get; set; }
+        public int? Area { get; set; }
+        public decimal CenterLat { get; set; }
+        public decimal CenterLng { get; set; }
     }
 
     public class LocationInfo

@@ -75,11 +75,11 @@ namespace Upland.Infrastructure.UplandApi
                 case 9:
                     return await _uplandApiRepository.GetForSalePropsInArea(35.478016363918215, 35.24329418643363, -118.72327963318267, -119.27015379486721);
                 case 10:
-                    return await _uplandApiRepository.GetForSalePropsInArea(42.074710592001225, 41.55788981787009, -86.91037877297619, -88.22833184253585);
+                    return await _uplandApiRepository.GetForSalePropsInArea(42.11264759895798, 41.58238862582928, -87.0736963824263, -88.43397342182176);
                 case 11:
                     return await _uplandApiRepository.GetForSalePropsInArea(41.609782691584314, 41.387344856244056, -81.35990844811214, -81.9241803054757);
                 case 12:
-                    return await _uplandApiRepository.GetForSalePropsInArea(37.424085931066, 37.304091193254465, -121.79407460177957, -122.080800718098);
+                    return await _uplandApiRepository.GetForSalePropsInArea(37.46951308231604, 37.27710591853466, -121.716739599238, -122.17922994376318);
                 case 13:
                     return await _uplandApiRepository.GetForSalePropsInArea(40.85554504499757, 40.78575359038544, -74.02452815445089, -74.19954351904273);
                 case 14:

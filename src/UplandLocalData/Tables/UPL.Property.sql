@@ -6,6 +6,9 @@
 	[StreetId]        INT           NOT NULL,
 	[Size]            INT           NOT NULL,
 	[MonthlyEarnings] DECIMAL(11,2) NOT NULL,
+	[NeighborhoodId]  INT,
+	[Latitude]        DECIMAL(19,16),
+	[Longitude]       DECIMAL(19,16)
 
 
 	CONSTRAINT pk_PropertyId PRIMARY KEY(Id)

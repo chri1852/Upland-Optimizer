@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types;
+using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
@@ -52,6 +53,37 @@ namespace Upland.InformationProcessor
                     , collection.NumberOfProperties
                     , string.Format("{0:N0}", collection.Reward).ToString().PadLeft(7)
                     , string.Format("{0:N0}", collection.MatchingPropertyIds.Count).ToString().PadLeft(6)
+                ));
+            }
+
+            return output;
+        }
+
+        public List<string> GetNeighborhoodInformation()
+        {
+            List<string> output = new List<string>();
+
+            List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
+
+            int maxNameLength = neighborhoods.OrderByDescending(n => n.Name.Length).First().Name.Length;
+            neighborhoods = neighborhoods.OrderBy(n => n.Name).OrderBy(n => n.CityId).ToList();
+
+            output.Add(string.Format("       Id - {0}", "Name".PadLeft(maxNameLength)));
+            output.Add("");
+
+            int? cityId = -1;
+            foreach (Neighborhood neighborhood in neighborhoods)
+            {
+                if (cityId != neighborhood.CityId)
+                {
+                    cityId = neighborhood.CityId;
+                    output.Add("");
+                    output.Add(Consts.Cities[cityId.Value]);
+                }
+
+                output.Add(string.Format("     {0} - {1}"
+                    , neighborhood.Id.ToString().PadLeft(4)
+                    , neighborhood.Name.PadLeft(maxNameLength)
                 ));
             }
 
@@ -131,8 +163,7 @@ namespace Upland.InformationProcessor
                 return output;
             }
 
-            Dictionary<long, Property> properties = localDataManager.GetPropertiesByCollectionId(collectionId)
-                .Where(p => forSaleProps.Any(f => f.Prop_Id == p.Id)).ToDictionary(p => p.Id, p => p);
+            Dictionary<long, Property> properties = localDataManager.GetPropertiesByCollectionId(collectionId).ToDictionary(p => p.Id, p => p);
 
             if(orderBy.ToUpper() == "MARKUP")
             {
@@ -143,40 +174,57 @@ namespace Upland.InformationProcessor
                 forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
             }
 
-            // Finally we are ready to write the output
-            int pricePad = 11;
-            int markupPad = 9;
-            int mintPad = 10;
-            int addressPad = properties.Max(p => p.Value.Address.Length);
-            int ownerPad = forSaleProps.Max(p => p.Owner.Length);
-            output.Add(string.Format("For Sale Report for {0} in {1}. Data expires at {2}", collection.Name, Consts.Cities[collection.CityId.Value], uplandApiManager.GetCacheDateTime(collection.CityId.Value)));
-            output.Add("");
-            output.Add(string.Format("{0} - Currency - {1} - {2} - {3} - {4}", "Price".PadLeft(pricePad), "Mint".PadLeft(mintPad), "Markup".PadLeft(markupPad), "Address".PadLeft(addressPad), "Owner".PadLeft(ownerPad)));
-            
-            foreach (UplandForSaleProp prop in forSaleProps)
+            output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, collection.Name, Consts.Cities[collection.CityId.Value], uplandApiManager.GetCacheDateTime(collection.CityId.Value)));
+
+            return output;
+        }
+
+        public async Task<List<string>> GetNeighborhoodPropertiesForSale(int neighborhoodId, string orderBy, string currency)
+        {
+            List<string> output = new List<string>();
+
+            List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
+
+            if (!neighborhoods.Any(n => n.Id == neighborhoodId))
             {
-                string propString = "";
-
-                if(prop.Currency == "USD")
-                {
-                    propString += string.Format("{0:N2}", prop.Price).PadLeft(pricePad);
-                }
-                else
-                {
-                    propString += string.Format("{0:N0}", prop.Price).PadLeft(pricePad);
-                }
-
-                propString += string.Format(" -    {0}   - ", prop.Currency.ToUpper());
-                propString += string.Format("{0:N0}", Math.Round(properties[prop.Prop_Id].MonthlyEarnings*12/0.1728)).PadLeft(mintPad);
-                propString += " - ";
-                propString += string.Format("{0:N0}%", 100 * prop.SortValue/(properties[prop.Prop_Id].MonthlyEarnings * 12/0.1728)).PadLeft(markupPad);
-                propString += " - ";
-                propString += string.Format("{0}", properties[prop.Prop_Id].Address).PadLeft(addressPad);
-                propString += " - ";
-                propString += string.Format("{0}", prop.Owner).PadLeft(ownerPad);
-
-                output.Add(propString);
+                // Neighborhood don't exist
+                output.Add(string.Format("{0} is not a valid neighborhoodId. Try running my !NeighborhoodInfo command.", neighborhoodId.ToString()));
+                return output;
             }
+
+            Neighborhood neighborhood = neighborhoods.Where(n => n.Id == neighborhoodId).First();
+            List<UplandForSaleProp> forSaleProps = await uplandApiManager.GetForSalePropsByCityId(neighborhood.CityId);
+
+            if (currency == "USD")
+            {
+                forSaleProps = forSaleProps.Where(p => p.Currency == "USD").ToList();
+            }
+            else if (currency == "UPX")
+            {
+                forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
+            }
+
+            Dictionary<long, Property> properties = localDataManager.GetPropertiesByCityId(neighborhood.CityId).ToDictionary(p => p.Id, p => p);
+
+            forSaleProps = forSaleProps.Where(p => properties[p.Prop_Id].NeighborhoodId == neighborhoodId).ToList();
+
+            if (forSaleProps.Count == 0)
+            {
+                // Nothing on sale
+                output.Add(string.Format("There is nothing on sale in this neighborhood.", neighborhoodId.ToString()));
+                return output;
+            }
+
+            if (orderBy.ToUpper() == "MARKUP")
+            {
+                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
+            }
+            else // PRICE
+            {
+                forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
+            }
+
+            output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, neighborhood.Name, Consts.Cities[neighborhood.CityId], uplandApiManager.GetCacheDateTime(neighborhood.CityId)));
 
             return output;
         }
@@ -263,36 +311,11 @@ namespace Upland.InformationProcessor
                 }
             }
 
-            output.Add("PropertyId,Price,Currency,Mint,Markup,CityId,Address,Owner");
-
-            foreach (UplandForSaleProp prop in forSaleDictionary.Values)
-            {
-                string propString = "";
-
-                propString += string.Format("{0},", prop.Prop_Id);
-
-                if (prop.Currency == "USD")
-                {
-                    propString += string.Format("{0:F2},", prop.Price);
-                }
-                else
-                {
-                    propString += string.Format("{0:F0},", prop.Price);
-                }
-
-                propString += string.Format("{0},", prop.Currency.ToUpper());
-                propString += string.Format("{0:F0},", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
-                propString += string.Format("{0:F0}%,", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
-                propString += string.Format("{0},", propDictionary[prop.Prop_Id].CityId);
-                propString += string.Format("{0},", propDictionary[prop.Prop_Id].Address);
-                propString += string.Format("{0}", prop.Owner);
-
-                output.Add(propString);
-            }
+            output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleDictionary, propDictionary));
 
             return output;
         }
-        
+
         public void ClearSalesCache()
         {
             uplandApiManager.ClearSalesCache();
