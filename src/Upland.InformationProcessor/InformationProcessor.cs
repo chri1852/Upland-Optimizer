@@ -207,7 +207,7 @@ namespace Upland.InformationProcessor
 
             Dictionary<long, Property> properties = localDataManager.GetPropertiesByCityId(neighborhood.CityId).ToDictionary(p => p.Id, p => p);
 
-            forSaleProps = forSaleProps.Where(p => properties[p.Prop_Id].NeighborhoodId == neighborhoodId).ToList();
+            forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].NeighborhoodId == neighborhoodId).ToList();
 
             if (forSaleProps.Count == 0)
             {

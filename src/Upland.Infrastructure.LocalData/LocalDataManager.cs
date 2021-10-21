@@ -20,14 +20,11 @@ namespace Upland.Infrastructure.LocalData
             uplandApiRepository = new UplandApiRepository();
         }
 
-        public async Task PopulateAllPropertiesInArea(double north, double south, double east, double west)
+        public async Task PopulateAllPropertiesInArea(double north, double south, double east, double west, int cityId)
         {
             List<long> retryIds = new List<long>();
             List<long> loadedProps = new List<long>();
-
-            #region /* IgnoreIds */
-            List<long> ignoreIds = LocalDataRepository.GetPropertiesByCityId(11).Where(p => p.Latitude.HasValue).Select(p => p.Id).ToList();
-            #endregion /* IgnoreIds */
+            List<long> ignoreIds = LocalDataRepository.GetPropertiesByCityId(cityId).Where(p => p.Latitude.HasValue).Select(p => p.Id).ToList();
 
             double defaultStep = 0.005;
             int totalprops = 0;
@@ -189,6 +186,11 @@ namespace Upland.Infrastructure.LocalData
 
         private bool IsPropertyInNeighborhood(Neighborhood neighborhood, Property property)
         {
+            if (neighborhood.Coordinates.Count == 0)
+            {
+                return false;
+            }
+
             foreach (List<List<double>> polygon in neighborhood.Coordinates[0])
             {
                 if (IsPointInPolygon(polygon, property))

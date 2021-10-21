@@ -27,45 +27,34 @@ class Program
     /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
-        //LocalDataManager localDataManager = new LocalDataManager();
-        // await localDataManager.PopulateNeighborhoods();
-        //await localDataManager.PopulateNeighborhoods();
-
-        //List<Neighborhood> hoods = localDataManager.GetNeighborhoods();
-
-        // Neighborhood hood = hoods.Where(h => h.Name == "STREETERVILLE").First();
-        
+        LocalDataManager localDataManager = new LocalDataManager();
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
+        InformationProcessor informationProcessor = new InformationProcessor();
+
         string username;
         string qualityLevel;
+        List<string> output = new List<string>();
 
-        //LocalDataManager localDataManager = new LocalDataManager();
+        /// Test Optimizer
+        //Console.Write("Enter the Upland Username: ");
+        //username = Console.ReadLine();
+        //Console.Write("Enter the Level (1-8)....: ");
+        //qualityLevel = Console.ReadLine();
+        //await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel), 201, 20, 1000);
+
+        // Populate initial City Data
+        //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
-        
-        Console.Write("Enter the Upland Username: ");
-        username = Console.ReadLine();
-        Console.Write("Enter the Level (1-8)....: ");
-        qualityLevel = Console.ReadLine();
 
+        // Test Information Processing Functions
+        //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
+        //output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
+        output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
 
-        await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel), 201, 20, 1000);
-        
-        
-        InformationProcessor informationProcessor = new InformationProcessor();
-
-        List<string> output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
-        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
-        
-        InformationProcessor informationProcessor = new InformationProcessor();
-        List<string> output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
-        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\collectiontest.txt", string.Join(Environment.NewLine, output));
-        
-        InformationProcessor informationProcessor = new InformationProcessor();
-        LocalDataManager localDataManager = new LocalDataManager();
-        //List<string> neighborhoodReport = await informationProcessor.GetNeighborhoodPropertiesForSale(889, "Markup", "UPX");
-
-        //localDataManager.DetermineNeighborhoodIdsForCity(10);
-        await localDataManager.PopulateAllPropertiesInArea(41.605934, 41.386330, -81.528364, -81.884733);
+        // Populate CityProps And Neighborhoods
+        //await localDataManager.PopulateAllPropertiesInArea(37.893514, 37.698581, -122.100490, -122.354549, 7);
+        //localDataManager.DetermineNeighborhoodIdsForCity(14);
     }
     */
     
