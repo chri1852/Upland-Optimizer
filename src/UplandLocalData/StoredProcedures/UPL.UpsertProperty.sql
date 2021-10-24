@@ -1,2 +1,70 @@
-﻿CREATE APPLICATION ROLE [UpsertProperty]
-	WITH PASSWORD = 'hec 2oh4sPzd{gr:;&3cT6aimsFT7_&#$!~<6xqs0wIy1klv'
+﻿CREATE PROCEDURE [UPL].[UpsertProperty]
+(
+	@Id              BIGINT,
+	@Address         VARCHAR(200),
+	@CityId          INT,
+	@StreetId        INT,
+	@Size            INT,
+	@MonthlyEarnings DECIMAL(11,2),
+	@NeighborhoodId  INT = NULL,
+	@Latitude        DECIMAL(19,16),
+	@Longitude       DECIMAL(19,16)
+)
+AS
+BEGIN
+	BEGIN TRY	
+		IF(EXISTS(SELECT * FROM [UPL].[Property] (NOLOCK) WHERE [Id] = @Id))
+			BEGIN
+				UPDATE [UPL].[Property]
+				SET
+					[Address] = @Address,
+					[CityId] = @CityId,
+					[StreetId] = @StreetId,
+					[Size] = @Size,
+					[MonthlyEarnings] = @MonthlyEarnings,
+					[NeighborhoodId] = @NeighborhoodId,
+					[Latitude] = @Latitude,
+					[Longitude] = @Longitude
+				WHERE [Id] = @Id
+			END
+		ELSE
+			BEGIN
+				INSERT INTO [UPL].[Property]
+				(
+					[Id],
+					[Address],
+					[CityId],
+					[StreetId],
+					[Size],
+					[MonthlyEarnings],
+					[NeighborhoodId],
+					[Latitude],
+					[Longitude]
+				)
+				Values
+				(
+					@Id,
+					@Address,
+					@CityId,
+					@StreetId,
+					@Size,
+					@MonthlyEarnings,
+					@NeighborhoodId,
+					@Latitude,
+					@Longitude   
+				)
+			END
+	END TRY
+
+	BEGIN CATCH
+		DECLARE @ErrorMessage NVARCHAR(4000);
+		DECLARE @ErrorSeverity INT;
+		DECLARE @ErrorState INT;
+
+		SELECT @ErrorMessage = ERROR_MESSAGE(),
+			   @ErrorSeverity = ERROR_SEVERITY(),
+			   @ErrorState = ERROR_STATE();
+
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END CATCH
+END

@@ -15,7 +15,9 @@ Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "UplandLocalData", "UplandLo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Startup", "Startup\Startup.csproj", "{E46DE09A-7795-46AF-B48D-D01CB8833856}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upland.InformationProcessor", "Upland.InformationProcessor\Upland.InformationProcessor.csproj", "{5C658079-14BC-40A0-8FB0-245695EE2BE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.InformationProcessor", "Upland.InformationProcessor\Upland.InformationProcessor.csproj", "{5C658079-14BC-40A0-8FB0-245695EE2BE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upland.Infrastructure.Blockchain", "Upland.Infrastructure.Blockchain\Upland.Infrastructure.Blockchain.csproj", "{DF1C8ED7-3CBA-4F3F-BA31-1C3344D2720B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +54,10 @@ Global
 		{5C658079-14BC-40A0-8FB0-245695EE2BE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C658079-14BC-40A0-8FB0-245695EE2BE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C658079-14BC-40A0-8FB0-245695EE2BE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF1C8ED7-3CBA-4F3F-BA31-1C3344D2720B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF1C8ED7-3CBA-4F3F-BA31-1C3344D2720B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF1C8ED7-3CBA-4F3F-BA31-1C3344D2720B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF1C8ED7-3CBA-4F3F-BA31-1C3344D2720B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

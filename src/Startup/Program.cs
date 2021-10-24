@@ -7,7 +7,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Upland.InformationProcessor;
 
-/*
+
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -15,7 +15,8 @@ using System.Collections.Generic;
 using System.IO;
 using Upland.Types.Types;
 using System.Linq;
-*/
+using Upland.Infrastructure.Blockchain;
+using Upland.Types.BlockchainTypes;
 
 class Program
 {
@@ -24,12 +25,13 @@ class Program
     private IServiceProvider _services;
     private InformationProcessor _informationProcessor;
 
-    /*
+    
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
         InformationProcessor informationProcessor = new InformationProcessor();
+        BlockchainRepository blockchainRepository = new BlockchainRepository();
 
         string username;
         string qualityLevel;
@@ -49,18 +51,25 @@ class Program
         // Test Information Processing Functions
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
         //output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
-        output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
+        //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
 
         // Populate CityProps And Neighborhoods
-        //await localDataManager.PopulateAllPropertiesInArea(37.893514, 37.698581, -122.100490, -122.354549, 7);
-        //localDataManager.DetermineNeighborhoodIdsForCity(14);
+        //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 8);
+        //localDataManager.DetermineNeighborhoodIdsForCity(8);
+
+        List<dGood> nfts = await blockchainRepository.GetAllNFTs();
+
+        List<dGood> buildings = nfts.Where(n => n.category == "structure" ).ToList();
+        List<dGood> NotUplandbuildings = buildings.Where(n => n.owner != "playuplandme").ToList();
+
+        List<a21Entry> buildingProps = await blockchainRepository.GetBuildingProps();
     }
-    */
     
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    
+    */
     public async Task RunBotAsync()
     {
         _client = new DiscordSocketClient();

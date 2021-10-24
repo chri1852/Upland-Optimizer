@@ -803,6 +803,66 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static void CreatePropertyStructure(long propertyId, string propertyType)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CreatePropertyStructure]";
+                    sqlCmd.Parameters.Add(new SqlParameter("PropertyId", propertyId));
+                    sqlCmd.Parameters.Add(new SqlParameter("StructureType", propertyType));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static void TruncatePropertyStructure()
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[TruncatePropertyStructure]";
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+
+
         private static DataTable CreatePropertyIdTable(List<long> propertyIds)
         {
             DataTable table = new DataTable();

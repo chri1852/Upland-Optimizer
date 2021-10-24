@@ -91,6 +91,10 @@
     <Build Include="StoredProcedures\UPL.CreateNeighborhood.sql" />
     <Build Include="StoredProcedures\UPL.GetNeighborhoods.sql" />
     <Build Include="StoredProcedures\UPL.UpsertProperty.sql" />
-    <Build Include="StoredProcedures\GetPropertiesByCityId.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertiesByCityId.sql" />
+    <Build Include="Tables\UPL.PropertyStructure.sql" />
+    <Build Include="StoredProcedures\UPL.CreatePropertyStructure.sql" />
+    <Build Include="StoredProcedures\UPL.TruncatePropertyStructure.sql" />
+    <Build Include="StoredProcedures\GetPropertyStructures.sql" />
   </ItemGroup>
 </Project>
