@@ -247,15 +247,35 @@ namespace Upland.InformationProcessor
 
             if (type.ToUpper() == "CITY")
             {
-                if (!Consts.Cities.ContainsKey(Id))
+                cityId = Id;
+                if (Id != 0 && !Consts.Cities.ContainsKey(Id))
                 {
                     output.Add(string.Format("{0} is not a valid cityId.", Id));
                     return output;
-                } 
-                cityId = Id;
-                forSaleProps = await uplandApiManager.GetForSalePropsByCityId(cityId);
-                properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
+                }
+
+                if (cityId == 0)
+                {
+                    List<Property> allProps = new List<Property>();
+                    foreach (int cId in Consts.Cities.Keys)
+                    {
+                        allProps.AddRange(localDataManager.GetPropertiesByCityId(cId));
+                        forSaleProps.AddRange(await uplandApiManager.GetForSalePropsByCityId(cId));
+                    }
+
+                    properties = allProps.ToDictionary(p => p.Id, p => p);
+                    forSaleProps = forSaleProps.GroupBy(p => p.Prop_Id)
+                        .Select(g => g.First())
+                        .ToList();
+                }
+                else
+                {
+                    properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
+                    forSaleProps = await uplandApiManager.GetForSalePropsByCityId(cityId);
+                }
+
                 forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id)).ToList();
+                cityId = 1; // Fix for Sales Cache time, just use San Francisco
             }
             else if(type.ToUpper() == "NEIGHBORHOOD")
             {

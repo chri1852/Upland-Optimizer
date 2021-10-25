@@ -7,7 +7,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Upland.InformationProcessor;
 
-
+/*
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -17,7 +17,7 @@ using Upland.Types.Types;
 using System.Linq;
 using Upland.Infrastructure.Blockchain;
 using Upland.Types.BlockchainTypes;
-
+*/
 
 class Program
 {
@@ -26,7 +26,7 @@ class Program
     private IServiceProvider _services;
     private InformationProcessor _informationProcessor;
 
-    
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -53,7 +53,7 @@ class Program
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
         //output = await informationProcessor.GetSalesDataByCityId(1);
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
-        //output = await informationProcessor.GetBuildingPropertiesForSale("Collection", 2, "Markup", "all");
+        //output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "price", "all");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
 
         // Populate CityProps And Neighborhoods
@@ -65,11 +65,11 @@ class Program
 
         //List<t3Entry> items = await blockchainRepository.GetActiveOffers();
     }
+    */
     
-    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    
     public async Task RunBotAsync()
     {
         _client = new DiscordSocketClient();

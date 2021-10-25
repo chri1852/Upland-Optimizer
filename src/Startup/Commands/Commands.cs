@@ -543,7 +543,7 @@ namespace Startup.Commands
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, string.Format("BuildingsForSale.csv"));
+                await Context.Channel.SendFileAsync(stream, string.Format("BuildingsForSale.txt"));
             }
         }
 
@@ -712,6 +712,8 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("This command will find props with Buildings for sale in the given type and id, and return a text file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again."));
                     helpOutput.Add("EX: !BuildingsForSale City 1 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties with buildings for sale for UPX in San Francisco, and returns a list form lowest to greatest markup");
+                    helpOutput.Add("EX: !BuildingsForSale City 0 MARKUP UPX");
+                    helpOutput.Add("The above command finds all properties with buildings for sale for UPX, and returns a list form lowest to greatest markup");
                     helpOutput.Add("EX: !BuildingsForSale Neighborhood 876 PRICE ALL");
                     helpOutput.Add("The above command finds all properties with buildings for sale in the Chicago Portage Park neighborhood, and returns a list form lowest to greatest price (USD = UPX * 1000).");
                     helpOutput.Add("EX: !BuildingsForSale Collection 2 PRICE USD");
