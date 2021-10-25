@@ -18,6 +18,7 @@ using System.Linq;
 using Upland.Infrastructure.Blockchain;
 using Upland.Types.BlockchainTypes;
 
+
 class Program
 {
     private DiscordSocketClient _client;
@@ -50,20 +51,19 @@ class Program
 
         // Test Information Processing Functions
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
-        //output = await informationProcessor.GetCollectionsSalesDataByCityId(0);
+        //output = await informationProcessor.GetSalesDataByCityId(1);
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
+        //output = await informationProcessor.GetBuildingPropertiesForSale("Collection", 2, "Markup", "all");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
 
         // Populate CityProps And Neighborhoods
         //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 8);
         //localDataManager.DetermineNeighborhoodIdsForCity(8);
 
-        List<dGood> nfts = await blockchainRepository.GetAllNFTs();
+        // Rebuild Property Structure List
+        //await informationProcessor.RebuildPropertyStructures();
 
-        List<dGood> buildings = nfts.Where(n => n.category == "structure" ).ToList();
-        List<dGood> NotUplandbuildings = buildings.Where(n => n.owner != "playuplandme").ToList();
-
-        List<a21Entry> buildingProps = await blockchainRepository.GetBuildingProps();
+        //List<t3Entry> items = await blockchainRepository.GetActiveOffers();
     }
     
     /*

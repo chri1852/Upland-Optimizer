@@ -83,6 +83,12 @@ namespace Upland.Infrastructure.LocalData
             return nextRetryIds;
         }
 
+        public async Task PopulateIndividualPropertyById(long propertyId)
+        {
+            Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propertyId));
+            LocalDataRepository.UpsertProperty(property);
+        }
+
         public async Task PopulateNeighborhoods()
         {
             List<Neighborhood> existingNeighborhoods = GetNeighborhoods();
@@ -328,6 +334,21 @@ namespace Upland.Infrastructure.LocalData
         public void SetRegisteredUserPaid(string uplandUsername)
         {
             LocalDataRepository.SetRegisteredUserPaid(uplandUsername);
+        }
+
+        public void TruncatePropertyStructure()
+        {
+            LocalDataRepository.TruncatePropertyStructure();
+        }
+
+        public void CreatePropertyStructure(PropertyStructure propertyStructure)
+        {
+            LocalDataRepository.CreatePropertyStructure(propertyStructure);
+        }
+
+        public List<PropertyStructure> GetPropertyStructures()
+        {
+            return LocalDataRepository.GetPropertyStructures();
         }
     }
 }

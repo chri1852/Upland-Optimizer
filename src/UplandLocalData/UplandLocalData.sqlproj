@@ -95,6 +95,6 @@
     <Build Include="Tables\UPL.PropertyStructure.sql" />
     <Build Include="StoredProcedures\UPL.CreatePropertyStructure.sql" />
     <Build Include="StoredProcedures\UPL.TruncatePropertyStructure.sql" />
-    <Build Include="StoredProcedures\GetPropertyStructures.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertyStructures.sql" />
   </ItemGroup>
 </Project>

@@ -168,5 +168,24 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("Failed Clearing Sales Cache: {0}", ex.Message));
             }
         }
+
+        [Command("AdminRebuildPropertyStructures")]
+        public async Task AdminRebuildPropertyStructures()
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                await _informationProcessor.RebuildPropertyStructures();
+                await ReplyAsync(string.Format("PropertyStructures Rebuilt."));
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(string.Format("Failed Rebuilding PropertyStructures: {0}", ex.Message));
+            }
+        }
     }
 }

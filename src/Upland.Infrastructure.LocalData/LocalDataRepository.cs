@@ -803,7 +803,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void CreatePropertyStructure(long propertyId, string propertyType)
+        public static void CreatePropertyStructure(PropertyStructure propertyStructure)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -817,8 +817,8 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[CreatePropertyStructure]";
-                    sqlCmd.Parameters.Add(new SqlParameter("PropertyId", propertyId));
-                    sqlCmd.Parameters.Add(new SqlParameter("StructureType", propertyType));
+                    sqlCmd.Parameters.Add(new SqlParameter("PropertyId", propertyStructure.PropertyId));
+                    sqlCmd.Parameters.Add(new SqlParameter("StructureType", propertyStructure.StructureType));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -861,7 +861,47 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static List<PropertyStructure> GetPropertyStructures()
+        {
+            List<PropertyStructure> propertyStructures = new List<PropertyStructure>();
+            SqlConnection sqlConnection = GetSQLConnector();
 
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertyStructures]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            propertyStructures.Add(new PropertyStructure
+                            {
+                                Id = (int)reader["Id"],
+                                PropertyId = (long)reader["PropertyId"], 
+                                StructureType = (string)reader["StructureType"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return propertyStructures;
+            }
+        }
 
         private static DataTable CreatePropertyIdTable(List<long> propertyIds)
         {

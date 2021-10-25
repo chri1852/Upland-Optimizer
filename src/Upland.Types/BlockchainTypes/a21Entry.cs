@@ -6,7 +6,7 @@ namespace Upland.Types.BlockchainTypes
 {
     public class a21Entry
     {
-        public int f45 { get; set; }
-        public long a34 { get; set; }
+        public int f45 { get; set; } //NFT Id
+        public long a34 { get; set; } //PropertyId
     }
 }

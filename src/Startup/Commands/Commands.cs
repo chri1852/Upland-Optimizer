@@ -420,7 +420,7 @@ namespace Startup.Commands
             if(collectionReport.Count == 1)
             {
                 // An Error Occured
-                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), collectionReport));
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), collectionReport[0]));
                 return;
             }
 
@@ -450,7 +450,7 @@ namespace Startup.Commands
             if (neighborhoodReport.Count == 1)
             {
                 // An Error Occured
-                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), neighborhoodReport));
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), neighborhoodReport[0]));
                 return;
             }
 
@@ -516,6 +516,37 @@ namespace Startup.Commands
             }
         }
 
+        [Command("BuildingsForSale")]
+        public async Task BuildingsForSale(string type, int Id, string orderBy, string currency = "ALL")
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            await ReplyAsync(string.Format("Looking for Buildings now {0}!", HelperFunctions.GetRandomName(_random)));
+
+            List<string> salesData = await _informationProcessor.GetBuildingPropertiesForSale(type, Id, orderBy, currency);
+
+            if (salesData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), salesData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, salesData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("BuildingsForSale.csv"));
+            }
+        }
+
         [Command("Help")]
         public async Task Help()
         {
@@ -568,10 +599,11 @@ namespace Startup.Commands
             helpMenu.Add("   9.  !CollectionsForSale");
             helpMenu.Add("   10. !NeighborhoodsForSale");
             helpMenu.Add("   11. !GetSalesDataByCityId");
+            helpMenu.Add("   12. !BuildingsForSale");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   12. !OptimizerLevelRun");
-            helpMenu.Add("   13. !OptimizerWhatIfRun");
+            helpMenu.Add("   13. !OptimizerLevelRun");
+            helpMenu.Add("   14. !OptimizerWhatIfRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -675,12 +707,23 @@ namespace Startup.Commands
                     helpOutput.Add("The above command will return a csv file containing all for sale props in cleveland");
                     break;
                 case "12":
+                    helpOutput.Add(string.Format("!BuildingsForSale"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will find props with Buildings for sale in the given type and id, and return a text file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again."));
+                    helpOutput.Add("EX: !BuildingsForSale City 1 MARKUP UPX");
+                    helpOutput.Add("The above command finds all properties with buildings for sale for UPX in San Francisco, and returns a list form lowest to greatest markup");
+                    helpOutput.Add("EX: !BuildingsForSale Neighborhood 876 PRICE ALL");
+                    helpOutput.Add("The above command finds all properties with buildings for sale in the Chicago Portage Park neighborhood, and returns a list form lowest to greatest price (USD = UPX * 1000).");
+                    helpOutput.Add("EX: !BuildingsForSale Collection 2 PRICE USD");
+                    helpOutput.Add("The above command finds all properties with buildings for sale for USD in the Mission District Collection, and returns a list form lowest to greatest price.");
+                    break;
+                case "13":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
-                case "13":
+                case "14":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
