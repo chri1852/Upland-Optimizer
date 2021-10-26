@@ -41,12 +41,12 @@ namespace Upland.InformationProcessor
             }
         }
 
-        public static List<string> CreateForSaleCSVString(Dictionary<long, UplandForSaleProp> forSaleDictionary, Dictionary<long, Property> propDictionary, Dictionary<long, string> propBuildings)
+        public static List<string> CreateForSaleCSVString(List<UplandForSaleProp> forSaleProperties, Dictionary<long, Property> propDictionary, Dictionary<long, string> propBuildings)
         {
             List<string> output = new List<string>();
             output.Add("PropertyId,Price,Currency,Mint,Markup,CityId,Address,Owner,NeighborhoodId,Structure");
 
-            foreach (UplandForSaleProp prop in forSaleDictionary.Values)
+            foreach (UplandForSaleProp prop in forSaleProperties)
             {
                 string propString = "";
 
@@ -63,7 +63,7 @@ namespace Upland.InformationProcessor
 
                 propString += string.Format("{0},", prop.Currency.ToUpper());
                 propString += string.Format("{0:F0},", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
-                propString += string.Format("{0:F0}%,", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
+                propString += string.Format("{0:F0},", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].CityId);
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].Address);
                 propString += string.Format("{0},", prop.Owner);
@@ -76,14 +76,14 @@ namespace Upland.InformationProcessor
             return output;
         }
 
-        public static List<string> ForSaleTxtString(List<UplandForSaleProp> forSaleProps, Dictionary<long, Property> properties, Dictionary<long, string> propBuildings, string reportHeader, string expireDate)
+        public static List<string> ForSaleTxtString(List<UplandForSaleProp> forSaleProps, Dictionary<long, Property> propDictionary, Dictionary<long, string> propBuildings, string reportHeader, string expireDate)
         {
             List<string> output = new List<string>();
 
             int pricePad = 11;
             int markupPad = 10;
             int mintPad = 10;
-            int addressPad = properties.Max(p => p.Value.Address.Length);
+            int addressPad = propDictionary.Max(p => p.Value.Address.Length);
             int ownerPad = forSaleProps.Max(p => p.Owner.Length);
             int neighborhoodPad = 14;
             int buildingPad = 29;
@@ -105,15 +105,15 @@ namespace Upland.InformationProcessor
                 }
 
                 propString += string.Format(" -    {0}   - ", prop.Currency.ToUpper());
-                propString += string.Format("{0:N0}", Math.Round(properties[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(mintPad);
+                propString += string.Format("{0:N0}", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(mintPad);
                 propString += " - ";
-                propString += string.Format("{0:N0}%", 100 * prop.SortValue / (properties[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(markupPad);
+                propString += string.Format("{0:N0}%", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(markupPad);
                 propString += " - ";
-                propString += string.Format("{0}", properties[prop.Prop_Id].Address).PadLeft(addressPad);
+                propString += string.Format("{0}", propDictionary[prop.Prop_Id].Address).PadLeft(addressPad);
                 propString += " - ";
                 propString += string.Format("{0}", prop.Owner).PadLeft(ownerPad);
                 propString += " - ";
-                propString += string.Format("{0}", properties[prop.Prop_Id].NeighborhoodId.HasValue ? properties[prop.Prop_Id].NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad);
+                propString += string.Format("{0}", propDictionary[prop.Prop_Id].NeighborhoodId.HasValue ? propDictionary[prop.Prop_Id].NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad);
                 propString += " - ";
 
                 if(propBuildings.ContainsKey(prop.Prop_Id))

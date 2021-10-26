@@ -123,7 +123,7 @@ namespace Upland.InformationProcessor
             return output;
         }
 
-        public async Task<List<string>> GetCollectionPropertiesForSale(int collectionId, string orderBy, string currency)
+        public async Task<List<string>> GetCollectionPropertiesForSale(int collectionId, string orderBy, string currency, string fileType)
         {
             List<string> output = new List<string>();
 
@@ -168,7 +168,7 @@ namespace Upland.InformationProcessor
 
             Dictionary<long, Property> properties = localDataManager.GetPropertiesByCollectionId(collectionId).ToDictionary(p => p.Id, p => p);
 
-            if(orderBy.ToUpper() == "MARKUP")
+            if(orderBy == "MARKUP")
             {
                 forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12/0.1728).ToList();
             }
@@ -180,12 +180,19 @@ namespace Upland.InformationProcessor
             // Lets grab the Structures
             Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
 
-            output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", collection.Name),  uplandApiManager.GetCacheDateTime(collection.CityId.Value)));
+            if (fileType == "CSV")
+            {
+                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, properties, propertyStructures));
+            }
+            else
+            {
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", collection.Name), uplandApiManager.GetCacheDateTime(collection.CityId.Value)));
+            }
 
             return output;
         }
 
-        public async Task<List<string>> GetNeighborhoodPropertiesForSale(int neighborhoodId, string orderBy, string currency)
+        public async Task<List<string>> GetNeighborhoodPropertiesForSale(int neighborhoodId, string orderBy, string currency, string fileType)
         {
             List<string> output = new List<string>();
 
@@ -233,12 +240,19 @@ namespace Upland.InformationProcessor
             // Lets grab the Structures
             Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
 
-            output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", neighborhood.Name), uplandApiManager.GetCacheDateTime(neighborhood.CityId)));
+            if (fileType == "CSV")
+            {
+                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, properties, propertyStructures));
+            }
+            else
+            {
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", neighborhood.Name), uplandApiManager.GetCacheDateTime(neighborhood.CityId)));
+            }
 
             return output;
         }
 
-        public async Task<List<string>> GetBuildingPropertiesForSale(string type, int Id, string orderBy, string currency)
+        public async Task<List<string>> GetBuildingPropertiesForSale(string type, int Id, string orderBy, string currency, string fileType)
         {
             List<string> output = new List<string>();
             List<UplandForSaleProp> forSaleProps = new List<UplandForSaleProp>();
@@ -354,7 +368,14 @@ namespace Upland.InformationProcessor
                 forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
             }
 
-            output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report Buildings In {0} {1}", type.ToUpper(), Id), uplandApiManager.GetCacheDateTime(cityId)));
+            if (fileType == "CSV")
+            {
+                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, properties, propertyStructures));
+            }
+            else
+            {
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report Buildings In {0}Id {1}.", type.ToUpper(), Id), uplandApiManager.GetCacheDateTime(cityId)));
+            }
 
             return output;
         }
@@ -367,7 +388,7 @@ namespace Upland.InformationProcessor
             return array;
         }
 
-        public async Task<List<string>> GetSalesDataByCityId(int cityId)
+        public async Task<List<string>> GetCityPropertiesForSale(int cityId, string orderBy, string currency, string fileType)
         {
             List<string> output = new List<string>();
 
@@ -395,25 +416,41 @@ namespace Upland.InformationProcessor
 
             forSaleProps = forSaleProps.Where(p => propDictionary.ContainsKey(p.Prop_Id)).ToList();
 
+            if (currency == "USD")
+            {
+                forSaleProps = forSaleProps.Where(p => p.Currency == "USD").ToList();
+            }
+            else if (currency == "UPX")
+            {
+                forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
+            }
+
             if (forSaleProps.Count == 0)
             {
                 output.Add(string.Format("No Props Found, I bet you tried to run this on Piedmont or something."));
                 return output;
             }
 
-            Dictionary<long, UplandForSaleProp> forSaleDictionary = new Dictionary<long, UplandForSaleProp>();
-            foreach (UplandForSaleProp prop in forSaleProps)
+            if (orderBy.ToUpper() == "MARKUP")
             {
-                if (!forSaleDictionary.ContainsKey(prop.Prop_Id))
-                {
-                    forSaleDictionary.Add(prop.Prop_Id, prop);
-                }
+                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / propDictionary[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
+            }
+            else // PRICE
+            {
+                forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
             }
 
             // Lets grab the Structures
             Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
 
-            output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleDictionary, propDictionary, propertyStructures));
+            if (fileType == "CSV")
+            {
+                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, propDictionary, propertyStructures));
+            }
+            else
+            {
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, propDictionary, propertyStructures, string.Format("For Sale Report For CityId {0}.", cityId), uplandApiManager.GetCacheDateTime(cityId)));
+            }
 
             return output;
         }

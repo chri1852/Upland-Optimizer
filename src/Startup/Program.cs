@@ -122,11 +122,12 @@ class Program
                 if (!result.IsSuccess)
                 {
                     Console.WriteLine(result.ErrorReason);
-                    Console.WriteLine(string.Format("{0}: {1}", message.Author.Username, message.Content));
+                    Console.WriteLine(string.Format("{0}: {1} - {2}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), message.Author.Username, message.Content));
+                    await context.Channel.SendMessageAsync(string.Format("ERROR: {0}{1}Contant Grombrindal.", result.ErrorReason, Environment.NewLine));
                 }
                 else
                 {
-                    Console.WriteLine(string.Format("{0}: {1}", message.Author.Username, message.Content));
+                    Console.WriteLine(string.Format("{0}: {1} - {2}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), message.Author.Username, message.Content));
                 }
             });
         }

@@ -122,6 +122,27 @@ namespace Startup.Commands
             }
         }
 
+        [Command("AdminPropertyInfo")]
+        public async Task AdminPropertyInfo(string userName)
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            List<string> propertyData = await _informationProcessor.GetMyPropertyInfo(userName);
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, propertyData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("PropertyInfo_{0}.txt", userName));
+            }
+        }
+
         [Command("AdminPopulateCollectionProperty")]
         public async Task AdminPopulateCollectionProperty(int collectionId)
         {
