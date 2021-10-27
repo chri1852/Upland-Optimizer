@@ -324,7 +324,7 @@ namespace Startup.Commands
         }
 
         [Command("CollectionInfo")]
-        public async Task CollectionInfo()
+        public async Task CollectionInfo(string fileType = "TXT")
         {
             LocalDataManager localDataManager = new LocalDataManager();
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
@@ -334,19 +334,19 @@ namespace Startup.Commands
                 return;
             }
 
-            List<string> collectionData = _informationProcessor.GetCollectionInformation();
+            List<string> collectionData = _informationProcessor.GetCollectionInformation(fileType.ToUpper());
 
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, collectionData));
             using(Stream stream = new MemoryStream())
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, "CollectionInfo.txt");
+                await Context.Channel.SendFileAsync(stream, string.Format("CollectionInfo.{0}", fileType.ToUpper() == "TXT" ? "txt" : "csv"));
             }
         }
 
         [Command("PropertyInfo")]
-        public async Task PropertyInfo()
+        public async Task PropertyInfo(string fileType = "TXT")
         {
             LocalDataManager localDataManager = new LocalDataManager();
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
@@ -363,19 +363,19 @@ namespace Startup.Commands
                 return;
             }
 
-            List<string> propertyData = await _informationProcessor.GetMyPropertyInfo(registeredUser.UplandUsername);
+            List<string> propertyData = await _informationProcessor.GetPropertyInfo(registeredUser.UplandUsername, fileType.ToUpper());
 
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, propertyData));
             using (Stream stream = new MemoryStream())
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, string.Format("PropertyInfo_{0}.txt", registeredUser.UplandUsername));
+                await Context.Channel.SendFileAsync(stream, string.Format("PropertyInfo_{0}.{1}", registeredUser.UplandUsername, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
             }
         }
 
         [Command("NeighborhoodInfo")]
-        public async Task NeighborhoodInfo()
+        public async Task NeighborhoodInfo(string fileType = "TXT")
         {
             LocalDataManager localDataManager = new LocalDataManager();
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
@@ -385,7 +385,7 @@ namespace Startup.Commands
                 return;
             }
 
-            List<string> neighborhoodData = _informationProcessor.GetNeighborhoodInformation();
+            List<string> neighborhoodData = _informationProcessor.GetNeighborhoodInformation(fileType.ToUpper());
 
             if (neighborhoodData.Count == 1)
             {
@@ -399,7 +399,7 @@ namespace Startup.Commands
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, "NeighborhoodInfo.txt");
+                await Context.Channel.SendFileAsync(stream, string.Format("NeighborhoodInfo.{0}", fileType.ToUpper() == "TXT" ? "txt" : "csv"));
             }
         }
 
@@ -464,7 +464,7 @@ namespace Startup.Commands
         }
 
         [Command("CityInfo")]
-        public async Task CityInfo()
+        public async Task CityInfo(string fileType = "TXT")
         {
             LocalDataManager localDataManager = new LocalDataManager();
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
@@ -474,14 +474,14 @@ namespace Startup.Commands
                 return;
             }
 
-            List<string> cities = _informationProcessor.GetCityIds();
+            List<string> cities = _informationProcessor.GetCityIds(fileType.ToUpper());
 
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, cities));
             using (Stream stream = new MemoryStream())
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, string.Format("CityInfo.txt"));
+                await Context.Channel.SendFileAsync(stream, string.Format("CityInfo.{0}", fileType.ToUpper() == "TXT" ? "txt" : "csv"));
             }
         }
 
@@ -655,21 +655,45 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("!CollectionInfo"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will return a text file with information on all collections. Note that the property count does not include any locked properties, city and standard collections will also have a property count of 0."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CollectionInfo");
+                    helpOutput.Add("This command will return a text file.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CollectionInfo CSV");
+                    helpOutput.Add("This command will return a csv file.");
                     break;
                 case "5":
                     helpOutput.Add(string.Format("!PropertyInfo"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will return a text file with all of your properties."));
+                    helpOutput.Add(string.Format("This command will return a csv file with all of your properties."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !PropertyInfo");
+                    helpOutput.Add("This command will return a text file.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !PropertyInfo CSV");
+                    helpOutput.Add("This command will return a csv file.");
                     break;
                 case "6":
                     helpOutput.Add(string.Format("!NeighborhoodInfo"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will return a text file with information on all Neighborhoods."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !NeighborhoodInfo");
+                    helpOutput.Add("This command will return a text file.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !NeighborhoodInfo CSV");
+                    helpOutput.Add("This command will return a csv file.");
                     break;
                 case "7":
                     helpOutput.Add(string.Format("!CityInfo"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will return a text file with all cityIds and Names."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CityInfo");
+                    helpOutput.Add("This command will return a text file");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CityInfo CSV");
+                    helpOutput.Add("This command will return a csv file..");
                     break;
                 case "8":
                     helpOutput.Add(string.Format("!SupportMe"));
@@ -680,10 +704,13 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("!CollectionsForSale"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will find props for sale in the given collection id (not standard or city collections), and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !CollectionsForSale 177 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties for sale for UPX in the Kansas City Main St collection, and returns a csv file from lowest to greatest markup");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !CollectionsForSale 177 PRICE ALL");
                     helpOutput.Add("The above command finds all properties for sale in the Kansas City Main St collection, and returns a csv file from lowest to greatest price (USD = UPX * 1000).");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !CollectionsForSale 177 PRICE USD TXT");
                     helpOutput.Add("The above command finds all properties for sale for USD in the Kansas City Main St collection, and returns a txt file from from lowest to greatest price.");
                     break;
@@ -691,10 +718,13 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("!NeighborhoodsForSale"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will find props for sale in the given neighborhood id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !NeighborhoodsForSale 810 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties for sale for UPX in the Chicago Ashburn neighborhood, and returns a csv file from lowest to greatest markup");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !NeighborhoodsForSale 810 PRICE ALL");
                     helpOutput.Add("The above command finds all properties for sale in the Chicago Ashburn neighborhood, and returns a csv from lowest to greatest price (USD = UPX * 1000).");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !NeighborhoodsForSale 810 PRICE USD TXT");
                     helpOutput.Add("The above command finds all properties for sale for USD in the Chicago Ashburn neighborhood, and returns a txt file from lowest to greatest price.");
                     break;
@@ -702,10 +732,13 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("!CitysForSale"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will find props for sale in the given city id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !CitysForSale 10 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties for sale for UPX in the Chicago, and returns a csv file from lowest to greatest markup");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !CitysForSale 1 PRICE ALL");
                     helpOutput.Add("The above command finds all properties for sale in the San Francisco, and returns a csv from lowest to greatest price (USD = UPX * 1000).");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !CitysForSale 10 PRICE USD TXT");
                     helpOutput.Add("The above command finds all properties for sale for USD in the Chicago, and returns a txt file from lowest to greatest price.");
                     break;
@@ -713,12 +746,16 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("!BuildingsForSale"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will find props with Buildings for sale in the given type and id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !BuildingsForSale City 1 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties with buildings for sale for UPX in San Francisco, and returns a csv file from lowest to greatest markup");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !BuildingsForSale City 0 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties with buildings for sale for UPX, and returns a csv file from lowest to greatest markup");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !BuildingsForSale Neighborhood 876 PRICE ALL");
                     helpOutput.Add("The above command finds all properties with buildings for sale in the Chicago Portage Park neighborhood, and returns a csv file from lowest to greatest price (USD = UPX * 1000).");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !BuildingsForSale Collection 2 PRICE USD TXT");
                     helpOutput.Add("The above command finds all properties with buildings for sale for USD in the Mission District Collection, and returns a txt file from lowest to greatest price.");
                     break;
@@ -726,12 +763,14 @@ namespace Startup.Commands
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
                 case "14":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerWhatIfRun 188 3 250.10");
                     helpOutput.Add("The above command will run a WhatIfRun with your currenty properties, and 3 fake properties in the French Quarter collection with an average monthly upx earnings of 250.10 upx.");
                     break;

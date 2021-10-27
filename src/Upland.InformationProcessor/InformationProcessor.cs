@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Upland.Infrastructure.Blockchain;
@@ -23,101 +24,192 @@ namespace Upland.InformationProcessor
             blockchainManager = new BlockchainManager();
         }
 
-        public List<string> GetCollectionInformation()
+        public List<string> GetCollectionInformation(string fileType)
         {
             List<string> output = new List<string>();
 
             List<Collection> collections = localDataManager.GetCollections();
-
             collections = collections.OrderBy(c => c.Category).OrderBy(c => c.CityId).ToList();
 
-            output.Add("      Id - Category   - Name - Boost - Slots - Reward - Number of Properties");
-            output.Add("");
-            output.Add("Standard Collections");
-
-            int maxNameLenght = collections.OrderByDescending(c => c.Name.Length).First().Name.Length;
-
-            int? cityId = -1;
-            foreach (Collection collection in collections)
+            if (fileType == "TXT")
             {
-                if (cityId != collection.CityId)
-                {
-                    cityId = collection.CityId;
-                    output.Add("");
-                    output.Add(Consts.Cities[cityId.Value]);
-                }
 
-                output.Add(string.Format("     {0} - {1} - {2} - {3:N2} - {4} - {5} - {6}"
-                    , collection.Id.ToString().PadLeft(3)
-                    , HelperFunctions.GetCollectionCategory(collection.Category).PadRight(10)
-                    , collection.Name.PadRight(maxNameLenght)
-                    , collection.Boost
-                    , collection.NumberOfProperties
-                    , string.Format("{0:N0}", collection.Reward).ToString().PadLeft(7)
-                    , string.Format("{0:N0}", collection.MatchingPropertyIds.Count).ToString().PadLeft(6)
-                ));
+                int idPad = 8;
+                int categoryPad = 10;
+                int NamePad = collections.OrderByDescending(c => c.Name.Length).First().Name.Length;
+                int boostPad = 5;
+                int slotsPad = 5;
+                int rewardPad = 7;
+                int propCountPad = 10;
+
+
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}"
+                    , "Id".PadLeft(idPad)
+                    , "Category".PadLeft(categoryPad)
+                    , "Name".PadLeft(NamePad)
+                    , "Boost".PadLeft(boostPad)
+                    , "Slots".PadLeft(slotsPad)
+                    , "Reward".PadLeft(rewardPad)
+                    , "Prop Count".PadLeft(propCountPad)));
+
+                output.Add("");
+                output.Add("Standard Collections");
+
+                int? cityId = -1;
+                foreach (Collection collection in collections)
+                {
+                    if (cityId != collection.CityId)
+                    {
+                        cityId = collection.CityId;
+                        output.Add("");
+                        output.Add(Consts.Cities[cityId.Value]);
+                    }
+
+                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}"
+                        , collection.Id.ToString().PadLeft(idPad)
+                        , HelperFunctions.GetCollectionCategory(collection.Category).PadRight(categoryPad)
+                        , collection.Name.PadLeft(NamePad)
+                        , string.Format("{0:N2}", collection.Boost).PadLeft(boostPad)
+                        , collection.NumberOfProperties.ToString().PadLeft(slotsPad)
+                        , string.Format("{0:N0}", collection.Reward).ToString().PadLeft(rewardPad)
+                        , string.Format("{0:N0}", collection.MatchingPropertyIds.Count).ToString().PadLeft(propCountPad)
+                    ));
+                }
+            }
+            else
+            {
+                output.Add("Id,Category,Name,Boost,Slots,Reward,NumberOfProperties");
+                foreach (Collection collection in collections)
+                {
+                    output.Add(string.Format("{0},{1},{2},{3},{4},{5},{6}"
+                        , collection.Id.ToString()
+                        , HelperFunctions.GetCollectionCategory(collection.Category)
+                        , collection.Name
+                        , collection.Boost
+                        , collection.NumberOfProperties
+                        , string.Format("{0}", collection.Reward).ToString()
+                        , string.Format("{0}", collection.MatchingPropertyIds.Count).ToString()
+                    ));
+                }
             }
 
             return output;
         }
 
-        public List<string> GetNeighborhoodInformation()
+        public List<string> GetNeighborhoodInformation(string fileType)
         {
             List<string> output = new List<string>();
 
             List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
-
-            int maxNameLength = neighborhoods.OrderByDescending(n => n.Name.Length).First().Name.Length;
             neighborhoods = neighborhoods.OrderBy(n => n.Name).OrderBy(n => n.CityId).ToList();
 
-            output.Add(string.Format("       Id - {0}", "Name".PadLeft(maxNameLength)));
-            output.Add("");
-
-            int? cityId = -1;
-            foreach (Neighborhood neighborhood in neighborhoods)
+            if (fileType == "TXT")
             {
-                if (cityId != neighborhood.CityId)
-                {
-                    cityId = neighborhood.CityId;
-                    output.Add("");
-                    output.Add(Consts.Cities[cityId.Value]);
-                }
+                int idPad = 9;
+                int namePad = neighborhoods.OrderByDescending(n => n.Name.Length).First().Name.Length;
 
-                output.Add(string.Format("     {0} - {1}"
-                    , neighborhood.Id.ToString().PadLeft(4)
-                    , neighborhood.Name.PadLeft(maxNameLength)
-                ));
+                output.Add(string.Format("{0} - {1}", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
+                output.Add("");
+
+                int cityId = -1;
+                foreach (Neighborhood neighborhood in neighborhoods)
+                {
+                    if (cityId != neighborhood.CityId)
+                    {
+                        cityId = neighborhood.CityId;
+                        output.Add("");
+                        output.Add(Consts.Cities[cityId]);
+                    }
+
+                    output.Add(string.Format("{0} - {1}"
+                        , neighborhood.Id.ToString().PadLeft(idPad)
+                        , neighborhood.Name.PadLeft(namePad)
+                    ));
+                }
+            }
+            else
+            {
+                output.Add("Id,Name,CityId");
+                foreach (Neighborhood neighborhood in neighborhoods)
+                {
+                    output.Add(string.Format("{0},{1},{2}"
+                        , neighborhood.Id.ToString()
+                        , neighborhood.Name.Replace(',', ' ')
+                        , neighborhood.CityId
+                    ));
+                }
             }
 
             return output;
         }
 
-        public async Task<List<string>> GetMyPropertyInfo(string username)
+        public async Task<List<string>> GetPropertyInfo(string username, string fileType)
         {
             List<string> output = new List<string>();
             List<Property> properties = await localDataManager.GetPropertysByUsername(username);
 
             properties = properties.OrderBy(p => p.Address).OrderBy(p => p.CityId).ToList();
 
-            output.Add("                 Id -   Size - Monthly Earnings - NeighborhoodId - Address");
-
-            int? cityId = -1;
-            foreach (Property property in properties)
+            // Lets grab the Structures
+            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+            
+            if (fileType == "CSV")
             {
-                if (cityId != property.CityId)
-                {
-                    cityId = property.CityId;
-                    output.Add("");
-                    output.Add(Consts.Cities[cityId.Value]);
-                }
+                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Address,Structure");
 
-                output.Add(string.Format("     {0} - {1} - {2:} - {3} - {4}"
-                    , property.Id
-                    , string.Format("{0:N0}", property.Size).ToString().PadLeft(6)
-                    , string.Format("{0:N2}", property.MonthlyEarnings).ToString().PadLeft(10)
-                    , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString().PadLeft(4) : "-1")
-                    , property.Address
-                ));
+                foreach (Property property in properties)
+                {
+                    string propString = "";
+
+                    propString += string.Format("{0},", property.Id);
+                    propString += string.Format("{0},", property.Size);
+                    propString += string.Format("{0:F0},", Math.Round(property.MonthlyEarnings * 12 / 0.1728));
+                    propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
+                    propString += string.Format("{0},", property.CityId);
+                    propString += string.Format("{0},", property.Address);
+                    propString += string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None");
+
+                    output.Add(propString);
+                }
+            }
+            else
+            {
+                int idPad = 19;
+                int sizePad = 7;
+                int mintPad = 12;
+                int neighborhoodPad = 14;
+                int addressPad = properties.Max(p => p.Address.Length);
+                int buildingPad = 29;
+
+                output.Add(string.Format("Property Information For {0} as of {1:MM/dd/yy H:mm:ss}", username.ToUpper(), DateTime.Now));
+                output.Add("");
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                    , "Id".PadLeft(idPad)
+                    , "Size".PadLeft(sizePad)
+                    , "Mint".PadLeft(mintPad)
+                    , "NeighborhoodId".PadLeft(neighborhoodPad)
+                    , "Address".PadLeft(addressPad)
+                    , "Building".PadLeft(buildingPad)));
+
+                int? cityId = -1;
+                foreach (Property property in properties)
+                {
+                    if (cityId != property.CityId)
+                    {
+                        cityId = property.CityId;
+                        output.Add("");
+                        output.Add(Consts.Cities[cityId.Value]);
+                    }
+
+                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                        , property.Id.ToString().PadLeft(idPad)
+                        , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
+                        , string.Format("{0:N2}", Math.Round(property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
+                        , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
+                        , property.Address.PadLeft(addressPad)
+                        , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(buildingPad)
+                    ));
+                }
             }
 
             return output;
@@ -380,11 +472,22 @@ namespace Upland.InformationProcessor
             return output;
         }
 
-        public List<string> GetCityIds()
+        public List<string> GetCityIds(string fileType)
         {
             List<string> array = new List<string>();
-            array.Add("Id - Name");
-            array.AddRange(Consts.Cities.Select(c => string.Format("{0} - {1}", c.Key.ToString().PadLeft(2), c.Value)).ToList());
+
+            if (fileType == "TXT")
+            {
+                int namePad = Consts.Cities.OrderByDescending(c => c.Value.Length).First().Value.Length;
+
+                array.Add(string.Format("Id - {0}", "Name".PadLeft(namePad)));
+                array.AddRange(Consts.Cities.Select(c => string.Format("{0} - {1}", c.Key.ToString().PadLeft(2), c.Value.PadLeft(namePad))).ToList());
+            }
+            else
+            {
+                array.Add("Id,Name");
+                array.AddRange(Consts.Cities.Select(c => string.Format("{0},{1}", c.Key.ToString(), c.Value)).ToList());
+            }
             return array;
         }
 

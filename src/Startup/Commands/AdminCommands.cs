@@ -58,14 +58,14 @@ namespace Startup.Commands
 
             try
             {
-                await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername));
+                await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername.ToUpper()));
 
                 CollectionOptimizer optimizer = new CollectionOptimizer();
                 await optimizer.RunAutoOptimization(new RegisteredUser
                 {
                     DiscordUserId = Consts.TestUserDiscordId,
                     DiscordUsername = "TEST_USER_NAME",
-                    UplandUsername = uplandUsername
+                    UplandUsername = uplandUsername.ToLower()
                 },
                 qualityLevel);
 
@@ -73,7 +73,7 @@ namespace Startup.Commands
             }
             catch (Exception ex)
             {
-                await ReplyAsync(string.Format("Test Run Has Failed For: {0} - {1}", uplandUsername, ex.Message));
+                await ReplyAsync(string.Format("Test Run Has Failed For: {0} - {1}", uplandUsername.ToUpper(), ex.Message));
                 return;
             }
         }
@@ -123,7 +123,7 @@ namespace Startup.Commands
         }
 
         [Command("AdminPropertyInfo")]
-        public async Task AdminPropertyInfo(string userName)
+        public async Task AdminPropertyInfo(string userName, string fileType = "TXT")
         {
             LocalDataManager localDataManager = new LocalDataManager();
 
@@ -132,14 +132,14 @@ namespace Startup.Commands
                 return;
             }
 
-            List<string> propertyData = await _informationProcessor.GetMyPropertyInfo(userName);
+            List<string> propertyData = await _informationProcessor.GetPropertyInfo(userName.ToLower(), fileType.ToUpper());
 
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, propertyData));
             using (Stream stream = new MemoryStream())
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, string.Format("PropertyInfo_{0}.txt", userName));
+                await Context.Channel.SendFileAsync(stream, string.Format("PropertyInfo_{0}.{1}", userName.ToUpper(), fileType.ToUpper() == "TXT" ? "txt" : "csv"));
             }
         }
 

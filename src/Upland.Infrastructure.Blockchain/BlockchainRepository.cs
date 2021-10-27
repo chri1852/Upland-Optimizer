@@ -157,12 +157,5 @@ namespace Upland.Infrastructure.Blockchain
 
             return totalResults;
         }
-
-
-
-        public async Task GetPlayUplandMeActions(string transactionName)
-        {
-            //eos. .GetTransaction()
-        }
     }
 }
