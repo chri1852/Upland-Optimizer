@@ -36,7 +36,7 @@ namespace Upland.InformationProcessor
                 case "ferrybuildng": { return "San Francisco Ferry Building"; }
                 case "coittower"   : { return "Coit Tower"; }
                 case "chiftblstdm" : { return "Soldier Field"; }
-                case "cleftblstdm" : { return "FistEnergy Stadium"; }
+                case "cleftblstdm" : { return "FirstEnergy Stadium"; }
                 default: { return "Unknown"; }
             }
         }
