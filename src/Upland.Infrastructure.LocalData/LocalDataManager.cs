@@ -20,11 +20,21 @@ namespace Upland.Infrastructure.LocalData
             uplandApiRepository = new UplandApiRepository();
         }
 
-        public async Task PopulateAllPropertiesInArea(double north, double south, double east, double west, int cityId)
+        public async Task PopulateAllPropertiesInArea(double north, double south, double east, double west, int cityId, bool fullPropertyRetrieve)
         {
             List<long> retryIds = new List<long>();
             List<long> loadedProps = new List<long>();
-            List<long> ignoreIds = LocalDataRepository.GetPropertiesByCityId(cityId).Where(p => p.Latitude.HasValue).Select(p => p.Id).ToList();
+            List<long> ignoreIds = new List<long>();
+            Dictionary<long, Property> allCityProperties = new Dictionary<long, Property>();
+
+            if (fullPropertyRetrieve)
+            {
+                LocalDataRepository.GetPropertiesByCityId(cityId).Where(p => p.Latitude.HasValue).Select(p => p.Id).ToList();
+            }
+            else
+            {
+                allCityProperties = LocalDataRepository.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
+            }
 
             double defaultStep = 0.005;
             int totalprops = 0;
@@ -37,21 +47,54 @@ namespace Upland.Infrastructure.LocalData
                     totalprops += sectorProps.Count;
                     foreach (UplandProperty prop in sectorProps)
                     {
-                        if (loadedProps.Contains(prop.Prop_Id) || ignoreIds.Contains(prop.Prop_Id)) 
+                        if (loadedProps.Contains(prop.Prop_Id) || ignoreIds.Contains(prop.Prop_Id))
                         {
                             continue;
                         }
 
-                        try
+                        // Get the full property Data
+                        if (fullPropertyRetrieve)
+                        { 
+                            try
+                            {
+                                Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                LocalDataRepository.UpsertProperty(property);
+                                loadedProps.Add(prop.Prop_Id);
+                            }
+                            catch
+                            {
+                                retryIds.Add(prop.Prop_Id);
+
+                            }
+                        }
+                        else
                         {
-                            Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                            Property property;
+
+                            // Check to see if the prop exists, otherwise lets try and grab it.
+                            if (!allCityProperties.ContainsKey(prop.Prop_Id))
+                            {
+                                // check to make sure it is not under another city
+                                List<Property> checkProps = LocalDataRepository.GetProperties(new List<long> { prop.Prop_Id });
+                                if(checkProps.Count > 0)
+                                {
+                                    property = checkProps[0];
+                                }
+                                else
+                                {
+                                    property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                }
+                            }
+                            else
+                            {
+                                property = allCityProperties[prop.Prop_Id];
+                            }
+
+                            // Lets Just update the status and FSA
+                            property.Status = prop.status;
+                            property.FSA = prop.labels.fsa_allow;
                             LocalDataRepository.UpsertProperty(property);
                             loadedProps.Add(prop.Prop_Id);
-                        }
-                        catch
-                        {
-                            retryIds.Add(prop.Prop_Id);
-
                         }
                     }
                 }
@@ -176,9 +219,14 @@ namespace Upland.Infrastructure.LocalData
             neighborhoods = neighborhoods.Where(n => n.CityId == cityId).ToList();
             properties = properties.Where(p => p.NeighborhoodId == null && p.Latitude != null).ToList();
 
-            foreach(Property prop in properties)
+            foreach (Property prop in properties)
             {
-                foreach(Neighborhood neighborhood in neighborhoods)
+                if (prop.NeighborhoodId.HasValue)
+                {
+                    continue;
+                }
+
+                foreach (Neighborhood neighborhood in neighborhoods)
                 {
                     if (IsPropertyInNeighborhood(neighborhood, prop))
                     {
@@ -197,11 +245,14 @@ namespace Upland.Infrastructure.LocalData
                 return false;
             }
 
-            foreach (List<List<double>> polygon in neighborhood.Coordinates[0])
+            foreach (List<List<List<double>>> part in neighborhood.Coordinates)
             {
-                if (IsPointInPolygon(polygon, property))
+                foreach (List<List<double>> polygon in part)
                 {
-                    return true;
+                    if (IsPointInPolygon(polygon, property))
+                    {
+                        return true;
+                    }
                 }
             }
 

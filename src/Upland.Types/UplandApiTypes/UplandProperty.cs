@@ -15,6 +15,8 @@ namespace Upland.Types.UplandApiTypes
         public int? Area { get; set; }
         public decimal CenterLat { get; set; }
         public decimal CenterLng { get; set; }
+        public string status { get; set; }
+        public uplandLabels labels { get; set; }
     }
 
     public class LocationInfo
@@ -25,5 +27,10 @@ namespace Upland.Types.UplandApiTypes
     public class MarketInfo
     {
         public string token;
+    }
+
+    public class uplandLabels
+    {
+        public bool fsa_allow { get; set; }
     }
 }

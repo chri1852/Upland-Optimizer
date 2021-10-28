@@ -16,6 +16,8 @@ namespace Upland.Types
         public int? NeighborhoodId { get; set; }
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
+        public string? Status { get; set; }
+        public bool FSA { get; set; }
 
         public bool Equals(Property other)
         {

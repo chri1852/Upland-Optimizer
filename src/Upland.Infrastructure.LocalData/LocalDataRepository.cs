@@ -226,6 +226,8 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("NeighborhoodId", property.NeighborhoodId));
                     sqlCmd.Parameters.Add(new SqlParameter("Latitude", property.Latitude));
                     sqlCmd.Parameters.Add(new SqlParameter("Longitude", property.Longitude));
+                    sqlCmd.Parameters.Add(new SqlParameter("Status", property.Status));
+                    sqlCmd.Parameters.Add(new SqlParameter("FSA", property.FSA));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -271,7 +273,9 @@ namespace Upland.Infrastructure.LocalData
                                     StreetId = (int)reader["StreetId"],
                                     NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
                                     Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
-                                    Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null
+                                    Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
+                                    Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
+                                    FSA = (bool)reader["FSA"],
                                 }
                              );
                         }
@@ -323,6 +327,8 @@ namespace Upland.Infrastructure.LocalData
                                     NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
                                     Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
                                     Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
+                                    Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
+                                    FSA = (bool)reader["FSA"],
                                 }
                              );
                         }
@@ -374,6 +380,8 @@ namespace Upland.Infrastructure.LocalData
                                     NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
                                     Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
                                     Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
+                                    Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
+                                    FSA = (bool)reader["FSA"],
                                 }
                              );
                         }

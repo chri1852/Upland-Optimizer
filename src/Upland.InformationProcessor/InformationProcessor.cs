@@ -481,7 +481,7 @@ namespace Upland.InformationProcessor
                 int namePad = Consts.Cities.OrderByDescending(c => c.Value.Length).First().Value.Length;
 
                 array.Add(string.Format("Id - {0}", "Name".PadLeft(namePad)));
-                array.AddRange(Consts.Cities.Select(c => string.Format("{0} - {1}", c.Key.ToString().PadLeft(2), c.Value.PadLeft(namePad))).ToList());
+                array.AddRange(Consts.Cities.Select(c => string.Format("{0} - {1}", c.Key.ToString().PadLeft(5), c.Value.PadLeft(namePad))).ToList());
             }
             else
             {
@@ -589,6 +589,22 @@ namespace Upland.InformationProcessor
 
                     savedIds.Add(propertyStructure.PropertyId);
                 }
+            }
+        }
+
+        public async Task RunCityStatusUpdate()
+        { 
+            foreach (int cityId in Consts.Cities.Keys)
+            {
+                // Don't process the bullshit cities
+                if(cityId >= 10000)
+                {
+                    continue;
+                }
+
+                List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+                await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId, false);
+                localDataManager.DetermineNeighborhoodIdsForCity(cityId);
             }
         }
     }

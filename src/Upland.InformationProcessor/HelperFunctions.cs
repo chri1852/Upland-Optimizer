@@ -41,6 +41,46 @@ namespace Upland.InformationProcessor
             }
         }
 
+        public static List<double> GetCityAreaCoordinates(int cityId)
+        {
+            // N, S, E, W
+            switch (cityId)
+            {
+                case 1:
+                    return new List<double> {37.874861, 37.595937, -122.345007, -122.520960};
+                case 3:
+                    return new List<double> {40.882824, 40.680972,  -73.902522,  -74.052383};
+                case 4:
+                    return new List<double> {40.659563, 40.627391,  -73.757297,  -73.813173};
+                case 5:
+                    return new List<double> {36.953982, 36.648627, -119.592434, -119.941636};
+                case 6:
+                    return new List<double> {40.745700, 40.561811,  -73.827239,  -74.051086};
+                case 7:
+                    return new List<double> {37.894152, 37.697192, -122.108366, -122.346632};
+                case 8:
+                    return new List<double> {40.650337, 40.492300,  -74.045197,  -74.264237};
+                case 9:
+                    return new List<double> {35.431051, 35.253613, -118.797393, -119.190841};
+                case 10:
+                    return new List<double> {42.032864, 41.638941,  -87.514990,  -87.946204};
+                case 11:
+                    return new List<double> {41.605164, 41.390193,  -81.519952,  -81.883188};
+                case 12:
+                    return new List<double> {37.422572, 37.320392, -121.926698, -122.013043};
+                case 13:
+                    return new List<double> {40.855192, 40.785172,  -74.056121,  -74.130538};
+                case 14:
+                    return new List<double> {39.359456, 38.823596,  -94.370848,  -94.770819};
+                case 15:
+                    return new List<double> {30.179050, 29.863468,  -89.621784,  -90.142948};
+                case 16:
+                    return new List<double> {0, 0, 0, 0};
+                default:
+                    return new List<double> {0, 0, 0, 0};
+            }
+        }
+
         public static List<string> CreateForSaleCSVString(List<UplandForSaleProp> forSaleProperties, Dictionary<long, Property> propDictionary, Dictionary<long, string> propBuildings)
         {
             List<string> output = new List<string>();
