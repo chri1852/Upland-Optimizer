@@ -37,8 +37,8 @@ class Program
         InformationProcessor informationProcessor = new InformationProcessor();
         BlockchainRepository blockchainRepository = new BlockchainRepository();
 
-        //string username;
-        //string qualityLevel;
+        string username;
+        string qualityLevel;
         List<string> output = new List<string>();
         //new Program().InitializeRefreshTimer();
 
@@ -59,7 +59,8 @@ class Program
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         //output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "price", "all");
         //output = informationProcessor.GetNeighborhoodInformation("TXT"); 
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
+        //output = informationProcessor.GetUnmintedProperties("City", 6, "ALL", "CSV");
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.csv", string.Join(Environment.NewLine, output));
 
         // Populate CityProps And Neighborhoods
         //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 8, true);

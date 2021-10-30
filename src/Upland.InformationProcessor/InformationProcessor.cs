@@ -230,6 +230,76 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public List<string> GetCityInformation(string fileType)
+        {
+            List<string> array = new List<string>();
+            List<CollatedStatsObject> cityStats = localDataManager.GetCityStats();
+
+            if (fileType == "TXT")
+            {
+                int idPad = 5;
+                int namePad = Consts.Cities.OrderByDescending(c => c.Value.Length).First().Value.Length;
+
+                array.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
+
+                foreach (int cityId in Consts.Cities.Keys)
+                {
+                    string cityString = string.Format("{0} - {1} -", cityId.ToString().PadLeft(idPad), Consts.Cities[cityId].PadLeft(namePad));
+
+                    if (!cityStats.Any(c => c.Id == cityId))
+                    {
+                        cityString += HelperFunctions.CreateCollatedStatTextString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = cityStats.Where(c => c.Id == cityId).First();
+                        cityString += HelperFunctions.CreateCollatedStatTextString(stats);
+                    }
+                    array.Add(cityString);
+                }
+            }
+            else
+            {
+                array.Add("Id,Name,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
+                foreach (int cityId in Consts.Cities.Keys)
+                {
+                    string entry = string.Format("{0},{1},", cityId, Consts.Cities[cityId]);
+
+                    if (!cityStats.Any(c => c.Id == cityId))
+                    {
+                        entry += HelperFunctions.CreateCollatedStatCSVString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = cityStats.Where(c => c.Id == cityId).First();
+                        entry += HelperFunctions.CreateCollatedStatCSVString(stats);
+                    }
+                    array.Add(entry);
+                }
+            }
+            return array;
+        }
+
         public async Task<List<string>> GetPropertyInfo(string username, string fileType)
         {
             List<string> output = new List<string>();
@@ -443,7 +513,7 @@ namespace Upland.InformationProcessor
                 cityId = Id;
                 if (Id != 0 && !Consts.Cities.ContainsKey(Id))
                 {
-                    output.Add(string.Format("{0} is not a valid cityId.", Id));
+                    output.Add(string.Format("{0} is not a valid cityId. Try running my !CityInfo command.", Id));
                     return output;
                 }
 
@@ -559,76 +629,6 @@ namespace Upland.InformationProcessor
             return output;
         }
 
-        public List<string> GetCityInformation(string fileType)
-        {
-            List<string> array = new List<string>();
-            List<CollatedStatsObject> cityStats = localDataManager.GetCityStats();
-
-            if (fileType == "TXT")
-            {
-                int idPad = 5;
-                int namePad = Consts.Cities.OrderByDescending(c => c.Value.Length).First().Value.Length;
-
-                array.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
-
-                foreach (int cityId in Consts.Cities.Keys)
-                {
-                    string cityString = string.Format("{0} - {1} -", cityId.ToString().PadLeft(idPad), Consts.Cities[cityId].PadLeft(namePad));
-
-                    if (!cityStats.Any(c => c.Id == cityId))
-                    {
-                        cityString += HelperFunctions.CreateCollatedStatTextString(new CollatedStatsObject
-                        {
-                            TotalProps = 0,
-                            LockedProps = 0,
-                            UnlockedNonFSAProps = 0,
-                            UnlockedFSAProps = 0,
-                            ForSaleProps = 0,
-                            OwnedProps = 0,
-                            PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
-                        });
-                    }
-                    else
-                    {
-                        CollatedStatsObject stats = cityStats.Where(c => c.Id == cityId).First();
-                        cityString += HelperFunctions.CreateCollatedStatTextString(stats);
-                    }
-                    array.Add(cityString);
-                }
-            }
-            else
-            {
-                array.Add("Id,Name,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
-                foreach (int cityId in Consts.Cities.Keys)
-                {
-                    string entry = string.Format("{0},{1},", cityId, Consts.Cities[cityId]);
-
-                    if (!cityStats.Any(c => c.Id == cityId))
-                    {
-                        entry += HelperFunctions.CreateCollatedStatCSVString(new CollatedStatsObject
-                        {
-                            TotalProps = 0,
-                            LockedProps = 0,
-                            UnlockedNonFSAProps = 0,
-                            UnlockedFSAProps = 0,
-                            ForSaleProps = 0,
-                            OwnedProps = 0,
-                            PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
-                        });
-                    }
-                    else
-                    {
-                        CollatedStatsObject stats = cityStats.Where(c => c.Id == cityId).First();
-                        entry += HelperFunctions.CreateCollatedStatCSVString(stats);
-                    }
-                    array.Add(entry);
-                }
-            }
-            return array;
-        }
-
         public async Task<List<string>> GetCityPropertiesForSale(int cityId, string orderBy, string currency, string fileType)
         {
             List<string> output = new List<string>();
@@ -691,6 +691,146 @@ namespace Upland.InformationProcessor
             else
             {
                 output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, propDictionary, propertyStructures, string.Format("For Sale Report For CityId {0}.", cityId), uplandApiManager.GetCacheDateTime(cityId)));
+            }
+
+            return output;
+        }
+
+        public List<string> GetUnmintedProperties(string type, int Id, string propType, string fileType)
+        {
+            List<string> output = new List<string>();
+            Dictionary<long, Property> properties = new Dictionary<long, Property>();
+            int cityId = 0;
+
+            if (type.ToUpper() == "CITY")
+            {
+                cityId = Id;
+                if (!Consts.Cities.ContainsKey(Id))
+                {
+                    output.Add(string.Format("{0} is not a valid cityId. Try running my !CityInfo command.", Id));
+                    return output;
+                }
+                properties = localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .Where(p => p.Status != "Locked" && p.Status != "Owned" && p.Status != "For sale")
+                    .OrderBy(p => p.MonthlyEarnings)
+                    .ToDictionary(p => p.Id, p => p);
+            }
+            else if (type.ToUpper() == "NEIGHBORHOOD")
+            {
+                List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
+
+                if (!neighborhoods.Any(n => n.Id == Id))
+                {
+                    // Neighborhood don't exist
+                    output.Add(string.Format("{0} is not a valid neighborhoodId. Try running my !NeighborhoodInfo command.", Id.ToString()));
+                    return output;
+                }
+
+                cityId = neighborhoods.Where(n => n.Id == Id).First().CityId;
+                properties = localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .Where(p => p.NeighborhoodId == Id)
+                    .Where(p => p.Status != "Locked" && p.Status != "Owned" && p.Status != "For sale")
+                    .OrderBy(p => p.MonthlyEarnings)
+                    .ToDictionary(p => p.Id, p => p);
+            }
+            else if (type.ToUpper() == "COLLECTION")
+            {
+                List<Collection> collections = localDataManager.GetCollections();
+
+                if (!collections.Any(c => c.Id == Id))
+                {
+                    // Collection don't exist
+                    output.Add(string.Format("{0} is not a valid collectionId. Try running my !CollectionInfo command.", Id.ToString()));
+                    return output;
+                }
+
+                if (collections.Any(c => c.Id == Id && c.IsCityCollection))
+                {
+                    // Don't do city collections
+                    output.Add(string.Format("This doesn't work for city collections.", Id.ToString()));
+                    return output;
+                }
+
+                Collection collection = collections.Where(c => c.Id == Id).First();
+                cityId = collection.CityId.Value;
+                properties = localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .Where(p => collection.MatchingPropertyIds.Contains(p.Id))
+                    .Where(p => p.Status != "Locked" && p.Status != "Owned" && p.Status != "For sale")
+                    .OrderBy(p => p.MonthlyEarnings)
+                    .ToDictionary(p => p.Id, p => p);
+            }
+            else
+            {
+                output.Add(string.Format("That wasn't a valid type. Choose: City, Neighborhood, or Collection"));
+                return output;
+            }
+
+            if (propType == "FSA")
+            {
+                properties = properties.Where(p => p.Value.FSA).ToDictionary(p => p.Key, p => p.Value);
+            }
+            else if (propType == "NONFSA")
+            {
+                properties = properties.Where(p => !p.Value.FSA).ToDictionary(p => p.Key, p => p.Value);
+            }
+
+            if (properties.Count == 0)
+            {
+                // Nothing unminted in range
+                output.Add(string.Format("There are no uniminted properties for {0} {1}", type, Id));
+                return output;
+            }
+
+            if (fileType == "CSV")
+            {
+                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Address");
+
+                foreach (Property property in properties.Values)
+                {
+                    string propString = "";
+
+                    propString += string.Format("{0},", property.Id);
+                    propString += string.Format("{0},", property.Size);
+                    propString += string.Format("{0:F0},", Math.Round(property.MonthlyEarnings * 12 / 0.1728));
+                    propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
+                    propString += string.Format("{0},", property.CityId);
+                    propString += string.Format("{0},", property.Address);
+                    output.Add(propString);
+                }
+            }
+            else
+            {
+                int idPad = 19;
+                int sizePad = 7;
+                int mintPad = 13;
+                int neighborhoodPad = 14;
+                int cityPad = 6;
+                int addressPad = properties.Max(p => p.Value.Address.Length);
+
+                output.Add(string.Format("{0} Unminted Properties For {1} {2}", propType, type, Id));
+                output.Add("");
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                    , "Id".PadLeft(idPad)
+                    , "Size".PadLeft(sizePad)
+                    , "Mint".PadLeft(mintPad)
+                    , "NeighborhoodId".PadLeft(neighborhoodPad)
+                    , "CityId".PadLeft(cityPad)
+                    , "Address".PadLeft(addressPad)));
+
+                foreach (Property property in properties.Values)
+                {
+                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                        , property.Id.ToString().PadLeft(idPad)
+                        , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
+                        , string.Format("{0:N2}", Math.Round(property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
+                        , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
+                        , string.Format("{0}", cityId).PadLeft(cityPad)
+                        , property.Address.PadLeft(addressPad)
+                    ));
+                }
             }
 
             return output;
