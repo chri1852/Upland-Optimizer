@@ -8,7 +8,7 @@ namespace Upland.Types
     {
         public static readonly string LocalDBConnectionString = @"Data Source=DESKTOP-BK6KAFH\SQLEXPRESS;Initial Catalog=UplandLocalData;Integrated Security=True;";
 
-        public static readonly string AuthToken = @"eyJhbGciOiJIUzI1NiIsInR5cCI6ImFjY2VzcyJ9.eyJ1c2VySWQiOiIzZDk1ZTk0MC0xMDhkLTExZWItYmQ3OS1iZmE2NzhmODI5YzciLCJ2YWxpZGF0aW9uVG9rZW4iOiJ5dkNpQUd1UEE0cElNdlhMYkZLeWlCSnlPa0tWM2tMdDNJeDBhZVJzSXU4IiwiaWF0IjoxNjM1MjgxOTM0LCJleHAiOjE2NjY4Mzk1MzQsImlzcyI6ImZlYXRoZXJzIiwic3ViIjoiM2Q5NWU5NDAtMTA4ZC0xMWViLWJkNzktYmZhNjc4ZjgyOWM3IiwianRpIjoiOGFiNmQ2ODctOTJjMS00YjMzLWJjZGQtMWRlZWI5YWMxYjc2In0.KSRkk-v2eeWEMa-kVfvnRcq17DqrsdKSSm00iLI2VmA";
+        public static readonly string AuthToken = @"eyJhbGciOiJIUzI1NiIsInR5cCI6ImFjY2VzcyJ9.eyJ1c2VySWQiOiIzZDk1ZTk0MC0xMDhkLTExZWItYmQ3OS1iZmE2NzhmODI5YzciLCJ2YWxpZGF0aW9uVG9rZW4iOiJ5dkNpQUd1UEE0cElNdlhMYkZLeWlCSnlPa0tWM2tMdDNJeDBhZVJzSXU4IiwiaWF0IjoxNjM1NjE5NTgwLCJleHAiOjE2NjcxNzcxODAsImlzcyI6ImZlYXRoZXJzIiwic3ViIjoiM2Q5NWU5NDAtMTA4ZC0xMWViLWJkNzktYmZhNjc4ZjgyOWM3IiwianRpIjoiZjU0MTYwN2YtYTBlOC00NzYwLWJjNzctYmJlM2M3YTUzYTc2In0.HTkNvK7swvjNr-0YadFcbOdfym9BtTidxqthpcx7EUA";
 
         public static readonly string CityPro = "City Pro";
         public static readonly string KingOfTheStreet = "King of the Street";

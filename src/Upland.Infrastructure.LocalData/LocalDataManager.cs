@@ -327,6 +327,77 @@ namespace Upland.Infrastructure.LocalData
             return userProperties;
         }
 
+        public List<CollatedStatsObject> GetCityStats()
+        {
+            return CollateStats(LocalDataRepository.GetCityStats());
+        }
+
+        public List<CollatedStatsObject> GetNeighborhoodStats()
+        {
+            return CollateStats(LocalDataRepository.GetNeighborhoodStats());
+        }
+
+        public List<CollatedStatsObject> GetCollectionStats()
+        {
+            return CollateStats(LocalDataRepository.GetCollectionStats());
+        }
+
+        private List<CollatedStatsObject> CollateStats(List<StatsObject> rawStats)
+        {
+            rawStats = rawStats.OrderBy(o => o.Id).ToList();
+            List<CollatedStatsObject> collatedStats = new List<CollatedStatsObject>();
+            int id = -1;
+
+            foreach (StatsObject stat in rawStats)
+            {
+                if (stat.Id != id)
+                {
+                    id = stat.Id;
+                    collatedStats.Add(new CollatedStatsObject { Id = stat.Id });
+                }
+
+                switch(stat.Status)
+                {
+                    case "For Sale":
+                        collatedStats.Last().ForSaleProps += stat.PropCount;
+                        break;
+                    case "Locked":
+                        collatedStats.Last().LockedProps += stat.PropCount;
+                        break;
+                    case "Owned":
+                        collatedStats.Last().OwnedProps += stat.PropCount;
+                        break;
+                    case "Unlocked":
+                        if (stat.FSA)
+                        {
+                            collatedStats.Last().UnlockedFSAProps += stat.PropCount;
+                        }
+                        else
+                        {
+                            collatedStats.Last().UnlockedNonFSAProps += stat.PropCount;
+                        }
+                        break;
+                }
+            }
+
+            foreach (CollatedStatsObject collatedStat in collatedStats)
+            {
+                collatedStat.TotalProps = collatedStat.ForSaleProps + collatedStat.LockedProps + collatedStat.OwnedProps + collatedStat.UnlockedFSAProps + collatedStat.UnlockedNonFSAProps;
+                if ((collatedStat.TotalProps - collatedStat.LockedProps) == 0)
+                {
+                    collatedStat.PercentMinted = 100.00;
+                    collatedStat.PercentNonFSAMinted = 100.00;
+                }
+                else
+                {
+                    collatedStat.PercentMinted = 100.00 * (collatedStat.ForSaleProps + collatedStat.OwnedProps) / (collatedStat.TotalProps - collatedStat.LockedProps);
+                    collatedStat.PercentNonFSAMinted = 100.00 * (collatedStat.ForSaleProps + collatedStat.OwnedProps + collatedStat.UnlockedFSAProps) / (collatedStat.TotalProps - collatedStat.LockedProps);
+                }
+            }
+
+            return collatedStats;
+        }
+
         public void CreateOptimizationRun(OptimizationRun optimizationRun)
         {
             LocalDataRepository.CreateOptimizationRun(optimizationRun);

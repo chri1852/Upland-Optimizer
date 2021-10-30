@@ -474,7 +474,7 @@ namespace Startup.Commands
                 return;
             }
 
-            List<string> cities = _informationProcessor.GetCityIds(fileType.ToUpper());
+            List<string> cities = _informationProcessor.GetCityInformation(fileType.ToUpper());
 
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, cities));
             using (Stream stream = new MemoryStream())

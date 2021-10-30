@@ -28,22 +28,22 @@ namespace Upland.InformationProcessor
         {
             List<string> output = new List<string>();
 
+            List<CollatedStatsObject> collectionStats = localDataManager.GetCollectionStats();
             List<Collection> collections = localDataManager.GetCollections();
             collections = collections.OrderBy(c => c.Category).OrderBy(c => c.CityId).ToList();
 
             if (fileType == "TXT")
             {
-
                 int idPad = 8;
                 int categoryPad = 10;
                 int NamePad = collections.OrderByDescending(c => c.Name.Length).First().Name.Length;
                 int boostPad = 5;
                 int slotsPad = 5;
                 int rewardPad = 7;
-                int propCountPad = 10;
+                int propCountPad = 11;
 
 
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}"
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted"
                     , "Id".PadLeft(idPad)
                     , "Category".PadLeft(categoryPad)
                     , "Name".PadLeft(NamePad)
@@ -65,31 +65,73 @@ namespace Upland.InformationProcessor
                         output.Add(Consts.Cities[cityId.Value]);
                     }
 
-                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}"
+                    string collectionString = string.Format("{0} - {1} - {2} - {3} - {4} - {5} - "
                         , collection.Id.ToString().PadLeft(idPad)
                         , HelperFunctions.GetCollectionCategory(collection.Category).PadRight(categoryPad)
                         , collection.Name.PadLeft(NamePad)
                         , string.Format("{0:N2}", collection.Boost).PadLeft(boostPad)
                         , collection.NumberOfProperties.ToString().PadLeft(slotsPad)
                         , string.Format("{0:N0}", collection.Reward).ToString().PadLeft(rewardPad)
-                        , string.Format("{0:N0}", collection.MatchingPropertyIds.Count).ToString().PadLeft(propCountPad)
-                    ));
+                    );
+
+                    if (!collectionStats.Any(c => c.Id == collection.Id))
+                    {
+                        collectionString += HelperFunctions.CreateCollatedStatTextString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = collectionStats.Where(c => c.Id == collection.Id).First();
+                        collectionString += HelperFunctions.CreateCollatedStatTextString(stats);
+                    }
+
+                    output.Add(collectionString);
                 }
             }
             else
             {
-                output.Add("Id,Category,Name,Boost,Slots,Reward,NumberOfProperties");
+                output.Add("Id,Category,Name,Boost,Slots,Reward,NumberOfProperties,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
                 foreach (Collection collection in collections)
                 {
-                    output.Add(string.Format("{0},{1},{2},{3},{4},{5},{6}"
+                    string collectionString = string.Format("{0},{1},{2},{3},{4},{5},"
                         , collection.Id.ToString()
                         , HelperFunctions.GetCollectionCategory(collection.Category)
                         , collection.Name
                         , collection.Boost
                         , collection.NumberOfProperties
                         , string.Format("{0}", collection.Reward).ToString()
-                        , string.Format("{0}", collection.MatchingPropertyIds.Count).ToString()
-                    ));
+                    );
+
+                    if (!collectionStats.Any(c => c.Id == collection.Id))
+                    {
+                        collectionString += HelperFunctions.CreateCollatedStatCSVString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = collectionStats.Where(c => c.Id == collection.Id).First();
+                        collectionString += HelperFunctions.CreateCollatedStatCSVString(stats);
+                    }
+
+                    output.Add(collectionString);
                 }
             }
 
@@ -99,6 +141,7 @@ namespace Upland.InformationProcessor
         public List<string> GetNeighborhoodInformation(string fileType)
         {
             List<string> output = new List<string>();
+            List<CollatedStatsObject> neighborhoodStats = localDataManager.GetNeighborhoodStats();
 
             List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
             neighborhoods = neighborhoods.OrderBy(n => n.Name).OrderBy(n => n.CityId).ToList();
@@ -108,7 +151,7 @@ namespace Upland.InformationProcessor
                 int idPad = 9;
                 int namePad = neighborhoods.OrderByDescending(n => n.Name.Length).First().Name.Length;
 
-                output.Add(string.Format("{0} - {1}", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
+                output.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
                 output.Add("");
 
                 int cityId = -1;
@@ -121,22 +164,66 @@ namespace Upland.InformationProcessor
                         output.Add(Consts.Cities[cityId]);
                     }
 
-                    output.Add(string.Format("{0} - {1}"
+                    string neighborhoodString = string.Format("{0} - {1}"
                         , neighborhood.Id.ToString().PadLeft(idPad)
                         , neighborhood.Name.PadLeft(namePad)
-                    ));
+                    );
+
+                    if (!neighborhoodStats.Any(n => n.Id == neighborhood.Id))
+                    {
+                        neighborhoodString += HelperFunctions.CreateCollatedStatTextString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = neighborhoodStats.Where(n => n.Id == neighborhood.Id).First();
+                        neighborhoodString += HelperFunctions.CreateCollatedStatTextString(stats);
+                    }
+
+                    output.Add(neighborhoodString);
                 }
             }
             else
             {
-                output.Add("Id,Name,CityId");
+                output.Add("Id,Name,CityId,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
                 foreach (Neighborhood neighborhood in neighborhoods)
                 {
-                    output.Add(string.Format("{0},{1},{2}"
+                    string neighborhoodString = string.Format("{0},{1},{2},"
                         , neighborhood.Id.ToString()
                         , neighborhood.Name.Replace(',', ' ')
                         , neighborhood.CityId
-                    ));
+                    );
+
+                    if (!neighborhoodStats.Any(n => n.Id == neighborhood.Id))
+                    {
+                        neighborhoodString += HelperFunctions.CreateCollatedStatCSVString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = neighborhoodStats.Where(n => n.Id == neighborhood.Id).First();
+                        neighborhoodString += HelperFunctions.CreateCollatedStatCSVString(stats);
+                    }
+
+                    output.Add(neighborhoodString);
                 }
             }
 
@@ -472,21 +559,72 @@ namespace Upland.InformationProcessor
             return output;
         }
 
-        public List<string> GetCityIds(string fileType)
+        public List<string> GetCityInformation(string fileType)
         {
             List<string> array = new List<string>();
+            List<CollatedStatsObject> cityStats = localDataManager.GetCityStats();
 
             if (fileType == "TXT")
             {
+                int idPad = 5;
                 int namePad = Consts.Cities.OrderByDescending(c => c.Value.Length).First().Value.Length;
 
-                array.Add(string.Format("Id - {0}", "Name".PadLeft(namePad)));
-                array.AddRange(Consts.Cities.Select(c => string.Format("{0} - {1}", c.Key.ToString().PadLeft(5), c.Value.PadLeft(namePad))).ToList());
+                array.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
+
+                foreach (int cityId in Consts.Cities.Keys)
+                {
+                    string cityString = string.Format("{0} - {1} -", cityId.ToString().PadLeft(idPad), Consts.Cities[cityId].PadLeft(namePad));
+
+                    if (!cityStats.Any(c => c.Id == cityId))
+                    {
+                        cityString += HelperFunctions.CreateCollatedStatTextString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = cityStats.Where(c => c.Id == cityId).First();
+                        cityString += HelperFunctions.CreateCollatedStatTextString(stats);
+                    }
+                    array.Add(cityString);
+                }
             }
             else
             {
-                array.Add("Id,Name");
-                array.AddRange(Consts.Cities.Select(c => string.Format("{0},{1}", c.Key.ToString(), c.Value)).ToList());
+                array.Add("Id,Name,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
+                foreach (int cityId in Consts.Cities.Keys)
+                {
+                    string entry = string.Format("{0},{1},", cityId, Consts.Cities[cityId]);
+
+                    if (!cityStats.Any(c => c.Id == cityId))
+                    {
+                        entry += HelperFunctions.CreateCollatedStatCSVString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = cityStats.Where(c => c.Id == cityId).First();
+                        entry += HelperFunctions.CreateCollatedStatCSVString(stats);
+                    }
+                    array.Add(entry);
+                }
             }
             return array;
         }
@@ -592,8 +730,10 @@ namespace Upland.InformationProcessor
             }
         }
 
-        public async Task RunCityStatusUpdate()
-        { 
+        public async Task RunCityStatusUpdate(bool allCities)
+        {
+            List<CollatedStatsObject> cityStats = localDataManager.GetCityStats();
+
             foreach (int cityId in Consts.Cities.Keys)
             {
                 // Don't process the bullshit cities
@@ -602,6 +742,15 @@ namespace Upland.InformationProcessor
                     continue;
                 }
 
+                // Skip sold out if allCities is not true
+                if(!allCities)
+                {
+                    if (cityStats.Where(c => c.Id == cityId).First().PercentMinted >= 100)
+                    {
+                        continue;
+                    }
+                }
+                
                 List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
                 await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId, false);
                 localDataManager.DetermineNeighborhoodIdsForCity(cityId);

@@ -96,5 +96,8 @@
     <Build Include="StoredProcedures\UPL.CreatePropertyStructure.sql" />
     <Build Include="StoredProcedures\UPL.TruncatePropertyStructure.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertyStructures.sql" />
+    <Build Include="StoredProcedures\UPL.GetNeighborhoodStats.sql" />
+    <Build Include="StoredProcedures\UPL.GetCityStats.sql" />
+    <Build Include="StoredProcedures\UPL.GetCollectionStats.sql" />
   </ItemGroup>
 </Project>

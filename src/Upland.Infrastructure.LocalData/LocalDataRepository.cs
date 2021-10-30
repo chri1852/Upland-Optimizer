@@ -167,6 +167,141 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static List<StatsObject> GetCityStats()
+        {
+            List<StatsObject> stats = new List<StatsObject>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCityStats]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            stats.Add(
+                                new StatsObject
+                                {
+                                    Id = (int)reader["Id"],
+                                    FSA = (bool)reader["FSA"],
+                                    Status = (string)reader["Status"],
+                                    PropCount = (int)reader["PropCount"],
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return stats;
+            }
+        }
+
+        public static List<StatsObject> GetNeighborhoodStats()
+        {
+            List<StatsObject> stats = new List<StatsObject>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNeighborhoodStats]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            stats.Add(
+                                new StatsObject
+                                {
+                                    Id = (int)reader["Id"],
+                                    FSA = (bool)reader["FSA"],
+                                    Status = (string)reader["Status"],
+                                    PropCount = (int)reader["PropCount"],
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return stats;
+            }
+        }
+
+        public static List<StatsObject> GetCollectionStats()
+        {
+            List<StatsObject> stats = new List<StatsObject>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCollectionStats]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            stats.Add(
+                                new StatsObject
+                                {
+                                    Id = (int)reader["Id"],
+                                    FSA = (bool)reader["FSA"],
+                                    Status = (string)reader["Status"],
+                                    PropCount = (int)reader["PropCount"],
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return stats;
+            }
+        }
+
         public static void CreateProperty(Property property)
         {
             SqlConnection sqlConnection = GetSQLConnector();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Upland.Types;
+using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
@@ -147,7 +148,7 @@ namespace Upland.InformationProcessor
                 propString += string.Format(" -    {0}   - ", prop.Currency.ToUpper());
                 propString += string.Format("{0:N0}", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(mintPad);
                 propString += " - ";
-                propString += string.Format("{0:N0}%", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(markupPad);
+                propString += string.Format("{0:N2}%", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(markupPad);
                 propString += " - ";
                 propString += string.Format("{0}", propDictionary[prop.Prop_Id].Address).PadLeft(addressPad);
                 propString += " - ";
@@ -168,6 +169,33 @@ namespace Upland.InformationProcessor
             }
 
             return output;
+        }
+
+        public static string CreateCollatedStatTextString(CollatedStatsObject statObject)
+        {
+            string returnString = "";
+            returnString += string.Format("{0:N0}", statObject.TotalProps).PadLeft(11);
+            returnString += " - ";
+            returnString += string.Format("{0:N0}", statObject.LockedProps).PadLeft(12);
+            returnString += " - ";
+            returnString += string.Format("{0:N0}", statObject.UnlockedNonFSAProps).PadLeft(22);
+            returnString += " - ";
+            returnString += string.Format("{0:N0}", statObject.UnlockedFSAProps).PadLeft(18);
+            returnString += " - ";
+            returnString += string.Format("{0:N0}", statObject.ForSaleProps).PadLeft(14);
+            returnString += " - ";
+            returnString += string.Format("{0:N0}", statObject.OwnedProps).PadLeft(11);
+            returnString += " - ";
+            returnString += string.Format("{0:N2}%", statObject.PercentMinted).PadLeft(14);
+            returnString += " - ";
+            returnString += string.Format("{0:N2}%", statObject.PercentNonFSAMinted).PadLeft(22);
+
+            return returnString;
+        }
+
+        public static string CreateCollatedStatCSVString(CollatedStatsObject statObject)
+        {
+            return string.Format("{0},{1},{2},{3},{4},{5},{6:F2},{7:F2}", statObject.TotalProps, statObject.LockedProps, statObject.UnlockedNonFSAProps, statObject.UnlockedFSAProps, statObject.ForSaleProps, statObject.OwnedProps, statObject.PercentMinted, statObject.PercentNonFSAMinted);
         }
     }
 }
