@@ -356,13 +356,6 @@ namespace Startup.Commands
                 return;
             }
 
-            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
-            if (currentRun == null)
-            {
-                await ReplyAsync(string.Format("Run an Optimization Run first {0}.", HelperFunctions.GetRandomName(_random)));
-                return;
-            }
-
             List<string> propertyData = await _informationProcessor.GetPropertyInfo(registeredUser.UplandUsername, fileType.ToUpper());
 
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, propertyData));
