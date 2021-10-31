@@ -122,11 +122,41 @@ class Program
     {
         SocketUserMessage message = arg as SocketUserMessage;
         SocketCommandContext context = new SocketCommandContext(_client, message);
-        if (message.Author.IsBot) return;
+        if (message.Author.IsBot)
+        {
+            return;
+        }
+
+        if (context.Channel.Name == "server-messages")
+        {
+            Task child = Task.Factory.StartNew(async () =>
+            {
+                Console.WriteLine(string.Format("{0}: New User Joined Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
+            });
+            return;
+        }
 
         int argPos = 0;
         if (message.HasStringPrefix("!", ref argPos))
         {
+            if (context.Channel.Name == "general" || context.Channel.Name == "tech-issues")
+            {
+                Task wrongChannelChild = Task.Factory.StartNew(async () =>
+                {
+                    await context.Channel.SendMessageAsync(string.Format("Spam the bot in bot-spam my dude."));
+                });
+                return;
+            }
+
+            if (context.Channel.Name == "help" && !message.Content.ToUpper().Contains("HELP"))
+            {
+                Task helpChild = Task.Factory.StartNew(async () =>
+                {
+                    await context.Channel.SendMessageAsync(string.Format("Spam the bot in bot-spam my dude."));
+                });
+                return;
+            }
+
             Task child = Task.Factory.StartNew(async () =>
             {
                 var result = await _commands.ExecuteAsync(context, argPos, _services);
