@@ -58,9 +58,9 @@ class Program
         //output = await informationProcessor.GetSalesDataByCityId(1);
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         //output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "price", "all");
-        //output = informationProcessor.GetNeighborhoodInformation("TXT"); 
+        //output = informationProcessor.GetCityInformation("TXT"); 
         //output = informationProcessor.GetUnmintedProperties("City", 6, "ALL", "CSV");
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.csv", string.Join(Environment.NewLine, output));
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
 
         // Populate CityProps And Neighborhoods
         //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 8, true);
@@ -68,7 +68,7 @@ class Program
 
         // Rebuild Property Structure List
         //await informationProcessor.RebuildPropertyStructures();
-        //await informationProcessor.RunCityStatusUpdate();
+        await informationProcessor.RunCityStatusUpdate(true);
 
         //List<t3Entry> items = await blockchainRepository.GetActiveOffers();
     }
@@ -178,7 +178,7 @@ class Program
                 await RunRefreshActions();
             });
         };
-        _refreshTimer.Interval = 36000000;
+        _refreshTimer.Interval = 3600000;
         _refreshTimer.Start();
     }
 

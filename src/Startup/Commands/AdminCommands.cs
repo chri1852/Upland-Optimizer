@@ -208,5 +208,24 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("Failed Rebuilding PropertyStructures: {0}", ex.Message));
             }
         }
+
+        [Command("AdminRebuildPropertyStatus")]
+        public async Task AdminRebuildPropertyStatus()
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                await _informationProcessor.RunCityStatusUpdate(true);
+                await ReplyAsync(string.Format("Property Status Rebuilt."));
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(string.Format("Failed Rebuilding Property Status: {0}", ex.Message));
+            }
+        }
     }
 }

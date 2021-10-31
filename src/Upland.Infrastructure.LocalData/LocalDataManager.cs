@@ -358,7 +358,7 @@ namespace Upland.Infrastructure.LocalData
 
                 switch(stat.Status)
                 {
-                    case "For Sale":
+                    case "For sale":
                         collatedStats.Last().ForSaleProps += stat.PropCount;
                         break;
                     case "Locked":
