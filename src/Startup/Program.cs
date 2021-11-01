@@ -126,7 +126,7 @@ class Program
         {
             Task child = Task.Factory.StartNew(async () =>
             {
-                Console.WriteLine(string.Format("{0}: New User Joined Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
+                Console.WriteLine(string.Format("{0}: New User Joined!", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
             });
             return;
         }
