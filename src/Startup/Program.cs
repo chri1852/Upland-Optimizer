@@ -121,18 +121,20 @@ class Program
     private async Task HandleCommandAsync(SocketMessage arg)
     {
         SocketUserMessage message = arg as SocketUserMessage;
-        SocketCommandContext context = new SocketCommandContext(_client, message);
-        if (message.Author.IsBot)
-        {
-            return;
-        }
 
-        if (context.Channel.Name == "server-messages")
+        if (message == null)
         {
             Task child = Task.Factory.StartNew(async () =>
             {
                 Console.WriteLine(string.Format("{0}: New User Joined Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
             });
+            return;
+        }
+
+        SocketCommandContext context = new SocketCommandContext(_client, message);
+
+        if (message.Author.IsBot)
+        {
             return;
         }
 
