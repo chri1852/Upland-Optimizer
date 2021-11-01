@@ -570,6 +570,37 @@ namespace Startup.Commands
             }
         }
 
+        [Command("AllProperties")]
+        public async Task AllProperties(string type, int Id, string fileType = "CSV")
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            await ReplyAsync(string.Format("Okey-Dokey! Searching for all properties {0}!", HelperFunctions.GetRandomName(_random)));
+
+            List<string> unmintedData = _informationProcessor.GetAllProperties(type.ToUpper(), Id, fileType.ToUpper());
+
+            if (unmintedData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), unmintedData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, unmintedData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("AllProperties.{0}", fileType.ToUpper() == "CSV" ? "csv" : "txt"));
+            }
+        }
+
         [Command("Help")]
         public async Task Help()
         {
@@ -624,10 +655,11 @@ namespace Startup.Commands
             helpMenu.Add("   11. !CitysForSale");
             helpMenu.Add("   12. !BuildingsForSale");
             helpMenu.Add("   13. !UnmintedProperties");
+            helpMenu.Add("   14. !AllProperties");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   14. !OptimizerLevelRun");
-            helpMenu.Add("   15. !OptimizerWhatIfRun");
+            helpMenu.Add("   15. !OptimizerLevelRun");
+            helpMenu.Add("   16. !OptimizerWhatIfRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -802,13 +834,27 @@ namespace Startup.Commands
                     helpOutput.Add("The above command finds all unminted properties in the Mission District Collection, and returns a txt file from lowest to greatest mint price.");
                     break;
                 case "14":
+                    helpOutput.Add(string.Format("!AllProperties"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will find all properties in the given type and id, and return a csv file listing in order of mint price. On the city level this will only work for Rutherford and Santa Clara."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !AllProperties City 12");
+                    helpOutput.Add("The above command finds all FSA unminted properties in Santa Clara, and returns a csv file from lowest to greatest mint price.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !AllProperties Neighborhood 876");
+                    helpOutput.Add("The above command finds all properties in the Chicago Portage Park neighborhood, and returns a csv file from lowest to greatest mint price.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !AllProperties Collection 2 TXT");
+                    helpOutput.Add("The above command finds all properties in the Mission District Collection, and returns a txt file from lowest to greatest mint price.");
+                    break;
+                case "15":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
-                case "15":
+                case "16":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));

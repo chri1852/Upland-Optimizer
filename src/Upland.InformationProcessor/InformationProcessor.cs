@@ -836,6 +836,156 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public List<string> GetAllProperties(string type, int Id, string fileType)
+        {
+            List<string> output = new List<string>();
+            Dictionary<long, Property> properties = new Dictionary<long, Property>();
+            int cityId = 0;
+
+            if (type.ToUpper() == "CITY")
+            {
+                cityId = Id;
+                if (!Consts.Cities.ContainsKey(Id))
+                {
+                    output.Add(string.Format("{0} is not a valid cityId. Try running my !CityInfo command.", Id));
+                    return output;
+                }
+
+                if (cityId != 12 && cityId != 13)
+                {
+                    output.Add(string.Format("I can't run this command on City level data. There's just too much data!", Id.ToString()));
+                    return output;
+                }
+
+                properties = localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .OrderBy(p => p.MonthlyEarnings)
+                    .ToDictionary(p => p.Id, p => p);
+            }
+            else if (type.ToUpper() == "NEIGHBORHOOD")
+            {
+                List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
+
+                if (!neighborhoods.Any(n => n.Id == Id))
+                {
+                    // Neighborhood don't exist
+                    output.Add(string.Format("{0} is not a valid neighborhoodId. Try running my !NeighborhoodInfo command.", Id.ToString()));
+                    return output;
+                }
+
+                cityId = neighborhoods.Where(n => n.Id == Id).First().CityId;
+                properties = localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .Where(p => p.NeighborhoodId == Id)
+                    .OrderBy(p => p.MonthlyEarnings)
+                    .ToDictionary(p => p.Id, p => p);
+            }
+            else if (type.ToUpper() == "COLLECTION")
+            {
+                List<Collection> collections = localDataManager.GetCollections();
+
+                if (!collections.Any(c => c.Id == Id))
+                {
+                    // Collection don't exist
+                    output.Add(string.Format("{0} is not a valid collectionId. Try running my !CollectionInfo command.", Id.ToString()));
+                    return output;
+                }
+
+                if (collections.Any(c => c.Id == Id && c.IsCityCollection))
+                {
+                    // Don't do city collections
+                    output.Add(string.Format("This doesn't work for city collections.", Id.ToString()));
+                    return output;
+                }
+
+                Collection collection = collections.Where(c => c.Id == Id).First();
+                cityId = collection.CityId.Value;
+                properties = localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .Where(p => collection.MatchingPropertyIds.Contains(p.Id))
+                    .OrderBy(p => p.MonthlyEarnings)
+                    .ToDictionary(p => p.Id, p => p);
+            }
+            else
+            {
+                output.Add(string.Format("That wasn't a valid type. Choose: City, Neighborhood, or Collection"));
+                return output;
+            }
+
+            if (properties.Count == 0)
+            {
+                // Nothing in range
+                output.Add(string.Format("There are no properties, somehow, for {0} {1}", type, Id));
+                return output;
+            }
+
+            // Lets grab the Structures
+            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+
+            if (fileType == "CSV")
+            {
+                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Status,FSA,Address,Structure");
+
+                foreach (Property property in properties.Values)
+                {
+                    string propString = "";
+
+                    propString += string.Format("{0},", property.Id);
+                    propString += string.Format("{0},", property.Size);
+                    propString += string.Format("{0:F0},", Math.Round(property.MonthlyEarnings * 12 / 0.1728));
+                    propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
+                    propString += string.Format("{0},", property.CityId);
+                    propString += string.Format("{0},", property.Status);
+                    propString += string.Format("{0},", property.FSA);
+                    propString += string.Format("{0},", property.Address);
+                    propString += string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None");
+                    output.Add(propString);
+                }
+            }
+            else
+            {
+                int idPad = 19;
+                int sizePad = 7;
+                int mintPad = 13;
+                int neighborhoodPad = 14;
+                int cityPad = 6;
+                int statusPad = 8;
+                int fsaPad = 5;
+                int addressPad = properties.Max(p => p.Value.Address.Length);
+                int structurePad = propertyStructures.Max(p => p.Value.Length);
+
+                output.Add(string.Format("Properties For {0} {1}", type, Id));
+                output.Add("");
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}"
+                    , "Id".PadLeft(idPad)
+                    , "Size".PadLeft(sizePad)
+                    , "Mint".PadLeft(mintPad)
+                    , "NeighborhoodId".PadLeft(neighborhoodPad)
+                    , "CityId".PadLeft(cityPad)
+                    , "Status".PadLeft(statusPad)
+                    , "FSA".PadLeft(fsaPad)
+                    , "Address".PadLeft(addressPad)
+                    , "Structure".PadLeft(structurePad)));
+
+                foreach (Property property in properties.Values)
+                {
+                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}"
+                        , property.Id.ToString().PadLeft(idPad)
+                        , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
+                        , string.Format("{0:N2}", Math.Round(property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
+                        , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
+                        , string.Format("{0}", cityId).PadLeft(cityPad)
+                        , string.Format("{0}", property.Status).PadLeft(statusPad)
+                        , string.Format("{0}", property.FSA).PadLeft(fsaPad)
+                        , property.Address.PadLeft(addressPad)
+                        , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(structurePad)
+                    ));
+                }
+            }
+
+            return output;
+        }
+
         public void ClearSalesCache()
         {
             uplandApiManager.ClearSalesCache();
