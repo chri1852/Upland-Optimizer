@@ -27,14 +27,7 @@ namespace Upland.Infrastructure.LocalData
             List<long> ignoreIds = new List<long>();
             Dictionary<long, Property> allCityProperties = new Dictionary<long, Property>();
 
-            if (fullPropertyRetrieve)
-            {
-                LocalDataRepository.GetPropertiesByCityId(cityId).Where(p => p.Latitude.HasValue).Select(p => p.Id).ToList();
-            }
-            else
-            {
-                allCityProperties = LocalDataRepository.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
-            }
+            allCityProperties = LocalDataRepository.GetPropertiesByCityId(cityId).Where(p => p.Latitude.HasValue).ToDictionary(p => p.Id, p => p);
 
             double defaultStep = 0.005;
             int totalprops = 0;
@@ -64,7 +57,6 @@ namespace Upland.Infrastructure.LocalData
                             catch
                             {
                                 retryIds.Add(prop.Prop_Id);
-
                             }
                         }
                         else
@@ -156,6 +148,36 @@ namespace Upland.Infrastructure.LocalData
                     }
 
                     LocalDataRepository.CreateNeighborhood(neighborhood);
+                }
+            }
+        }
+
+        public async Task PopulateStreets()
+        {
+            List<Street> existingStreets = GetStreets();
+            List<int> failedIds = new List<int>();
+
+            for (int i = 1; i <= Consts.MaxStreetNumber; i++)
+            {
+                if (!existingStreets.Any(s => s.Id == i))
+                {
+                    try
+                    {
+                        Street street = await uplandApiRepository.GetStreet(i);
+                        if (street.Name != "NotFound")
+                        {
+                            if (street.Type == null || street.Type == "null")
+                            {
+                                street.Type = "None";
+                            }
+
+                            LocalDataRepository.CreateStreet(street);
+                        }
+                    }
+                    catch
+                    {
+                        failedIds.Add(i);
+                    }
                 }
             }
         }
@@ -327,6 +349,23 @@ namespace Upland.Infrastructure.LocalData
             return userProperties;
         }
 
+        public List<Street> SearchStreets(string name)
+        {
+            name = name.ToUpper();
+            List<Street> streets = LocalDataRepository.GetStreets();
+            List<Street> matches = new List<Street>();
+
+            foreach (Street street in streets)
+            {
+                if (string.Format("{0} {1}", street.Name, street.Type).ToUpper().Contains(name))
+                {
+                    matches.Add(street);
+                }
+            }
+
+            return matches;
+        }
+
         public List<CollatedStatsObject> GetCityStats()
         {
             return CollateStats(LocalDataRepository.GetCityStats());
@@ -335,6 +374,11 @@ namespace Upland.Infrastructure.LocalData
         public List<CollatedStatsObject> GetNeighborhoodStats()
         {
             return CollateStats(LocalDataRepository.GetNeighborhoodStats());
+        }
+
+        public List<CollatedStatsObject> GetStreetStats()
+        {
+            return CollateStats(LocalDataRepository.GetStreetStats());
         }
 
         public List<CollatedStatsObject> GetCollectionStats()
@@ -408,9 +452,19 @@ namespace Upland.Infrastructure.LocalData
             LocalDataRepository.CreateNeighborhood(neighborhood);
         }
 
+        public void CreateStreet(Street street)
+        {
+            LocalDataRepository.CreateStreet(street);
+        }
+
         public List<Neighborhood> GetNeighborhoods()
         {
             return LocalDataRepository.GetNeighborhoods();
+        }
+
+        public List<Street> GetStreets()
+        {
+            return LocalDataRepository.GetStreets();
         }
 
         public void SetOptimizationRunStatus(OptimizationRun optimizationRun)

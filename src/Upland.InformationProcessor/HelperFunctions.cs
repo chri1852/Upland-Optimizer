@@ -76,7 +76,7 @@ namespace Upland.InformationProcessor
                 case 15:
                     return new List<double> {30.179050, 29.863468,  -89.621784,  -90.142948};
                 case 16:
-                    return new List<double> {0, 0, 0, 0};
+                    return new List<double> {36.409888, 35.964879,  -86.511996,  -87.060626};
                 default:
                     return new List<double> {0, 0, 0, 0};
             }
@@ -188,7 +188,7 @@ namespace Upland.InformationProcessor
             returnString += " - ";
             returnString += string.Format("{0:N2}%", statObject.PercentMinted).PadLeft(14);
             returnString += " - ";
-            returnString += string.Format("{0:N2}%", statObject.PercentNonFSAMinted).PadLeft(22);
+            returnString += string.Format("{0:N2}%", statObject.PercentNonFSAMinted).PadLeft(23);
 
             return returnString;
         }

@@ -230,6 +230,103 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public List<string> GetStreetInformation(string fileType)
+        {
+            List<string> output = new List<string>();
+            List<CollatedStatsObject> streetStats = localDataManager.GetStreetStats();
+
+            List<Street> streets = localDataManager.GetStreets();
+            streets = streets.OrderBy(n => n.Name).OrderBy(n => n.CityId).ToList();
+
+            if (fileType == "TXT")
+            {
+                int idPad = 5;
+                int cityPad = 6;
+                int typePad = 14;
+                int namePad = streets.OrderByDescending(n => n.Name.Length).First().Name.Length;
+
+                output.Add(string.Format("{0} - {1} - {2} - {3} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "CityId".PadLeft(cityPad), "Name".PadLeft(namePad), "Type".PadLeft(typePad)));
+                output.Add("");
+
+                int cityId = -1;
+                foreach (Street street in streets)
+                {
+                    if (cityId != street.CityId)
+                    {
+                        cityId = street.CityId;
+                        output.Add("");
+                        output.Add(Consts.Cities[cityId]);
+                    }
+
+                    string streetString = string.Format("{0} - {1} - {2} - {3}"
+                        , street.Id.ToString().PadLeft(idPad)
+                        , street.CityId.ToString().PadLeft(cityPad)
+                        , street.Name.PadLeft(namePad)
+                        , street.Type.PadLeft(typePad)
+                    );
+
+                    if (!streetStats.Any(s => s.Id == street.Id))
+                    {
+                        streetString += HelperFunctions.CreateCollatedStatTextString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = streetStats.Where(s => s.Id == street.Id).First();
+                        streetString += HelperFunctions.CreateCollatedStatTextString(stats);
+                    }
+
+                    output.Add(streetString);
+                }
+            }
+            else
+            {
+                output.Add("Id,CityId,Name,Type,CityId,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
+                foreach (Street street in streets)
+                {
+                    string streetString = string.Format("{0},{1},{2},{3},"
+                        , street.Id.ToString()
+                        , street.CityId.ToString()
+                        , street.Name.Replace(',', ' ')
+                        , street.Type
+                    );
+
+                    if (!streetStats.Any(s => s.Id == street.Id))
+                    {
+                        streetString += HelperFunctions.CreateCollatedStatCSVString(new CollatedStatsObject
+                        {
+                            TotalProps = 0,
+                            LockedProps = 0,
+                            UnlockedNonFSAProps = 0,
+                            UnlockedFSAProps = 0,
+                            ForSaleProps = 0,
+                            OwnedProps = 0,
+                            PercentMinted = 100.00,
+                            PercentNonFSAMinted = 100.00
+                        });
+                    }
+                    else
+                    {
+                        CollatedStatsObject stats = streetStats.Where(s => s.Id == street.Id).First();
+                        streetString += HelperFunctions.CreateCollatedStatCSVString(stats);
+                    }
+
+                    output.Add(streetString);
+                }
+            }
+
+            return output;
+        }
+
         public List<string> GetCityInformation(string fileType)
         {
             List<string> array = new List<string>();
@@ -366,6 +463,60 @@ namespace Upland.InformationProcessor
                         , property.Address.PadLeft(addressPad)
                         , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(buildingPad)
                     ));
+                }
+            }
+
+            return output;
+        }
+
+        public List<string> SearchStreets(string name, string fileType)
+        {
+            List<string> output = new List<string>();
+            List<Street> streets = localDataManager.SearchStreets(name);
+
+            if (streets.Count == 0)
+            {
+                output.Add(string.Format("Sorry, No Streets Found for {0}.", name));
+                return output;
+            }
+
+            streets = streets.OrderBy(n => n.Name).OrderBy(n => n.CityId).ToList();
+
+            if (fileType == "TXT")
+            {
+                int idPad = 5;
+                int cityPad = 6;
+                int typePad = 14;
+                int namePad = streets.OrderByDescending(n => n.Name.Length).First().Name.Length;
+
+                output.Add(string.Format("{0} - {1} - {2} - {3}", "Id".PadLeft(idPad), "CityId".PadLeft(cityPad), "Name".PadLeft(namePad), "Type".PadLeft(typePad)));
+                output.Add("");
+
+                foreach (Street street in streets)
+                {
+                    string streetString = string.Format("{0} - {1} - {2} - {3}"
+                        , street.Id.ToString().PadLeft(idPad)
+                        , street.CityId.ToString().PadLeft(cityPad)
+                        , street.Name.PadLeft(namePad)
+                        , street.Type.PadLeft(typePad)
+                    );
+
+                    output.Add(streetString);
+                }
+            }
+            else
+            {
+                output.Add("Id,CityId,Name,Type");
+                foreach (Street street in streets)
+                {
+                    string streetString = string.Format("{0},{1},{2},{3},"
+                        , street.Id.ToString()
+                        , street.CityId.ToString()
+                        , street.Name.Replace(',', ' ')
+                        , street.Type
+                    );
+
+                    output.Add(streetString);
                 }
             }
 
@@ -691,6 +842,66 @@ namespace Upland.InformationProcessor
             else
             {
                 output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, propDictionary, propertyStructures, string.Format("For Sale Report For CityId {0}.", cityId), uplandApiManager.GetCacheDateTime(cityId)));
+            }
+
+            return output;
+        }
+
+        public async Task<List<string>> GetStreetPropertiesForSale(int streetId, string orderBy, string currency, string fileType)
+        {
+            List<string> output = new List<string>();
+
+            List<Street> streets = localDataManager.GetStreets();
+
+            if (!streets.Any(s => s.Id == streetId))
+            {
+                // Neighborhood don't exist
+                output.Add(string.Format("{0} is not a valid streetId. Try running my !StreetInfo or !SearchStreets command.", streetId.ToString()));
+                return output;
+            }
+
+            Street street = streets.Where(s => s.Id == streetId).First();
+            List<UplandForSaleProp> forSaleProps = await uplandApiManager.GetForSalePropsByCityId(street.CityId);
+
+            if (currency == "USD")
+            {
+                forSaleProps = forSaleProps.Where(p => p.Currency == "USD").ToList();
+            }
+            else if (currency == "UPX")
+            {
+                forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
+            }
+
+            Dictionary<long, Property> properties = localDataManager.GetPropertiesByCityId(street.CityId).ToDictionary(p => p.Id, p => p);
+
+            forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].StreetId == streetId).ToList();
+
+            if (forSaleProps.Count == 0)
+            {
+                // Nothing on sale
+                output.Add(string.Format("There is nothing on sale on this street.", streetId.ToString()));
+                return output;
+            }
+
+            if (orderBy.ToUpper() == "MARKUP")
+            {
+                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
+            }
+            else // PRICE
+            {
+                forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
+            }
+
+            // Lets grab the Structures
+            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+
+            if (fileType == "CSV")
+            {
+                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, properties, propertyStructures));
+            }
+            else
+            {
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", street.Name), uplandApiManager.GetCacheDateTime(street.CityId)));
             }
 
             return output;

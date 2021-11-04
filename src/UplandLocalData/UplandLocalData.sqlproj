@@ -99,5 +99,9 @@
     <Build Include="StoredProcedures\UPL.GetNeighborhoodStats.sql" />
     <Build Include="StoredProcedures\UPL.GetCityStats.sql" />
     <Build Include="StoredProcedures\UPL.GetCollectionStats.sql" />
+    <Build Include="Tables\UPL.Street.sql" />
+    <Build Include="StoredProcedures\UPL.CreateStreet.sql" />
+    <Build Include="StoredProcedures\UPL.GetStreets.sql" />
+    <Build Include="StoredProcedures\UPL.GetStreetStats.sql" />
   </ItemGroup>
 </Project>

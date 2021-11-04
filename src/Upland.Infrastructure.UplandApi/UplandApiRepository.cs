@@ -58,6 +58,17 @@ namespace Upland.Infrastructure.UplandApi
             return neighborhoods;
         }
 
+        public async Task<Street> GetStreet(int streetId)
+        {
+            Street street;
+            string requestUri = @"https://api.upland.me/street";
+            requestUri = string.Format("{0}/{1}", requestUri, streetId);
+
+            street = await CallApi<Street>(requestUri, true);
+
+            return street;
+        }
+
         public async Task<List<UplandForSaleProp>> GetForSalePropsInArea(double north, double south, double east, double west)
         {
             UplandForSalePropWrapper props;
@@ -67,16 +78,6 @@ namespace Upland.Infrastructure.UplandApi
             props = await CallApi<UplandForSalePropWrapper>(requestUri);
 
             return props.Properties;
-        }
-
-        public async Task<UplandStreet> GetStreetById(int streetId)
-        {
-            UplandStreet street;
-            string requestUri = @"https://api.upland.me/street/" + streetId ;
-
-            street = await CallApi<UplandStreet>(requestUri, true);
-
-            return street;
         }
 
         public async Task<List<UplandAuthProperty>> GetForSaleCollectionProperties(int collectionId)

@@ -257,6 +257,51 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static List<StatsObject> GetStreetStats()
+        {
+            List<StatsObject> stats = new List<StatsObject>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetStreetStats]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            stats.Add(
+                                new StatsObject
+                                {
+                                    Id = (int)reader["Id"],
+                                    FSA = (bool)reader["FSA"],
+                                    Status = (string)reader["Status"],
+                                    PropCount = (int)reader["PropCount"],
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return stats;
+            }
+        }
+
         public static List<StatsObject> GetCollectionStats()
         {
             List<StatsObject> stats = new List<StatsObject>();
@@ -516,7 +561,7 @@ namespace Upland.Infrastructure.LocalData
                                     Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
                                     Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
                                     Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
-                                    FSA = (bool)reader["FSA"],
+                                    FSA = reader["FSA"] != DBNull.Value ? (bool)reader["FSA"] : false,
                                 }
                              );
                         }
@@ -598,6 +643,38 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static void CreateStreet(Street street)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CreateStreet]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", street.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("Name", street.Name));
+                    sqlCmd.Parameters.Add(new SqlParameter("Type", street.Type));
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", street.CityId));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
         public static List<Neighborhood> GetNeighborhoods()
         {
             List<Neighborhood> neighborhoods = new List<Neighborhood>();
@@ -640,6 +717,51 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return neighborhoods;
+            }
+        }
+
+        public static List<Street> GetStreets()
+        {
+            List<Street> streets = new List<Street>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetStreets]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            streets.Add(
+                                new Street
+                                {
+                                    Id = (int)reader["Id"],
+                                    Name = (string)reader["Name"],
+                                    Type = (string)reader["Type"],
+                                    CityId = (int)reader["CityId"],
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return streets;
             }
         }
 

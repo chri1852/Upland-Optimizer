@@ -63,8 +63,11 @@ namespace Upland.Infrastructure.UplandApi
             property.StreetId = udProperty.Street.Id;
             property.Size = udProperty.Area.HasValue ? udProperty.Area.Value : 0;
             property.MonthlyEarnings = udProperty.Yield_Per_Hour.HasValue ? udProperty.Yield_Per_Hour.Value  * 720 : 0;
+            property.NeighborhoodId = null;
             property.Latitude = udProperty.CenterLat;
             property.Longitude = udProperty.CenterLng;
+            property.Status = udProperty.status;
+            property.FSA = udProperty.labels.fsa_allow;
 
             return property;
         }

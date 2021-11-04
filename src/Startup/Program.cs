@@ -40,6 +40,12 @@ class Program
         string username;
         string qualityLevel;
         List<string> output = new List<string>();
+
+        // Populate City
+        //List<double> cityCoordinates = Upland.InformationProcessor.HelperFunctions.GetCityAreaCoordinates(16);
+        //await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], 16, false);
+        //localDataManager.DetermineNeighborhoodIdsForCity(16);
+
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
@@ -52,6 +58,7 @@ class Program
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
+        //await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
@@ -60,7 +67,8 @@ class Program
         //output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "price", "all");
         //output = informationProcessor.GetCityInformation("TXT"); 
         //output = informationProcessor.GetUnmintedProperties("City", 6, "ALL", "CSV");
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
+        //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.csv", string.Join(Environment.NewLine, output));
 
         // Populate CityProps And Neighborhoods
         //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 8, true);
@@ -68,7 +76,7 @@ class Program
 
         // Rebuild Property Structure List
         //await informationProcessor.RebuildPropertyStructures();
-        await informationProcessor.RunCityStatusUpdate(true);
+        //await informationProcessor.RunCityStatusUpdate(true);
 
         //List<t3Entry> items = await blockchainRepository.GetActiveOffers();
     }
@@ -225,7 +233,7 @@ class Program
             try
             {
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-               // await informationProcessor.RebuildPropertyStructures();
+                await informationProcessor.RebuildPropertyStructures();
                 Console.WriteLine(string.Format("{0}: Rebuilding Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
             }
             catch (Exception ex)
