@@ -936,8 +936,8 @@ namespace Startup.Commands
                     helpOutput.Add("EX: !UnmintedProperties City 1 FSA");
                     helpOutput.Add("The above command finds all FSA unminted properties in San Francisco, and returns a csv file from lowest to greatest mint price.");
                     helpOutput.Add("");
-                    helpOutput.Add("EX: !UnmintedProperties City 1 NONFSA");
-                    helpOutput.Add("The above command finds all non-FSA unminted properties in San Francisco, and returns a csv file from lowest to greatest mint price.");
+                    helpOutput.Add("EX: !UnmintedProperties Street 31898 NONFSA");
+                    helpOutput.Add("The above command finds all non-FSA unminted properties on Broadway in Nashville, and returns a csv file from lowest to greatest mint price.");
                     helpOutput.Add("");
                     helpOutput.Add("EX: !UnmintedProperties Neighborhood 876 ALL");
                     helpOutput.Add("The above command finds all unminted properties in the Chicago Portage Park neighborhood, and returns a csv file from lowest to greatest mint price.");
@@ -952,6 +952,9 @@ namespace Startup.Commands
                     helpOutput.Add("");
                     helpOutput.Add("EX: !AllProperties City 12");
                     helpOutput.Add("The above command finds all FSA unminted properties in Santa Clara, and returns a csv file from lowest to greatest mint price.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !AllProperties Street 31898");
+                    helpOutput.Add("The above command finds all FSA unminted properties on Broadway in Nashville, and returns a csv file from lowest to greatest mint price.");
                     helpOutput.Add("");
                     helpOutput.Add("EX: !AllProperties Neighborhood 876");
                     helpOutput.Add("The above command finds all properties in the Chicago Portage Park neighborhood, and returns a csv file from lowest to greatest mint price.");

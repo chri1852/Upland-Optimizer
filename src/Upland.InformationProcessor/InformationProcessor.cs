@@ -750,7 +750,7 @@ namespace Upland.InformationProcessor
             // Lets grab the Structures
             Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
 
-            forSaleProps = forSaleProps.Where(p => propertyStructures.ContainsKey(p.Prop_Id)).ToList();
+           // forSaleProps = forSaleProps.Where(p => propertyStructures.ContainsKey(p.Prop_Id)).ToList();
 
             if (forSaleProps.Count == 0)
             {
@@ -973,6 +973,25 @@ namespace Upland.InformationProcessor
                     .OrderBy(p => p.MonthlyEarnings)
                     .ToDictionary(p => p.Id, p => p);
             }
+            else if (type.ToUpper() == "STREET")
+            {
+                List<Street> streets = localDataManager.GetStreets();
+
+                if (!streets.Any(s => s.Id == Id))
+                {
+                    // Street don't exist
+                    output.Add(string.Format("{0} is not a valid streetId. Try running my !SearchStreets command.", Id.ToString()));
+                    return output;
+                }
+
+                cityId = streets.Where(n => n.Id == Id).First().CityId;
+                properties = localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .Where(p => p.StreetId == Id)
+                    .Where(p => p.Status != "Locked" && p.Status != "Owned" && p.Status != "For sale")
+                    .OrderBy(p => p.MonthlyEarnings)
+                    .ToDictionary(p => p.Id, p => p);
+            }
             else
             {
                 output.Add(string.Format("That wasn't a valid type. Choose: City, Neighborhood, or Collection"));
@@ -1088,6 +1107,24 @@ namespace Upland.InformationProcessor
                 properties = localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.NeighborhoodId == Id)
+                    .OrderBy(p => p.MonthlyEarnings)
+                    .ToDictionary(p => p.Id, p => p);
+            }
+            else if (type.ToUpper() == "STREET")
+            {
+                List<Street> streets = localDataManager.GetStreets();
+
+                if (!streets.Any(s => s.Id == Id))
+                {
+                    // Street don't exist
+                    output.Add(string.Format("{0} is not a valid streetId. Try running my !SearchStreets command.", Id.ToString()));
+                    return output;
+                }
+
+                cityId = streets.Where(n => n.Id == Id).First().CityId;
+                properties = localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .Where(p => p.StreetId == Id)
                     .OrderBy(p => p.MonthlyEarnings)
                     .ToDictionary(p => p.Id, p => p);
             }

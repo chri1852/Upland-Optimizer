@@ -64,9 +64,9 @@ class Program
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
         //output = await informationProcessor.GetSalesDataByCityId(1);
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
-        //output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "price", "all");
+       // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
         //output = informationProcessor.GetCityInformation("TXT"); 
-        //output = informationProcessor.GetUnmintedProperties("City", 6, "ALL", "CSV");
+        //output = informationProcessor.GetAllProperties("Street", 31898, "CSV");
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.csv", string.Join(Environment.NewLine, output));
 
