@@ -143,6 +143,27 @@ namespace Startup.Commands
             }
         }
 
+        [Command("SetUserPaid")]
+        public async Task SetUserPaid(string uplandUsername)
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            LocalDataManager localDataManager = new LocalDataManager();
+
+            try
+            {
+                localDataManager.SetRegisteredUserPaid(uplandUsername);
+                await ReplyAsync(string.Format("{0} is now a Supporter.", uplandUsername));
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(string.Format("Failed: {0}", ex.Message));
+            }
+        }
+
         [Command("AdminPopulateCollectionProperty")]
         public async Task AdminPopulateCollectionProperty(int collectionId)
         {
