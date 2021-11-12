@@ -54,6 +54,7 @@ class Program
         //Console.Write("Enter the Level (1-8)....: ");
         //qualityLevel = Console.ReadLine();
         //await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel), 201, 20, 1000);
+        //await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -64,15 +65,17 @@ class Program
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
         //output = await informationProcessor.GetSalesDataByCityId(1);
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
-       // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
+        // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
         //output = informationProcessor.GetCityInformation("TXT"); 
         //output = informationProcessor.GetAllProperties("Street", 31898, "CSV");
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.csv", string.Join(Environment.NewLine, output));
 
         // Populate CityProps And Neighborhoods
-        //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 8, true);
+        //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 16, true);
         //foreach (int cityId in Consts.Cities.Keys) { localDataManager.DetermineNeighborhoodIdsForCity(cityId); }
+        //await localDataManager.PopulateCollectionPropertiesByCityId(16);
+        //localDataManager.DetermineNeighborhoodIdsForCity(16);
 
         // Rebuild Property Structure List
         //await informationProcessor.RebuildPropertyStructures();

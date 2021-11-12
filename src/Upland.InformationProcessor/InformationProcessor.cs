@@ -708,6 +708,22 @@ namespace Upland.InformationProcessor
                 properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
                 forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].NeighborhoodId == Id).ToList();
             }
+            else if (type.ToUpper() == "STREET")
+            {
+                List<Street> streets = localDataManager.GetStreets();
+
+                if (!streets.Any(s => s.Id == Id))
+                {
+                    // Street don't exist
+                    output.Add(string.Format("{0} is not a valid streetId. Try running my !SearchStreets command.", Id.ToString()));
+                    return output;
+                }
+
+                cityId = streets.Where(n => n.Id == Id).First().CityId;
+                forSaleProps = await uplandApiManager.GetForSalePropsByCityId(cityId);
+                properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
+                forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].StreetId == Id).ToList();
+            }
             else if(type.ToUpper() == "COLLECTION")
             {
                 List<Collection> collections = localDataManager.GetCollections();
@@ -750,7 +766,7 @@ namespace Upland.InformationProcessor
             // Lets grab the Structures
             Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
 
-           // forSaleProps = forSaleProps.Where(p => propertyStructures.ContainsKey(p.Prop_Id)).ToList();
+            forSaleProps = forSaleProps.Where(p => propertyStructures.ContainsKey(p.Prop_Id)).ToList();
 
             if (forSaleProps.Count == 0)
             {

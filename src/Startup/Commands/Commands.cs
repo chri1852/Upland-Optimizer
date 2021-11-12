@@ -905,8 +905,8 @@ namespace Startup.Commands
                     helpOutput.Add("EX: !BuildingsForSale City 1 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties with buildings for sale for UPX in San Francisco, and returns a csv file from lowest to greatest markup.");
                     helpOutput.Add("");
-                    helpOutput.Add("EX: !BuildingsForSale City 0 MARKUP UPX");
-                    helpOutput.Add("The above command finds all properties with buildings for sale for UPX, and returns a csv file from lowest to greatest markup.");
+                    helpOutput.Add("EX: !BuildingsForSale Street 31898 MARKUP UPX");
+                    helpOutput.Add("The above command finds all properties with buildings for sale on Broadway in Nashville for UPX, and returns a csv file from lowest to greatest markup.");
                     helpOutput.Add("");
                     helpOutput.Add("EX: !BuildingsForSale Neighborhood 876 PRICE ALL");
                     helpOutput.Add("The above command finds all properties with buildings for sale in the Chicago Portage Park neighborhood, and returns a csv file from lowest to greatest price (USD = UPX * 1000).");

@@ -302,7 +302,36 @@ namespace Upland.Infrastructure.LocalData
 
             return oddNodes;
         }
-        
+
+        public async Task PopulateCollectionPropertiesByCityId(int cityId)
+        {
+            List<Collection> collections = LocalDataRepository.GetCollections();
+            collections = collections.Where(c => c.CityId == cityId && c.Category > 1).ToList();
+            List<long> retryIds = new List<long>();
+
+            foreach(Collection collection in collections)
+            {
+                List<Property> properties = LocalDataRepository.GetPropertiesByCollectionId(collection.Id);
+                foreach(Property property in properties)
+                {
+                    try
+                    {
+                        LocalDataRepository.UpsertProperty(UplandMapper.Map(await uplandApiRepository.GetPropertyById(property.Id)));
+                    }
+                    catch
+                    {
+                        retryIds.Add(property.Id);
+                    }
+                }
+            }
+
+            while (retryIds.Count > 0)
+            {
+                retryIds = await RetryPopulate(retryIds);
+            }
+        }
+
+
         public List<long> GetPropertyIdsByCollectionId(int collectionId)
         {
             return LocalDataRepository.GetCollectionPropertyIds(collectionId);
