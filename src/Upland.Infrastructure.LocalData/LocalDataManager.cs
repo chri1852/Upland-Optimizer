@@ -228,7 +228,7 @@ namespace Upland.Infrastructure.LocalData
                 if (!existingCollectionProperties.Any(p => p.Id == propId))
                 {
                     Property prop = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propId));
-                    LocalDataRepository.CreateProperty(prop);
+                    LocalDataRepository.UpsertProperty(prop);
                 }
             }
         }
@@ -370,7 +370,7 @@ namespace Upland.Infrastructure.LocalData
                 if (!userProperties.Any(p => p.Id == propId.Prop_Id))
                 {
                     Property prop = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propId.Prop_Id));
-                    LocalDataRepository.CreateProperty(prop);
+                    LocalDataRepository.UpsertProperty(prop);
                     userProperties.Add(prop);
                 }
             }
