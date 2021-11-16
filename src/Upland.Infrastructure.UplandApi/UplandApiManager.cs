@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.Infrastructure.UplandApi
@@ -48,6 +49,21 @@ namespace Upland.Infrastructure.UplandApi
         public void ClearSalesCache()
         {
             _saleCache = new Dictionary<int, Tuple<DateTime, List<UplandForSaleProp>>>();
+        }
+
+        public async Task<List<NFLPALegit>> GetNFLPALegitsByUsername(string userName)
+        {
+            return UplandMapper.MapNFLPALegits(await _uplandApiRepository.GetNFLPALegitsByUserName(userName));
+        }
+
+        public async Task<List<SpiritLegit>> GetSpiritLegitsByUsername(string userName)
+        {
+            return UplandMapper.MapSpiritLegits(await _uplandApiRepository.GetSpiritLegitsByUserName(userName));
+        }
+
+        public async Task<List<Decoration>> GetDecorationsByUsername(string userName)
+        {
+            return UplandMapper.MapDecorations(await _uplandApiRepository.GetDecorationsByUserName(userName));
         }
 
         private async Task RefreshCache(int cityId)

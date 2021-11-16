@@ -192,25 +192,6 @@ namespace Startup.Commands
             }
         }
 
-        [Command("AdminClearSalesCache")]
-        public async Task AdminClearSalesCache()
-        {
-            if (!await checkIfAdmin(Context.User.Id))
-            {
-                return;
-            }
-
-            try
-            {
-                _informationProcessor.ClearSalesCache();
-                await ReplyAsync(string.Format("Sales Cache Cleared."));
-            }
-            catch (Exception ex)
-            {
-                await ReplyAsync(string.Format("Failed Clearing Sales Cache: {0}", ex.Message));
-            }
-        }
-
         [Command("AdminRebuildPropertyStructures")]
         public async Task AdminRebuildPropertyStructures()
         {

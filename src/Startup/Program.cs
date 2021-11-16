@@ -19,6 +19,7 @@ using System.Linq;
 using Upland.Infrastructure.Blockchain;
 using Upland.Types.BlockchainTypes;
 using Upland.Types;
+using Upland.Infrastructure.UplandApi;
 */
 
 class Program
@@ -36,6 +37,7 @@ class Program
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
         InformationProcessor informationProcessor = new InformationProcessor();
         BlockchainRepository blockchainRepository = new BlockchainRepository();
+        UplandApiManager uplandApiManager = new UplandApiManager();
 
         string username;
         string qualityLevel;
@@ -62,14 +64,18 @@ class Program
         //await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
-        //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL");
+        //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
         //output = await informationProcessor.GetSalesDataByCityId(1);
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
         //output = informationProcessor.GetCityInformation("TXT"); 
         //output = informationProcessor.GetAllProperties("Street", 31898, "CSV");
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.csv", string.Join(Environment.NewLine, output));
+        output = await informationProcessor.GetAssetsByTypeAndUserName("spirit", "hornbrod", "CSV");
+        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.csv", string.Join(Environment.NewLine, output));
+
+        // Test Repo Actions
+        //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
 
         // Populate CityProps And Neighborhoods
         //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 16, true);
@@ -199,7 +205,7 @@ class Program
                             await context.Channel.SendMessageAsync(string.Format("ERROR: That file exceeds the size limit set discord unfortunaley. Try requesting it as a CSV instead."));
                             break;
                         default:
-                            await context.Channel.SendMessageAsync(string.Format("ERROR: Contant Grombrindal."));
+                            await context.Channel.SendMessageAsync(string.Format("ERROR: Contact Grombrindal."));
                             break;
                     }
                 }

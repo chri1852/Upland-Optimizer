@@ -1250,6 +1250,190 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public async Task<List<string>> GetAssetsByTypeAndUserName(string type, string userName, string fileType)
+        {
+            List<string> output = new List<string>(); 
+            List<Asset> assets = new List<Asset>();
+
+            type = type.ToUpper();
+            userName = userName.ToLower();
+
+            if (type == "NFLPA")
+            {
+                assets.AddRange(await uplandApiManager.GetNFLPALegitsByUsername(userName));
+            }
+            else if(type == "SPIRIT")
+            {
+                assets.AddRange(await uplandApiManager.GetSpiritLegitsByUsername(userName));
+            }
+            else if (type == "DECORATION")
+            {
+                assets.AddRange(await uplandApiManager.GetDecorationsByUsername(userName));
+            }
+            else
+            {
+                output.Add(string.Format("That wasn't a valid type. Choose: NFLPA, Spirit, or Decoration"));
+                return output;
+            }
+
+            if (assets.Count == 0)
+            {
+                // Nothing found
+                output.Add(string.Format("No {0} assets found for {1}.", type, userName));
+                return output;
+            }
+
+            switch (type)
+            {
+                case "NFLPA":
+                    assets = assets.OrderBy(a => ((NFLPALegit)a).TeamName).ToList();
+                    break;
+                case "SPIRIT":
+                    assets = assets.OrderBy(a => a.DisplayName).OrderBy(a => ((SpiritLegit)a).Rarity).ToList();
+                    break;
+                case "DECORATION":
+                    assets = assets.OrderBy(a => a.DisplayName).OrderBy(a => ((Decoration)a).Rarity).ToList();
+                    break;
+            }
+
+            if (fileType == "CSV")
+            {
+                switch (type)
+                {
+                    case "NFLPA":
+                        output.Add("Team,Name,Mint,Current Supply,Max Supply,Link");
+                        break;
+                    case "SPIRIT":
+                        output.Add("Name,Rarity,Mint,Current Supply,Max Supply,Link");
+                        break;
+                    case "DECORATION":
+                        output.Add("Name,Building,Rarity,Mint,Current Supply,Max Supply,Link");
+                        break;
+                }
+
+                foreach (Asset asset in assets)
+                {
+                    string assetString = "";
+
+                    switch (type)
+                    {
+                        case "NFLPA":
+                            assetString += string.Format("{0},", ((NFLPALegit)asset).TeamName);
+                            assetString += string.Format("{0},", asset.DisplayName);
+                            break;
+                        case "SPIRIT":
+                            assetString += string.Format("{0},", asset.DisplayName);
+                            assetString += string.Format("{0},", ((SpiritLegit)asset).Rarity);
+                            break;
+                        case "DECORATION":
+                            assetString += string.Format("{0},", asset.DisplayName);
+                            assetString += string.Format("{0},", ((Decoration)asset).Subtitle);
+                            assetString += string.Format("{0},", ((Decoration)asset).Rarity);
+                            break;
+                    }
+
+                    assetString += string.Format("{0},", asset.Mint);
+                    assetString += string.Format("{0},", asset.CurrentSupply);
+                    assetString += string.Format("{0},", asset.MaxSupply);
+                    assetString += string.Format("{0}", asset.Link);
+
+                    output.Add(assetString);
+                }
+            }
+            else
+            {
+                int slotOnePad = 0;
+                int slotTwoPad = 0;
+                int slotThreePad = 0;
+                int mintPad = 6;
+                int currentPad = 14;
+                int maxPad = 10;
+                int linkPad = assets.Max(a => a.Link.Length);
+
+                output.Add(string.Format("{0} Assets Owned By {1}", type, userName));
+                output.Add("");
+
+                switch (type)
+                {
+                    case "NFLPA":
+                        slotOnePad = assets.Max(a => ((NFLPALegit)a).TeamName.Length);
+                        slotTwoPad = assets.Max(a => a.DisplayName.Length);
+
+                        output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                            , "Team".PadLeft(slotOnePad)
+                            , "Name".PadLeft(slotTwoPad)
+                            , "Mint".PadLeft(mintPad)
+                            , "Current Supply".PadLeft(currentPad)
+                            , "Max Supply".PadLeft(maxPad)
+                            , "Link".PadLeft(linkPad)));
+                        break;
+                    case "SPIRIT":
+                        slotOnePad = assets.Max(a => a.DisplayName.Length);
+                        slotTwoPad = assets.Max(a => ((SpiritLegit)a).DisplayName.Length);
+
+                        output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                            , "Name".PadLeft(slotOnePad)
+                            , "Rarity".PadLeft(slotTwoPad)
+                            , "Mint".PadLeft(mintPad)
+                            , "Current Supply".PadLeft(currentPad)
+                            , "Max Supply".PadLeft(maxPad)
+                            , "Link".PadLeft(linkPad)));
+                        break;
+                    case "DECORATION":
+                        slotOnePad = assets.Max(a => a.DisplayName.Length);
+                        slotTwoPad = assets.Max(a => ((Decoration)a).Subtitle.Length);
+                        slotThreePad = assets.Max(a => ((Decoration)a).Rarity.Length);
+
+                        output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}"
+                            , "Name".PadLeft(slotOnePad)
+                            , "Building".PadLeft(slotTwoPad)
+                            , "Rarity".PadLeft(slotThreePad)
+                            , "Mint".PadLeft(mintPad)
+                            , "Current Supply".PadLeft(currentPad)
+                            , "Max Supply".PadLeft(maxPad)
+                            , "Link".PadLeft(linkPad)));
+                        break;
+                }
+
+                foreach (Asset asset in assets)
+                {
+                    switch (type)
+                    {
+                        case "NFLPA":
+                            output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                                , ((NFLPALegit)asset).TeamName.PadLeft(slotOnePad)
+                                , asset.DisplayName.PadLeft(slotTwoPad)
+                                , string.Format("{0:N0}", asset.Mint).PadLeft(mintPad)
+                                , string.Format("{0:N0}", asset.CurrentSupply).PadLeft(currentPad)
+                                , string.Format("{0:N0}", asset.MaxSupply).PadLeft(maxPad)
+                                , asset.Link.PadLeft(linkPad)));
+                            break;
+                        case "SPIRIT":
+                            output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                                , asset.DisplayName.PadLeft(slotOnePad)
+                                , ((SpiritLegit)asset).Rarity.PadLeft(slotTwoPad)
+                                , string.Format("{0:N0}", asset.Mint).PadLeft(mintPad)
+                                , string.Format("{0:N0}", asset.CurrentSupply).PadLeft(currentPad)
+                                , string.Format("{0:N0}", asset.MaxSupply).PadLeft(maxPad)
+                                , asset.Link.PadLeft(linkPad)));
+                            break;
+                        case "DECORATION":
+                            output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}"
+                                , asset.DisplayName.PadLeft(slotOnePad)
+                                , ((Decoration)asset).Subtitle.PadLeft(slotTwoPad)
+                                , ((Decoration)asset).Rarity.PadLeft(slotThreePad)
+                                , string.Format("{0:N0}", asset.Mint).PadLeft(mintPad)
+                                , string.Format("{0:N0}", asset.CurrentSupply).PadLeft(currentPad)
+                                , string.Format("{0:N0}", asset.MaxSupply).PadLeft(maxPad)
+                                , asset.Link.PadLeft(linkPad)));
+                            break;
+                    }
+                }
+            }
+
+            return output;
+        }
+
         public void ClearSalesCache()
         {
             uplandApiManager.ClearSalesCache();

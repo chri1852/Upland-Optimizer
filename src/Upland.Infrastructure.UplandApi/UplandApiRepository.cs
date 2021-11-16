@@ -19,12 +19,10 @@ namespace Upland.Infrastructure.UplandApi
             this.httpClient = new HttpClient();
             this.httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             this.httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
-            this.httpClient.DefaultRequestHeaders.Add("Host", "api.upland.me");
 
             this.authHttpClient = new HttpClient();
             this.authHttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             this.authHttpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
-            this.authHttpClient.DefaultRequestHeaders.Add("Host", "api.upland.me");
             this.authHttpClient.DefaultRequestHeaders.Add("Authorization", Consts.AuthToken);
         }
 
@@ -148,6 +146,36 @@ namespace Upland.Infrastructure.UplandApi
             properties = await CallApi<List<UplandProperty>>(requestUri);
 
             return properties;
+        }
+
+        public async Task<List<UplandAsset>> GetNFLPALegitsByUserName(string username)
+        {
+            List<UplandAsset> assets;
+            string requestUri = @"https://nft.upland.me/assets/legits/" + username;
+
+            assets = await CallApi<List<UplandAsset>>(requestUri, false);
+
+            return assets;
+        }
+
+        public async Task<List<UplandAsset>> GetSpiritLegitsByUserName(string username)
+        {
+            List<UplandAsset> assets;
+            string requestUri = @"https://nft.upland.me/assets/spirits/" + username;
+
+            assets = await CallApi<List<UplandAsset>>(requestUri, false);
+
+            return assets;
+        }
+
+        public async Task<List<UplandAsset>> GetDecorationsByUserName(string username)
+        {
+            List<UplandAsset> assets;
+            string requestUri = @"https://nft.upland.me/assets/decorations/" + username;
+
+            assets = await CallApi<List<UplandAsset>>(requestUri, false);
+
+            return assets;
         }
 
         private async Task<T> CallApi<T>(string requestUri, bool useAuth = false)

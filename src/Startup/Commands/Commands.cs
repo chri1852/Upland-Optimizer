@@ -685,6 +685,37 @@ namespace Startup.Commands
             }
         }
 
+        [Command("GetAssets")]
+        public async Task GetAssets(string userName, string type, string fileType = "TXT")
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            await ReplyAsync(string.Format("Sounds Good! I'll find those assets {0}!", HelperFunctions.GetRandomName(_random)));
+
+            List<string> assetData = await _informationProcessor.GetAssetsByTypeAndUserName(type, userName, fileType.ToUpper());
+
+            if (assetData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), assetData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, assetData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("{0}_Assets_{1}.{2}", type.ToUpper(), userName, fileType.ToUpper() == "CSV" ? "csv" : "txt"));
+            }
+        }
+
         [Command("Help")]
         public async Task Help()
         {
@@ -743,10 +774,12 @@ namespace Startup.Commands
             helpMenu.Add("   15. !UnmintedProperties");
             helpMenu.Add("   16. !AllProperties");
             helpMenu.Add("   17. !SearchStreets");
+            helpMenu.Add("   18. !GetAssets");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   18. !OptimizerLevelRun");
-            helpMenu.Add("   19. !OptimizerWhatIfRun");
+            helpMenu.Add("   19. !OptimizerLevelRun");
+            helpMenu.Add("   20. !OptimizerWhatIfRun");
+            helpMenu.Add("   21. !ClearSalesCache");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -974,19 +1007,41 @@ namespace Startup.Commands
                     helpOutput.Add("The above command finds all streets with BROADWAY in their name, and returns a csv file.");
                     break;
                 case "18":
+                    helpOutput.Add(string.Format("!GetAssets"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command returns the assets of the given type owned by the given username."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !GetAssets Hornbrod NFLPA");
+                    helpOutput.Add("The above command finds all NFLPA Legits owned by Hornbrod and returns a txt file.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !GetAssets Hornbrod Spirit");
+                    helpOutput.Add("The above command finds all Spirit Legits owned by Hornbrod and returns a txt file.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !GetAssets Hornbrod Decoration CSV");
+                    helpOutput.Add("The above command finds all Decorations owned by Hornbrod and returns a csv file.");
+                    break;
+                case "19":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
-                case "19":
+                case "20":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerWhatIfRun 188 3 250.10");
                     helpOutput.Add("The above command will run a WhatIfRun with your currenty properties, and 3 fake properties in the French Quarter collection with an average monthly upx earnings of 250.10 upx.");
+                    break;
+                case "21":
+                    helpOutput.Add(string.Format("!ClearSalesCache"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will clear the sales cache, so the next time you request properties for sale in a city it will fetch the latest data. The Sales data is normally cached and can be up to 15 minutes old."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !ClearSalesCache");
+                    helpOutput.Add("The above command will clear the sales cache for all cities.");
                     break;
                 default:
                     helpOutput.Add(string.Format("Not sure what command you are refering to {0}. Try running my !Help command.", HelperFunctions.GetRandomName(_random)));

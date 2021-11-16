@@ -3,6 +3,7 @@ using System;
 using Upland.Types;
 using Upland.Types.UplandApiTypes;
 using System.Linq;
+using Upland.Types.Types;
 
 namespace Upland.Infrastructure.UplandApi
 {
@@ -70,6 +71,92 @@ namespace Upland.Infrastructure.UplandApi
             property.FSA = udProperty.labels.fsa_allow;
 
             return property;
+        }
+
+        public static List<NFLPALegit> MapNFLPALegits(List<UplandAsset> assets)
+        {
+            List<NFLPALegit> legits = new List<NFLPALegit>();
+
+            foreach (UplandAsset asset in assets)
+            {
+                legits.Add(MapNFLPALegit(asset));
+            }
+
+            return legits;
+        }
+
+        public static NFLPALegit MapNFLPALegit(UplandAsset asset)
+        {
+            NFLPALegit legit = new NFLPALegit();
+
+            legit.TeamName = asset.Metadata.TeamName;
+            legit.Category = asset.Category;
+
+            legit.DGoodId = asset.DGoodId;
+            legit.DisplayName = asset.Metadata.DisplayName;
+            legit.Mint = asset.Mint;
+            legit.CurrentSupply = asset.Stat.CurrentSupply;
+            legit.MaxSupply = asset.Stat.MaxSupply;
+            legit.Link = @"https://play.upland.me/legit-preview/" + asset.DGoodId;
+
+            return legit;
+        }
+
+        public static List<SpiritLegit> MapSpiritLegits(List<UplandAsset> assets)
+        {
+            List<SpiritLegit> legits = new List<SpiritLegit>();
+
+            foreach (UplandAsset asset in assets)
+            {
+                legits.Add(MapSpiritLegit(asset));
+            }
+
+            return legits;
+        }
+
+        public static SpiritLegit MapSpiritLegit(UplandAsset asset)
+        {
+            SpiritLegit legit = new SpiritLegit();
+
+            legit.Rarity = asset.Metadata.RarityLevel;
+
+            legit.DGoodId = asset.DGoodId;
+            legit.DisplayName = asset.Metadata.DisplayName;
+            legit.Mint = asset.SerialNumber;
+            legit.CurrentSupply = asset.Stat.CurrentSupply;
+            legit.MaxSupply = asset.Stat.MaxSupply;
+            legit.Link = @"https://play.upland.me/nft-3d/spirit/" + asset.DGoodId;
+
+            return legit;
+        }
+
+        public static List<Decoration> MapDecorations(List<UplandAsset> assets)
+        {
+            List<Decoration> decorations = new List<Decoration>();
+
+            foreach (UplandAsset asset in assets)
+            {
+                decorations.Add(MapDecoration(asset));
+            }
+
+            return decorations;
+        }
+
+        public static Decoration MapDecoration(UplandAsset asset)
+        {
+            Decoration decoration = new Decoration();
+
+            decoration.Rarity = asset.Metadata.RarityLevel;
+            decoration.Subtitle = asset.Metadata.Subtitle;
+
+            decoration.DGoodId = asset.DGoodId;
+            decoration.DisplayName = asset.Metadata.DisplayName;
+            decoration.Mint = asset.SerialNumber;
+            decoration.CurrentSupply = asset.Stat.CurrentSupply;
+            decoration.MaxSupply = asset.Stat.MaxSupply;
+            decoration.Link = @"https://play.upland.me/nft-3d/decoration/" + asset.DGoodId;
+
+            return decoration;
         }
 
         private static bool IsCollectionCityCollection(UplandCollection uplandCollection)
