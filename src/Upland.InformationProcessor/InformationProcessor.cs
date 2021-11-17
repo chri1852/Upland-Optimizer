@@ -1286,7 +1286,7 @@ namespace Upland.InformationProcessor
             switch (type)
             {
                 case "NFLPA":
-                    assets = assets.OrderBy(a => ((NFLPALegit)a).TeamName).ToList();
+                    assets = assets.OrderBy(a => ((NFLPALegit)a).PlayerName).OrderBy(a => ((NFLPALegit)a).LegitType).OrderBy(a => ((NFLPALegit)a).TeamName).ToList();
                     break;
                 case "SPIRIT":
                     assets = assets.OrderBy(a => a.DisplayName).OrderBy(a => ((SpiritLegit)a).Rarity).ToList();
@@ -1301,7 +1301,7 @@ namespace Upland.InformationProcessor
                 switch (type)
                 {
                     case "NFLPA":
-                        output.Add("Team,Name,Mint,Current Supply,Max Supply,Link");
+                        output.Add("Team,Player,Type,Year,Mint,Current Supply,Max Supply,Link");
                         break;
                     case "SPIRIT":
                         output.Add("Name,Rarity,Mint,Current Supply,Max Supply,Link");
@@ -1319,7 +1319,9 @@ namespace Upland.InformationProcessor
                     {
                         case "NFLPA":
                             assetString += string.Format("{0},", ((NFLPALegit)asset).TeamName);
-                            assetString += string.Format("{0},", asset.DisplayName);
+                            assetString += string.Format("{0},", ((NFLPALegit)asset).PlayerName);
+                            assetString += string.Format("{0},", ((NFLPALegit)asset).LegitType);
+                            assetString += string.Format("{0},", ((NFLPALegit)asset).Year);
                             break;
                         case "SPIRIT":
                             assetString += string.Format("{0},", asset.DisplayName);
@@ -1345,6 +1347,7 @@ namespace Upland.InformationProcessor
                 int slotOnePad = 0;
                 int slotTwoPad = 0;
                 int slotThreePad = 0;
+                int slotFourPad = 0;
                 int mintPad = 6;
                 int currentPad = 14;
                 int maxPad = 10;
@@ -1357,11 +1360,15 @@ namespace Upland.InformationProcessor
                 {
                     case "NFLPA":
                         slotOnePad = assets.Max(a => ((NFLPALegit)a).TeamName.Length);
-                        slotTwoPad = assets.Max(a => a.DisplayName.Length);
+                        slotTwoPad = assets.Max(a => ((NFLPALegit)a).PlayerName.Length);
+                        slotThreePad = assets.Max(a => ((NFLPALegit)a).LegitType.Length);
+                        slotFourPad = 4;
 
-                        output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                        output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
                             , "Team".PadLeft(slotOnePad)
-                            , "Name".PadLeft(slotTwoPad)
+                            , "Player".PadLeft(slotTwoPad)
+                            , "Type".PadLeft(slotThreePad)
+                            , "Year".PadLeft(slotFourPad)
                             , "Mint".PadLeft(mintPad)
                             , "Current Supply".PadLeft(currentPad)
                             , "Max Supply".PadLeft(maxPad)
@@ -1400,9 +1407,11 @@ namespace Upland.InformationProcessor
                     switch (type)
                     {
                         case "NFLPA":
-                            output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                            output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
                                 , ((NFLPALegit)asset).TeamName.PadLeft(slotOnePad)
-                                , asset.DisplayName.PadLeft(slotTwoPad)
+                                , ((NFLPALegit)asset).PlayerName.PadLeft(slotTwoPad)
+                                , ((NFLPALegit)asset).LegitType.PadLeft(slotThreePad)
+                                , ((NFLPALegit)asset).Year.PadLeft(slotFourPad)
                                 , string.Format("{0:N0}", asset.Mint).PadLeft(mintPad)
                                 , string.Format("{0:N0}", asset.CurrentSupply).PadLeft(currentPad)
                                 , string.Format("{0:N0}", asset.MaxSupply).PadLeft(maxPad)
