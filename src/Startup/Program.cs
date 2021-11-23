@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Upland.InformationProcessor;
 using System.Timers;
 
-/*
+
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -20,7 +20,7 @@ using Upland.Infrastructure.Blockchain;
 using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
-*/
+
 
 class Program
 {
@@ -30,7 +30,7 @@ class Program
     private InformationProcessor _informationProcessor;
     private Timer _refreshTimer;
 
-    /*
+    
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -38,6 +38,7 @@ class Program
         InformationProcessor informationProcessor = new InformationProcessor();
         BlockchainRepository blockchainRepository = new BlockchainRepository();
         UplandApiManager uplandApiManager = new UplandApiManager();
+        BlockchainManager blockchainManager = new BlockchainManager();
 
         string username;
         string qualityLevel;
@@ -88,13 +89,19 @@ class Program
         //await informationProcessor.RunCityStatusUpdate(true);
 
         //List<t3Entry> items = await blockchainRepository.GetActiveOffers();
+
+        Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
+
+        List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
+
+
     }
-    */
     
     
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    
+    */
 
     public async Task RunBotAsync()
     {

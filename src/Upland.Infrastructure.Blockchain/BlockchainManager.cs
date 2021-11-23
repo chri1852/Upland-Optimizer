@@ -35,5 +35,26 @@ namespace Upland.Infrastructure.Blockchain
 
             return returnStructures;
         }
+
+        public async Task<Dictionary<string, double>> GetStakedSpark()
+        {
+            List<a24Entry> stakes = await blockchainRepository.GetSparkStakingTable();
+
+            Dictionary<string, double> userStakes = new Dictionary<string, double>();
+
+            foreach (a24Entry entry in stakes)
+            {
+                if (!userStakes.ContainsKey(entry.f34))
+                {
+                    userStakes.Add(entry.f34, double.Parse(entry.b14.Split(" ")[0]));
+                }
+                else
+                {
+                    userStakes[entry.f34] += double.Parse(entry.b14.Split(" ")[0]);
+                }
+            }
+
+            return userStakes;
+        }
     }
 }

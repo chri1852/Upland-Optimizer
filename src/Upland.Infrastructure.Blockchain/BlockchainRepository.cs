@@ -59,6 +59,39 @@ namespace Upland.Infrastructure.Blockchain
             return totalResults;
         }
 
+        public async Task<List<a24Entry>> GetSparkStakingTable()
+        {
+            List<a24Entry> totalResults = new List<a24Entry>();
+            GetTableRowsResponse result = new GetTableRowsResponse { more = true };
+            int index = 0;
+
+            while (result.more)
+            {
+                result = await this.eos.GetTableRows(new GetTableRowsRequest()
+                {
+                    json = true,
+                    code = "playuplandme",
+                    scope = "playuplandme",
+                    table = "a24",
+                    lower_bound = index.ToString(),
+                    upper_bound = null,
+                    index_position = "0",
+                    key_type = "",
+                    limit = 5000,
+                    reverse = false,
+                    show_payer = false,
+                });
+
+                foreach (Newtonsoft.Json.Linq.JObject item in result.rows)
+                {
+                    totalResults.Add(item.ToObject<a24Entry>());
+                }
+                index = totalResults.Max(i => i.f35);
+            }
+
+            return totalResults;
+        }
+
         public async Task<List<a21Entry>> GetNftsRelatedToPropertys()
         {
             List<a21Entry> totalResults = new List<a21Entry>();
