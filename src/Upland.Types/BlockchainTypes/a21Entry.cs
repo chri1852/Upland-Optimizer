@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Upland.Types.BlockchainTypes
+﻿namespace Upland.Types.BlockchainTypes
 {
-    public class a21Entry
+    public class a21Entry // NFT Property Table
     {
-        public int f45 { get; set; } //NFT Id
-        public long a34 { get; set; } //PropertyId
+        public int f45 { get; set; }  // NFT Id
+        public long a34 { get; set; } // PropertyId
     }
 }

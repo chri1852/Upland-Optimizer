@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Upland.Types.BlockchainTypes
+﻿namespace Upland.Types.BlockchainTypes
 {
     public class dGood
     {
