@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -55,6 +56,11 @@ namespace Upland.Infrastructure.Blockchain
             }
 
             return userStakes;
+        }
+
+        public async Task<List<HistoryAction>> GetPropertyActionsFromTime(DateTime timeFrom, int minutesToAdd)
+        {
+            return (await blockchainRepository.GetPropertyActionsFromDateTime(timeFrom, minutesToAdd)).actions;
         }
     }
 }

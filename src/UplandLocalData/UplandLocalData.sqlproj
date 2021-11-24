@@ -103,5 +103,14 @@
     <Build Include="StoredProcedures\UPL.CreateStreet.sql" />
     <Build Include="StoredProcedures\UPL.GetStreets.sql" />
     <Build Include="StoredProcedures\UPL.GetStreetStats.sql" />
+    <Build Include="Tables\UPL.EOSUser.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertEOSUser.sql" />
+    <Build Include="Tables\UPL.SaleHistory.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertSaleHistory.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteSaleHistoryById.sql" />
+    <Build Include="StoredProcedures\UPL.GetSaleHistoryByPropertyId.sql" />
+    <Build Include="Tables\UPL.ConfigurationValues.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertConfigurationValue.sql" />
+    <Build Include="StoredProcedures\UPL.GetConfigurationValue.sql" />
   </ItemGroup>
 </Project>

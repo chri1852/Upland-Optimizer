@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetSaleHistoryByPropertyId]
+﻿CREATE PROCEDURE [UPL].[GetConfigurationValue]
 (
-	@PropId BIGINT
+	@Name VARCHAR(200)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT *
-		FROM [UPL].[SaleHistory] (NOLOCK)
-		WHERE PropId = @PropId
+		SELECT TOP(1) *
+		FROM [UPL].[ConfigurationValue] (NOLOCK)
+		WHERE Name = @Name
 	END TRY
 
 	BEGIN CATCH

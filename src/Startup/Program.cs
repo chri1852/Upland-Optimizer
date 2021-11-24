@@ -88,11 +88,11 @@ class Program
         //await informationProcessor.RebuildPropertyStructures();
         //await informationProcessor.RunCityStatusUpdate(true);
 
-        //List<t3Entry> items = await blockchainRepository.GetActiveOffers();
+        List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
 
-        Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
+       // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
 
-        List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
+       // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
 
 
     }

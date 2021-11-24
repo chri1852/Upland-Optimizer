@@ -422,6 +422,73 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static void UpsertEOSUser(string eosAccount, string uplandUsername)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertEOSUser]";
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", eosAccount));
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static void UpsertSaleHistory(SaleHistoryEntry saleHistory)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertSaleHistory]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", saleHistory.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("DateTime", saleHistory.DateTime));
+                    sqlCmd.Parameters.Add(new SqlParameter("SellerEOS", saleHistory.SellerEOS));
+                    sqlCmd.Parameters.Add(new SqlParameter("BuyerEOS", saleHistory.BuyerEOS));
+                    sqlCmd.Parameters.Add(new SqlParameter("PropId", saleHistory.PropId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Amount", saleHistory.Amount));
+                    sqlCmd.Parameters.Add(new SqlParameter("OfferPropId", saleHistory.OfferPropId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Offer", saleHistory.Offer));
+                    sqlCmd.Parameters.Add(new SqlParameter("Accepted", saleHistory.Accepted));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
         public static List<Property> GetProperties(List<long> propertyIds)
         {
             List<Property> properties = new List<Property>();
@@ -765,6 +832,96 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public static string GetConfigurationValue(string name)
+        {
+            string configValue = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetConfigurationValue]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Name", name));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            configValue = (string)reader["Value"];
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return configValue;
+            }
+        }
+
+        public static List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
+        {
+            List<SaleHistoryEntry> saleHistoryEntries = new List<SaleHistoryEntry>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSaleHistoryByPropertyId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("PropId", propertyId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            saleHistoryEntries.Add(
+                                new SaleHistoryEntry
+                                {
+                                    Id = (int)reader["Id"],
+                                    DateTime = (DateTime)reader["DateTime"],
+                                    SellerEOS = reader["SellerEOS"] == DBNull.Value ? null : (string)reader["SellerEOS"],
+                                    BuyerEOS = reader["BuyerEOS"] == DBNull.Value ? null : (string)reader["BuyerEOS"],
+                                    PropId = (long)reader["PropId"],
+                                    Amount = reader["Amount"] != DBNull.Value ? (double?)null : (double)reader["Amount"],
+                                    OfferPropId = reader["OfferPropId"] == DBNull.Value ? (long?)null : (long)reader["OfferPropId"],
+                                    Offer = (bool)reader["Offer"],
+                                    Accepted = (bool)reader["Accepted"],
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return saleHistoryEntries;
+            }
+        }
+
         public static void SetOptimizationRunStatus(OptimizationRun optimizationRun)
         {
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1054,6 +1211,65 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[DeleteOptimizerRuns]";
                     sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static void DeleteSaleHistoryById(int id)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[DeleteSaleHistoryById]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", id));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public static void UpsertConfigurationValue(string name, string value)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpserConfigurationValue]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Name", name));
+                    sqlCmd.Parameters.Add(new SqlParameter("Value", value));
 
                     sqlCmd.ExecuteNonQuery();
                 }

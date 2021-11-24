@@ -511,6 +511,16 @@ namespace Upland.Infrastructure.LocalData
             return LocalDataRepository.GetRegisteredUser(discordUserId);
         }
 
+        public List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
+        {
+            return LocalDataRepository.GetSaleHistoryByPropertyId(propertyId);
+        }
+
+        public string GetConfigurationValue(string name)
+        {
+            return LocalDataRepository.GetConfigurationValue(name);
+        }
+
         public void CreateRegisteredUser(RegisteredUser registeredUser)
         {
             LocalDataRepository.CreateRegisteredUser(registeredUser);
@@ -524,6 +534,11 @@ namespace Upland.Infrastructure.LocalData
         public void DeleteRegisteredUser(decimal discordUserId)
         {
             LocalDataRepository.DeleteRegisteredUser(discordUserId);
+        }
+
+        public void DeleteSaleHistoryById(int id)
+        {
+            LocalDataRepository.DeleteSaleHistoryById(id);
         }
 
         public void DeleteOptimizerRuns(decimal discordUserId)
@@ -554,6 +569,21 @@ namespace Upland.Infrastructure.LocalData
         public List<PropertyStructure> GetPropertyStructures()
         {
             return LocalDataRepository.GetPropertyStructures();
+        }
+
+        public void UpsertEOSUser(string eosAccount, string uplandUsername)
+        {
+            LocalDataRepository.UpsertEOSUser(eosAccount, uplandUsername);
+        }
+
+        public void UpsertSaleHistory(SaleHistoryEntry saleHistory)
+        {
+            LocalDataRepository.UpsertSaleHistory(saleHistory);
+        }
+
+        public void UpsertConfigurationValue(string name, string value)
+        {
+            LocalDataRepository.UpsertConfigurationValue(name, value);
         }
     }
 }

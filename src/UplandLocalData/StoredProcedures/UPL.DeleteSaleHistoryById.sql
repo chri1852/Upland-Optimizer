@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetSaleHistoryByPropertyId]
+﻿CREATE PROCEDURE [UPL].[DeleteSaleHistoryById]
 (
-	@PropId BIGINT
+	@Id INT
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT *
-		FROM [UPL].[SaleHistory] (NOLOCK)
-		WHERE PropId = @PropId
+		DELETE 
+		FROM [UPL].[SaleHistory]
+		WHERE Id = @Id
 	END TRY
 
 	BEGIN CATCH
