@@ -39,6 +39,7 @@ class Program
         BlockchainRepository blockchainRepository = new BlockchainRepository();
         UplandApiManager uplandApiManager = new UplandApiManager();
         BlockchainManager blockchainManager = new BlockchainManager();
+        BlockchainPropertySurfer blockchainPropertySurfer = new BlockchainPropertySurfer();
 
         string username;
         string qualityLevel;
@@ -88,11 +89,13 @@ class Program
         //await informationProcessor.RebuildPropertyStructures();
         //await informationProcessor.RunCityStatusUpdate(true);
 
-        List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
+        //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
 
-       // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
+        // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
 
-       // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
+        // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
+
+        await blockchainPropertySurfer.BuildBlockChainFromBegining();
 
 
     }
