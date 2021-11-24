@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertiesByCityId]
+﻿CREATE PROCEDURE [UPL].[GetSaleHistoryByPropertyId]
 (
-	@CityId INT
+	@PropId BIGINT
 )
 AS
 BEGIN
 	BEGIN TRY		
 		SELECT *
-		FROM UPL.Property (NOLOCK)
-		WHERE CityId = @CityId
+		FROM [UPL].[SaleHistory] (NOLOCK)
+		WHERE PropId = @PropId
 	END TRY
 
 	BEGIN CATCH
@@ -22,4 +22,3 @@ BEGIN
 		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
 	END CATCH
 END
-GO

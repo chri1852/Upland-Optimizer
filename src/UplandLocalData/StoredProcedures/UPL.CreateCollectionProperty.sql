@@ -1,13 +1,21 @@
-﻿CREATE PROCEDURE [UPL].[GetSaleHistoryByPropertyId]
+﻿CREATE PROCEDURE [UPL].[CreateCollectionProperty]
 (
-	@PropId BIGINT
+	@CollectionId INT,
+	@PropertyId   BIGINT
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT *
-		FROM [UPL].[SaleHistory] (NOLOCK)
-		WHERE PropId = @PropId
+		INSERT INTO [UPL].[CollectionProperty]
+		(
+			[CollectionId],
+			[PropertyId]
+		)
+		VALUES
+		(
+			@CollectionId,
+			@PropertyId
+		)
 	END TRY
 
 	BEGIN CATCH
