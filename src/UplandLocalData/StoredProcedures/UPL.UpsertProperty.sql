@@ -10,7 +10,8 @@
 	@Latitude        DECIMAL(19,16),
 	@Longitude       DECIMAL(19,16),
 	@Status          VARCHAR(25) = NULL,
-	@FSA             BIT = 0
+	@FSA             BIT = 0,
+	@Owner           VARCHAR(50)
 )
 AS
 BEGIN

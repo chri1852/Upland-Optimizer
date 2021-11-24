@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertiesByCityId]
+﻿CREATE PROCEDURE [UPL].[GetPropertyByCityIdAndAddress]
 (
 	@CityId INT,
 	@Address VARCHAR(200)

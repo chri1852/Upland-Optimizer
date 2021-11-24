@@ -71,7 +71,6 @@
     <Build Include="StoredProcedures\UPL.CreateCollectionProperties.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertyIdsForCollectionId.sql" />
     <Build Include="Tables\UPL.Property.sql" />
-    <Build Include="StoredProcedures\UPL.CreateProperty.sql" />
     <Build Include="StoredProcedures\UPL.GetProperties.sql" />
     <Build Include="StoredProcedures\UPL.GetCollections.sql" />
     <Build Include="Tables\UPL.OptimizationRun.sql" />
@@ -112,5 +111,6 @@
     <Build Include="Tables\UPL.ConfigurationValues.sql" />
     <Build Include="StoredProcedures\UPL.UpsertConfigurationValue.sql" />
     <Build Include="StoredProcedures\UPL.GetConfigurationValue.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertyByCityIdAndAddress.sql" />
   </ItemGroup>
 </Project>
