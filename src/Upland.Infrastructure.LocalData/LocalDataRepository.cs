@@ -347,42 +347,6 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void CreateProperty(Property property)
-        {
-            SqlConnection sqlConnection = GetSQLConnector();
-
-            using (sqlConnection)
-            {
-                sqlConnection.Open();
-
-                try
-                {
-                    SqlCommand sqlCmd = new SqlCommand();
-                    sqlCmd.Connection = sqlConnection;
-                    sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[CreateProperty]";
-                    sqlCmd.Parameters.Add(new SqlParameter("Id", property.Id));
-                    sqlCmd.Parameters.Add(new SqlParameter("Address", property.Address));
-                    sqlCmd.Parameters.Add(new SqlParameter("CityId", property.CityId));
-                    sqlCmd.Parameters.Add(new SqlParameter("StreetId", property.StreetId));
-                    sqlCmd.Parameters.Add(new SqlParameter("Size", property.Size));
-                    sqlCmd.Parameters.Add(new SqlParameter("MonthlyEarnings", property.MonthlyEarnings));
-                    sqlCmd.Parameters.Add(new SqlParameter("Latitude", property.Latitude));
-                    sqlCmd.Parameters.Add(new SqlParameter("Longitude", property.Longitude));
-
-                    sqlCmd.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    sqlConnection.Close();
-                }
-            }
-        }
-
         public static void UpsertProperty(Property property)
         {
             SqlConnection sqlConnection = GetSQLConnector();
@@ -408,6 +372,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("Longitude", property.Longitude));
                     sqlCmd.Parameters.Add(new SqlParameter("Status", property.Status));
                     sqlCmd.Parameters.Add(new SqlParameter("FSA", property.FSA));
+                    sqlCmd.Parameters.Add(new SqlParameter("Owner", property.Owner));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -523,6 +488,7 @@ namespace Upland.Infrastructure.LocalData
                                     Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
                                     Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
                                     FSA = (bool)reader["FSA"],
+                                    Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null
                                 }
                              );
                         }
@@ -576,6 +542,7 @@ namespace Upland.Infrastructure.LocalData
                                     Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
                                     Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
                                     FSA = (bool)reader["FSA"],
+                                    Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null
                                 }
                              );
                         }
@@ -629,6 +596,7 @@ namespace Upland.Infrastructure.LocalData
                                     Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
                                     Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
                                     FSA = reader["FSA"] != DBNull.Value ? (bool)reader["FSA"] : false,
+                                    Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null
                                 }
                              );
                         }
@@ -645,6 +613,57 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return properties;
+            }
+        }
+
+        public static Property GetPropertyByCityIdAndAddress(int cityId, string address)
+        {
+            Property property = new Property();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertyByCityIdAndAddress]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Address", address));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            property.Id = (long)reader["Id"];
+                            property.Address = (string)reader["Address"];
+                            property.CityId = (int)reader["CityId"];
+                            property.Size = (int)reader["Size"];
+                            property.MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]);
+                            property.StreetId = (int)reader["StreetId"];
+                            property.NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null;
+                            property.Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null;
+                            property.Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null;
+                            property.Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null;
+                            property.FSA = reader["FSA"] != DBNull.Value ? (bool)reader["FSA"] : false;
+                            property.Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null;      
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return property;
             }
         }
 

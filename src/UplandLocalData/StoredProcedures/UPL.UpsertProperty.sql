@@ -45,7 +45,8 @@ BEGIN
 					[Latitude],
 					[Longitude],
 					[Status],
-					[FSA]
+					[FSA],
+					[Owner]
 				)
 				Values
 				(
@@ -59,7 +60,8 @@ BEGIN
 					@Latitude,
 					@Longitude,
 					@Status,
-					@FSA
+					@FSA,
+					@Owner
 				)
 			END
 	END TRY

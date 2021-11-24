@@ -342,6 +342,11 @@ namespace Upland.Infrastructure.LocalData
             return LocalDataRepository.GetPropertiesByCityId(cityId);
         }
 
+        public Property GetPropertyByCityIdAndAddress(int cityId, string address)
+        {
+            return LocalDataRepository.GetPropertyByCityIdAndAddress(cityId, address);
+        }
+
         public List<Property> GetPropertiesByCollectionId(int collectionId)
         {
             return LocalDataRepository.GetPropertiesByCollectionId(collectionId);
