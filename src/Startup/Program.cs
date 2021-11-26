@@ -20,7 +20,7 @@ using Upland.Infrastructure.Blockchain;
 using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
-
+using System.Text.Json;
 
 class Program
 {
@@ -127,7 +127,7 @@ class Program
 
         await RegisterCommandsAsync();
 
-        await _client.LoginAsync(TokenType.Bot, token);
+        await _client.LoginAsync(TokenType.Bot, JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["DiscordBotToken"]);
 
         await _client.StartAsync();
 

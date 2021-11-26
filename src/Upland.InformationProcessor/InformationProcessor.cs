@@ -1451,6 +1451,7 @@ namespace Upland.InformationProcessor
         public async Task RebuildPropertyStructures()
         {
             List<PropertyStructure> propertyStructures = await blockchainManager.GetPropertyStructures();
+            List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
 
             localDataManager.TruncatePropertyStructure();
 
@@ -1468,7 +1469,7 @@ namespace Upland.InformationProcessor
                     catch
                     {
                         // Most likely fails due to a missing property
-                        await localDataManager.PopulateIndividualPropertyById(propertyStructure.PropertyId);
+                        await localDataManager.PopulateIndividualPropertyById(propertyStructure.PropertyId, neighborhoods);
                         localDataManager.CreatePropertyStructure(propertyStructure);
                     }
 

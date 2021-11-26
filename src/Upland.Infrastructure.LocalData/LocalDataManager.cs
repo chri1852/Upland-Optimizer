@@ -28,6 +28,7 @@ namespace Upland.Infrastructure.LocalData
             List<long> loadedProps = new List<long>();
             List<long> ignoreIds = new List<long>();
             Dictionary<long, Property> allCityProperties = new Dictionary<long, Property>();
+            List<Neighborhood> neighborhoods = GetNeighborhoods();
 
             allCityProperties = localDataRepository.GetPropertiesByCityId(cityId).Where(p => p.Latitude.HasValue).ToDictionary(p => p.Id, p => p);
 
@@ -53,6 +54,8 @@ namespace Upland.Infrastructure.LocalData
                             try
                             {
                                 Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+
                                 localDataRepository.UpsertProperty(property);
                                 loadedProps.Add(prop.Prop_Id);
                             }
@@ -77,6 +80,7 @@ namespace Upland.Infrastructure.LocalData
                                 else
                                 {
                                     property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                    property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
                                 }
                             }
                             else
@@ -96,11 +100,24 @@ namespace Upland.Infrastructure.LocalData
 
             while (retryIds.Count > 0)
             {
-                retryIds = await RetryPopulate(retryIds);
+                retryIds = await RetryPopulate(retryIds, neighborhoods);
             }
         }
 
-        private async Task<List<long>> RetryPopulate(List<long> retryIds)
+        private int GetNeighborhoodIdForProp(List<Neighborhood> neighborhoods, Property property)
+        {
+            foreach (Neighborhood neighborhood in neighborhoods)
+            {
+                if (IsPropertyInNeighborhood(neighborhood, property))
+                {
+                    return neighborhood.Id;
+                }
+            }
+
+            return -1;
+        }
+
+        private async Task<List<long>> RetryPopulate(List<long> retryIds, List<Neighborhood> neighborhoods)
         {
             List<long> nextRetryIds = new List<long>();
 
@@ -109,6 +126,8 @@ namespace Upland.Infrastructure.LocalData
                 try
                 {
                     Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(Id));
+                    property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+
                     localDataRepository.UpsertProperty(property);
                 }
                 catch
@@ -120,9 +139,10 @@ namespace Upland.Infrastructure.LocalData
             return nextRetryIds;
         }
 
-        public async Task PopulateIndividualPropertyById(long propertyId)
+        public async Task PopulateIndividualPropertyById(long propertyId, List<Neighborhood> neighborhoods)
         {
             Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propertyId));
+            property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
             localDataRepository.UpsertProperty(property);
         }
 
@@ -219,22 +239,6 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public async Task PopulationCollectionPropertyData(int collectionId)
-        {
-            Collection collection = GetCollections().Where(c => c.Id == collectionId).First();
-
-            List<Property> existingCollectionProperties = GetPropertiesByCollectionId(collection.Id);
-
-            foreach (long propId in collection.MatchingPropertyIds)
-            {
-                if (!existingCollectionProperties.Any(p => p.Id == propId))
-                {
-                    Property prop = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propId));
-                    localDataRepository.UpsertProperty(prop);
-                }
-            }
-        }
-
         public void DetermineNeighborhoodIdsForCity(int cityId)
         {
             List<Neighborhood> neighborhoods = GetNeighborhoods();
@@ -305,35 +309,6 @@ namespace Upland.Infrastructure.LocalData
             return oddNodes;
         }
 
-        public async Task PopulateCollectionPropertiesByCityId(int cityId)
-        {
-            List<Collection> collections = localDataRepository.GetCollections();
-            collections = collections.Where(c => c.CityId == cityId && c.Category > 1).ToList();
-            List<long> retryIds = new List<long>();
-
-            foreach(Collection collection in collections)
-            {
-                List<Property> properties = localDataRepository.GetPropertiesByCollectionId(collection.Id);
-                foreach(Property property in properties)
-                {
-                    try
-                    {
-                        localDataRepository.UpsertProperty(UplandMapper.Map(await uplandApiRepository.GetPropertyById(property.Id)));
-                    }
-                    catch
-                    {
-                        retryIds.Add(property.Id);
-                    }
-                }
-            }
-
-            while (retryIds.Count > 0)
-            {
-                retryIds = await RetryPopulate(retryIds);
-            }
-        }
-
-
         public List<long> GetPropertyIdsByCollectionId(int collectionId)
         {
             return localDataRepository.GetCollectionPropertyIds(collectionId);
@@ -372,16 +347,6 @@ namespace Upland.Infrastructure.LocalData
 
             List<Property> userProperties = localDataRepository.GetProperties(userPropIds.Select(p => p.Prop_Id).ToList());
 
-            foreach (UplandAuthProperty propId in userPropIds)
-            {
-                if (!userProperties.Any(p => p.Id == propId.Prop_Id))
-                {
-                    Property prop = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propId.Prop_Id));
-                    localDataRepository.UpsertProperty(prop);
-                    userProperties.Add(prop);
-                }
-            }
-
             return userProperties;
         }
 
@@ -400,6 +365,16 @@ namespace Upland.Infrastructure.LocalData
             }
 
             return matches;
+        }
+
+        public void SetHistoricalCityStats()
+        {
+            List<CollatedStatsObject> cityStats = GetCityStats();
+
+            foreach(CollatedStatsObject stat in cityStats)
+            {
+                localDataRepository.CreateHistoricalCityStatus(stat);
+            }
         }
 
         public List<CollatedStatsObject> GetCityStats()
@@ -521,6 +496,11 @@ namespace Upland.Infrastructure.LocalData
         public List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
         {
             return localDataRepository.GetSaleHistoryByPropertyId(propertyId);
+        }
+
+        public List<CollatedStatsObject> GetHistoricalCityStatsByCityId(int cityId)
+        {
+            return localDataRepository.GetHistoricalCityStatusByCityId(cityId);
         }
 
         public string GetConfigurationValue(string name)

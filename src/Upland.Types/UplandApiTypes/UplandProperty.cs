@@ -17,6 +17,7 @@ namespace Upland.Types.UplandApiTypes
         public decimal CenterLng { get; set; }
         public string status { get; set; }
         public uplandLabels labels { get; set; }
+        public string owner_username { get; set; }
     }
 
     public class LocationInfo

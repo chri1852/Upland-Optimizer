@@ -14,7 +14,7 @@ namespace Upland.Infrastructure.LocalData
 
         public LocalDataRepository()
         {
-            DbConnectionString = JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"AppSettings.json"))["DatabaseConnectionString"];
+            DbConnectionString = JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["DatabaseConnectionString"];
         }
 
         public void CreateCollection(Collection collection)
@@ -737,6 +737,43 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void CreateHistoricalCityStatus(CollatedStatsObject statsObject)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CreateHistoricalCityStatus]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", statsObject.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("TotalProps", statsObject.TotalProps));
+                    sqlCmd.Parameters.Add(new SqlParameter("Locked", statsObject.LockedProps));
+                    sqlCmd.Parameters.Add(new SqlParameter("UnlockedNonFSA", statsObject.UnlockedNonFSAProps));
+                    sqlCmd.Parameters.Add(new SqlParameter("UnlockedFSA", statsObject.UnlockedFSAProps));
+                    sqlCmd.Parameters.Add(new SqlParameter("ForSale", statsObject.ForSaleProps));
+                    sqlCmd.Parameters.Add(new SqlParameter("Owned", statsObject.OwnedProps));
+                    sqlCmd.Parameters.Add(new SqlParameter("PercentMinted", statsObject.PercentMinted));
+                    sqlCmd.Parameters.Add(new SqlParameter("PercentMintedNonFSA", statsObject.PercentNonFSAMinted));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
         public void CreateStreet(Street street)
         {
             SqlConnection sqlConnection = GetSQLConnector();
@@ -856,6 +893,60 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return streets;
+            }
+        }
+
+        public List<CollatedStatsObject> GetHistoricalCityStatusByCityId(int cityId)
+        {
+            List<CollatedStatsObject> cityStats = new List<CollatedStatsObject>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetHistoricalCityStatusByCityId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            cityStats.Add(
+                                new CollatedStatsObject
+                                {
+                                    DbId = (int)reader["Id"],
+                                    Id = (int)reader["CityId"],
+                                    TotalProps = (int)reader["TotalProps"],
+                                    LockedProps = (int)reader["Locked"],
+                                    UnlockedNonFSAProps = (int)reader["UnlockedNonFSA"],
+                                    UnlockedFSAProps = (int)reader["UnlockedFSA"],
+                                    ForSaleProps = (int)reader["ForSale"],
+                                    OwnedProps = (int)reader["Owned"],
+                                    PercentMinted = (int)reader["PercentMinted"],
+                                    PercentNonFSAMinted = (int)reader["PercentMintedNonFSA"],
+                                    TimeStamp = (DateTime)reader["TimeStamp"]
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return cityStats;
             }
         }
 

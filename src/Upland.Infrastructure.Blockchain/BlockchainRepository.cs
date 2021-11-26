@@ -198,7 +198,7 @@ namespace Upland.Infrastructure.Blockchain
         {
             HistoryV2Query historyQuery;
 
-            string requestUri = @"https://eos.hyperion.eosrio.io/v2/history/get_actions?account=playuplandme&filter=*%3An12,*%3An13,*%3An5,*%3An2,*%3An4,*%3An52,*%3Aa4&skip=0&limit=1000&sort=desc&after=";
+            string requestUri = @"https://eos.hyperion.eosrio.io/v2/history/get_actions?account=playuplandme&filter=*%3An12,*%3An13,*%3An5,*%3An2,*%3An4,*%3An52,*%3Aa4,*%3An34,*%3An33&skip=0&limit=1000&sort=desc&after=";
             requestUri += string.Format("{0}&before=", fromTime.ToString("yyyy-MM-ddTHH:mm:ss"));
             requestUri += string.Format("{0}", fromTime.AddMinutes(minutesToAdd).ToString("yyyy-MM-ddTHH:mm:ss"));
 

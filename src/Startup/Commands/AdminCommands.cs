@@ -164,34 +164,6 @@ namespace Startup.Commands
             }
         }
 
-        [Command("AdminPopulateCollectionProperty")]
-        public async Task AdminPopulateCollectionProperty(int collectionId)
-        {
-            if (!await checkIfAdmin(Context.User.Id))
-            {
-                return;
-            }
-
-            LocalDataManager localDataManager = new LocalDataManager();
-            List<Collection> collections = localDataManager.GetCollections();
-
-            if (!collections.Any(c => c.Id == collectionId))
-            {
-                await ReplyAsync(string.Format("No Collection found for CollectionId {0}.", collectionId));
-                return;
-            }
-
-            try
-            {
-                await localDataManager.PopulationCollectionPropertyData(collectionId);
-                await ReplyAsync(string.Format("Running Collection Property Update in Child Task for CollectionId {0}.", collectionId));
-            }
-            catch (Exception ex)
-            {
-                await ReplyAsync(string.Format("Update Failed: {0}", ex.Message));
-            }
-        }
-
         [Command("AdminRebuildPropertyStructures")]
         public async Task AdminRebuildPropertyStructures()
         {

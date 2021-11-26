@@ -112,5 +112,8 @@
     <Build Include="StoredProcedures\UPL.UpsertConfigurationValue.sql" />
     <Build Include="StoredProcedures\UPL.GetConfigurationValue.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertyByCityIdAndAddress.sql" />
+    <Build Include="Tables\UPL.HistoricalCityStatus.sql" />
+    <Build Include="StoredProcedures\UPL.CreateHistoricalCityStatus.sql" />
+    <Build Include="StoredProcedures\UPL.GetHistoricalCityStatusByCityId.sql" />
   </ItemGroup>
 </Project>

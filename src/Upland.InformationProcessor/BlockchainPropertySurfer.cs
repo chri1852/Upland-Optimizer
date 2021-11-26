@@ -114,7 +114,13 @@ namespace Upland.InformationProcessor
                         ProcessRemoveFromSaleAction(action);
                         break;
                     case "n52":
-                        ProcessButForFiatAction(action);
+                        ProcessBuyForFiatAction(action);
+                        break;
+                    case "n33":
+                        ProcessBecomeUplanderAction(action);
+                        break;
+                    case "n34":
+                        ProcessDeleteVisitorAction(action);
                         break;
                     default:
                         continue;
@@ -122,7 +128,17 @@ namespace Upland.InformationProcessor
             }
         }
 
-        private void ProcessButForFiatAction(HistoryAction action)
+        private void ProcessDeleteVisitorAction(HistoryAction action)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ProcessBecomeUplanderAction(HistoryAction action)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ProcessBuyForFiatAction(HistoryAction action)
         {
             throw new NotImplementedException();
         }
