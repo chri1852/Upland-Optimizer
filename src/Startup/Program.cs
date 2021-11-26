@@ -7,7 +7,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Upland.InformationProcessor;
 using System.Timers;
-
+using System.Text.Json;
 
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
@@ -20,7 +20,6 @@ using Upland.Infrastructure.Blockchain;
 using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
-using System.Text.Json;
 
 class Program
 {
