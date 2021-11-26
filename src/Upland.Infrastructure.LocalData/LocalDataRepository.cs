@@ -2,14 +2,22 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Text.Json;
 using Upland.Types;
 using Upland.Types.Types;
 
 namespace Upland.Infrastructure.LocalData
 {
-    public static class LocalDataRepository
+    public class LocalDataRepository
     {
-        public static void CreateCollection(Collection collection)
+        private readonly string DbConnectionString;
+
+        public LocalDataRepository()
+        {
+            DbConnectionString = JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"AppSettings.json"))["DatabaseConnectionString"];
+        }
+
+        public void CreateCollection(Collection collection)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -45,7 +53,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void CreateCollectionProperties(int collectionId, List<long> propertyIds)
+        public void CreateCollectionProperties(int collectionId, List<long> propertyIds)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -75,7 +83,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<long> GetCollectionPropertyIds(int collectionId)
+        public List<long> GetCollectionPropertyIds(int collectionId)
         {
             SqlConnection sqlConnection = GetSQLConnector();
             List<long> propertyIds = new List<long>();
@@ -115,7 +123,7 @@ namespace Upland.Infrastructure.LocalData
             return propertyIds;
         }
 
-        public static List<Collection> GetCollections()
+        public List<Collection> GetCollections()
         {
             List<Collection> collections = new List<Collection>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -167,7 +175,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<StatsObject> GetCityStats()
+        public List<StatsObject> GetCityStats()
         {
             List<StatsObject> stats = new List<StatsObject>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -212,7 +220,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<StatsObject> GetNeighborhoodStats()
+        public List<StatsObject> GetNeighborhoodStats()
         {
             List<StatsObject> stats = new List<StatsObject>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -257,7 +265,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<StatsObject> GetStreetStats()
+        public List<StatsObject> GetStreetStats()
         {
             List<StatsObject> stats = new List<StatsObject>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -302,7 +310,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<StatsObject> GetCollectionStats()
+        public List<StatsObject> GetCollectionStats()
         {
             List<StatsObject> stats = new List<StatsObject>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -347,7 +355,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void UpsertProperty(Property property)
+        public void UpsertProperty(Property property)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -387,7 +395,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void UpsertEOSUser(string eosAccount, string uplandUsername)
+        public void UpsertEOSUser(string eosAccount, string uplandUsername)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -417,7 +425,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void UpsertSaleHistory(SaleHistoryEntry saleHistory)
+        public void UpsertSaleHistory(SaleHistoryEntry saleHistory)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -454,7 +462,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<Property> GetProperties(List<long> propertyIds)
+        public List<Property> GetProperties(List<long> propertyIds)
         {
             List<Property> properties = new List<Property>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -508,7 +516,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<Property> GetPropertiesByCollectionId(int collectionId)
+        public List<Property> GetPropertiesByCollectionId(int collectionId)
         {
             List<Property> properties = new List<Property>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -562,7 +570,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<Property> GetPropertiesByCityId(int cityId)
+        public List<Property> GetPropertiesByCityId(int cityId)
         {
             List<Property> properties = new List<Property>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -616,7 +624,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static Property GetPropertyByCityIdAndAddress(int cityId, string address)
+        public Property GetPropertyByCityIdAndAddress(int cityId, string address)
         {
             Property property = new Property();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -667,7 +675,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void CreateOptimizationRun(OptimizationRun optimizationRun)
+        public void CreateOptimizationRun(OptimizationRun optimizationRun)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -697,7 +705,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void CreateNeighborhood(Neighborhood neighborhood)
+        public void CreateNeighborhood(Neighborhood neighborhood)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -729,7 +737,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void CreateStreet(Street street)
+        public void CreateStreet(Street street)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -761,7 +769,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<Neighborhood> GetNeighborhoods()
+        public List<Neighborhood> GetNeighborhoods()
         {
             List<Neighborhood> neighborhoods = new List<Neighborhood>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -806,7 +814,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<Street> GetStreets()
+        public List<Street> GetStreets()
         {
             List<Street> streets = new List<Street>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -851,7 +859,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static string GetConfigurationValue(string name)
+        public string GetConfigurationValue(string name)
         {
             string configValue = null;
             SqlConnection sqlConnection = GetSQLConnector();
@@ -890,7 +898,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
+        public List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
         {
             List<SaleHistoryEntry> saleHistoryEntries = new List<SaleHistoryEntry>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -941,7 +949,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void SetOptimizationRunStatus(OptimizationRun optimizationRun)
+        public void SetOptimizationRunStatus(OptimizationRun optimizationRun)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -972,7 +980,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static OptimizationRun GetLatestOptimizationRun(decimal discordUserId)
+        public OptimizationRun GetLatestOptimizationRun(decimal discordUserId)
         {
             OptimizationRun optimizationRun = null;
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1017,7 +1025,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void CreateRegisteredUser(RegisteredUser registeredUser)
+        public void CreateRegisteredUser(RegisteredUser registeredUser)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1050,7 +1058,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void SetRegisteredUserPaid(string uplandUsername)
+        public void SetRegisteredUserPaid(string uplandUsername)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1079,7 +1087,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void SetRegisteredUserVerified(decimal discordUserId)
+        public void SetRegisteredUserVerified(decimal discordUserId)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1108,7 +1116,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void IncreaseRegisteredUserRunCount(decimal discordUserId)
+        public void IncreaseRegisteredUserRunCount(decimal discordUserId)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1137,7 +1145,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static RegisteredUser GetRegisteredUser(decimal discordUserId)
+        public RegisteredUser GetRegisteredUser(decimal discordUserId)
         {
             RegisteredUser registeredUser = null;
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1186,7 +1194,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void DeleteRegisteredUser(decimal discordUserId)
+        public void DeleteRegisteredUser(decimal discordUserId)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1215,7 +1223,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void DeleteOptimizerRuns(decimal discordUserId)
+        public void DeleteOptimizerRuns(decimal discordUserId)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1244,7 +1252,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void DeleteSaleHistoryById(int id)
+        public void DeleteSaleHistoryById(int id)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1273,7 +1281,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void UpsertConfigurationValue(string name, string value)
+        public void UpsertConfigurationValue(string name, string value)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1303,7 +1311,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void CreatePropertyStructure(PropertyStructure propertyStructure)
+        public void CreatePropertyStructure(PropertyStructure propertyStructure)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1333,7 +1341,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static void TruncatePropertyStructure()
+        public void TruncatePropertyStructure()
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1361,7 +1369,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public static List<PropertyStructure> GetPropertyStructures()
+        public List<PropertyStructure> GetPropertyStructures()
         {
             List<PropertyStructure> propertyStructures = new List<PropertyStructure>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1403,7 +1411,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        private static DataTable CreatePropertyIdTable(List<long> propertyIds)
+        private DataTable CreatePropertyIdTable(List<long> propertyIds)
         {
             DataTable table = new DataTable();
             table.Columns.Add("PropertyId", typeof(long));
@@ -1415,9 +1423,9 @@ namespace Upland.Infrastructure.LocalData
             return table;
         }
 
-        private static SqlConnection GetSQLConnector()
+        private SqlConnection GetSQLConnector()
         {
-            string connectionString = Consts.LocalDBConnectionString;
+            string connectionString = DbConnectionString;
 
             if (connectionString == null)
             {

@@ -339,7 +339,7 @@ namespace Upland.InformationProcessor
 
                 array.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
 
-                foreach (int cityId in Consts.Cities.Keys)
+                foreach (int cityId in Consts.Cities.Keys.Where(k => k < 10000))
                 {
                     string cityString = string.Format("{0} - {1} -", cityId.ToString().PadLeft(idPad), Consts.Cities[cityId].PadLeft(namePad));
 

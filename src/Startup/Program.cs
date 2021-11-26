@@ -74,6 +74,7 @@ class Program
         //output = informationProcessor.GetAllProperties("Street", 31898, "CSV");
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
         //output = await informationProcessor.GetAssetsByTypeAndUserName("nflpa", "loyldoyl", "txt");
+       //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
@@ -95,7 +96,7 @@ class Program
 
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
 
-        await blockchainPropertySurfer.BuildBlockChainFromBegining();
+        //await blockchainPropertySurfer.BuildBlockChainFromBegining();
 
 
     }
