@@ -8,8 +8,8 @@
 	[UnlockedFSA]         INT               NOT NULL,
 	[ForSale]             INT               NOT NULL,
 	[Owned]               INT               NOT NULL,
-	[PercentMinted]       DECIMAL(3,2)      NOT NULL,
-	[PercentMintedNonFSA] DECIMAL(3,2)      NOT NULL,
+	[PercentMinted]       DECIMAL(5,2)      NOT NULL,
+	[PercentMintedNonFSA] DECIMAL(5,2)      NOT NULL,
 	[TimeStamp]           DATETIME          NOT NULL,
 
 	CONSTRAINT pk_HistoricalCityStatus PRIMARY KEY(Id)

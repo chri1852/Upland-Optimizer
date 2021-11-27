@@ -7,8 +7,9 @@
 	@UnlockedFSA         INT         ,
 	@ForSale             INT         ,
 	@Owned               INT         ,
-	@PercentMinted       DECIMAL(3,2),
-	@PercentMintedNonFSA DECIMAL(3,2)          
+	@PercentMinted       DECIMAL(5,2),
+	@PercentMintedNonFSA DECIMAL(5,2),
+	@TimeStamp           DATETIME
 )
 AS
 BEGIN
@@ -37,7 +38,7 @@ BEGIN
 			@Owned,
 			@PercentMinted,
 			@PercentMintedNonFSA,
-			GETDATE()
+			@TimeStamp
 		)
 	END TRY
 

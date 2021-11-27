@@ -24,7 +24,7 @@ BEGIN
 				UPDATE [UPL].[ConfigurationValue]
 				SET
 					[Value] = @Value
-				WHERE [Name] = [Value]
+				WHERE [Name] = @Name
 			END
 	END TRY
 

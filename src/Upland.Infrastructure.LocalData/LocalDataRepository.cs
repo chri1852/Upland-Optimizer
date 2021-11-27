@@ -466,14 +466,14 @@ namespace Upland.Infrastructure.LocalData
 
         public Property GetProperty(long id)
         {
-            try
-            {
-                return GetProperties(new List<long> { id }).First();
-            }
-            catch
+            List<Property> properties = GetProperties(new List<long> { id });
+
+            if (properties == null || properties.Count == 0)
             {
                 return null;
             }
+
+            return properties.First();
         }
 
         public List<Property> GetProperties(List<long> propertyIds)
@@ -828,6 +828,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("Owned", statsObject.OwnedProps));
                     sqlCmd.Parameters.Add(new SqlParameter("PercentMinted", statsObject.PercentMinted));
                     sqlCmd.Parameters.Add(new SqlParameter("PercentMintedNonFSA", statsObject.PercentNonFSAMinted));
+                    sqlCmd.Parameters.Add(new SqlParameter("TimeStamp", statsObject.TimeStamp));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -1085,8 +1086,8 @@ namespace Upland.Infrastructure.LocalData
                                     SellerEOS = reader["SellerEOS"] == DBNull.Value ? null : (string)reader["SellerEOS"],
                                     BuyerEOS = reader["BuyerEOS"] == DBNull.Value ? null : (string)reader["BuyerEOS"],
                                     PropId = (long)reader["PropId"],
-                                    Amount = reader["Amount"] != DBNull.Value ? (double?)null : (double)reader["Amount"],
-                                    AmountFiat = reader["AmountFiat"] != DBNull.Value ? (double?)null : (double)reader["AmountFiat"],
+                                    Amount = reader["Amount"] == DBNull.Value ? (double?)null : decimal.ToDouble((decimal)reader["Amount"]),
+                                    AmountFiat = reader["AmountFiat"] == DBNull.Value ? (double?)null : decimal.ToDouble((decimal)reader["AmountFiat"]),
                                     OfferPropId = reader["OfferPropId"] == DBNull.Value ? (long?)null : (long)reader["OfferPropId"],
                                     Offer = (bool)reader["Offer"],
                                     Accepted = (bool)reader["Accepted"],
@@ -1376,7 +1377,7 @@ namespace Upland.Infrastructure.LocalData
                         {
                             uplandUsername = (string)reader["UplandUsername"];
                         }
-                        reader.Close();
+                         reader.Close();
                     }
                 }
                 catch
@@ -1450,6 +1451,37 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpdateSaleHistoryVistorToUplander]";
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", oldEOS));
+                    sqlCmd.Parameters.Add(new SqlParameter("NewEOSAccount", newEOS));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+
         public void DeleteSaleHistoryById(int id)
         {
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1521,7 +1553,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[UpserConfigurationValue]";
+                    sqlCmd.CommandText = "[UPL].[UpsertConfigurationValue]";
                     sqlCmd.Parameters.Add(new SqlParameter("Name", name));
                     sqlCmd.Parameters.Add(new SqlParameter("Value", value));
 

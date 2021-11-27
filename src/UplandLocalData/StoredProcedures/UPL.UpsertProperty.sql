@@ -6,7 +6,7 @@
 	@StreetId        INT,
 	@Size            INT,
 	@MonthlyEarnings DECIMAL(11,2),
-	@NeighborhoodId  INT,
+	@NeighborhoodId  INT = NULL,
 	@Latitude        DECIMAL(19,16),
 	@Longitude       DECIMAL(19,16),
 	@Status          VARCHAR(25),

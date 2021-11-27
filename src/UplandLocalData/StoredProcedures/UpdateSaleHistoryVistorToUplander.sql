@@ -1,15 +1,19 @@
-﻿CREATE PROCEDURE [UPL].[DeleteSaleHistoryByBuyerEOS]
+﻿CREATE PROCEDURE [UPL].[UpdateSaleHistoryVistorToUplander]
 (
-	@EOSAccount VARCHAR(12)
+	@EOSAccount VARCHAR(12),
+	@NewEOSAccount VARCHAR(12)
+
 )
 AS
 BEGIN
 	BEGIN TRY		
-		DELETE 
-		FROM [UPL].[SaleHistory]
+		UPDATE [UPL].[SaleHistory]
+		SET BuyerEOS = @NewEOSAccount
 		WHERE BuyerEOS = @EOSAccount
-			AND SellerEOS IS NULL
-			AND Offer = 1
+
+		UPDATE [UPL].[SaleHistory]
+		SET SellerEOS = @NewEOSAccount
+		WHERE SellerEOS = @EOSAccount
 	END TRY
 
 	BEGIN CATCH
@@ -24,4 +28,3 @@ BEGIN
 		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
 	END CATCH
 END
-GO

@@ -377,13 +377,17 @@ namespace Upland.Infrastructure.LocalData
             return matches;
         }
 
-        public void SetHistoricalCityStats()
+        public void SetHistoricalCityStats(DateTime timeStamp)
         {
             List<CollatedStatsObject> cityStats = GetCityStats();
 
             foreach(CollatedStatsObject stat in cityStats)
             {
-                localDataRepository.CreateHistoricalCityStatus(stat);
+                if (stat.PercentMinted > 0)
+                {
+                    stat.TimeStamp = timeStamp;
+                    localDataRepository.CreateHistoricalCityStatus(stat);
+                }
             }
         }
 
@@ -521,6 +525,11 @@ namespace Upland.Infrastructure.LocalData
         public string GetUplandUsernameByEOSAccount(string eosAccount)
         {
             return localDataRepository.GetUplandUserNameByEOSAccount(eosAccount);
+        }
+
+        public void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS)
+        {
+            localDataRepository.UpdateSaleHistoryVistorToUplander(oldEOS, newEOS);
         }
 
         public void DeleteSaleHistoryByBuyerEOSAccount(string eosAccount)
