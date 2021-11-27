@@ -6,6 +6,7 @@
 	@BuyerEOS        VARCHAR(12) = NULL,
 	@PropId          BIGINT,
 	@Amount          DECIMAL(20,2) = NULL,
+	@AmountFiat      DECIMAL(20,2) = NULL,
 	@OfferPropId     BIGINT = NULL,
 	@Offer           BIT = FALSE,
 	@Accepted        BIT = FALSE
@@ -22,6 +23,7 @@ BEGIN
 					[BuyerEOS],
 					[PropId],
 					[Amount],
+					[AmountFiat],
 					[OfferPropId],
 					[Offer],
 					[Accepted]
@@ -33,6 +35,7 @@ BEGIN
 					@BuyerEOS,
 					@PropId,
 					@Amount,
+					@AmountFiat,
 					@OfferPropId,
 					@Offer,
 					@Accepted
@@ -47,6 +50,7 @@ BEGIN
 					[BuyerEOS] = @BuyerEOS,
 					[PropId] = @PropId,
 					[Amount] = @Amount,
+					[AmountFiat] = @AmountFiat,
 					[OfferPropId] = @OfferPropId,
 					[Offer] = @Offer,
 					[Accepted] = @Accepted

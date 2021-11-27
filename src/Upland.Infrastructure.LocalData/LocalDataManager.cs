@@ -309,9 +309,19 @@ namespace Upland.Infrastructure.LocalData
             return oddNodes;
         }
 
+        public Property GetProperty(long id)
+        {
+            return localDataRepository.GetProperty(id);
+        }
+
         public List<long> GetPropertyIdsByCollectionId(int collectionId)
         {
             return localDataRepository.GetCollectionPropertyIds(collectionId);
+        }
+
+        public List<Property> GetPropertiesByUplandUsername(string uplandUsername)
+        {
+            return localDataRepository.GetPropertiesByUplandUsername(uplandUsername);
         }
 
         public List<Property> GetPropertiesByCityId(int cityId)
@@ -508,6 +518,16 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetConfigurationValue(name);
         }
 
+        public string GetUplandUsernameByEOSAccount(string eosAccount)
+        {
+            return localDataRepository.GetUplandUserNameByEOSAccount(eosAccount);
+        }
+
+        public void DeleteSaleHistoryByBuyerEOSAccount(string eosAccount)
+        {
+            localDataRepository.DeleteSaleHistoryByBuyerEOS(eosAccount);
+        }
+
         public void CreateRegisteredUser(RegisteredUser registeredUser)
         {
             localDataRepository.CreateRegisteredUser(registeredUser);
@@ -571,6 +591,11 @@ namespace Upland.Infrastructure.LocalData
         public void UpsertConfigurationValue(string name, string value)
         {
             localDataRepository.UpsertConfigurationValue(name, value);
+        }
+
+        public void UpsertProperty(Property property)
+        {
+            localDataRepository.UpsertProperty(property);
         }
     }
 }

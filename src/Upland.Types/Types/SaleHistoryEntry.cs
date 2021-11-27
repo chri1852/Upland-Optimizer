@@ -12,6 +12,7 @@ namespace Upland.Types.Types
         public string? BuyerEOS { get; set; }
         public long PropId { get; set; }
         public double? Amount { get; set; }
+        public double? AmountFiat { get; set; }
         public long? OfferPropId { get; set; }
         public bool Offer { get; set; }
         public bool Accepted { get; set; }

@@ -115,5 +115,8 @@
     <Build Include="Tables\UPL.HistoricalCityStatus.sql" />
     <Build Include="StoredProcedures\UPL.CreateHistoricalCityStatus.sql" />
     <Build Include="StoredProcedures\UPL.GetHistoricalCityStatusByCityId.sql" />
+    <Build Include="StoredProcedures\UPL.GetEOSUserByEOSUsername.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByBuyerEOS.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertiesByUplandUsername.sql" />
   </ItemGroup>
 </Project>

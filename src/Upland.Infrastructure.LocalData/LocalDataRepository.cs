@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Text.Json;
 using Upland.Types;
 using Upland.Types.Types;
@@ -445,6 +446,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("BuyerEOS", saleHistory.BuyerEOS));
                     sqlCmd.Parameters.Add(new SqlParameter("PropId", saleHistory.PropId));
                     sqlCmd.Parameters.Add(new SqlParameter("Amount", saleHistory.Amount));
+                    sqlCmd.Parameters.Add(new SqlParameter("AmountFiat", saleHistory.AmountFiat));
                     sqlCmd.Parameters.Add(new SqlParameter("OfferPropId", saleHistory.OfferPropId));
                     sqlCmd.Parameters.Add(new SqlParameter("Offer", saleHistory.Offer));
                     sqlCmd.Parameters.Add(new SqlParameter("Accepted", saleHistory.Accepted));
@@ -459,6 +461,18 @@ namespace Upland.Infrastructure.LocalData
                 {
                     sqlConnection.Close();
                 }
+            }
+        }
+
+        public Property GetProperty(long id)
+        {
+            try
+            {
+                return GetProperties(new List<long> { id }).First();
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -478,6 +492,60 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[GetProperties]";
                     sqlCmd.Parameters.Add(new SqlParameter("PropertyIds", CreatePropertyIdTable(propertyIds)));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            properties.Add(
+                                new Property
+                                {
+                                    Id = (long)reader["Id"],
+                                    Address = (string)reader["Address"],
+                                    CityId = (int)reader["CityId"],
+                                    Size = (int)reader["Size"],
+                                    MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
+                                    StreetId = (int)reader["StreetId"],
+                                    NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
+                                    Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
+                                    Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
+                                    Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
+                                    FSA = (bool)reader["FSA"],
+                                    Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return properties;
+            }
+        }
+
+        public List<Property> GetPropertiesByUplandUsername(string uplandUsername)
+        {
+            List<Property> properties = new List<Property>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertiesByUplandUsername]";
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -1018,6 +1086,7 @@ namespace Upland.Infrastructure.LocalData
                                     BuyerEOS = reader["BuyerEOS"] == DBNull.Value ? null : (string)reader["BuyerEOS"],
                                     PropId = (long)reader["PropId"],
                                     Amount = reader["Amount"] != DBNull.Value ? (double?)null : (double)reader["Amount"],
+                                    AmountFiat = reader["AmountFiat"] != DBNull.Value ? (double?)null : (double)reader["AmountFiat"],
                                     OfferPropId = reader["OfferPropId"] == DBNull.Value ? (long?)null : (long)reader["OfferPropId"],
                                     Offer = (bool)reader["Offer"],
                                     Accepted = (bool)reader["Accepted"],
@@ -1285,6 +1354,44 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public string GetUplandUserNameByEOSAccount(string eosAccount)
+        {
+            string uplandUsername = "";
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetEOSUserByEOSAccount]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@EOSAccount", eosAccount));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            uplandUsername = (string)reader["UplandUsername"];
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return uplandUsername;
+            }
+        }
+
         public void DeleteRegisteredUser(decimal discordUserId)
         {
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1358,6 +1465,35 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[DeleteSaleHistoryById]";
                     sqlCmd.Parameters.Add(new SqlParameter("Id", id));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void DeleteSaleHistoryByBuyerEOS(string eosAccount)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[DeleteSaleHistoryByBuyerEOS]";
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", eosAccount));
 
                     sqlCmd.ExecuteNonQuery();
                 }

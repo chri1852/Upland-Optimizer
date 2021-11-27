@@ -25,12 +25,12 @@ namespace Upland.Types.BlockchainTypes
     public class ActionData
     {
         public string memo { get; set; }
-        public long a45 { get; set; }
+        public string a45 { get; set; }
         public string a54 { get; set; }
         public string p3 { get; set; }
         public string p11 { get; set; }
         public string p14 { get; set; }
-        public long p15 { get; set; }
+        public string p15 { get; set; }
         public List<string> p21 { get; set; }
         public string p23 { get; set; }
         public string p24 { get; set; }
