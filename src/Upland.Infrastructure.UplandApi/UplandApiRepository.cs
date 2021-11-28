@@ -178,6 +178,16 @@ namespace Upland.Infrastructure.UplandApi
             return assets;
         }
 
+        public async Task<UplandUserProfile> GetProfileByUsername(string username)
+        {
+            UplandUserProfile profile;
+            string requestUri = @"https://api.upland.me/profile/" + username;
+
+            profile = await CallApi<UplandUserProfile>(requestUri, true);
+
+            return profile;
+        }
+
         private async Task<T> CallApi<T>(string requestUri, bool useAuth = false)
         {
             HttpResponseMessage httpResponse;

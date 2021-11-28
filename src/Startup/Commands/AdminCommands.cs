@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Upland.CollectionOptimizer;
 using Upland.InformationProcessor;
@@ -26,7 +27,9 @@ namespace Startup.Commands
 
         private async Task<bool> checkIfAdmin(ulong discordUserId)
         {
-            if(discordUserId != Consts.AdminDiscordId)
+            ulong adminId = ulong.Parse(JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["AdminDiscordId"]);
+
+            if (discordUserId != adminId)
             {
                 await ReplyAsync(string.Format("You are not an admin {0}.", HelperFunctions.GetRandomName(_random)));
                 return false;
@@ -140,6 +143,27 @@ namespace Startup.Commands
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
                 await Context.Channel.SendFileAsync(stream, string.Format("PropertyInfo_{0}.{1}", userName.ToUpper(), fileType.ToUpper() == "TXT" ? "txt" : "csv"));
+            }
+        }
+
+        [Command("AdminPropsUnderConstruction")]
+        public async Task AdminPropsUnderConstruction(int userlevel = -1)
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+            await ReplyAsync(string.Format("Running Under Construction Report. This may take up to two hours."));
+
+            List<string> stakingReport = await _informationProcessor.GetBuildingsUnderConstruction(userlevel);
+            await ReplyAsync(string.Format("Construction Report Completed!"));
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, stakingReport));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("StakingReport_UserLevel_{0}.csv", Upland.InformationProcessor.HelperFunctions.TranslateUserLevel(userlevel)));
             }
         }
 

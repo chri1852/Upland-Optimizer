@@ -11,10 +11,6 @@
 	[Offer]             BIT               NOT NULL,
 	[Accepted]          BIT               NOT NULL,
 
-	CONSTRAINT pk_SaleHistoryId PRIMARY KEY([Id]),
-	CONSTRAINT fk_SaleHistory_Property FOREIGN KEY([PropId])
-		REFERENCES [UPL].[Property]([Id]),
-	CONSTRAINT fk_SaleHistory_OfferProperty FOREIGN KEY([OfferPropId])
-		REFERENCES [UPL].[Property]([Id]),
+	CONSTRAINT pk_SaleHistoryId PRIMARY KEY([Id])
 )
 GO

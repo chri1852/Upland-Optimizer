@@ -6,6 +6,7 @@ using Upland.Infrastructure.Blockchain;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types;
+using Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
@@ -1452,13 +1453,18 @@ namespace Upland.InformationProcessor
         {
             List<PropertyStructure> propertyStructures = await blockchainManager.GetPropertyStructures();
             List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
-
+            List<long> underConstructionProps = await blockchainManager.GetPropertiesUnderConstruction();
             localDataManager.TruncatePropertyStructure();
 
             List<long> savedIds = new List<long>();
 
             foreach(PropertyStructure propertyStructure in propertyStructures)
             {
+                if (underConstructionProps.Contains(propertyStructure.PropertyId))
+                {
+                    continue;
+                }
+
                 if (!savedIds.Contains(propertyStructure.PropertyId))
                 {
                     try
@@ -1503,6 +1509,89 @@ namespace Upland.InformationProcessor
                 await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId, false);
                 localDataManager.DetermineNeighborhoodIdsForCity(cityId);
             }
+        }
+
+        public async Task<List<string>> GetBuildingsUnderConstruction(int userLevel = -1)
+        {
+            List<SparkStakingReport> sparkReport = new List<SparkStakingReport>();
+            List<UplandUserProfile> uniqueUserProfiles = new List<UplandUserProfile>();
+
+            List<long> propsUnderConstruction = await blockchainManager.GetPropertiesUnderConstruction();
+
+            foreach (long prop in propsUnderConstruction)
+            {
+                UplandProperty property = await uplandApiManager.GetUplandPropertyById(prop);
+
+                if (property == null || property.building == null || property.building.construction == null)
+                {
+                    continue;
+                }
+
+                sparkReport.Add(new SparkStakingReport
+                {
+                    Username = property.owner_username,
+                    Level = -1,
+                    CityId = property.City.Id,
+                    CityName = Consts.Cities[property.City.Id],
+                    PropertyId = property.Prop_Id,
+                    Address = property.Full_Address,
+                    CurrentStakedSpark = property.building.construction.stackedSparks,
+                    CurrentSparkProgress = property.building.construction.progressInSparks,
+                    TotalSparkRequired = property.building.construction.totalSparksRequired,
+                    StartDateTime = property.building.construction.startedAt,
+                    CurrentFinishDateTime = property.building.construction.finishedAt,
+                    ConstructionStatus = property.building.constructionStatus,
+                    NFTId = property.building.nftID,
+                    ModelId = property.building.propModelID
+                });
+            }
+
+            foreach (string username in sparkReport.GroupBy(r => r.Username).Select(g => g.First().Username).ToList())
+            {
+                if (username == null || username == "")
+                {
+                    continue;
+                }
+
+                UplandUserProfile profile = await uplandApiManager.GetUplandUserProfile(username);
+
+                if (profile == null)
+                {
+                    continue;
+                }
+
+                if (userLevel != -1 || userLevel != profile.lvl)
+                {
+                    continue;
+                }
+
+                uniqueUserProfiles.Add(profile);
+            }
+
+            foreach (UplandUserProfile profile in uniqueUserProfiles)
+            {
+                foreach (SparkStakingReport report in sparkReport)
+                {
+                    if (report.Username == profile.username)
+                    {
+                        report.Level = profile.lvl;
+                    }
+                }
+            }
+
+            return sparkReport.Where(r => r.Username != null && r.Username != "")
+                .OrderBy(r => r.Username)
+                .Select(s => string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}"
+                    , s.Username
+                    , HelperFunctions.TranslateUserLevel(s.Level)
+                    , s.CityName
+                    , s.Address
+                    , s.CurrentStakedSpark
+                    , s.CurrentSparkProgress
+                    , s.TotalSparkRequired
+                    , s.StartDateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                    , s.CurrentFinishDateTime.ToString("yyyy-MM-dd HH:mm:ss")))
+                .ToList();
         }
     }
 }

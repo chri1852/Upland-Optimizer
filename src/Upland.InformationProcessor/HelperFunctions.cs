@@ -42,6 +42,29 @@ namespace Upland.InformationProcessor
             }
         }
 
+        public static string TranslateUserLevel(int userLevel)
+        {
+            switch (userLevel)
+            {
+                case 0: 
+                    return "Visitor";
+                case 1: 
+                    return "Uplander";
+                case 2:
+                    return "Pro";
+                case 3:
+                    return "Director";
+                case 4:
+                    return "Executive";
+                case 5:
+                    return "Chief Executive";
+                case -1:
+                    return "All";
+                default:
+                    return "Unknown";
+            }
+        }
+
         public static List<double> GetCityAreaCoordinates(int cityId)
         {
             // N, S, E, W

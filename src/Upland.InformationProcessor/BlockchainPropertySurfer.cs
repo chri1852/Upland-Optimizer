@@ -31,9 +31,9 @@ namespace Upland.InformationProcessor
         public async Task BuildBlockChainFromBegining()
         {
             // Upland went live on the blockchain on 2019-06-06 11:51:37
-            DateTime startDate = new DateTime(2019, 06, 04, 01, 00, 00);
+            //DateTime startDate = new DateTime(2019, 06, 05, 01, 00, 00);
 
-            //DateTime startDate = new DateTime(2020, 03, 11, 21, 29, 00);
+            DateTime startDate = new DateTime(2020, 11, 16, 00, 56, 00);
           //  localDataManager.SetHistoricalCityStats(new DateTime(2020, 03, 11));
 
             await BuildBlockChainFromDate(startDate);
@@ -200,7 +200,7 @@ namespace Upland.InformationProcessor
             }
 
             Property property = localDataManager.GetProperty(propId);
-            if (property != null)
+            if (property != null && property.Address != null && property.Address != "")
             {
                 property.Status = Status_Owned;
                 property.Owner = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.p14);
@@ -223,7 +223,7 @@ namespace Upland.InformationProcessor
 
             Property property = localDataManager.GetProperty(propId);
 
-            if (property != null)
+            if (property != null && property.Address != null && property.Address != "")
             {
                 property.Owner = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.a54);
                 property.Status = Status_Owned;
@@ -244,7 +244,7 @@ namespace Upland.InformationProcessor
 
             if(Regex.Match(action.act.data.p11, "^0.00 UP").Success)
             {
-                historyEntry.AmountFiat = double.Parse(action.act.data.p11.Split(" FI")[0]);
+                historyEntry.AmountFiat = double.Parse(action.act.data.p3.Split(" FI")[0]);
                 historyEntry.Amount = null;
             }
             else
@@ -255,7 +255,7 @@ namespace Upland.InformationProcessor
 
             Property property = localDataManager.GetProperty(historyEntry.PropId);
 
-            if (property != null)
+            if (property != null && property.Address != null && property.Address != "")
             {
                 localDataManager.UpsertSaleHistory(historyEntry);
                 property.Status = Status_ForSale;
@@ -269,7 +269,7 @@ namespace Upland.InformationProcessor
             long propId = long.Parse(action.act.data.a45);
 
             Property property = localDataManager.GetProperty(propId);
-            if (property == null)
+            if (property == null || property.Address == null || property.Address == "")
             {
                 return;
             }
@@ -331,16 +331,38 @@ namespace Upland.InformationProcessor
 
                 propOne.Owner = action.act.data.memo.Split("that Upland user ")[1].Split(" (EOS account ")[0];
                 propOne.Status = Status_Owned;
-                localDataManager.UpsertProperty(propOne);
+                if (propOne != null && propOne.Address != null && propOne.Address != "")
+                {
+                    localDataManager.UpsertProperty(propOne);
+                }
 
                 propTwo.Owner = action.act.data.memo.Split("and Upland user ")[1].Split(" (EOS account ")[0];
                 propTwo.Status = Status_Owned;
-                localDataManager.UpsertProperty(propTwo);
+                if (propTwo != null && propTwo.Address != null && propTwo.Address != "")
+                {
+                    localDataManager.UpsertProperty(propTwo);
+                }
 
                 localDataManager.UpsertEOSUser(action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0], propOne.Owner);
                 localDataManager.UpsertEOSUser(action.act.data.memo.Split("(EOS account ")[1].Split(") now owns ")[0], propTwo.Owner);
 
+
+
                 List<SaleHistoryEntry> allEntriesOne = localDataManager.GetSaleHistoryByPropertyId(propOne.Id);
+                List<SaleHistoryEntry> allEntriesTwo = localDataManager.GetSaleHistoryByPropertyId(propTwo.Id);
+
+                SaleHistoryEntry buyEntry = allEntriesTwo
+                    .Where(e => e.SellerEOS == null && e.Offer && e.BuyerEOS == action.act.data.memo.Split("(EOS account ")[1].Split(") now owns ")[0])
+                    .OrderByDescending(e => e.DateTime)
+                    .FirstOrDefault();
+
+                if (buyEntry != null)
+                {
+                    buyEntry.SellerEOS = action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0];
+                    buyEntry.Accepted = true;
+                    localDataManager.UpsertSaleHistory(buyEntry);
+                }
+
                 foreach (SaleHistoryEntry entry in allEntriesOne)
                 {
                     if (entry.BuyerEOS == null || entry.SellerEOS == null)
@@ -349,7 +371,6 @@ namespace Upland.InformationProcessor
                     }
                 }
 
-                List<SaleHistoryEntry> allEntriesTwo = localDataManager.GetSaleHistoryByPropertyId(propTwo.Id);
                 foreach (SaleHistoryEntry entry in allEntriesTwo)
                 {
                     if (entry.BuyerEOS == null || entry.SellerEOS == null)
@@ -361,7 +382,7 @@ namespace Upland.InformationProcessor
             else
             {
                 Property prop = localDataManager.GetPropertyByCityIdAndAddress(Consts.Cities.Where(c => c.Value == action.act.data.memo.Split(", ")[1]).First().Key, action.act.data.memo.Split(" owns ")[1].Split(", ")[0]);
-                if(prop.Id == 0)
+                if(prop == null || prop.Id == 0 || prop.Address == null || prop.Address == "")
                 {
                     return;
                 }
@@ -374,7 +395,7 @@ namespace Upland.InformationProcessor
 
                 List<SaleHistoryEntry> allEntries = localDataManager.GetSaleHistoryByPropertyId(prop.Id);
                 SaleHistoryEntry buyEntry = allEntries
-                    .Where(e => e.SellerEOS == null && e.Offer)
+                    .Where(e => e.SellerEOS == null && e.Offer && e.BuyerEOS == action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0])
                     .OrderByDescending(e => e.DateTime)
                     .FirstOrDefault();
 
@@ -434,7 +455,7 @@ namespace Upland.InformationProcessor
 
             localDataManager.UpsertEOSUser(action.act.data.a54, uplandUsername);
 
-            if (property != null)
+            if (property != null && property.Address != null && property.Address != "")
             {
                 property.Owner = uplandUsername;
                 property.Status = Status_Owned;
