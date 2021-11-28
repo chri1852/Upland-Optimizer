@@ -96,7 +96,7 @@ class Program
 
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
 
-        //await blockchainPropertySurfer.BuildBlockChainFromBegining();
+        await blockchainPropertySurfer.BuildBlockChainFromBegining();
     }
     
     
