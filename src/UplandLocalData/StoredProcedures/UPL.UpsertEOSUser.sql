@@ -19,6 +19,12 @@ BEGIN
 					@UplandUsername
 				)
 			END
+		ELSE
+			BEGIN
+				UPDATE [UPL].[EOSUser]
+				SET [UplandUsername] = @UplandUsername
+				WHERE [EOSAccount] = @EOSAccount
+			END
 	END TRY
 
 	BEGIN CATCH

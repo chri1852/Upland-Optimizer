@@ -165,18 +165,15 @@ namespace Upland.InformationProcessor
 
         private void ProcessBecomeUplanderAction(HistoryAction action)
         {
-            try
+            if (action.act.data.p53 == null || action.act.data.p52 == null)
             {
-                string uplandUsername = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.p52);
-
-                localDataManager.UpdateSaleHistoryVistorToUplander(action.act.data.p52, action.act.data.p53);
-
-                localDataManager.UpsertEOSUser(action.act.data.p53, uplandUsername);
+                return;
             }
-            catch
-            {
-                // Just Eat it
-            }
+            string uplandUsername = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.p52);
+
+            localDataManager.UpdateSaleHistoryVistorToUplander(action.act.data.p52, action.act.data.p53);
+
+            localDataManager.UpsertEOSUser(action.act.data.p53, uplandUsername);
         }
 
         private void ProcessBuyForFiatAction(HistoryAction action)
