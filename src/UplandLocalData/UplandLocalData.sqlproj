@@ -118,6 +118,7 @@
     <Build Include="StoredProcedures\UPL.GetEOSUserByEOSUsername.sql" />
     <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByBuyerEOS.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertiesByUplandUsername.sql" />
-    <Build Include="StoredProcedures\UpdateSaleHistoryVistorToUplander.sql" />
+    <Build Include="StoredProcedures\UPL.UpdateSaleHistoryVistorToUplander.sql" />
+    <Build Include="StoredProcedures\UPL.GetLastHistoricalCityStatusDate.sql" />
   </ItemGroup>
 </Project>

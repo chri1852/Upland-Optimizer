@@ -96,7 +96,9 @@ class Program
 
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
 
-        await blockchainPropertySurfer.BuildBlockChainFromBegining();
+        DateTime startDate = new DateTime(2021, 03, 08, 06, 18, 00);
+
+        await blockchainPropertySurfer.BuildBlockChainFromDate(startDate);
     }
     
     

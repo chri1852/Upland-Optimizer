@@ -1058,6 +1058,44 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public DateTime GetLastHistoricalCityStatusDate()
+        {
+            DateTime lastValue = DateTime.MinValue;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetLastHistoricalCityStatusDate]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            lastValue = (DateTime)reader["TimeStamp"];
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return lastValue;
+            }
+        }
+
         public List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
         {
             List<SaleHistoryEntry> saleHistoryEntries = new List<SaleHistoryEntry>();

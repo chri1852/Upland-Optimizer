@@ -32,24 +32,42 @@ namespace Upland.Types
 
         public static readonly Dictionary<int, string> Cities = new Dictionary<int, string>
         {
-            { 1    , "San Francisco" },
-            { 3    , "Manhattan"     },
-            { 4    , "Queens"        },
-            { 5    , "Fresno"        },
-            { 6    , "Brooklyn"      },
-            { 7    , "Oakland"       },
-            { 8    , "Staten Island" },
-            { 9    , "Bakersfield"   },
-            { 10   , "Chicago"       },
-            { 11   , "Cleveland"     },
-            { 12   , "Santa Clara"   },
-            { 13   , "Rutherford"    },
-            { 14   , "Kansas"        },
-            { 15   , "New Orleans"   },
-            { 16   , "Nashville"     },
-            { 10000, "New York"      },
-            { 10001, "Clovis"        },
-            { 10002, "Piedmont"      },
+            // Main Cities
+            { 1    , "San Francisco"  },
+            { 3    , "Manhattan"      },
+            { 4    , "Queens"         },
+            { 5    , "Fresno"         },
+            { 6    , "Brooklyn"       },
+            { 7    , "Oakland"        },
+            { 8    , "Staten Island"  },
+            { 9    , "Bakersfield"    },
+            { 10   , "Chicago"        },
+            { 11   , "Cleveland"      },
+            { 12   , "Santa Clara"    },
+            { 13   , "Rutherford"     },
+            { 14   , "Kansas"         },
+            { 15   , "New Orleans"    },
+            { 16   , "Nashville"      },
+
+            // NYC Sub Cities
+            { 17   , "New York"       },
+
+            // Fresno Sub Cities
+            { 18   , "Clovis"         },
+
+            // Oakland Sub Cities
+            { 19   , "Piedmont"       },
+
+            // Nashville Subcities
+            { 20   , "Joelton"        },
+            { 21   , "Goodlettsville" },
+            { 22   , "Ashland City"   },
+            { 23   , "Madison"        },
+            { 24   , "Old Hickory"    },
+            { 25   , "Hermitage"      },
+            { 26   , "Antioch"        },
+            { 27   , "Nolensville"    },
+            { 28   , "Whites Creek"   },
         };
 
         public static readonly int WarningRuns = 1;

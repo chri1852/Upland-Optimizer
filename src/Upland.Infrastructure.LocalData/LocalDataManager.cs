@@ -527,6 +527,11 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetUplandUserNameByEOSAccount(eosAccount);
         }
 
+        public DateTime GetLastHistoricalCityStatusDate()
+        {
+            return localDataRepository.GetLastHistoricalCityStatusDate();
+        }
+
         public void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS)
         {
             localDataRepository.UpdateSaleHistoryVistorToUplander(oldEOS, newEOS);

@@ -33,15 +33,21 @@ namespace Upland.InformationProcessor
             // Upland went live on the blockchain on 2019-06-06 11:51:37
             DateTime startDate = new DateTime(2019, 06, 05, 01, 00, 00);
 
-            //DateTime startDate = new DateTime(2020, 11, 16, 00, 56, 00);
-          //  localDataManager.SetHistoricalCityStats(new DateTime(2020, 03, 11));
-
             await BuildBlockChainFromDate(startDate);
         }
 
         public async Task BuildBlockChainFromDate(DateTime startDate)
         {
-            DateTime historyTimeStamp = new DateTime(startDate.Year, startDate.Month, startDate.Day);
+            DateTime historyTimeStamp = localDataManager.GetLastHistoricalCityStatusDate();
+
+            if(historyTimeStamp == DateTime.MinValue)
+            {
+                historyTimeStamp = new DateTime(startDate.Year, startDate.Month, startDate.Day);
+            }
+            else
+            {
+                historyTimeStamp = new DateTime(historyTimeStamp.Year, historyTimeStamp.Month, historyTimeStamp.Day);
+            }
 
             // Advance a day at a time, unless there are more props
             int minutesToMoveFoward = 1440;
@@ -55,7 +61,7 @@ namespace Upland.InformationProcessor
                 bool retry = true;
                 while (retry)
                 {
-                    Thread.Sleep(5000);
+                    Thread.Sleep(1000);
                     actions = await blockchainManager.GetPropertyActionsFromTime(startDate, minutesToMoveFoward);
                     if (actions != null)
                     {
@@ -101,7 +107,7 @@ namespace Upland.InformationProcessor
 
             foreach (HistoryAction action in actions)
             {
-                if (action.global_sequence < maxGlobalSequence )
+                if (action.global_sequence <= maxGlobalSequence )
                 {
                     // We've already processed this event
                     continue;
@@ -180,17 +186,28 @@ namespace Upland.InformationProcessor
         {
             long propId = long.Parse(action.act.data.a45);
             List<SaleHistoryEntry> allEntries = localDataManager.GetSaleHistoryByPropertyId(propId);
-            SaleHistoryEntry buyEntry = allEntries
+            List<SaleHistoryEntry> buyEntries = allEntries
                 .Where(e => e.BuyerEOS == null && !e.Offer && e.AmountFiat > 0)
-                .OrderByDescending(e => e.DateTime)
-                .First();
+                .OrderByDescending(e => e.DateTime).ToList();
 
-            buyEntry.BuyerEOS = action.act.data.p14;
-            localDataManager.UpsertSaleHistory(buyEntry);
+            if (buyEntries.Count == 0)
+            {
+                // For some reason got set, check to see if the buyer eos action type
+                buyEntries = allEntries
+                .Where(e => e.BuyerEOS == action.act.data.p14 && !e.Offer && e.AmountFiat > 0)
+                .OrderByDescending(e => e.DateTime).ToList();
+            }
+
+            if (buyEntries.Count > 0)
+            {
+                buyEntries.First().BuyerEOS = action.act.data.p14;
+                buyEntries.First().DateTime = action.timestamp;
+                localDataManager.UpsertSaleHistory(buyEntries.First());
+            }
 
             foreach (SaleHistoryEntry entry in allEntries)
             {
-                if (entry.Id != buyEntry.Id && (entry.BuyerEOS == null || entry.SellerEOS == null))
+                if (entry.Id != buyEntries.First().Id && (entry.BuyerEOS == null || entry.SellerEOS == null))
                 {
                     localDataManager.DeleteSaleHistoryById(entry.Id.Value);
                 }
@@ -282,6 +299,7 @@ namespace Upland.InformationProcessor
             }
 
             buyEntries.First().BuyerEOS = action.act.data.p14;
+            buyEntries.First().DateTime = action.timestamp;
             localDataManager.UpsertSaleHistory(buyEntries.First());
 
             foreach(SaleHistoryEntry entry in allEntries)
@@ -313,10 +331,10 @@ namespace Upland.InformationProcessor
 
                 if (Regex.Match(action.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                 {
-                    propOneCityId = Consts.Cities.Where(c => c.Value == action.act.data.memo.Split(", ")[1]).First().Key;
+                    propOneCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(", ")[1]);
                     propOneAddress = action.act.data.memo.Split(" owns ")[1].Split(", ")[0];
 
-                    propTwoCityId = Consts.Cities.Where(c => c.Value == action.act.data.memo.Split(", ")[3]).First().Key;
+                    propTwoCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(", ")[3]);
                     propTwoAddress = action.act.data.memo.Split(" owns ")[2].Split(", ")[0];
                 }
                 else
@@ -360,6 +378,7 @@ namespace Upland.InformationProcessor
                 {
                     buyEntry.SellerEOS = action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0];
                     buyEntry.Accepted = true;
+                    buyEntry.DateTime = action.timestamp;
                     localDataManager.UpsertSaleHistory(buyEntry);
                 }
 
@@ -381,7 +400,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                Property prop = localDataManager.GetPropertyByCityIdAndAddress(Consts.Cities.Where(c => c.Value == action.act.data.memo.Split(", ")[1]).First().Key, action.act.data.memo.Split(" owns ")[1].Split(", ")[0]);
+                Property prop = localDataManager.GetPropertyByCityIdAndAddress(HelperFunctions.GetCityIdByName(action.act.data.memo.Split(", ")[1]), action.act.data.memo.Split(" owns ")[1].Split(", ")[0]);
                 if(prop == null || prop.Id == 0 || prop.Address == null || prop.Address == "")
                 {
                     return;
@@ -403,6 +422,7 @@ namespace Upland.InformationProcessor
                 {
                     buyEntry.SellerEOS = action.act.data.p25;
                     buyEntry.Accepted = true;
+                    buyEntry.DateTime = action.timestamp;
                     localDataManager.UpsertSaleHistory(buyEntry);
                 }
 
