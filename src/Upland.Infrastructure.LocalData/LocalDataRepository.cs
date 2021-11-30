@@ -1096,6 +1096,44 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public DateTime GetLastSaleHistoryDateTime()
+        {
+            DateTime lastValue = DateTime.MinValue;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetLastSaleHistoryDateTime]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            lastValue = (DateTime)reader["DateTime"];
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return lastValue;
+            }
+        }
+
         public List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
         {
             List<SaleHistoryEntry> saleHistoryEntries = new List<SaleHistoryEntry>();
@@ -1535,6 +1573,35 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[DeleteSaleHistoryById]";
                     sqlCmd.Parameters.Add(new SqlParameter("Id", id));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void DeleteSaleHistoryByPropertyId(long propertyId)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[DeleteSaleHistoryByPropertyId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("PropertyId", propertyId));
 
                     sqlCmd.ExecuteNonQuery();
                 }

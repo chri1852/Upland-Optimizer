@@ -88,11 +88,16 @@ namespace Upland.Infrastructure.LocalData
                                 property = allCityProperties[prop.Prop_Id];
                             }
 
-                            // Lets Just update the status and FSA
-                            property.Status = prop.status;
-                            property.FSA = prop.labels.fsa_allow;
-                            localDataRepository.UpsertProperty(property);
-                            loadedProps.Add(prop.Prop_Id);
+                            if (prop.status == "Locked")
+                            {
+                                // Lets Just update the status and FSA
+                                property.Status = prop.status;
+                                property.FSA = prop.labels.fsa_allow;
+                                property.Owner = null;
+                                localDataRepository.UpsertProperty(property);
+                                localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
+                                loadedProps.Add(prop.Prop_Id);
+                            }
                         }
                     }
                 }
@@ -532,6 +537,11 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetLastHistoricalCityStatusDate();
         }
 
+        public DateTime GetLastSaleHistoryDateTime()
+        {
+            return localDataRepository.GetLastSaleHistoryDateTime();
+        }
+
         public void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS)
         {
             localDataRepository.UpdateSaleHistoryVistorToUplander(oldEOS, newEOS);
@@ -560,6 +570,11 @@ namespace Upland.Infrastructure.LocalData
         public void DeleteSaleHistoryById(int id)
         {
             localDataRepository.DeleteSaleHistoryById(id);
+        }
+
+        public void DeleteSaleHistoryByPropertyId(long propertyId)
+        {
+            localDataRepository.DeleteSaleHistoryByPropertyId(propertyId);
         }
 
         public void DeleteOptimizerRuns(decimal discordUserId)

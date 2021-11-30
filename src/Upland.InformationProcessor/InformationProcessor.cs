@@ -1484,30 +1484,20 @@ namespace Upland.InformationProcessor
             }
         }
 
-        public async Task RunCityStatusUpdate(bool allCities)
+        public async Task RunCityStatusUpdate()
         {
             List<CollatedStatsObject> cityStats = localDataManager.GetCityStats();
 
             foreach (int cityId in Consts.Cities.Keys)
             {
                 // Don't process the bullshit cities
-                if(cityId >= 10000)
+                if(cityId >= 17)
                 {
                     continue;
-                }
-
-                // Skip sold out if allCities is not true
-                if(!allCities)
-                {
-                    if (cityStats.Where(c => c.Id == cityId).First().PercentMinted >= 100)
-                    {
-                        continue;
-                    }
                 }
                 
                 List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
                 await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId, false);
-                localDataManager.DetermineNeighborhoodIdsForCity(cityId);
             }
         }
 

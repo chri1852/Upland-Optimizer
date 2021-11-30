@@ -6,10 +6,6 @@ namespace Upland.Types
 {
     public static class Consts
     {
-        // Windows DB
-        //public static readonly string LocalDBConnectionString = @"Data Source=DESKTOP-BK6KAFH\SQLEXPRESS;Initial Catalog=UplandLocalData;Integrated Security=True;";
-        //public static readonly string LocalDBConnectionString = @"Data Source=localhost;Initial Catalog=UplandLocalData;User Id= SA;Password=G0dDamnInternet;";
-
         // Config Values
         public static readonly string CONFIG_MAXGLOBALSEQUENCE = "MaxGlobalSequence";
 

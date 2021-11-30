@@ -28,6 +28,13 @@ namespace Upland.InformationProcessor
             blockchainManager = new BlockchainManager();
         }
 
+        public async Task RunBlockChainUpdate()
+        {
+            DateTime lastSaleUpdate = localDataManager.GetLastSaleHistoryDateTime();
+
+            await BuildBlockChainFromDate(lastSaleUpdate);
+        }
+
         public async Task BuildBlockChainFromBegining()
         {
             // Upland went live on the blockchain on 2019-06-06 11:51:37

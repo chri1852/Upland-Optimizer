@@ -115,10 +115,12 @@
     <Build Include="Tables\UPL.HistoricalCityStatus.sql" />
     <Build Include="StoredProcedures\UPL.CreateHistoricalCityStatus.sql" />
     <Build Include="StoredProcedures\UPL.GetHistoricalCityStatusByCityId.sql" />
-    <Build Include="StoredProcedures\UPL.GetEOSUserByEOSUsername.sql" />
+    <Build Include="StoredProcedures\UPL.GetEOSUserByEOSAccount.sql" />
     <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByBuyerEOS.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertiesByUplandUsername.sql" />
     <Build Include="StoredProcedures\UPL.UpdateSaleHistoryVistorToUplander.sql" />
     <Build Include="StoredProcedures\UPL.GetLastHistoricalCityStatusDate.sql" />
+    <Build Include="StoredProcedures\UPL.GetLastSaleHistoryDateTime.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByPropertyId.sql" />
   </ItemGroup>
 </Project>

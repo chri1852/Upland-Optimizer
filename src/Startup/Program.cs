@@ -6,14 +6,14 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Upland.InformationProcessor;
+using System.Collections.Generic;
 using System.Timers;
 using System.Text.Json;
 
-
+/*
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
-using System.Collections.Generic;
 using System.IO;
 using Upland.Types.Types;
 using System.Linq;
@@ -22,7 +22,7 @@ using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types.UplandApiTypes;
-
+*/
 
 class Program
 {
@@ -30,8 +30,11 @@ class Program
     private CommandService _commands;
     private IServiceProvider _services;
     private InformationProcessor _informationProcessor;
+    private BlockchainPropertySurfer _blockchainPropertySurfer;
     private Timer _refreshTimer;
+    private Timer _blockchainUpdateTimer;
 
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -98,12 +101,12 @@ class Program
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
 
 
-        DateTime startDate = new DateTime(2021, 03, 08, 06, 18, 00);
+        DateTime startDate = new DateTime(2021, 03, 13, 17, 05, 00);
 
         await blockchainPropertySurfer.BuildBlockChainFromDate(startDate);
     }
-    
-    
+    */
+
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
     
@@ -113,6 +116,7 @@ class Program
         _client = new DiscordSocketClient();
         _commands = new CommandService();
         _informationProcessor = new InformationProcessor();
+        _blockchainPropertySurfer = new BlockchainPropertySurfer();
 
         _services = new ServiceCollection()
             .AddSingleton(_informationProcessor)
@@ -125,6 +129,7 @@ class Program
         _client.Log += clientLog;
 
         InitializeRefreshTimer();
+        InitializeBlockchainUpdateTimer();
 
         await RegisterCommandsAsync();
 
@@ -243,9 +248,23 @@ class Program
         _refreshTimer.Start();
     }
 
+    private void InitializeBlockchainUpdateTimer()
+    {
+        _blockchainUpdateTimer = new Timer();
+        _blockchainUpdateTimer.Elapsed += (sender, e) =>
+        {
+            Task child = Task.Factory.StartNew(async () =>
+            {
+                await _blockchainPropertySurfer.RunBlockChainUpdate();
+            });
+        };
+        _blockchainUpdateTimer.Interval = 30000;
+        _blockchainUpdateTimer.Start();
+    }
+
     private async Task RunRefreshActions()
     {
-        DateTime time = DateTime.Now;
+        DateTime time = DateTime.UtcNow;
         if (time.Hour == 0) 
         {
             InformationProcessor informationProcessor = new InformationProcessor();
@@ -268,7 +287,7 @@ class Program
                 try
                 {
                     Console.WriteLine(string.Format("{0}: Refreshing All Cities", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                    await informationProcessor.RunCityStatusUpdate(true);
+                    await informationProcessor.RunCityStatusUpdate();
                     Console.WriteLine(string.Format("{0}: Refreshing All Cities Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
                 }
                 catch (Exception ex)
@@ -276,19 +295,8 @@ class Program
                     Console.WriteLine(string.Format("{0}: Refreshing All Cities Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
                 }
             }
-            else
-            {
-                try
-                {
-                    Console.WriteLine(string.Format("{0}: Refreshing Non Sold Out Cities", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                    await informationProcessor.RunCityStatusUpdate(false);
-                    Console.WriteLine(string.Format("{0}: Refreshing Non Sold Out Cities Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(string.Format("{0}: Refreshing Non Sold Out Cities Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
-                }
-            }
         }
     }
+
+
 }
