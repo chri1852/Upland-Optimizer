@@ -42,6 +42,29 @@ namespace Upland.InformationProcessor
             }
         }
 
+        public static string TranslateUserLevel(int userLevel)
+        {
+            switch (userLevel)
+            {
+                case 0: 
+                    return "Visitor";
+                case 1: 
+                    return "Uplander";
+                case 2:
+                    return "Pro";
+                case 3:
+                    return "Director";
+                case 4:
+                    return "Executive";
+                case 5:
+                    return "Chief Executive";
+                case -1:
+                    return "All";
+                default:
+                    return "Unknown";
+            }
+        }
+
         public static List<double> GetCityAreaCoordinates(int cityId)
         {
             // N, S, E, W
@@ -196,6 +219,37 @@ namespace Upland.InformationProcessor
         public static string CreateCollatedStatCSVString(CollatedStatsObject statObject)
         {
             return string.Format("{0},{1},{2},{3},{4},{5},{6:F2},{7:F2}", statObject.TotalProps, statObject.LockedProps, statObject.UnlockedNonFSAProps, statObject.UnlockedFSAProps, statObject.ForSaleProps, statObject.OwnedProps, statObject.PercentMinted, statObject.PercentNonFSAMinted);
+        }
+
+        public static int GetCityIdByName(string cityName)
+        {
+            // Since the sub cities get wrapped up to the main city we need to do some finagaling
+            if(Consts.Cities.Where(c => c.Value.ToUpper() == cityName.ToUpper()).ToList().Count == 0)
+            {
+                throw new Exception("Unknow City Detected");
+            }
+
+            int cityId = Consts.Cities.Where(c => c.Value.ToUpper() == cityName.ToUpper()).First().Key;
+
+            switch(cityId)
+            {
+                case 18:
+                    return 5; // Fresno
+                case 19:
+                    return 7; // Oakland
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                case 25:
+                case 26:
+                case 27:
+                case 28:
+                    return 16; // Nashville
+                default:
+                    return cityId;
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Upland.Types.Types;
@@ -64,6 +65,21 @@ namespace Upland.Infrastructure.UplandApi
         public async Task<List<Decoration>> GetDecorationsByUsername(string userName)
         {
             return UplandMapper.MapDecorations(await _uplandApiRepository.GetDecorationsByUserName(userName));
+        }
+
+        public async Task<UplandUserProfile> GetUplandUserProfile(string userName)
+        {
+            UplandUserProfile profile = await _uplandApiRepository.GetProfileByUsername(userName);
+
+            profile.username = userName;
+            profile.propertyList = profile.properties.Select(p => p.property_id).ToList();
+
+            return profile;
+        }
+
+        public async Task<UplandProperty> GetUplandPropertyById(long Id)
+        {
+            return await _uplandApiRepository.GetPropertyById(Id);
         }
 
         private async Task RefreshCache(int cityId)

@@ -18,7 +18,7 @@ namespace Upland.Types
         public decimal? Longitude { get; set; }
         public string? Status { get; set; }
         public bool FSA { get; set; }
-
+        public string Owner { get; set; }
         public bool Equals(Property other)
         {
             return other.Id == this.Id;

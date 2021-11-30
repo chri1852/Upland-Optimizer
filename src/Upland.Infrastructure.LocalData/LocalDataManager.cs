@@ -14,10 +14,12 @@ namespace Upland.Infrastructure.LocalData
     public class LocalDataManager
     {
         private UplandApiRepository uplandApiRepository;
+        private LocalDataRepository localDataRepository;
 
         public LocalDataManager()
         {
             uplandApiRepository = new UplandApiRepository();
+            localDataRepository = new LocalDataRepository();
         }
 
         public async Task PopulateAllPropertiesInArea(double north, double south, double east, double west, int cityId, bool fullPropertyRetrieve)
@@ -26,8 +28,9 @@ namespace Upland.Infrastructure.LocalData
             List<long> loadedProps = new List<long>();
             List<long> ignoreIds = new List<long>();
             Dictionary<long, Property> allCityProperties = new Dictionary<long, Property>();
+            List<Neighborhood> neighborhoods = GetNeighborhoods();
 
-            allCityProperties = LocalDataRepository.GetPropertiesByCityId(cityId).Where(p => p.Latitude.HasValue).ToDictionary(p => p.Id, p => p);
+            allCityProperties = localDataRepository.GetPropertiesByCityId(cityId).Where(p => p.Latitude.HasValue).ToDictionary(p => p.Id, p => p);
 
             double defaultStep = 0.005;
             int totalprops = 0;
@@ -51,7 +54,9 @@ namespace Upland.Infrastructure.LocalData
                             try
                             {
                                 Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
-                                LocalDataRepository.UpsertProperty(property);
+                                property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+
+                                localDataRepository.UpsertProperty(property);
                                 loadedProps.Add(prop.Prop_Id);
                             }
                             catch
@@ -67,7 +72,7 @@ namespace Upland.Infrastructure.LocalData
                             if (!allCityProperties.ContainsKey(prop.Prop_Id))
                             {
                                 // check to make sure it is not under another city
-                                List<Property> checkProps = LocalDataRepository.GetProperties(new List<long> { prop.Prop_Id });
+                                List<Property> checkProps = localDataRepository.GetProperties(new List<long> { prop.Prop_Id });
                                 if(checkProps.Count > 0)
                                 {
                                     property = checkProps[0];
@@ -75,6 +80,7 @@ namespace Upland.Infrastructure.LocalData
                                 else
                                 {
                                     property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                    property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
                                 }
                             }
                             else
@@ -85,7 +91,7 @@ namespace Upland.Infrastructure.LocalData
                             // Lets Just update the status and FSA
                             property.Status = prop.status;
                             property.FSA = prop.labels.fsa_allow;
-                            LocalDataRepository.UpsertProperty(property);
+                            localDataRepository.UpsertProperty(property);
                             loadedProps.Add(prop.Prop_Id);
                         }
                     }
@@ -94,11 +100,24 @@ namespace Upland.Infrastructure.LocalData
 
             while (retryIds.Count > 0)
             {
-                retryIds = await RetryPopulate(retryIds);
+                retryIds = await RetryPopulate(retryIds, neighborhoods);
             }
         }
 
-        private async Task<List<long>> RetryPopulate(List<long> retryIds)
+        private int GetNeighborhoodIdForProp(List<Neighborhood> neighborhoods, Property property)
+        {
+            foreach (Neighborhood neighborhood in neighborhoods)
+            {
+                if (IsPropertyInNeighborhood(neighborhood, property))
+                {
+                    return neighborhood.Id;
+                }
+            }
+
+            return -1;
+        }
+
+        private async Task<List<long>> RetryPopulate(List<long> retryIds, List<Neighborhood> neighborhoods)
         {
             List<long> nextRetryIds = new List<long>();
 
@@ -107,7 +126,9 @@ namespace Upland.Infrastructure.LocalData
                 try
                 {
                     Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(Id));
-                    LocalDataRepository.UpsertProperty(property);
+                    property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+
+                    localDataRepository.UpsertProperty(property);
                 }
                 catch
                 {
@@ -118,10 +139,11 @@ namespace Upland.Infrastructure.LocalData
             return nextRetryIds;
         }
 
-        public async Task PopulateIndividualPropertyById(long propertyId)
+        public async Task PopulateIndividualPropertyById(long propertyId, List<Neighborhood> neighborhoods)
         {
             Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propertyId));
-            LocalDataRepository.UpsertProperty(property);
+            property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+            localDataRepository.UpsertProperty(property);
         }
 
         public async Task PopulateNeighborhoods()
@@ -147,7 +169,7 @@ namespace Upland.Infrastructure.LocalData
                         neighborhood.Coordinates = JsonSerializer.Deserialize<List<List<List<List<double>>>>>(neighborhood.Boundaries.Coordinates.ToString());
                     }
 
-                    LocalDataRepository.CreateNeighborhood(neighborhood);
+                    localDataRepository.CreateNeighborhood(neighborhood);
                 }
             }
         }
@@ -171,7 +193,7 @@ namespace Upland.Infrastructure.LocalData
                                 street.Type = "None";
                             }
 
-                            LocalDataRepository.CreateStreet(street);
+                            localDataRepository.CreateStreet(street);
                         }
                     }
                     catch
@@ -190,8 +212,8 @@ namespace Upland.Infrastructure.LocalData
             foreach (Collection collection in collections)
             {
                 if (!existingCollections.Any(c => c.Id == collection.Id))
-                { 
-                    LocalDataRepository.CreateCollection(collection);
+                {
+                    localDataRepository.CreateCollection(collection);
                 }
 
                 if (!Consts.StandardCollectionIds.Contains(collection.Id) && !collection.IsCityCollection)
@@ -203,32 +225,16 @@ namespace Upland.Infrastructure.LocalData
 
                     if (!existingCollections.Any(c => c.Id == collection.Id))
                     {
-                        LocalDataRepository.CreateCollectionProperties(collection.Id, propIds);
+                        localDataRepository.CreateCollectionProperties(collection.Id, propIds);
                     }
                     else
                     {
                         List<long> newPropIds = propIds.Where(p => !existingCollections.Where(c => c.Id == collection.Id).First().MatchingPropertyIds.Contains(p)).ToList();
                         if (newPropIds.Count > 0)
                         {
-                            LocalDataRepository.CreateCollectionProperties(collection.Id, newPropIds);
+                            localDataRepository.CreateCollectionProperties(collection.Id, newPropIds);
                         }
                     }
-                }
-            }
-        }
-
-        public async Task PopulationCollectionPropertyData(int collectionId)
-        {
-            Collection collection = GetCollections().Where(c => c.Id == collectionId).First();
-
-            List<Property> existingCollectionProperties = GetPropertiesByCollectionId(collection.Id);
-
-            foreach (long propId in collection.MatchingPropertyIds)
-            {
-                if (!existingCollectionProperties.Any(p => p.Id == propId))
-                {
-                    Property prop = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propId));
-                    LocalDataRepository.UpsertProperty(prop);
                 }
             }
         }
@@ -236,7 +242,7 @@ namespace Upland.Infrastructure.LocalData
         public void DetermineNeighborhoodIdsForCity(int cityId)
         {
             List<Neighborhood> neighborhoods = GetNeighborhoods();
-            List<Property> properties = LocalDataRepository.GetPropertiesByCityId(cityId);
+            List<Property> properties = localDataRepository.GetPropertiesByCityId(cityId);
 
             neighborhoods = neighborhoods.Where(n => n.CityId == cityId).ToList();
             properties = properties.Where(p => p.NeighborhoodId == null && p.Latitude != null).ToList();
@@ -253,7 +259,7 @@ namespace Upland.Infrastructure.LocalData
                     if (IsPropertyInNeighborhood(neighborhood, prop))
                     {
                         prop.NeighborhoodId = neighborhood.Id;
-                        LocalDataRepository.UpsertProperty(prop);
+                        localDataRepository.UpsertProperty(prop);
                         break;
                     }
                 }
@@ -303,57 +309,43 @@ namespace Upland.Infrastructure.LocalData
             return oddNodes;
         }
 
-        public async Task PopulateCollectionPropertiesByCityId(int cityId)
+        public Property GetProperty(long id)
         {
-            List<Collection> collections = LocalDataRepository.GetCollections();
-            collections = collections.Where(c => c.CityId == cityId && c.Category > 1).ToList();
-            List<long> retryIds = new List<long>();
-
-            foreach(Collection collection in collections)
-            {
-                List<Property> properties = LocalDataRepository.GetPropertiesByCollectionId(collection.Id);
-                foreach(Property property in properties)
-                {
-                    try
-                    {
-                        LocalDataRepository.UpsertProperty(UplandMapper.Map(await uplandApiRepository.GetPropertyById(property.Id)));
-                    }
-                    catch
-                    {
-                        retryIds.Add(property.Id);
-                    }
-                }
-            }
-
-            while (retryIds.Count > 0)
-            {
-                retryIds = await RetryPopulate(retryIds);
-            }
+            return localDataRepository.GetProperty(id);
         }
-
 
         public List<long> GetPropertyIdsByCollectionId(int collectionId)
         {
-            return LocalDataRepository.GetCollectionPropertyIds(collectionId);
+            return localDataRepository.GetCollectionPropertyIds(collectionId);
+        }
+
+        public List<Property> GetPropertiesByUplandUsername(string uplandUsername)
+        {
+            return localDataRepository.GetPropertiesByUplandUsername(uplandUsername);
         }
 
         public List<Property> GetPropertiesByCityId(int cityId)
         {
-            return LocalDataRepository.GetPropertiesByCityId(cityId);
+            return localDataRepository.GetPropertiesByCityId(cityId);
+        }
+
+        public Property GetPropertyByCityIdAndAddress(int cityId, string address)
+        {
+            return localDataRepository.GetPropertyByCityIdAndAddress(cityId, address);
         }
 
         public List<Property> GetPropertiesByCollectionId(int collectionId)
         {
-            return LocalDataRepository.GetPropertiesByCollectionId(collectionId);
+            return localDataRepository.GetPropertiesByCollectionId(collectionId);
         }
 
         public List<Collection> GetCollections()
         {
-            List<Collection> collections = LocalDataRepository.GetCollections();
+            List<Collection> collections = localDataRepository.GetCollections();
 
             foreach (Collection collection in collections)
             {
-                collection.MatchingPropertyIds = LocalDataRepository.GetCollectionPropertyIds(collection.Id);
+                collection.MatchingPropertyIds = localDataRepository.GetCollectionPropertyIds(collection.Id);
             }
 
             return collections;
@@ -363,17 +355,7 @@ namespace Upland.Infrastructure.LocalData
         {
             List<UplandAuthProperty> userPropIds = await uplandApiRepository.GetPropertysByUsername(username);
 
-            List<Property> userProperties = LocalDataRepository.GetProperties(userPropIds.Select(p => p.Prop_Id).ToList());
-
-            foreach (UplandAuthProperty propId in userPropIds)
-            {
-                if (!userProperties.Any(p => p.Id == propId.Prop_Id))
-                {
-                    Property prop = UplandMapper.Map(await uplandApiRepository.GetPropertyById(propId.Prop_Id));
-                    LocalDataRepository.UpsertProperty(prop);
-                    userProperties.Add(prop);
-                }
-            }
+            List<Property> userProperties = localDataRepository.GetProperties(userPropIds.Select(p => p.Prop_Id).ToList());
 
             return userProperties;
         }
@@ -381,7 +363,7 @@ namespace Upland.Infrastructure.LocalData
         public List<Street> SearchStreets(string name)
         {
             name = name.ToUpper();
-            List<Street> streets = LocalDataRepository.GetStreets();
+            List<Street> streets = localDataRepository.GetStreets();
             List<Street> matches = new List<Street>();
 
             foreach (Street street in streets)
@@ -395,24 +377,38 @@ namespace Upland.Infrastructure.LocalData
             return matches;
         }
 
+        public void SetHistoricalCityStats(DateTime timeStamp)
+        {
+            List<CollatedStatsObject> cityStats = GetCityStats();
+
+            foreach(CollatedStatsObject stat in cityStats)
+            {
+                if (stat.PercentMinted > 0)
+                {
+                    stat.TimeStamp = timeStamp;
+                    localDataRepository.CreateHistoricalCityStatus(stat);
+                }
+            }
+        }
+
         public List<CollatedStatsObject> GetCityStats()
         {
-            return CollateStats(LocalDataRepository.GetCityStats());
+            return CollateStats(localDataRepository.GetCityStats());
         }
 
         public List<CollatedStatsObject> GetNeighborhoodStats()
         {
-            return CollateStats(LocalDataRepository.GetNeighborhoodStats());
+            return CollateStats(localDataRepository.GetNeighborhoodStats());
         }
 
         public List<CollatedStatsObject> GetStreetStats()
         {
-            return CollateStats(LocalDataRepository.GetStreetStats());
+            return CollateStats(localDataRepository.GetStreetStats());
         }
 
         public List<CollatedStatsObject> GetCollectionStats()
         {
-            return CollateStats(LocalDataRepository.GetCollectionStats());
+            return CollateStats(localDataRepository.GetCollectionStats());
         }
 
         private List<CollatedStatsObject> CollateStats(List<StatsObject> rawStats)
@@ -473,87 +469,147 @@ namespace Upland.Infrastructure.LocalData
 
         public void CreateOptimizationRun(OptimizationRun optimizationRun)
         {
-            LocalDataRepository.CreateOptimizationRun(optimizationRun);
+            localDataRepository.CreateOptimizationRun(optimizationRun);
         }
 
         public void CreateNeighborhood(Neighborhood neighborhood)
         {
-            LocalDataRepository.CreateNeighborhood(neighborhood);
+            localDataRepository.CreateNeighborhood(neighborhood);
         }
 
         public void CreateStreet(Street street)
         {
-            LocalDataRepository.CreateStreet(street);
+            localDataRepository.CreateStreet(street);
         }
 
         public List<Neighborhood> GetNeighborhoods()
         {
-            return LocalDataRepository.GetNeighborhoods();
+            return localDataRepository.GetNeighborhoods();
         }
 
         public List<Street> GetStreets()
         {
-            return LocalDataRepository.GetStreets();
+            return localDataRepository.GetStreets();
         }
 
         public void SetOptimizationRunStatus(OptimizationRun optimizationRun)
         {
-            LocalDataRepository.SetOptimizationRunStatus(optimizationRun);
+            localDataRepository.SetOptimizationRunStatus(optimizationRun);
         }
 
         public OptimizationRun GetLatestOptimizationRun(decimal discordUserId)
         {
-            return LocalDataRepository.GetLatestOptimizationRun(discordUserId);
+            return localDataRepository.GetLatestOptimizationRun(discordUserId);
         }
 
         public RegisteredUser GetRegisteredUser(decimal discordUserId)
         {
-            return LocalDataRepository.GetRegisteredUser(discordUserId);
+            return localDataRepository.GetRegisteredUser(discordUserId);
+        }
+
+        public List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
+        {
+            return localDataRepository.GetSaleHistoryByPropertyId(propertyId);
+        }
+
+        public List<CollatedStatsObject> GetHistoricalCityStatsByCityId(int cityId)
+        {
+            return localDataRepository.GetHistoricalCityStatusByCityId(cityId);
+        }
+
+        public string GetConfigurationValue(string name)
+        {
+            return localDataRepository.GetConfigurationValue(name);
+        }
+
+        public string GetUplandUsernameByEOSAccount(string eosAccount)
+        {
+            return localDataRepository.GetUplandUserNameByEOSAccount(eosAccount);
+        }
+
+        public DateTime GetLastHistoricalCityStatusDate()
+        {
+            return localDataRepository.GetLastHistoricalCityStatusDate();
+        }
+
+        public void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS)
+        {
+            localDataRepository.UpdateSaleHistoryVistorToUplander(oldEOS, newEOS);
+        }
+
+        public void DeleteSaleHistoryByBuyerEOSAccount(string eosAccount)
+        {
+            localDataRepository.DeleteSaleHistoryByBuyerEOS(eosAccount);
         }
 
         public void CreateRegisteredUser(RegisteredUser registeredUser)
         {
-            LocalDataRepository.CreateRegisteredUser(registeredUser);
+            localDataRepository.CreateRegisteredUser(registeredUser);
         }
 
         public void IncreaseRegisteredUserRunCount(decimal discordUserId)
         {
-            LocalDataRepository.IncreaseRegisteredUserRunCount(discordUserId);
+            localDataRepository.IncreaseRegisteredUserRunCount(discordUserId);
         }
 
         public void DeleteRegisteredUser(decimal discordUserId)
         {
-            LocalDataRepository.DeleteRegisteredUser(discordUserId);
+            localDataRepository.DeleteRegisteredUser(discordUserId);
+        }
+
+        public void DeleteSaleHistoryById(int id)
+        {
+            localDataRepository.DeleteSaleHistoryById(id);
         }
 
         public void DeleteOptimizerRuns(decimal discordUserId)
         {
-            LocalDataRepository.DeleteOptimizerRuns(discordUserId);
+            localDataRepository.DeleteOptimizerRuns(discordUserId);
         }
 
         public void SetRegisteredUserVerified(decimal discordUserId)
         {
-            LocalDataRepository.SetRegisteredUserVerified(discordUserId);
+            localDataRepository.SetRegisteredUserVerified(discordUserId);
         }
 
         public void SetRegisteredUserPaid(string uplandUsername)
         {
-            LocalDataRepository.SetRegisteredUserPaid(uplandUsername);
+            localDataRepository.SetRegisteredUserPaid(uplandUsername);
         }
 
         public void TruncatePropertyStructure()
         {
-            LocalDataRepository.TruncatePropertyStructure();
+            localDataRepository.TruncatePropertyStructure();
         }
 
         public void CreatePropertyStructure(PropertyStructure propertyStructure)
         {
-            LocalDataRepository.CreatePropertyStructure(propertyStructure);
+            localDataRepository.CreatePropertyStructure(propertyStructure);
         }
 
         public List<PropertyStructure> GetPropertyStructures()
         {
-            return LocalDataRepository.GetPropertyStructures();
+            return localDataRepository.GetPropertyStructures();
+        }
+
+        public void UpsertEOSUser(string eosAccount, string uplandUsername)
+        {
+            localDataRepository.UpsertEOSUser(eosAccount, uplandUsername);
+        }
+
+        public void UpsertSaleHistory(SaleHistoryEntry saleHistory)
+        {
+            localDataRepository.UpsertSaleHistory(saleHistory);
+        }
+
+        public void UpsertConfigurationValue(string name, string value)
+        {
+            localDataRepository.UpsertConfigurationValue(name, value);
+        }
+
+        public void UpsertProperty(Property property)
+        {
+            localDataRepository.UpsertProperty(property);
         }
     }
 }

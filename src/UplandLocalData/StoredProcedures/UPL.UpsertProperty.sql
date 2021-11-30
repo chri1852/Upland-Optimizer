@@ -9,8 +9,9 @@
 	@NeighborhoodId  INT = NULL,
 	@Latitude        DECIMAL(19,16),
 	@Longitude       DECIMAL(19,16),
-	@Status          VARCHAR(25) = NULL,
-	@FSA             BIT = 0
+	@Status          VARCHAR(25),
+	@FSA             BIT,
+	@Owner           VARCHAR(50) = NULL
 )
 AS
 BEGIN
@@ -28,7 +29,8 @@ BEGIN
 					[Latitude] = @Latitude,
 					[Longitude] = @Longitude,
 					[Status] = @Status,
-					[FSA] = @FSA
+					[FSA] = @FSA,
+					[Owner] = @Owner
 				WHERE [Id] = @Id
 			END
 		ELSE
@@ -45,7 +47,8 @@ BEGIN
 					[Latitude],
 					[Longitude],
 					[Status],
-					[FSA]
+					[FSA],
+					[Owner]
 				)
 				Values
 				(
@@ -59,7 +62,8 @@ BEGIN
 					@Latitude,
 					@Longitude,
 					@Status,
-					@FSA
+					@FSA,
+					@Owner
 				)
 			END
 	END TRY

@@ -69,6 +69,7 @@ namespace Upland.Infrastructure.UplandApi
             property.Longitude = udProperty.CenterLng;
             property.Status = udProperty.status;
             property.FSA = udProperty.labels.fsa_allow;
+            property.Owner = udProperty.owner_username;
 
             return property;
         }

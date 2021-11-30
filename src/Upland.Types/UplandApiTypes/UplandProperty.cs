@@ -17,6 +17,8 @@ namespace Upland.Types.UplandApiTypes
         public decimal CenterLng { get; set; }
         public string status { get; set; }
         public uplandLabels labels { get; set; }
+        public string owner_username { get; set; }
+        public UplandBuilding building { get; set; }
     }
 
     public class LocationInfo
@@ -32,5 +34,22 @@ namespace Upland.Types.UplandApiTypes
     public class uplandLabels
     {
         public bool fsa_allow { get; set; }
+    }
+
+    public class UplandBuilding
+    {
+        public string constructionStatus { get; set; }
+        public int propModelID { get; set; }
+        public int nftID { get; set; }
+        public UplandBuildingConstruction construction { get; set; }
+    }
+
+    public class UplandBuildingConstruction
+    {
+        public double stackedSparks { get; set; }
+        public int totalSparksRequired { get; set; }
+        public double progressInSparks { get; set; }
+        public DateTime startedAt { get; set; }
+        public DateTime finishedAt { get; set; }
     }
 }

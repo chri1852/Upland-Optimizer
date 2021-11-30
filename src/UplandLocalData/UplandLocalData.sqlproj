@@ -71,7 +71,6 @@
     <Build Include="StoredProcedures\UPL.CreateCollectionProperties.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertyIdsForCollectionId.sql" />
     <Build Include="Tables\UPL.Property.sql" />
-    <Build Include="StoredProcedures\UPL.CreateProperty.sql" />
     <Build Include="StoredProcedures\UPL.GetProperties.sql" />
     <Build Include="StoredProcedures\UPL.GetCollections.sql" />
     <Build Include="Tables\UPL.OptimizationRun.sql" />
@@ -103,5 +102,23 @@
     <Build Include="StoredProcedures\UPL.CreateStreet.sql" />
     <Build Include="StoredProcedures\UPL.GetStreets.sql" />
     <Build Include="StoredProcedures\UPL.GetStreetStats.sql" />
+    <Build Include="Tables\UPL.EOSUser.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertEOSUser.sql" />
+    <Build Include="Tables\UPL.SaleHistory.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertSaleHistory.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteSaleHistoryById.sql" />
+    <Build Include="StoredProcedures\UPL.GetSaleHistoryByPropertyId.sql" />
+    <Build Include="Tables\UPL.ConfigurationValues.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertConfigurationValue.sql" />
+    <Build Include="StoredProcedures\UPL.GetConfigurationValue.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertyByCityIdAndAddress.sql" />
+    <Build Include="Tables\UPL.HistoricalCityStatus.sql" />
+    <Build Include="StoredProcedures\UPL.CreateHistoricalCityStatus.sql" />
+    <Build Include="StoredProcedures\UPL.GetHistoricalCityStatusByCityId.sql" />
+    <Build Include="StoredProcedures\UPL.GetEOSUserByEOSUsername.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByBuyerEOS.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertiesByUplandUsername.sql" />
+    <Build Include="StoredProcedures\UPL.UpdateSaleHistoryVistorToUplander.sql" />
+    <Build Include="StoredProcedures\UPL.GetLastHistoricalCityStatusDate.sql" />
   </ItemGroup>
 </Project>

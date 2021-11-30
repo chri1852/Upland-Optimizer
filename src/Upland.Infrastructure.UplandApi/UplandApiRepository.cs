@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Upland.Types;
+using Newtonsoft.Json;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
@@ -23,7 +23,7 @@ namespace Upland.Infrastructure.UplandApi
             this.authHttpClient = new HttpClient();
             this.authHttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             this.authHttpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
-            this.authHttpClient.DefaultRequestHeaders.Add("Authorization", Consts.AuthToken);
+            this.authHttpClient.DefaultRequestHeaders.Add("Authorization", JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["UplandAuthToken"]);
         }
 
         public async Task<List<UplandCollection>> GetCollections()
@@ -176,6 +176,16 @@ namespace Upland.Infrastructure.UplandApi
             assets = await CallApi<List<UplandAsset>>(requestUri, false);
 
             return assets;
+        }
+
+        public async Task<UplandUserProfile> GetProfileByUsername(string username)
+        {
+            UplandUserProfile profile;
+            string requestUri = @"https://api.upland.me/profile/" + username;
+
+            profile = await CallApi<UplandUserProfile>(requestUri, true);
+
+            return profile;
         }
 
         private async Task<T> CallApi<T>(string requestUri, bool useAuth = false)

@@ -346,7 +346,7 @@ namespace Startup.Commands
         }
 
         [Command("PropertyInfo")]
-        public async Task PropertyInfo(string fileType = "TXT")
+        public async Task PropertyInfo(string username = "___SELF___", string fileType = "TXT")
         {
             LocalDataManager localDataManager = new LocalDataManager();
             RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
@@ -356,14 +356,19 @@ namespace Startup.Commands
                 return;
             }
 
-            List<string> propertyData = await _informationProcessor.GetPropertyInfo(registeredUser.UplandUsername, fileType.ToUpper());
+            if(username == "___SELF___")
+            {
+                username = registeredUser.UplandUsername;
+            }
+
+            List<string> propertyData = await _informationProcessor.GetPropertyInfo(username.ToLower(), fileType.ToUpper());
 
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, propertyData));
             using (Stream stream = new MemoryStream())
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, string.Format("PropertyInfo_{0}.{1}", registeredUser.UplandUsername, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
+                await Context.Channel.SendFileAsync(stream, string.Format("PropertyInfo_{0}.{1}", username, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
             }
         }
 
@@ -842,13 +847,16 @@ namespace Startup.Commands
                 case "5":
                     helpOutput.Add(string.Format("!PropertyInfo"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will return a csv file with all of your properties."));
+                    helpOutput.Add(string.Format("This command will return a csv file with all of your properties, or the properties of the specified user."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !PropertyInfo");
-                    helpOutput.Add("This command will return a text file.");
+                    helpOutput.Add("This command will return a text file with your properties.");
                     helpOutput.Add("");
-                    helpOutput.Add("EX: !PropertyInfo CSV");
-                    helpOutput.Add("This command will return a csv file.");
+                    helpOutput.Add("EX: !PropertyInfo Hornbrod txt");
+                    helpOutput.Add("This command will return a text file with all the properties owned by Hornbrod.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !PropertyInfo Hornbrod csv");
+                    helpOutput.Add("This command will return a csv file with all the properties owned by Hornbrod.");
                     break;
                 case "6":
                     helpOutput.Add(string.Format("!NeighborhoodInfo"));

@@ -7,8 +7,9 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Upland.InformationProcessor;
 using System.Timers;
+using System.Text.Json;
 
-/*
+
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -20,7 +21,8 @@ using Upland.Infrastructure.Blockchain;
 using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
-*/
+using Upland.Types.UplandApiTypes;
+
 
 class Program
 {
@@ -30,7 +32,6 @@ class Program
     private InformationProcessor _informationProcessor;
     private Timer _refreshTimer;
 
-    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -39,6 +40,7 @@ class Program
         BlockchainRepository blockchainRepository = new BlockchainRepository();
         UplandApiManager uplandApiManager = new UplandApiManager();
         BlockchainManager blockchainManager = new BlockchainManager();
+        BlockchainPropertySurfer blockchainPropertySurfer = new BlockchainPropertySurfer();
 
         string username;
         string qualityLevel;
@@ -73,7 +75,7 @@ class Program
         //output = informationProcessor.GetAllProperties("Street", 31898, "CSV");
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
         //output = await informationProcessor.GetAssetsByTypeAndUserName("nflpa", "loyldoyl", "txt");
-        output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
+        //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
@@ -89,15 +91,17 @@ class Program
         //await informationProcessor.RebuildPropertyStructures();
         //await informationProcessor.RunCityStatusUpdate(true);
 
-        //List<t3Entry> items = await blockchainRepository.GetActiveOffers();
+        //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
 
-       // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
+        // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
 
-       // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
+        // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
 
 
+        DateTime startDate = new DateTime(2021, 03, 08, 06, 18, 00);
+
+        await blockchainPropertySurfer.BuildBlockChainFromDate(startDate);
     }
-    */
     
     
     static void Main(string[] args) 
@@ -124,7 +128,7 @@ class Program
 
         await RegisterCommandsAsync();
 
-        await _client.LoginAsync(TokenType.Bot, token);
+        await _client.LoginAsync(TokenType.Bot, JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["DiscordBotToken"]);
 
         await _client.StartAsync();
 

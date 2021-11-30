@@ -11,7 +11,7 @@
 	[Longitude]       DECIMAL(19,16),
 	[Status]          VARCHAR(25),
 	[FSA]             BIT,
-
+	[Owner]           VARCHAR(50)
 
 	CONSTRAINT pk_PropertyId PRIMARY KEY(Id)
 )

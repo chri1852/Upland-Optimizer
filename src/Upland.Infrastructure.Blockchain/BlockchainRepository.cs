@@ -1,13 +1,11 @@
 ﻿using EosSharp;
 using EosSharp.Core;
 using EosSharp.Core.Api.v1;
-using EosSharp.Core.Providers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Upland.Types.BlockchainTypes;
 
@@ -15,10 +13,15 @@ namespace Upland.Infrastructure.Blockchain
 {
     public class BlockchainRepository
     {
+        HttpClient httpClient;
         Eos eos;
 
         public BlockchainRepository()
         {
+            this.httpClient = new HttpClient();
+            this.httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            this.httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+
             this.eos = new Eos(new EosConfigurator()
             {
                 HttpEndpoint = " https://eos.greymass.com", //Mainnet
@@ -189,6 +192,37 @@ namespace Upland.Infrastructure.Blockchain
             }
 
             return totalResults;
+        }
+
+        public async Task<HistoryV2Query> GetPropertyActionsFromDateTime(DateTime fromTime, int minutesToAdd)
+        {
+            HistoryV2Query historyQuery;
+
+            string requestUri = @"https://eos.hyperion.eosrio.io/v2/history/get_actions?account=playuplandme&filter=*%3An12,*%3An13,*%3An5,*%3An2,*%3An4,*%3An52,*%3Aa4,*%3An34,*%3An33&skip=0&limit=1000&sort=asc&after=";
+            requestUri += string.Format("{0}&before=", fromTime.ToString("yyyy-MM-ddTHH:mm:ss"));
+            requestUri += string.Format("{0}", fromTime.AddMinutes(minutesToAdd).ToString("yyyy-MM-ddTHH:mm:ss"));
+
+            historyQuery = await CallApi<HistoryV2Query>(requestUri);
+
+            return historyQuery;
+        }
+
+        private async Task<T> CallApi<T>(string requestUri)
+        {
+            HttpResponseMessage httpResponse;
+            string responseJson;
+            
+            httpResponse = await this.httpClient.GetAsync(requestUri);
+            responseJson = await httpResponse.Content.ReadAsStringAsync();
+
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(responseJson);
+            }
+            catch
+            {
+                return (T)Activator.CreateInstance(typeof(T));
+            }
         }
     }
 }
