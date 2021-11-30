@@ -62,10 +62,17 @@ namespace Upland.InformationProcessor
                 while (retry)
                 {
                     Thread.Sleep(1000);
-                    actions = await blockchainManager.GetPropertyActionsFromTime(startDate, minutesToMoveFoward);
-                    if (actions != null)
+                    try
                     {
-                        retry = false;
+                        actions = await blockchainManager.GetPropertyActionsFromTime(startDate, minutesToMoveFoward);
+                        if (actions != null)
+                        {
+                            retry = false;
+                        }
+                    }
+                    catch
+                    {
+                        // Just Eat it to Retry
                     }
                 }
 
@@ -203,13 +210,13 @@ namespace Upland.InformationProcessor
                 buyEntries.First().BuyerEOS = action.act.data.p14;
                 buyEntries.First().DateTime = action.timestamp;
                 localDataManager.UpsertSaleHistory(buyEntries.First());
-            }
 
-            foreach (SaleHistoryEntry entry in allEntries)
-            {
-                if (entry.Id != buyEntries.First().Id && (entry.BuyerEOS == null || entry.SellerEOS == null))
+                foreach (SaleHistoryEntry entry in allEntries)
                 {
-                    localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                    if (entry.Id != buyEntries.First().Id && (entry.BuyerEOS == null || entry.SellerEOS == null))
+                    {
+                        localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                    }
                 }
             }
 
