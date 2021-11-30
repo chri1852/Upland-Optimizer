@@ -9,6 +9,7 @@ using Upland.InformationProcessor;
 using System.Timers;
 using System.Text.Json;
 
+
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -22,6 +23,7 @@ using Upland.Types;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types.UplandApiTypes;
 
+
 class Program
 {
     private DiscordSocketClient _client;
@@ -30,7 +32,6 @@ class Program
     private InformationProcessor _informationProcessor;
     private Timer _refreshTimer;
 
-    
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -96,16 +97,16 @@ class Program
 
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
 
+
         DateTime startDate = new DateTime(2021, 03, 08, 06, 18, 00);
 
         await blockchainPropertySurfer.BuildBlockChainFromDate(startDate);
     }
     
     
-    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    
 
     public async Task RunBotAsync()
     {

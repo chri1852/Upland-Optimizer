@@ -14,8 +14,22 @@ namespace Upland.Types.UplandApiTypes
         public long Prop_Id { get; set; }
         public double Price { get; set; }
         public string Currency { get; set; }
-        public double SortValue { get; set; }
         public string Owner { get; set; }
+
+        public double SortValue 
+        { 
+            get
+            {
+                if (this.Currency == "USD")
+                {
+                    return this.Price * 1000;
+                }
+                else
+                {
+                    return this.Price;
+                }    
+            }
+        }
 
         public UplandForSaleProp Clone()
         {
@@ -24,7 +38,6 @@ namespace Upland.Types.UplandApiTypes
                 Prop_Id = this.Prop_Id,
                 Price = this.Price,
                 Currency = this.Currency,
-                SortValue = this.SortValue,
                 Owner = this.Owner
             };
         }
