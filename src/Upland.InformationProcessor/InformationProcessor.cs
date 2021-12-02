@@ -336,11 +336,11 @@ namespace Upland.InformationProcessor
             if (fileType == "TXT")
             {
                 int idPad = 5;
-                int namePad = Consts.Cities.OrderByDescending(c => c.Value.Length).First().Value.Length;
+                int namePad = Consts.Cities.Where(c => c.Key <= Consts.MAX_NON_BULLSHIT_CITY_ID).OrderByDescending(c => c.Value.Length).First().Value.Length;
 
                 array.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
 
-                foreach (int cityId in Consts.Cities.Keys.Where(k => k < 10000))
+                foreach (int cityId in Consts.Cities.Keys.Where(k => k <= Consts.MAX_NON_BULLSHIT_CITY_ID))
                 {
                     string cityString = string.Format("{0} - {1} -", cityId.ToString().PadLeft(idPad), Consts.Cities[cityId].PadLeft(namePad));
 
@@ -940,7 +940,7 @@ namespace Upland.InformationProcessor
                 }
                 properties = localDataManager
                     .GetPropertiesByCityId(cityId)
-                    .Where(p => p.Status != "Locked" && p.Status != "Owned" && p.Status != "For sale")
+                    .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
                     .OrderBy(p => p.MonthlyEarnings)
                     .ToDictionary(p => p.Id, p => p);
             }
@@ -959,7 +959,7 @@ namespace Upland.InformationProcessor
                 properties = localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.NeighborhoodId == Id)
-                    .Where(p => p.Status != "Locked" && p.Status != "Owned" && p.Status != "For sale")
+                    .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
                     .OrderBy(p => p.MonthlyEarnings)
                     .ToDictionary(p => p.Id, p => p);
             }
@@ -986,7 +986,7 @@ namespace Upland.InformationProcessor
                 properties = localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => collection.MatchingPropertyIds.Contains(p.Id))
-                    .Where(p => p.Status != "Locked" && p.Status != "Owned" && p.Status != "For sale")
+                    .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
                     .OrderBy(p => p.MonthlyEarnings)
                     .ToDictionary(p => p.Id, p => p);
             }
@@ -1005,7 +1005,7 @@ namespace Upland.InformationProcessor
                 properties = localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.StreetId == Id)
-                    .Where(p => p.Status != "Locked" && p.Status != "Owned" && p.Status != "For sale")
+                    .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
                     .OrderBy(p => p.MonthlyEarnings)
                     .ToDictionary(p => p.Id, p => p);
             }
@@ -1491,7 +1491,7 @@ namespace Upland.InformationProcessor
             foreach (int cityId in Consts.Cities.Keys)
             {
                 // Don't process the bullshit cities
-                if(cityId >= 17)
+                if(cityId <= Consts.MAX_NON_BULLSHIT_CITY_ID)
                 {
                     continue;
                 }
@@ -1501,7 +1501,7 @@ namespace Upland.InformationProcessor
             }
         }
 
-        public async Task<List<string>> GetBuildingsUnderConstruction(int userLevel = -1)
+        public async Task<List<string>> GetBuildingsUnderConstruction(int userLevel)
         {
             List<SparkStakingReport> sparkReport = new List<SparkStakingReport>();
             List<UplandUserProfile> uniqueUserProfiles = new List<UplandUserProfile>();

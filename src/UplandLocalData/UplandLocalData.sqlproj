@@ -122,5 +122,6 @@
     <Build Include="StoredProcedures\UPL.GetLastHistoricalCityStatusDate.sql" />
     <Build Include="StoredProcedures\UPL.GetLastSaleHistoryDateTime.sql" />
     <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByPropertyId.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteEOSUser.sql" />
   </ItemGroup>
 </Project>

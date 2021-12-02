@@ -26,6 +26,13 @@ namespace Upland.Types
             21,  // City Pro
         };
 
+        // Property Status
+        public const string PROP_STATUS_LOCKED = "Locked";
+        public const string PROP_STATUS_OWNED = "Owned";
+        public const string PROP_STATUS_UNLOCKED = "Unlocked";
+        public const string PROP_STATUS_FORSALE = "For sale";
+
+        public static readonly int MAX_NON_BULLSHIT_CITY_ID = 16;
         public static readonly Dictionary<int, string> Cities = new Dictionary<int, string>
         {
             // Main Cities

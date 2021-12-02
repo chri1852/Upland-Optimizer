@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Timers;
 using System.Text.Json;
 
-/*
+
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -22,7 +22,7 @@ using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types.UplandApiTypes;
-*/
+
 
 class Program
 {
@@ -34,7 +34,7 @@ class Program
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
 
-    /*
+    
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -100,16 +100,13 @@ class Program
 
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
 
-
-        DateTime startDate = new DateTime(2021, 03, 13, 17, 05, 00);
-
-        await blockchainPropertySurfer.BuildBlockChainFromDate(startDate);
+        await blockchainPropertySurfer.BuildBlockChainFromBegining(); // .BuildBlockChainFromDate(startDate);
     }
-    */
-
+    
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    
+    */
 
     public async Task RunBotAsync()
     {
@@ -258,7 +255,7 @@ class Program
                 await _blockchainPropertySurfer.RunBlockChainUpdate();
             });
         };
-        _blockchainUpdateTimer.Interval = 30000;
+        _blockchainUpdateTimer.Interval = 60000;
         _blockchainUpdateTimer.Start();
     }
 

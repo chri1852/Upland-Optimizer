@@ -1,30 +1,27 @@
 ﻿CREATE PROCEDURE [UPL].[UpsertEOSUser]
 (
 	@EOSAccount      VARCHAR(12),
-	@UplandUsername  VARCHAR(50)
+	@UplandUsername  VARCHAR(50),
+	@Joined          DATETIME
 )
 AS
 BEGIN
 	BEGIN TRY	
-		IF(NOT EXISTS(SELECT * FROM [UPL].[EOSUser] (NOLOCK) WHERE [EOSAccount] = @EOSAccount))
-			BEGIN
-				INSERT INTO [UPL].[EOSUser]
-				(
-					[EOSAccount],
-					[UplandUsername]
-				)
-				Values
-				(
-					@EOSAccount,
-					@UplandUsername
-				)
-			END
-		ELSE
-			BEGIN
-				UPDATE [UPL].[EOSUser]
-				SET [UplandUsername] = @UplandUsername
-				WHERE [EOSAccount] = @EOSAccount
-			END
+		DELETE FROM [UPL].[EOSUser]
+		WHERE [UplandUsername] = @UplandUsername
+
+		INSERT INTO [UPL].[EOSUser]
+		(
+			[EOSAccount],
+			[UplandUsername],
+			[Joined]
+		)
+		Values
+		(
+			@EOSAccount,
+			@UplandUsername,
+			@Joined
+		)
 	END TRY
 
 	BEGIN CATCH

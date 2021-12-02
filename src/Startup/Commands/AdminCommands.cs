@@ -147,7 +147,7 @@ namespace Startup.Commands
         }
 
         [Command("AdminPropsUnderConstruction")]
-        public async Task AdminPropsUnderConstruction(int userlevel = -1)
+        public async Task AdminPropsUnderConstruction(int userlevel)
         {
             if (!await checkIfAdmin(Context.User.Id))
             {

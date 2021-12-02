@@ -90,15 +90,28 @@ namespace Startup.Commands
                 return;
             }
 
-            UplandAuthProperty verifyProperty = properties[_random.Next(0, properties.Count)];
-            int verifyPrice = _random.Next(80000000, 90000000);
+            List<Property> localProps = localDataManager.GetProperties(properties.Select(p => p.Prop_Id).ToList());
+            int verifyPrice = 0;
+            Property verifyProperty = null;
+            int nonFSACount = localProps.Where(p => !p.FSA).ToList().Count;
+
+            if (nonFSACount > 0)
+            {
+                verifyProperty = localProps.Where(p => !p.FSA).ToList()[_random.Next(0, nonFSACount)];
+                verifyPrice = _random.Next(80000000, 90000000);
+            }
+            else
+            {
+                verifyProperty = localProps[_random.Next(0, localProps.Count)];
+                verifyPrice = _random.Next(80000000, 90000000);
+            }
 
             RegisteredUser newUser = new RegisteredUser()
             {
                 DiscordUserId = Context.User.Id,
                 DiscordUsername = Context.User.Username,
                 UplandUsername = uplandUserName.ToLower(),
-                PropertyId = verifyProperty.Prop_Id,
+                PropertyId = verifyProperty.Id,
                 Price = verifyPrice
             };
 
@@ -113,7 +126,7 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Good News {0}! I have registered you as a user!", HelperFunctions.GetRandomName(_random)));
-            await ReplyAsync(string.Format("To continue place, {0}, up for sale for {1:N2} UPX, and then use my !VerifyMe command. If you can't place the propery for sale run my !ClearMe command.", verifyProperty.Full_Address, verifyPrice));
+            await ReplyAsync(string.Format("To continue place, {0}, {1}, up for sale for {2:N2} UPX, and then use my !VerifyMe command. If you can't place the propery for sale run my !ClearMe command.", verifyProperty.Address, Consts.Cities[verifyProperty.CityId], verifyPrice));
         }
 
         [Command("ClearMe")]
