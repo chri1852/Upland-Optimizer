@@ -32,7 +32,11 @@ namespace Upland.Types
         public const string PROP_STATUS_UNLOCKED = "Unlocked";
         public const string PROP_STATUS_FORSALE = "For sale";
 
-        public static readonly int MAX_NON_BULLSHIT_CITY_ID = 16;
+        public static readonly List<int> NON_BULLSHIT_CITY_IDS = new List<int>
+        {
+            1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 29
+        };
+
         public static readonly Dictionary<int, string> Cities = new Dictionary<int, string>
         {
             // Main Cities
@@ -51,6 +55,7 @@ namespace Upland.Types
             { 14   , "Kansas"         },
             { 15   , "New Orleans"    },
             { 16   , "Nashville"      },
+            { 29   , "Bronx"          },
 
             // NYC Sub Cities
             { 17   , "New York"       },

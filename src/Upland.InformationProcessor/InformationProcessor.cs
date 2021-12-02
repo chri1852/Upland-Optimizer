@@ -336,11 +336,11 @@ namespace Upland.InformationProcessor
             if (fileType == "TXT")
             {
                 int idPad = 5;
-                int namePad = Consts.Cities.Where(c => c.Key <= Consts.MAX_NON_BULLSHIT_CITY_ID).OrderByDescending(c => c.Value.Length).First().Value.Length;
+                int namePad = Consts.Cities.Where(c => Consts.NON_BULLSHIT_CITY_IDS.Contains(c.Key)).OrderByDescending(c => c.Value.Length).First().Value.Length;
 
                 array.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
 
-                foreach (int cityId in Consts.Cities.Keys.Where(k => k <= Consts.MAX_NON_BULLSHIT_CITY_ID))
+                foreach (int cityId in Consts.Cities.Keys.Where(k => Consts.NON_BULLSHIT_CITY_IDS.Contains(k)))
                 {
                     string cityString = string.Format("{0} - {1} -", cityId.ToString().PadLeft(idPad), Consts.Cities[cityId].PadLeft(namePad));
 
@@ -1491,7 +1491,7 @@ namespace Upland.InformationProcessor
             foreach (int cityId in Consts.Cities.Keys)
             {
                 // Don't process the bullshit cities
-                if(cityId <= Consts.MAX_NON_BULLSHIT_CITY_ID)
+                if(!Consts.NON_BULLSHIT_CITY_IDS.Contains(cityId))
                 {
                     continue;
                 }
