@@ -125,5 +125,6 @@
     <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByPropertyId.sql" />
     <Build Include="StoredProcedures\UPL.DeleteEOSUser.sql" />
     <Build Include="Indices\CreateIndicies.sql" />
+    <Build Include="StoredProcedures\GetCityPropertiesForSale.sql" />
   </ItemGroup>
 </Project>

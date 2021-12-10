@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using Upland.Types;
 using Upland.Types.Types;
+using Upland.Types.UplandApiTypes;
 
 namespace Upland.Infrastructure.LocalData
 {
@@ -676,6 +677,51 @@ namespace Upland.Infrastructure.LocalData
                                     Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null
                                 }
                              );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return properties;
+            }
+        }
+
+        public List<UplandForSaleProp> GetCityPropertiesForSale(int cityId)
+        {
+            List<UplandForSaleProp> properties = new List<UplandForSaleProp>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCityPropertiesForSale]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            properties.Add(new UplandForSaleProp
+                            {
+                                Prop_Id = (long)reader["PropId"],
+                                Price = decimal.ToDouble((decimal)reader["Price"]),
+                                Currency = (string)reader["Currency"],
+                                Owner = (string)reader["Owner"]
+                            });
                         }
                         reader.Close();
                     }

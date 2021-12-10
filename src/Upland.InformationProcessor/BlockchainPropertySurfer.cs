@@ -119,7 +119,7 @@ namespace Upland.InformationProcessor
                     }
                 }
 
-                if (startDate >= DateTime.Now)
+                if (startDate >= DateTime.UtcNow)
                 {
                     continueLoad = false;
                 }

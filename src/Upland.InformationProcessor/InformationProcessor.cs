@@ -545,7 +545,7 @@ namespace Upland.InformationProcessor
             }
 
             Collection collection = collections.Where(c => c.Id == collectionId).First();
-            List<UplandForSaleProp> forSaleProps = await uplandApiManager.GetForSalePropsByCityId(collection.CityId.Value);
+            List<UplandForSaleProp> forSaleProps = localDataManager.GetCityPropertiesForSale(collection.CityId.Value);
 
             if (currency == "USD")
             {
@@ -587,7 +587,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", collection.Name), uplandApiManager.GetCacheDateTime(collection.CityId.Value)));
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", collection.Name), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
             return output;
@@ -607,7 +607,7 @@ namespace Upland.InformationProcessor
             }
 
             Neighborhood neighborhood = neighborhoods.Where(n => n.Id == neighborhoodId).First();
-            List<UplandForSaleProp> forSaleProps = await uplandApiManager.GetForSalePropsByCityId(neighborhood.CityId);
+            List<UplandForSaleProp> forSaleProps = localDataManager.GetCityPropertiesForSale(neighborhood.CityId);
 
             if (currency == "USD")
             {
@@ -647,7 +647,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", neighborhood.Name), uplandApiManager.GetCacheDateTime(neighborhood.CityId)));
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", neighborhood.Name), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
             return output;
@@ -675,7 +675,7 @@ namespace Upland.InformationProcessor
                     foreach (int cId in Consts.Cities.Keys)
                     {
                         allProps.AddRange(localDataManager.GetPropertiesByCityId(cId));
-                        forSaleProps.AddRange(await uplandApiManager.GetForSalePropsByCityId(cId));
+                        forSaleProps.AddRange(localDataManager.GetCityPropertiesForSale(cId));
                     }
 
                     properties = allProps.ToDictionary(p => p.Id, p => p);
@@ -686,7 +686,7 @@ namespace Upland.InformationProcessor
                 else
                 {
                     properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
-                    forSaleProps = await uplandApiManager.GetForSalePropsByCityId(cityId);
+                    forSaleProps = localDataManager.GetCityPropertiesForSale(cityId);
                 }
 
                 forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id)).ToList();
@@ -705,7 +705,7 @@ namespace Upland.InformationProcessor
 
                 Neighborhood neighborhood = neighborhoods.Where(n => n.Id == Id).First();
                 cityId = neighborhood.CityId;
-                forSaleProps = await uplandApiManager.GetForSalePropsByCityId(cityId);
+                forSaleProps = localDataManager.GetCityPropertiesForSale(cityId);
                 properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
                 forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].NeighborhoodId == Id).ToList();
             }
@@ -721,7 +721,7 @@ namespace Upland.InformationProcessor
                 }
 
                 cityId = streets.Where(n => n.Id == Id).First().CityId;
-                forSaleProps = await uplandApiManager.GetForSalePropsByCityId(cityId);
+                forSaleProps = localDataManager.GetCityPropertiesForSale(cityId);
                 properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
                 forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].StreetId == Id).ToList();
             }
@@ -745,7 +745,7 @@ namespace Upland.InformationProcessor
 
                 Collection collection = collections.Where(c => c.Id == Id).First();
                 cityId = collection.CityId.Value;
-                forSaleProps = await uplandApiManager.GetForSalePropsByCityId(cityId);
+                forSaleProps = localDataManager.GetCityPropertiesForSale(cityId);
                 properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
                 forSaleProps = forSaleProps.Where(p => collection.MatchingPropertyIds.Contains(p.Prop_Id)).ToList();
             }
@@ -791,7 +791,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report Buildings In {0}Id {1}.", type.ToUpper(), Id), uplandApiManager.GetCacheDateTime(cityId)));
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report Buildings In {0}Id {1}.", type.ToUpper(), Id), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
             return output;
@@ -810,7 +810,7 @@ namespace Upland.InformationProcessor
             Dictionary<long, Property> propDictionary = new Dictionary<long, Property>();
             List<UplandForSaleProp> forSaleProps = new List<UplandForSaleProp>();
 
-            forSaleProps.AddRange(await uplandApiManager.GetForSalePropsByCityId(cityId));
+            forSaleProps.AddRange(localDataManager.GetCityPropertiesForSale(cityId));
             List<Property> allProperties = new List<Property>();
 
             allProperties.AddRange(localDataManager.GetPropertiesByCityId(cityId));
@@ -858,7 +858,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, propDictionary, propertyStructures, string.Format("For Sale Report For CityId {0}.", cityId), uplandApiManager.GetCacheDateTime(cityId)));
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, propDictionary, propertyStructures, string.Format("For Sale Report For CityId {0}.", cityId), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
             return output;
@@ -878,7 +878,7 @@ namespace Upland.InformationProcessor
             }
 
             Street street = streets.Where(s => s.Id == streetId).First();
-            List<UplandForSaleProp> forSaleProps = await uplandApiManager.GetForSalePropsByCityId(street.CityId);
+            List<UplandForSaleProp> forSaleProps = localDataManager.GetCityPropertiesForSale(street.CityId);
 
             if (currency == "USD")
             {
@@ -918,7 +918,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", street.Name), uplandApiManager.GetCacheDateTime(street.CityId)));
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", street.Name), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
             return output;

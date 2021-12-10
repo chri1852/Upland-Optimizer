@@ -70,7 +70,7 @@ class Program
         //await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
-        //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
+        output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
         //output = await informationProcessor.GetSalesDataByCityId(1);
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
@@ -80,7 +80,7 @@ class Program
         //output = await informationProcessor.GetAssetsByTypeAndUserName("nflpa", "loyldoyl", "txt");
         //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
         //output = await informationProcessor.GetBuildingsUnderConstruction(1);
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\underConstruction.CSV", string.Join(Environment.NewLine, output));
+        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\testForSale.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
         //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
@@ -93,7 +93,7 @@ class Program
 
         // Rebuild Property Structure List
         //await informationProcessor.RebuildPropertyStructures();
-        await informationProcessor.RunCityStatusUpdate();
+        //await informationProcessor.RunCityStatusUpdate();
 
         //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
 

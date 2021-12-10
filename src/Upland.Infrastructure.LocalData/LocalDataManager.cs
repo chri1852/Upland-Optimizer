@@ -577,6 +577,11 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetHistoricalCityStatusByCityId(cityId);
         }
 
+        public List<UplandForSaleProp> GetCityPropertiesForSale(int cityId)
+        {
+            return localDataRepository.GetCityPropertiesForSale(cityId);
+        }
+
         public string GetConfigurationValue(string name)
         {
             return localDataRepository.GetConfigurationValue(name);
