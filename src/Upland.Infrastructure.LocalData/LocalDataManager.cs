@@ -139,6 +139,15 @@ namespace Upland.Infrastructure.LocalData
                                     property.Owner = uplandProp.Owner;
                                     hasChanges = true;
                                 }
+
+                                if (property.Status == Consts.PROP_STATUS_FORSALE && prop.status == Consts.PROP_STATUS_OWNED)
+                                {
+                                    Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                    property.Status = prop.status;
+                                    property.Owner = uplandProp.Owner;
+                                    localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
+                                    hasChanges = true;
+                                }
                             }
 
                             if (hasChanges)

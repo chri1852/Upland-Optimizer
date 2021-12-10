@@ -1503,7 +1503,7 @@ namespace Upland.InformationProcessor
 
         public async Task<List<string>> GetBuildingsUnderConstruction(int userLevel)
         {
-            List<SparkStakingReport> sparkReport = new List<SparkStakingReport>();
+            List<SparkStakingReport> rawSparkReport = new List<SparkStakingReport>();
             List<UplandUserProfile> uniqueUserProfiles = new List<UplandUserProfile>();
 
             List<long> propsUnderConstruction = await blockchainManager.GetPropertiesUnderConstruction();
@@ -1517,7 +1517,7 @@ namespace Upland.InformationProcessor
                     continue;
                 }
 
-                sparkReport.Add(new SparkStakingReport
+                rawSparkReport.Add(new SparkStakingReport
                 {
                     Username = property.owner_username,
                     Level = -1,
@@ -1536,7 +1536,7 @@ namespace Upland.InformationProcessor
                 });
             }
 
-            foreach (string username in sparkReport.GroupBy(r => r.Username).Select(g => g.First().Username).ToList())
+            foreach (string username in rawSparkReport.GroupBy(r => r.Username).Select(g => g.First().Username).ToList())
             {
                 if (username == null || username == "")
                 {
@@ -1558,13 +1558,16 @@ namespace Upland.InformationProcessor
                 uniqueUserProfiles.Add(profile);
             }
 
+            List<SparkStakingReport> sparkReport = new List<SparkStakingReport>();
+
             foreach (UplandUserProfile profile in uniqueUserProfiles)
             {
-                foreach (SparkStakingReport report in sparkReport)
+                foreach (SparkStakingReport report in rawSparkReport)
                 {
                     if (report.Username == profile.username)
                     {
                         report.Level = profile.lvl;
+                        sparkReport.Add(report);
                     }
                 }
             }
@@ -1581,6 +1584,7 @@ namespace Upland.InformationProcessor
                     , s.TotalSparkRequired
                     , s.StartDateTime.ToString("yyyy-MM-dd HH:mm:ss")
                     , s.CurrentFinishDateTime.ToString("yyyy-MM-dd HH:mm:ss")))
+                .Prepend("Username,UserLevel,CityName,Address,CurrentStakedSpark,CurrentSparkProgress,TotalSparkRequired,StartDateTime,CurrentFinisheDateTime")
                 .ToList();
         }
     }

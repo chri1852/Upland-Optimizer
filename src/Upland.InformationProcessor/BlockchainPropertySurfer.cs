@@ -30,7 +30,14 @@ namespace Upland.InformationProcessor
         {
             DateTime lastSaleUpdate = localDataManager.GetLastSaleHistoryDateTime();
 
-            await BuildBlockChainFromDate(lastSaleUpdate);
+            try
+            {
+                await BuildBlockChainFromDate(lastSaleUpdate);
+            }
+            catch
+            {
+                this.isProcessing = false;
+            }
         }
 
         public async Task BuildBlockChainFromBegining()

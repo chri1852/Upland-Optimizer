@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Timers;
 using System.Text.Json;
 
-
+/*
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -22,7 +22,7 @@ using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types.UplandApiTypes;
-
+*/
 
 class Program
 {
@@ -33,8 +33,8 @@ class Program
     private BlockchainPropertySurfer _blockchainPropertySurfer;
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
-
     
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -70,7 +70,7 @@ class Program
         //await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
-        output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
+        //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
         //output = await informationProcessor.GetSalesDataByCityId(1);
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
@@ -80,7 +80,7 @@ class Program
         //output = await informationProcessor.GetAssetsByTypeAndUserName("nflpa", "loyldoyl", "txt");
         //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
         //output = await informationProcessor.GetBuildingsUnderConstruction(1);
-        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\testForSale.txt", string.Join(Environment.NewLine, output));
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\testForSale.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
         //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
@@ -103,11 +103,11 @@ class Program
         //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
         //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
     }
+    */
     
-    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    
 
     public async Task RunBotAsync()
     {
@@ -256,7 +256,7 @@ class Program
                 await _blockchainPropertySurfer.RunBlockChainUpdate();
             });
         };
-        _blockchainUpdateTimer.Interval = 60000;
+        _blockchainUpdateTimer.Interval = 30000;
         _blockchainUpdateTimer.Start();
     }
 
@@ -279,8 +279,8 @@ class Program
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
             }
 
-            // Only Rebuild All on Sundays
-            if (time.DayOfWeek == DayOfWeek.Sunday)
+            // Only Rebuild All on Saturday
+            if (time.DayOfWeek == DayOfWeek.Saturday)
             {
                 try
                 {
