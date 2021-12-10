@@ -117,28 +117,6 @@ namespace Startup.Commands
             }
         }
 
-        [Command("ClearSalesCache")]
-        public async Task ClearSalesCache()
-        {
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
-            if (!await EnsureRegisteredVerifiedAndPaid(registeredUser))
-            {
-                return;
-            }
-
-            try
-            {
-                _informationProcessor.ClearSalesCache();
-                await ReplyAsync(string.Format("I Cleared out that moldy old sales data for you {0}", HelperFunctions.GetRandomName(_random)));
-            }
-            catch
-            {
-                await ReplyAsync(string.Format("I failed somehow, Grombrindal should probably hear of this."));
-            }
-        }
-
         private async Task<bool> EnsureRegisteredVerifiedAndPaid(RegisteredUser registeredUser)
         {
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")

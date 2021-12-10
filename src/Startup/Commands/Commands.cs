@@ -797,7 +797,6 @@ namespace Startup.Commands
             helpMenu.Add("Supporter Commands");
             helpMenu.Add("   19. !OptimizerLevelRun");
             helpMenu.Add("   20. !OptimizerWhatIfRun");
-            helpMenu.Add("   21. !ClearSalesCache");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -1055,14 +1054,6 @@ namespace Startup.Commands
                     helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerWhatIfRun 188 3 250.10");
                     helpOutput.Add("The above command will run a WhatIfRun with your currenty properties, and 3 fake properties in the French Quarter collection with an average monthly upx earnings of 250.10 upx.");
-                    break;
-                case "21":
-                    helpOutput.Add(string.Format("!ClearSalesCache"));
-                    helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will clear the sales cache, so the next time you request properties for sale in a city it will fetch the latest data. The Sales data is normally cached and can be up to 15 minutes old."));
-                    helpOutput.Add("");
-                    helpOutput.Add("EX: !ClearSalesCache");
-                    helpOutput.Add("The above command will clear the sales cache for all cities.");
                     break;
                 default:
                     helpOutput.Add(string.Format("Not sure what command you are refering to {0}. Try running my !Help command.", HelperFunctions.GetRandomName(_random)));
