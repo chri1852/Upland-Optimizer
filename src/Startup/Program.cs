@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Timers;
 using System.Text.Json;
 
-/*
+
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -22,7 +22,7 @@ using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types.UplandApiTypes;
-*/
+
 
 class Program
 {
@@ -34,7 +34,7 @@ class Program
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
 
-    /*
+    
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -70,7 +70,7 @@ class Program
         //await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
-        //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
+        output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
         //output = await informationProcessor.GetSalesDataByCityId(1);
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
@@ -79,37 +79,35 @@ class Program
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
         //output = await informationProcessor.GetAssetsByTypeAndUserName("nflpa", "loyldoyl", "txt");
         //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
+        //output = await informationProcessor.GetBuildingsUnderConstruction(1);
+        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\testForSale.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
         //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
 
         // Populate CityProps And Neighborhoods
-        //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 16, true);
+        //await localDataManager.PopulateAllPropertiesInArea(40.921864, 40.782411, -73.763343, -73.942215, 29, true);
         //foreach (int cityId in Consts.Cities.Keys) { localDataManager.DetermineNeighborhoodIdsForCity(cityId); }
         //await localDataManager.PopulateCollectionPropertiesByCityId(16);
         //localDataManager.DetermineNeighborhoodIdsForCity(16);
 
         // Rebuild Property Structure List
         //await informationProcessor.RebuildPropertyStructures();
-        //await informationProcessor.RunCityStatusUpdate(true);
+        //await informationProcessor.RunCityStatusUpdate();
 
         //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
 
         // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
 
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
-
-
-        DateTime startDate = new DateTime(2021, 03, 13, 17, 05, 00);
-
-        await blockchainPropertySurfer.BuildBlockChainFromDate(startDate);
+        //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
+        //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
     }
-    */
-
+    
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    
+    */
 
     public async Task RunBotAsync()
     {
@@ -258,7 +256,7 @@ class Program
                 await _blockchainPropertySurfer.RunBlockChainUpdate();
             });
         };
-        _blockchainUpdateTimer.Interval = 30000;
+        _blockchainUpdateTimer.Interval = 60000;
         _blockchainUpdateTimer.Start();
     }
 

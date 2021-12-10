@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetEOSUserByEOSAccount]
+﻿CREATE PROCEDURE [UPL].[DeleteEOSUser]
 (
-	@EOSAccount VARCHAR(12)
+	@EOSAccount  VARCHAR(12)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT TOP(1) *
-		FROM [UPL].[EOSUser] (NOLOCK)
-		WHERE EOSAccount = @EOSAccount
+		DELETE 
+		FROM [UPL].[EOSUser]
+		WHERE [EOSAccount] = @EOSAccount
 	END TRY
 
 	BEGIN CATCH
@@ -22,3 +22,4 @@ BEGIN
 		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
 	END CATCH
 END
+GO

@@ -90,15 +90,28 @@ namespace Startup.Commands
                 return;
             }
 
-            UplandAuthProperty verifyProperty = properties[_random.Next(0, properties.Count)];
-            int verifyPrice = _random.Next(80000000, 90000000);
+            List<Property> localProps = localDataManager.GetProperties(properties.Select(p => p.Prop_Id).ToList());
+            int verifyPrice = 0;
+            Property verifyProperty = null;
+            int nonFSACount = localProps.Where(p => !p.FSA).ToList().Count;
+
+            if (nonFSACount > 0)
+            {
+                verifyProperty = localProps.Where(p => !p.FSA).ToList()[_random.Next(0, nonFSACount)];
+                verifyPrice = _random.Next(80000000, 90000000);
+            }
+            else
+            {
+                verifyProperty = localProps[_random.Next(0, localProps.Count)];
+                verifyPrice = _random.Next(80000000, 90000000);
+            }
 
             RegisteredUser newUser = new RegisteredUser()
             {
                 DiscordUserId = Context.User.Id,
                 DiscordUsername = Context.User.Username,
                 UplandUsername = uplandUserName.ToLower(),
-                PropertyId = verifyProperty.Prop_Id,
+                PropertyId = verifyProperty.Id,
                 Price = verifyPrice
             };
 
@@ -113,7 +126,7 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Good News {0}! I have registered you as a user!", HelperFunctions.GetRandomName(_random)));
-            await ReplyAsync(string.Format("To continue place, {0}, up for sale for {1:N2} UPX, and then use my !VerifyMe command. If you can't place the propery for sale run my !ClearMe command.", verifyProperty.Full_Address, verifyPrice));
+            await ReplyAsync(string.Format("To continue place, {0}, {1}, up for sale for {2:N2} UPX, and then use my !VerifyMe command. If you can't place the propery for sale run my !ClearMe command.", verifyProperty.Address, Consts.Cities[verifyProperty.CityId], verifyPrice));
         }
 
         [Command("ClearMe")]
@@ -784,7 +797,6 @@ namespace Startup.Commands
             helpMenu.Add("Supporter Commands");
             helpMenu.Add("   19. !OptimizerLevelRun");
             helpMenu.Add("   20. !OptimizerWhatIfRun");
-            helpMenu.Add("   21. !ClearSalesCache");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -1042,14 +1054,6 @@ namespace Startup.Commands
                     helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerWhatIfRun 188 3 250.10");
                     helpOutput.Add("The above command will run a WhatIfRun with your currenty properties, and 3 fake properties in the French Quarter collection with an average monthly upx earnings of 250.10 upx.");
-                    break;
-                case "21":
-                    helpOutput.Add(string.Format("!ClearSalesCache"));
-                    helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will clear the sales cache, so the next time you request properties for sale in a city it will fetch the latest data. The Sales data is normally cached and can be up to 15 minutes old."));
-                    helpOutput.Add("");
-                    helpOutput.Add("EX: !ClearSalesCache");
-                    helpOutput.Add("The above command will clear the sales cache for all cities.");
                     break;
                 default:
                     helpOutput.Add(string.Format("Not sure what command you are refering to {0}. Try running my !Help command.", HelperFunctions.GetRandomName(_random)));

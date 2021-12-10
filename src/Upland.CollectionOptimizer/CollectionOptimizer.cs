@@ -25,6 +25,11 @@ namespace Upland.CollectionOptimizer
         private LocalDataManager LocalDataManager;
         private bool DebugMode;
 
+        private const string CityPro = "CityPro";
+        private const string KingOfTheStreet = "King of the Street";
+        private const int CityProId = 21;
+        private const int KingOfTheStreetId = 1;
+
         public CollectionOptimizer()
         {
             this.Properties = new Dictionary<long, Property>();
@@ -467,8 +472,8 @@ namespace Upland.CollectionOptimizer
                 }
 
                 if (entry.Value.SlottedPropertyIds.Count < entry.Value.NumberOfProperties
-                    && entry.Value.Name != Consts.CityPro
-                    && entry.Value.Name != Consts.KingOfTheStreet)
+                    && entry.Value.Name != CityPro
+                    && entry.Value.Name != KingOfTheStreet)
                 {
                     removeCollectionIds.Add(entry.Value.Id);
                 }
@@ -516,7 +521,7 @@ namespace Upland.CollectionOptimizer
 
         private Dictionary<int, Collection> BuildBestCityProCollection(Dictionary<int, Collection> collections, List<long> ignorePropertyIds)
         {
-            if (!collections.Any(c => c.Value.Name == Consts.CityPro))
+            if (!collections.Any(c => c.Value.Name == CityPro))
             {
                 return collections;
             }
@@ -527,12 +532,12 @@ namespace Upland.CollectionOptimizer
             {
                 StandardCollectionBuilder topCityProCollection =
                     this.CityProCollections.Where(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 5).OrderByDescending(c => c.MonthlyUpx(ignorePropertyIds)).First();
-                copiedCollections[Consts.CityProId].SlottedPropertyIds = topCityProCollection.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Select(p => p.Key).Take(5).ToList();
-                copiedCollections[Consts.CityProId].MonthlyUpx = topCityProCollection.MonthlyUpx(ignorePropertyIds);
+                copiedCollections[CityProId].SlottedPropertyIds = topCityProCollection.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Select(p => p.Key).Take(5).ToList();
+                copiedCollections[CityProId].MonthlyUpx = topCityProCollection.MonthlyUpx(ignorePropertyIds);
             }
             else
             {
-                copiedCollections.Remove(Consts.CityProId);
+                copiedCollections.Remove(CityProId);
             }
 
             return copiedCollections;
@@ -540,7 +545,7 @@ namespace Upland.CollectionOptimizer
 
         private Dictionary<int, Collection> BuildBestKingOfTheStreetCollection(Dictionary<int, Collection> collections, List<long> ignorePropertyIds)
         {
-            if (!collections.Any(c => c.Value.Name == Consts.KingOfTheStreet))
+            if (!collections.Any(c => c.Value.Name == KingOfTheStreet))
             {
                 return collections;
             }
@@ -551,12 +556,12 @@ namespace Upland.CollectionOptimizer
             {
                 StandardCollectionBuilder topKingOfTheStreetCollection =
                     this.KingOfTheStreetCollections.Where(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 3).OrderByDescending(c => c.MonthlyUpx(ignorePropertyIds)).First();
-                copiedCollections[Consts.KingOfTheStreetId].SlottedPropertyIds = topKingOfTheStreetCollection.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Select(p => p.Key).Take(3).ToList();
-                copiedCollections[Consts.KingOfTheStreetId].MonthlyUpx = topKingOfTheStreetCollection.MonthlyUpx(ignorePropertyIds);
+                copiedCollections[KingOfTheStreetId].SlottedPropertyIds = topKingOfTheStreetCollection.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Select(p => p.Key).Take(3).ToList();
+                copiedCollections[KingOfTheStreetId].MonthlyUpx = topKingOfTheStreetCollection.MonthlyUpx(ignorePropertyIds);
             }
             else
             {
-                copiedCollections.Remove(Consts.KingOfTheStreetId);
+                copiedCollections.Remove(KingOfTheStreetId);
             }
 
             return copiedCollections;
@@ -566,9 +571,9 @@ namespace Upland.CollectionOptimizer
         {
             Collection newbie = new Collection
             {
-                Id = Consts.NewbieId,
-                Name = Consts.Newbie,
-                Boost = Consts.NewbieBoost,
+                Id = 7,
+                Name ="Newbie",
+                Boost = 1.1,
                 NumberOfProperties = 1,
                 SlottedPropertyIds = new List<long>(),
                 MonthlyUpx = 0,

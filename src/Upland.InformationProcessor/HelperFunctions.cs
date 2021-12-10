@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
@@ -100,6 +101,8 @@ namespace Upland.InformationProcessor
                     return new List<double> {30.179050, 29.863468,  -89.621784,  -90.142948};
                 case 16:
                     return new List<double> {36.409888, 35.964879,  -86.511996,  -87.060626};
+                case 29:
+                    return new List<double> { 40.921864, 40.782411, -73.763343, -73.942215 };
                 default:
                     return new List<double> {0, 0, 0, 0};
             }
@@ -221,8 +224,25 @@ namespace Upland.InformationProcessor
             return string.Format("{0},{1},{2},{3},{4},{5},{6:F2},{7:F2}", statObject.TotalProps, statObject.LockedProps, statObject.UnlockedNonFSAProps, statObject.UnlockedFSAProps, statObject.ForSaleProps, statObject.OwnedProps, statObject.PercentMinted, statObject.PercentNonFSAMinted);
         }
 
+        public static string SusOutCityNameByMemoString(string memo)
+        {
+            foreach (string name in Consts.Cities.Values)
+            {
+                if (memo.Contains(name))
+                {
+                    return name;
+                }
+            }
+
+            throw new Exception("Unknow City Detected");
+        }
+
         public static int GetCityIdByName(string cityName)
         {
+            if (Regex.Match(cityName.ToUpper(), "RUTHERFORD").Success)
+            {
+                return 13;
+            }
             // Since the sub cities get wrapped up to the main city we need to do some finagaling
             if(Consts.Cities.Where(c => c.Value.ToUpper() == cityName.ToUpper()).ToList().Count == 0)
             {

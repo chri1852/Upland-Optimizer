@@ -120,6 +120,8 @@ namespace Upland.Infrastructure.UplandApi
                     return await _uplandApiRepository.GetForSalePropsInArea(30.46192714455018, 29.580268899360252, -88.97599509417788, -90.91151219715452);
                 case 16:
                     return await _uplandApiRepository.GetForSalePropsInArea(36.409888, 35.964879, -86.511996, -87.060626);
+                case 29:
+                    return await _uplandApiRepository.GetForSalePropsInArea(40.921864, 40.782411, -73.763343, -73.942215);
             }
 
             return new List<UplandForSaleProp>();

@@ -88,16 +88,65 @@ namespace Upland.Infrastructure.LocalData
                                 property = allCityProperties[prop.Prop_Id];
                             }
 
-                            if (prop.status == "Locked")
+                            bool hasChanges = false;
+
+                            if (property.MonthlyEarnings == 0 && prop.status != Consts.PROP_STATUS_LOCKED)
                             {
-                                // Lets Just update the status and FSA
-                                property.Status = prop.status;
-                                property.FSA = prop.labels.fsa_allow;
-                                property.Owner = null;
-                                localDataRepository.UpsertProperty(property);
-                                localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
-                                loadedProps.Add(prop.Prop_Id);
+                                Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                property.MonthlyEarnings = uplandProp.MonthlyEarnings;
+                                hasChanges = true;
                             }
+
+                            if (property.NeighborhoodId == null)
+                            {
+                                int neighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+
+                                if (neighborhoodId != -1)
+                                {
+                                    property.NeighborhoodId = neighborhoodId;
+                                    hasChanges = true;
+                                }
+                            }
+
+                            if (property.Status != prop.status)
+                            {
+                                // Lock a prop
+                                if (property.Status != Consts.PROP_STATUS_LOCKED && prop.status == Consts.PROP_STATUS_LOCKED)
+                                {
+                                    // Lets Just update the status and FSA
+                                    property.Status = prop.status;
+                                    property.FSA = prop.labels.fsa_allow;
+                                    property.Owner = null;
+                                    hasChanges = true;
+                                    localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
+                                }
+
+                                // unlock a prop
+                                if (property.Status == Consts.PROP_STATUS_LOCKED && prop.status != Consts.PROP_STATUS_LOCKED)
+                                {
+                                    Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                    property.Status = uplandProp.Status;
+                                    property.MonthlyEarnings = uplandProp.MonthlyEarnings;
+                                    property.Owner = uplandProp.Owner;
+                                    hasChanges = true;
+                                }
+
+
+                                if (property.Status == Consts.PROP_STATUS_UNLOCKED && (prop.status == Consts.PROP_STATUS_OWNED || prop.status == Consts.PROP_STATUS_FORSALE))
+                                {
+                                    Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                    property.Status = prop.status;
+                                    property.Owner = uplandProp.Owner;
+                                    hasChanges = true;
+                                }
+                            }
+
+                            if (hasChanges)
+                            {
+                                localDataRepository.UpsertProperty(property);
+                            }
+
+                            loadedProps.Add(property.Id);
                         }
                     }
                 }
@@ -319,6 +368,12 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetProperty(id);
         }
 
+        public List<Property> GetProperties(List<long> ids)
+        {
+            return localDataRepository.GetProperties(ids);
+        }
+
+
         public List<long> GetPropertyIdsByCollectionId(int collectionId)
         {
             return localDataRepository.GetCollectionPropertyIds(collectionId);
@@ -432,16 +487,16 @@ namespace Upland.Infrastructure.LocalData
 
                 switch(stat.Status)
                 {
-                    case "For sale":
+                    case Consts.PROP_STATUS_FORSALE:
                         collatedStats.Last().ForSaleProps += stat.PropCount;
                         break;
-                    case "Locked":
+                    case Consts.PROP_STATUS_LOCKED:
                         collatedStats.Last().LockedProps += stat.PropCount;
                         break;
-                    case "Owned":
+                    case Consts.PROP_STATUS_OWNED:
                         collatedStats.Last().OwnedProps += stat.PropCount;
                         break;
-                    case "Unlocked":
+                    case Consts.PROP_STATUS_UNLOCKED:
                         if (stat.FSA)
                         {
                             collatedStats.Last().UnlockedFSAProps += stat.PropCount;
@@ -522,12 +577,17 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetHistoricalCityStatusByCityId(cityId);
         }
 
+        public List<UplandForSaleProp> GetCityPropertiesForSale(int cityId)
+        {
+            return localDataRepository.GetCityPropertiesForSale(cityId);
+        }
+
         public string GetConfigurationValue(string name)
         {
             return localDataRepository.GetConfigurationValue(name);
         }
 
-        public string GetUplandUsernameByEOSAccount(string eosAccount)
+        public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
         {
             return localDataRepository.GetUplandUserNameByEOSAccount(eosAccount);
         }
@@ -565,6 +625,11 @@ namespace Upland.Infrastructure.LocalData
         public void DeleteRegisteredUser(decimal discordUserId)
         {
             localDataRepository.DeleteRegisteredUser(discordUserId);
+        }
+
+        public void DeleteEOSUser(string eosAccount)
+        {
+            localDataRepository.DeleteEOSUser(eosAccount);
         }
 
         public void DeleteSaleHistoryById(int id)
@@ -607,9 +672,9 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetPropertyStructures();
         }
 
-        public void UpsertEOSUser(string eosAccount, string uplandUsername)
+        public void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined)
         {
-            localDataRepository.UpsertEOSUser(eosAccount, uplandUsername);
+            localDataRepository.UpsertEOSUser(eosAccount, uplandUsername, joined);
         }
 
         public void UpsertSaleHistory(SaleHistoryEntry saleHistory)

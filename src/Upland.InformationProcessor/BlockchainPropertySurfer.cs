@@ -17,15 +17,13 @@ namespace Upland.InformationProcessor
     {
         private readonly LocalDataManager localDataManager;
         private readonly BlockchainManager blockchainManager;
-
-        private const string Status_Owned = "Owned";
-        private const string Status_ForSale = "For sale";
-        private const string Status_Unlocked = "Unlocked";
+        private bool isProcessing;
 
         public BlockchainPropertySurfer()
         {
             localDataManager = new LocalDataManager();
             blockchainManager = new BlockchainManager();
+            isProcessing = false;
         }
 
         public async Task RunBlockChainUpdate()
@@ -45,6 +43,15 @@ namespace Upland.InformationProcessor
 
         public async Task BuildBlockChainFromDate(DateTime startDate)
         {
+            bool enableUpdates = bool.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
+
+            if (!enableUpdates || this.isProcessing)
+            {
+                return;
+            }
+
+            this.isProcessing = true;
+
             DateTime historyTimeStamp = localDataManager.GetLastHistoricalCityStatusDate();
 
             if(historyTimeStamp == DateTime.MinValue)
@@ -57,7 +64,8 @@ namespace Upland.InformationProcessor
             }
 
             // Advance a day at a time, unless there are more props
-            int minutesToMoveFoward = 1440;
+            //int minutesToMoveFoward = 1440;
+            int minutesToMoveFoward = 60; // One Hours
             bool continueLoad = true;
 
             while(continueLoad)
@@ -68,13 +76,16 @@ namespace Upland.InformationProcessor
                 bool retry = true;
                 while (retry)
                 {
-                    Thread.Sleep(1000);
                     try
                     {
                         actions = await blockchainManager.GetPropertyActionsFromTime(startDate, minutesToMoveFoward);
                         if (actions != null)
                         {
                             retry = false;
+                        }
+                        else
+                        {
+                            Thread.Sleep(5000);
                         }
                     }
                     catch
@@ -108,11 +119,13 @@ namespace Upland.InformationProcessor
                     }
                 }
 
-                if (startDate >= DateTime.Now)
+                if (startDate >= DateTime.UtcNow)
                 {
                     continueLoad = false;
                 }
             }
+
+            this.isProcessing = false;
         }
 
         private void ProcessActions(List<HistoryAction> actions)
@@ -171,14 +184,13 @@ namespace Upland.InformationProcessor
 
         private void ProcessDeleteVisitorAction(HistoryAction action)
         {
-            localDataManager.DeleteSaleHistoryByBuyerEOSAccount(action.act.data.p52);
-            string uplandUsername = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.p52);
-            List<Property> properties = localDataManager.GetPropertiesByUplandUsername(uplandUsername);
-            
+            List<Property> properties = localDataManager.GetPropertiesByUplandUsername(action.act.data.p52);
+            localDataManager.DeleteEOSUser(action.act.data.p52);
+
             foreach (Property prop in properties)
             {
                 prop.Owner = null;
-                prop.Status = Status_Unlocked;
+                prop.Status = Consts.PROP_STATUS_UNLOCKED;
                 localDataManager.UpsertProperty(prop);
             }
         }
@@ -189,15 +201,28 @@ namespace Upland.InformationProcessor
             {
                 return;
             }
-            string uplandUsername = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.p52);
+            string uplandUsername = action.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding ")[0];
 
-            localDataManager.UpdateSaleHistoryVistorToUplander(action.act.data.p52, action.act.data.p53);
+            List<Property> properties = localDataManager.GetPropertiesByUplandUsername(action.act.data.p52);
 
-            localDataManager.UpsertEOSUser(action.act.data.p53, uplandUsername);
+            foreach (Property prop in properties)
+            {
+                prop.Owner = action.act.data.p53;
+                localDataManager.UpsertProperty(prop);
+            }
+
+            localDataManager.DeleteEOSUser(action.act.data.p52);
+
+            localDataManager.UpsertEOSUser(action.act.data.p53, uplandUsername, action.timestamp);
         }
 
         private void ProcessBuyForFiatAction(HistoryAction action)
         {
+            if (action.act.data.a45 == null || action.act.data.p14 == null)
+            {
+                return;
+            }
+
             long propId = long.Parse(action.act.data.a45);
             List<SaleHistoryEntry> allEntries = localDataManager.GetSaleHistoryByPropertyId(propId);
             List<SaleHistoryEntry> buyEntries = allEntries
@@ -230,8 +255,8 @@ namespace Upland.InformationProcessor
             Property property = localDataManager.GetProperty(propId);
             if (property != null && property.Address != null && property.Address != "")
             {
-                property.Status = Status_Owned;
-                property.Owner = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.p14);
+                property.Status = Consts.PROP_STATUS_OWNED;
+                property.Owner = action.act.data.p14;
                 localDataManager.UpsertProperty(property);
             }
         }
@@ -253,8 +278,7 @@ namespace Upland.InformationProcessor
 
             if (property != null && property.Address != null && property.Address != "")
             {
-                property.Owner = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.a54);
-                property.Status = Status_Owned;
+                property.Status = Consts.PROP_STATUS_OWNED;
                 localDataManager.UpsertProperty(property);
             }
         }
@@ -286,8 +310,7 @@ namespace Upland.InformationProcessor
             if (property != null && property.Address != null && property.Address != "")
             {
                 localDataManager.UpsertSaleHistory(historyEntry);
-                property.Status = Status_ForSale;
-                property.Owner = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.a54);
+                property.Status = Consts.PROP_STATUS_FORSALE;
                 localDataManager.UpsertProperty(property);
             }
         }
@@ -324,11 +347,8 @@ namespace Upland.InformationProcessor
                 }
             }
 
-            string uplandUsername = action.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with EOS account ")[0];
-            localDataManager.UpsertEOSUser(action.act.data.p14, uplandUsername);
-
-            property.Status = Status_Owned;
-            property.Owner = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.p14);
+            property.Status = Consts.PROP_STATUS_OWNED;
+            property.Owner = action.act.data.p14;
             localDataManager.UpsertProperty(property);
         }
 
@@ -340,8 +360,6 @@ namespace Upland.InformationProcessor
                 int propTwoCityId = 1;
                 string propOneAddress = "";
                 string propTwoAddress = "";
-                string propOneOwner = "";
-                string propTwoOwner = "";
 
                 if (Regex.Match(action.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                 {
@@ -357,28 +375,22 @@ namespace Upland.InformationProcessor
                     propTwoAddress = action.act.data.memo.Split(" owns ")[2].Split(" (ini")[0];
                 }
 
-                propOneOwner = action.act.data.memo.Split("that Upland user ")[1].Split(" (EOS account ")[0];
-                propTwoOwner = action.act.data.memo.Split("and Upland user ")[1].Split(" (EOS account ")[0];
-
                 Property propOne = localDataManager.GetPropertyByCityIdAndAddress(propOneCityId, propOneAddress);
                 Property propTwo = localDataManager.GetPropertyByCityIdAndAddress(propTwoCityId, propTwoAddress);
 
-                propOne.Owner = propOneOwner;
-                propOne.Status = Status_Owned;
+                propOne.Owner = action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0];
+                propOne.Status = Consts.PROP_STATUS_OWNED;
                 if (propOne != null && propOne.Address != null && propOne.Address != "")
                 {
                     localDataManager.UpsertProperty(propOne);
                 }
 
-                propTwo.Owner = propTwoOwner;
-                propTwo.Status = Status_Owned;
+                propTwo.Owner = action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0];
+                propTwo.Status = Consts.PROP_STATUS_OWNED;
                 if (propTwo != null && propTwo.Address != null && propTwo.Address != "")
                 {
                     localDataManager.UpsertProperty(propTwo);
                 }
-
-                localDataManager.UpsertEOSUser(action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0], propOne.Owner);
-                localDataManager.UpsertEOSUser(action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0], propTwo.Owner);
 
                 List<SaleHistoryEntry> allEntriesOne = localDataManager.GetSaleHistoryByPropertyId(propOne.Id);
                 List<SaleHistoryEntry> allEntriesTwo = localDataManager.GetSaleHistoryByPropertyId(propTwo.Id);
@@ -414,17 +426,18 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                Property prop = localDataManager.GetPropertyByCityIdAndAddress(HelperFunctions.GetCityIdByName(action.act.data.memo.Split(", ")[1]), action.act.data.memo.Split(" owns ")[1].Split(", ")[0]);
+                string cityName = HelperFunctions.SusOutCityNameByMemoString(action.act.data.memo);
+                Property prop = localDataManager.GetPropertyByCityIdAndAddress(
+                    HelperFunctions.GetCityIdByName(cityName), 
+                    action.act.data.memo.Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0]);
                 if(prop == null || prop.Id == 0 || prop.Address == null || prop.Address == "")
                 {
                     return;
                 }
-                prop.Owner = action.act.data.memo.Split("that Upland user ")[1].Split(" with EOS acc")[0];
-                prop.Status = Status_Owned;
+                prop.Owner = action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0];
+                prop.Status = Consts.PROP_STATUS_OWNED;
 
                 localDataManager.UpsertProperty(prop);
-
-                localDataManager.UpsertEOSUser(action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0], prop.Owner);
 
                 List<SaleHistoryEntry> allEntries = localDataManager.GetSaleHistoryByPropertyId(prop.Id);
                 SaleHistoryEntry buyEntry = allEntries
@@ -448,7 +461,6 @@ namespace Upland.InformationProcessor
                     }
                 }
             }
-
         }
 
         private void ProcessOfferAction(HistoryAction action)
@@ -486,13 +498,34 @@ namespace Upland.InformationProcessor
         {
             string uplandUsername = action.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding EOS account ")[0];
             Property property = localDataManager.GetProperty(long.Parse(action.act.data.a45));
+            Tuple<string, string> existingAccount = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.a54);
 
-            localDataManager.UpsertEOSUser(action.act.data.a54, uplandUsername);
+            if (existingAccount != null && existingAccount.Item2 != uplandUsername)
+            {
+                // Tried Upserting a EOS Account that already exists, the older one must have been deleted, but not processed yet
+                HistoryAction deleteAction = new HistoryAction
+                {
+                    act = new ActionEntry
+                    {
+                        data = new ActionData
+                        {
+                            p52 = existingAccount.Item1
+                        }
+                    }
+                };
+                ProcessDeleteVisitorAction(deleteAction);
+
+                localDataManager.UpsertEOSUser(action.act.data.a54, uplandUsername, action.timestamp);
+            }
+            else if(existingAccount == null)
+            {
+                localDataManager.UpsertEOSUser(action.act.data.a54, uplandUsername, action.timestamp);
+            }
 
             if (property != null && property.Address != null && property.Address != "")
             {
-                property.Owner = uplandUsername;
-                property.Status = Status_Owned;
+                property.Owner = action.act.data.a54;
+                property.Status = Consts.PROP_STATUS_OWNED;
                 localDataManager.UpsertProperty(property);
             }
         }
