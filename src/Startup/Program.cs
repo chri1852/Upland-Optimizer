@@ -79,28 +79,29 @@ class Program
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
         //output = await informationProcessor.GetAssetsByTypeAndUserName("nflpa", "loyldoyl", "txt");
         //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test_file.txt", string.Join(Environment.NewLine, output));
+        //output = await informationProcessor.GetBuildingsUnderConstruction(1);
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\underConstruction.CSV", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
         //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
 
         // Populate CityProps And Neighborhoods
-        //await localDataManager.PopulateAllPropertiesInArea(40.656588, 40.492300, -74.031335, -74.264108, 16, true);
+        //await localDataManager.PopulateAllPropertiesInArea(40.921864, 40.782411, -73.763343, -73.942215, 29, true);
         //foreach (int cityId in Consts.Cities.Keys) { localDataManager.DetermineNeighborhoodIdsForCity(cityId); }
         //await localDataManager.PopulateCollectionPropertiesByCityId(16);
         //localDataManager.DetermineNeighborhoodIdsForCity(16);
 
         // Rebuild Property Structure List
         //await informationProcessor.RebuildPropertyStructures();
-        //await informationProcessor.RunCityStatusUpdate(true);
+        await informationProcessor.RunCityStatusUpdate();
 
         //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
 
         // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
 
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
-
-        await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
+        //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
+        //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
     }
     
     /*

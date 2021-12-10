@@ -60,6 +60,7 @@
     <Folder Include="Schemas" />
     <Folder Include="StoredProcedures" />
     <Folder Include="Types" />
+    <Folder Include="Indices" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Schemas\UPLSchema.sql" />
@@ -123,5 +124,6 @@
     <Build Include="StoredProcedures\UPL.GetLastSaleHistoryDateTime.sql" />
     <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByPropertyId.sql" />
     <Build Include="StoredProcedures\UPL.DeleteEOSUser.sql" />
+    <Build Include="Indices\CreateIndicies.sql" />
   </ItemGroup>
 </Project>

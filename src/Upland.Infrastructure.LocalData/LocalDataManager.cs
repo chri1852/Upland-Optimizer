@@ -88,25 +88,65 @@ namespace Upland.Infrastructure.LocalData
                                 property = allCityProperties[prop.Prop_Id];
                             }
 
-                            if (prop.status == Consts.PROP_STATUS_LOCKED && property.Status != Consts.PROP_STATUS_LOCKED)
-                            {
-                                // Lets Just update the status and FSA
-                                property.Status = prop.status;
-                                property.FSA = prop.labels.fsa_allow;
-                                property.Owner = null;
-                                localDataRepository.UpsertProperty(property);
-                                localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
-                                loadedProps.Add(prop.Prop_Id);
-                            }
-                            
-                            if(prop.status != Consts.PROP_STATUS_LOCKED && property.Status == Consts.PROP_STATUS_LOCKED)
-                            {
-                                property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
-                                property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+                            bool hasChanges = false;
 
-                                localDataRepository.UpsertProperty(property);
-                                loadedProps.Add(prop.Prop_Id);
+                            if (property.MonthlyEarnings == 0 && prop.status != Consts.PROP_STATUS_LOCKED)
+                            {
+                                Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                property.MonthlyEarnings = uplandProp.MonthlyEarnings;
+                                hasChanges = true;
                             }
+
+                            if (property.NeighborhoodId == null)
+                            {
+                                int neighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+
+                                if (neighborhoodId != -1)
+                                {
+                                    property.NeighborhoodId = neighborhoodId;
+                                    hasChanges = true;
+                                }
+                            }
+
+                            if (property.Status != prop.status)
+                            {
+                                // Lock a prop
+                                if (property.Status != Consts.PROP_STATUS_LOCKED && prop.status == Consts.PROP_STATUS_LOCKED)
+                                {
+                                    // Lets Just update the status and FSA
+                                    property.Status = prop.status;
+                                    property.FSA = prop.labels.fsa_allow;
+                                    property.Owner = null;
+                                    hasChanges = true;
+                                    localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
+                                }
+
+                                // unlock a prop
+                                if (property.Status == Consts.PROP_STATUS_LOCKED && prop.status != Consts.PROP_STATUS_LOCKED)
+                                {
+                                    Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                    property.Status = uplandProp.Status;
+                                    property.MonthlyEarnings = uplandProp.MonthlyEarnings;
+                                    property.Owner = uplandProp.Owner;
+                                    hasChanges = true;
+                                }
+
+
+                                if (property.Status == Consts.PROP_STATUS_UNLOCKED && (prop.status == Consts.PROP_STATUS_OWNED || prop.status == Consts.PROP_STATUS_FORSALE))
+                                {
+                                    Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                    property.Status = prop.status;
+                                    property.Owner = uplandProp.Owner;
+                                    hasChanges = true;
+                                }
+                            }
+
+                            if (hasChanges)
+                            {
+                                localDataRepository.UpsertProperty(property);
+                            }
+
+                            loadedProps.Add(property.Id);
                         }
                     }
                 }

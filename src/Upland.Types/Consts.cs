@@ -8,16 +8,7 @@ namespace Upland.Types
     {
         // Config Values
         public static readonly string CONFIG_MAXGLOBALSEQUENCE = "MaxGlobalSequence";
-
-        public static readonly string CityPro = "City Pro";
-        public static readonly string KingOfTheStreet = "King of the Street";
-        public static readonly string Newbie = "Newbie";
-
-        public static readonly double NewbieBoost = 1.1;
-
-        public static readonly int CityProId = 21;
-        public static readonly int KingOfTheStreetId = 1;
-        public static readonly int NewbieId = 7;
+        public static readonly string CONFIG_ENABLEBLOCKCHAINUPDATES = "EnableBlockChainUpdates";
 
         public static readonly List<int> StandardCollectionIds = new List<int>
         {
@@ -85,6 +76,6 @@ namespace Upland.Types
         public static readonly string RunStatusFailed = "Failed";
         public static readonly ulong TestUserDiscordId = 1;
 
-        public static readonly int MaxStreetNumber = 38807;
+        public static readonly int MaxStreetNumber = 39899;
     }
 }

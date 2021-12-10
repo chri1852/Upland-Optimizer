@@ -1550,7 +1550,7 @@ namespace Upland.InformationProcessor
                     continue;
                 }
 
-                if (userLevel != -1 || userLevel != profile.lvl)
+                if (userLevel != -1 && userLevel != profile.lvl)
                 {
                     continue;
                 }

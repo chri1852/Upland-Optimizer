@@ -146,6 +146,27 @@ namespace Startup.Commands
             }
         }
 
+        [Command("ToggleBlockchainUpdates")]
+        public async Task ToggleBlockchainUpdates()
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                LocalDataManager localDataManager = new LocalDataManager();
+                bool enableUpdates = !bool.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
+                localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, enableUpdates.ToString());
+                await ReplyAsync(string.Format("Blockchain Updating is now {0}.", enableUpdates ? "Enabled" : "Disabled"));
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(string.Format("Failed To Toggle BlockchainUpdates: {0}", ex.Message));
+            }
+        }
+
         [Command("AdminPropsUnderConstruction")]
         public async Task AdminPropsUnderConstruction(int userlevel)
         {

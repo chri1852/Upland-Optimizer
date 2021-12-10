@@ -17,11 +17,13 @@ namespace Upland.InformationProcessor
     {
         private readonly LocalDataManager localDataManager;
         private readonly BlockchainManager blockchainManager;
+        private bool isProcessing;
 
         public BlockchainPropertySurfer()
         {
             localDataManager = new LocalDataManager();
             blockchainManager = new BlockchainManager();
+            isProcessing = false;
         }
 
         public async Task RunBlockChainUpdate()
@@ -41,6 +43,15 @@ namespace Upland.InformationProcessor
 
         public async Task BuildBlockChainFromDate(DateTime startDate)
         {
+            bool enableUpdates = bool.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
+
+            if (!enableUpdates || this.isProcessing)
+            {
+                return;
+            }
+
+            this.isProcessing = true;
+
             DateTime historyTimeStamp = localDataManager.GetLastHistoricalCityStatusDate();
 
             if(historyTimeStamp == DateTime.MinValue)
@@ -53,7 +64,8 @@ namespace Upland.InformationProcessor
             }
 
             // Advance a day at a time, unless there are more props
-            int minutesToMoveFoward = 1440;
+            //int minutesToMoveFoward = 1440;
+            int minutesToMoveFoward = 60; // One Hours
             bool continueLoad = true;
 
             while(continueLoad)
@@ -64,13 +76,16 @@ namespace Upland.InformationProcessor
                 bool retry = true;
                 while (retry)
                 {
-                    Thread.Sleep(1000);
                     try
                     {
                         actions = await blockchainManager.GetPropertyActionsFromTime(startDate, minutesToMoveFoward);
                         if (actions != null)
                         {
                             retry = false;
+                        }
+                        else
+                        {
+                            Thread.Sleep(5000);
                         }
                     }
                     catch
@@ -109,6 +124,8 @@ namespace Upland.InformationProcessor
                     continueLoad = false;
                 }
             }
+
+            this.isProcessing = false;
         }
 
         private void ProcessActions(List<HistoryAction> actions)
@@ -201,6 +218,11 @@ namespace Upland.InformationProcessor
 
         private void ProcessBuyForFiatAction(HistoryAction action)
         {
+            if (action.act.data.a45 == null || action.act.data.p14 == null)
+            {
+                return;
+            }
+
             long propId = long.Parse(action.act.data.a45);
             List<SaleHistoryEntry> allEntries = localDataManager.GetSaleHistoryByPropertyId(propId);
             List<SaleHistoryEntry> buyEntries = allEntries
@@ -404,7 +426,10 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                Property prop = localDataManager.GetPropertyByCityIdAndAddress(HelperFunctions.GetCityIdByName(action.act.data.memo.Split(", ")[1]), action.act.data.memo.Split(" owns ")[1].Split(", ")[0]);
+                string cityName = HelperFunctions.SusOutCityNameByMemoString(action.act.data.memo);
+                Property prop = localDataManager.GetPropertyByCityIdAndAddress(
+                    HelperFunctions.GetCityIdByName(cityName), 
+                    action.act.data.memo.Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0]);
                 if(prop == null || prop.Id == 0 || prop.Address == null || prop.Address == "")
                 {
                     return;
