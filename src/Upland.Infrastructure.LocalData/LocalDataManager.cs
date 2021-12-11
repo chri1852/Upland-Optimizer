@@ -97,17 +97,6 @@ namespace Upland.Infrastructure.LocalData
                                 hasChanges = true;
                             }
 
-                            if (property.NeighborhoodId == null)
-                            {
-                                int neighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
-
-                                if (neighborhoodId != -1)
-                                {
-                                    property.NeighborhoodId = neighborhoodId;
-                                    hasChanges = true;
-                                }
-                            }
-
                             if (property.Status != prop.status)
                             {
                                 // Lock a prop
@@ -122,7 +111,7 @@ namespace Upland.Infrastructure.LocalData
                                 }
 
                                 // unlock a prop
-                                if (property.Status == Consts.PROP_STATUS_LOCKED && prop.status != Consts.PROP_STATUS_LOCKED)
+                                if (property.Status == Consts.PROP_STATUS_LOCKED)
                                 {
                                     Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
                                     property.Status = uplandProp.Status;
@@ -131,8 +120,7 @@ namespace Upland.Infrastructure.LocalData
                                     hasChanges = true;
                                 }
 
-
-                                if (property.Status == Consts.PROP_STATUS_UNLOCKED && (prop.status == Consts.PROP_STATUS_OWNED || prop.status == Consts.PROP_STATUS_FORSALE))
+                                if (property.Status == Consts.PROP_STATUS_UNLOCKED)
                                 {
                                     Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
                                     property.Status = prop.status;
@@ -140,7 +128,7 @@ namespace Upland.Infrastructure.LocalData
                                     hasChanges = true;
                                 }
 
-                                if (property.Status == Consts.PROP_STATUS_FORSALE && prop.status == Consts.PROP_STATUS_OWNED)
+                                if (property.Status == Consts.PROP_STATUS_FORSALE)
                                 {
                                     Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
                                     property.Status = prop.status;

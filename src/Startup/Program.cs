@@ -57,12 +57,12 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        //Console.Write("Enter the Upland Username: ");
-        //username = Console.ReadLine();
-        //Console.Write("Enter the Level (1-8)....: ");
-        //qualityLevel = Console.ReadLine();
+        Console.Write("Enter the Upland Username: ");
+        username = Console.ReadLine();
+        Console.Write("Enter the Level (1-8)....: ");
+        qualityLevel = Console.ReadLine();
         //await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel), 201, 20, 1000);
-        //await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
+        await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -263,7 +263,7 @@ class Program
     private async Task RunRefreshActions()
     {
         DateTime time = DateTime.UtcNow;
-        if (time.Hour == 0) 
+        if (time.Hour == 17) 
         {
             InformationProcessor informationProcessor = new InformationProcessor();
 

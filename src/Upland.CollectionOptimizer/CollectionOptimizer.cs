@@ -25,7 +25,7 @@ namespace Upland.CollectionOptimizer
         private LocalDataManager LocalDataManager;
         private bool DebugMode;
 
-        private const string CityPro = "CityPro";
+        private const string CityPro = "City Pro";
         private const string KingOfTheStreet = "King of the Street";
         private const int CityProId = 21;
         private const int KingOfTheStreetId = 1;
