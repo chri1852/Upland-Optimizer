@@ -1484,6 +1484,13 @@ namespace Upland.InformationProcessor
             }
         }
 
+        public async Task RefreshCityById(string type, int cityId)
+        {
+            bool fullRefresh = type.ToUpper() == "FULL" ? true : false;
+            List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId, fullRefresh);
+        }
+
         public async Task RunCityStatusUpdate()
         {
             List<CollatedStatsObject> cityStats = localDataManager.GetCityStats();

@@ -247,5 +247,25 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("Failed Rebuilding PropertyStructures: {0}", ex.Message));
             }
         }
+
+        [Command("AdminRefreshCityById")]
+        public async Task AdminRefreshCityById(string type, int cityId)
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                await ReplyAsync(string.Format("Performing {0} of CityId {1}", type.ToUpper(), cityId));
+                await _informationProcessor.RefreshCityById(type.ToUpper(), cityId);
+                await ReplyAsync(string.Format("CityId {0} Refreshed.", cityId));
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(string.Format("Failed Refreshing CityId {0}: {1}", cityId, ex.Message));
+            }
+        }
     }
 }

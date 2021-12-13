@@ -50,7 +50,27 @@ namespace Upland.Infrastructure.LocalData
 
                         // Get the full property Data
                         if (fullPropertyRetrieve)
-                        { 
+                        {
+                            // Check to see if the prop exists
+                            if (!allCityProperties.ContainsKey(prop.Prop_Id))
+                            {
+                                // check to make sure it is not under another city if it is continue
+                                List<Property> checkProps = localDataRepository.GetProperties(new List<long> { prop.Prop_Id });
+                                if (checkProps.Count > 0)
+                                {
+                                    continue;
+                                }
+                            }
+                            else
+                            {
+                                // if the property is in the city and has a non 0 mint continue
+                                if (allCityProperties[prop.Prop_Id].MonthlyEarnings != 0)
+                                {
+                                    continue;
+                                }
+                            }
+
+                            // now lets populate it
                             try
                             {
                                 Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
