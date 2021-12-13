@@ -209,6 +209,26 @@ namespace Startup.Commands
             }
         }
 
+        [Command("AdminResyncPropertyList")]
+        public async Task AdminResyncPropertyList(string action, string propertyList)
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                await ReplyAsync(string.Format("Resyncing Properties."));
+                await _informationProcessor.ResyncPropsList(action, propertyList);
+                await ReplyAsync(string.Format("Properties Resynced."));
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(string.Format("Failed Resyncing Properties: {0}", ex.Message));
+            }
+        }
+
         [Command("AdminRebuildPropertyStructures")]
         public async Task AdminRebuildPropertyStructures()
         {

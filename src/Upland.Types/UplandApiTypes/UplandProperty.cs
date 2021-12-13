@@ -30,6 +30,8 @@ namespace Upland.Types.UplandApiTypes
     public class MarketInfo
     {
         public string token;
+        public string fiat;
+        public string currency;
     }
 
     public class uplandLabels

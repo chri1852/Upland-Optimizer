@@ -1501,6 +1501,98 @@ namespace Upland.InformationProcessor
             }
         }
 
+        public async Task ResyncPropsList(string action, string propList)
+        {
+            List<long> propIds = new List<long>();
+            foreach (string id in propList.Split(","))
+            {
+                propIds.Add(long.Parse(id));
+            }
+            List<Property> localProperties = localDataManager.GetProperties(propIds);
+
+            if (action == "OpenForSaleOwned")
+            {
+                foreach (Property localProperty in localProperties)
+                {
+                    UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(localProperty.Id);
+
+                    localProperty.Owner = uplandProperty.owner;
+                    localProperty.Status = uplandProperty.status;
+
+                    localDataManager.DeleteSaleHistoryByPropertyId(localProperty.Id);
+                    localDataManager.UpsertProperty(localProperty);
+                }
+            }
+            else if (action == "ManyOpenForSale")
+            {
+                foreach (Property localProperty in localProperties)
+                {
+                    UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(localProperty.Id);
+                    List<SaleHistoryEntry> propSaleHistory = localDataManager.GetSaleHistoryByPropertyId(localProperty.Id).OrderByDescending(e => e.DateTime).ToList();
+
+                    bool mostRecentSaleFound = false;
+                    foreach(SaleHistoryEntry entry in propSaleHistory)
+                    {
+                        // Skip Offers and completed
+                        if (entry.Offer == true || (entry.BuyerEOS != null && entry.SellerEOS != null))
+                        {
+                            continue;
+                        }
+
+                        // Seller is not the current owner, delete
+                        if (uplandProperty.owner != entry.SellerEOS)
+                        {
+                            localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                            continue;
+                        }
+
+                        // Seller is the current owner, if not most recent sale found, mark and continuce
+                        if (!mostRecentSaleFound)
+                        {
+                            mostRecentSaleFound = true;
+                        }
+                        else
+                        {
+                            localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                        }    
+                    }
+
+                    localProperty.Owner = uplandProperty.owner;
+                    localProperty.Status = uplandProperty.status;
+
+                    // If the prop is for sale, but we have none logged, sub one in
+                    if (localProperty.Status == Consts.PROP_STATUS_FORSALE && !mostRecentSaleFound)
+                    {
+                        SaleHistoryEntry newEntry = new SaleHistoryEntry
+                        {
+                            DateTime = DateTime.Now,
+                            SellerEOS = localProperty.Owner,
+                            BuyerEOS = null,
+                            PropId = localProperty.Id,
+                            OfferPropId = null,
+                            Amount = null,
+                            AmountFiat = null,
+                            Offer = false,
+                            Accepted = false
+                        };
+
+                        if (uplandProperty.on_market.currency == "UPX")
+                        {
+                            newEntry.Amount = double.Parse(uplandProperty.on_market.token.Split(" UP")[0]);
+                        }
+                        else
+                        {
+                            newEntry.AmountFiat = double.Parse(uplandProperty.on_market.fiat.Split(" FI")[0]);
+                        }
+
+                        localDataManager.UpsertSaleHistory(newEntry);
+                    }
+
+                    localDataManager.UpsertProperty(localProperty);
+                }
+            }
+        }
+
         public async Task<List<string>> GetBuildingsUnderConstruction(int userLevel)
         {
             List<SparkStakingReport> rawSparkReport = new List<SparkStakingReport>();
