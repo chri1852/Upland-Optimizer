@@ -1,6 +1,6 @@
-﻿CREATE PROCEDURE [UPL].[GetSaleHistoryByPropertyId]
+﻿CREATE PROCEDURE [UPL].[GetSaleHistoryByCollectionId]
 (
-	@PropertyId  BIGINT
+	@CollectionId  INT
 )
 AS
 BEGIN
@@ -32,11 +32,13 @@ BEGIN
 				ON S.SellerEOS = Seller.EOSAccount
 			JOIN UPL.EOSUser Buyer (NOLOCK)
 				ON S.BuyerEOS = Buyer.EOSAccount
+			JOIN UPL.CollectionProperty CP (NOLOCK)
+				ON P.Id = CP.PropertyId
 		WHERE SellerEOS IS NOT NULL
 			AND BuyerEOS IS NOT NULL
 			AND OfferPropId IS NULL
 			AND P.MonthlyEarnings != 0
-			AND P.Id = @PropertyId
+			AND CP.CollectionId = @CollectionId
 		ORDER BY S.DateTime DESC
 	END TRY
 

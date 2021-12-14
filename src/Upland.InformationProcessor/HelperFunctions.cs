@@ -147,9 +147,9 @@ namespace Upland.InformationProcessor
         {
             List<string> output = new List<string>();
 
-            int pricePad = 11;
-            int markupPad = 10;
-            int mintPad = 10;
+            int pricePad = 14;
+            int markupPad = 14;
+            int mintPad = 14;
             int addressPad = propDictionary.Max(p => p.Value.Address.Length);
             int ownerPad = forSaleProps.Max(p => p.Owner.Length);
             int neighborhoodPad = 14;

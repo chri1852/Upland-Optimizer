@@ -609,7 +609,6 @@ namespace Startup.Commands
             }
         }
 
-
         [Command("UnmintedProperties")]
         public async Task UnmintedProperties(string type, int Id, string propType, string fileType = "CSV")
         {
@@ -734,6 +733,37 @@ namespace Startup.Commands
             }
         }
 
+        [Command("GetSalesHistory")]
+        public async Task GetSalesHistory(string type, string identifier, string fileType = "CSV")
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            await ReplyAsync(string.Format("Grabbing that Sales History now {0}!", HelperFunctions.GetRandomName(_random)));
+
+            List<string> saleHistoryData = _informationProcessor.GetSaleHistoryByType(type.ToUpper(), identifier, fileType.ToUpper());
+
+            if (saleHistoryData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), saleHistoryData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, saleHistoryData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("SaleHistory_{0}_{1}.{2}", type, identifier, fileType.ToUpper() == "CSV" ? "csv" : "txt"));
+            }
+        }
+
         [Command("Help")]
         public async Task Help()
         {
@@ -793,10 +823,11 @@ namespace Startup.Commands
             helpMenu.Add("   16. !AllProperties");
             helpMenu.Add("   17. !SearchStreets");
             helpMenu.Add("   18. !GetAssets");
+            helpMenu.Add("   19. !GetSalesHistory"); 
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   19. !OptimizerLevelRun");
-            helpMenu.Add("   20. !OptimizerWhatIfRun");
+            helpMenu.Add("   20. !OptimizerLevelRun");
+            helpMenu.Add("   21. !OptimizerWhatIfRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -1041,13 +1072,30 @@ namespace Startup.Commands
                     helpOutput.Add("The above command finds all Decorations owned by Hornbrod and returns a csv file.");
                     break;
                 case "19":
+                    helpOutput.Add(string.Format("!GetSalesHistory"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command returns the sales history for a given type (City, Neighborhood, Collection, Street, Property, Buyer, Seller) and its identifier. Note this does not include property swaps, only upx and fiat transactions."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !GetSalesHistory City 13");
+                    helpOutput.Add("The above command finds the sales history for Rutherford, and returns a csv file sorted by date.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !GetSalesHistory Street 31898");
+                    helpOutput.Add("The above command finds the sales history on Broadway in Nashville, and returns a csv file sorted by date.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !GetSalesHistory Buyer hornbrod TXT");
+                    helpOutput.Add("The above command finds the sales history where the user hornbrod was a buyer, and returns a txt file sorted by date");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !GetSalesHistory Property \"10, 9843 S Exchange Ave\" TXT");
+                    helpOutput.Add("The above command finds the sales history for 9843 S Exchange Ave in Chicago, and returns a txt file sorted by date");
+                    break;
+                case "20":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
-                case "20":
+                case "21":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));

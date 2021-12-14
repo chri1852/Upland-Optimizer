@@ -1444,6 +1444,149 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public List<string> GetSaleHistoryByType(string type, string identifier, string fileType)
+        {
+            type = type.ToUpper();
+            List<string> output = new List<string>();
+            List<SaleHistoryQueryEntry> saleHistoryEntries = new List<SaleHistoryQueryEntry>();
+
+            int intId = 0;
+            long propId = 0;
+
+            if ((type == "CITY" || type == "NEIGHBORHOOD" || type == "COLLECTION" || type == "STREET")
+                && !int.TryParse(identifier, out intId))
+            {
+                output.Add(string.Format("{0} not a valid {1} Id", identifier, type));
+                return output;
+            }
+
+            if (type == "PROPERTY")
+            {
+                if(!int.TryParse(identifier.Split(",")[0], out intId))
+                {
+                    output.Add(string.Format("{0} not a valid City Id", identifier.Split(",")[0]));
+                    return output;
+                }
+                string address = identifier.Substring(identifier.IndexOf(',') + 1).Trim();
+                Property searchProp = localDataManager.GetPropertyByCityIdAndAddress(intId, address);
+
+                if (searchProp == null || searchProp.Id == 0)
+                {
+                    output.Add(string.Format("I Couldn't find that property in city Id {0} with address {1}", intId, address));
+                    return output;
+                }
+
+                propId = searchProp.Id;
+            }
+
+            switch (type.ToUpper())
+            {
+                case "CITY":
+                    saleHistoryEntries = localDataManager.GetSaleHistoryByCityId(intId);
+                    break;
+                case "NEIGHBORHOOD":
+                    saleHistoryEntries = localDataManager.GetSaleHistoryByNeighborhoodId(intId);
+                    break;
+                case "COLLECTION":
+                    saleHistoryEntries = localDataManager.GetSaleHistoryByCollectionId(intId);
+                    break;
+                case "STREET":
+                    saleHistoryEntries = localDataManager.GetSaleHistoryByStreetId(intId);
+                    break;
+                case "PROPERTY":
+                    saleHistoryEntries = localDataManager.GetSaleHistoryByPropertyId(propId);
+                    break;
+                case "BUYER":
+                    saleHistoryEntries = localDataManager.GetSaleHistoryByBuyerUsername(identifier.ToLower());
+                    break;
+                case "SELLER":
+                    saleHistoryEntries = localDataManager.GetSaleHistoryBySellerUsername(identifier.ToLower());
+                    break;
+            }
+
+            if (saleHistoryEntries.Count == 0)
+            {
+                output.Add(string.Format("Sorry no sales history was found for {0} Id {1}", type, identifier));
+                return output;
+            }
+
+            if (fileType.ToUpper() == "CSV")
+            {
+                output.Add("DateTime,Seller,Buyer,Offer,CityId,Address,Mint,Price,Currency,Markup");
+                foreach (SaleHistoryQueryEntry entry in saleHistoryEntries)
+                {
+                    output.Add(string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}%",
+                        entry.DateTime,
+                        entry.Seller,
+                        entry.Buyer,
+                        entry.Offer,
+                        entry.CityId,
+                        entry.Address,
+                        entry.Mint,
+                        entry.Price,
+                        entry.Currency,
+                        entry.Markup*100
+                    ));
+                }
+            }
+            else
+            {
+                int datePad = 22;
+                int sellerPad = Math.Max(saleHistoryEntries.Max(e => e.Seller.Length), 6);
+                int buyerPad = Math.Max(saleHistoryEntries.Max(e => e.Buyer.Length), 6);
+                int offerPad = 5;
+                int cityIdPad = 6;
+                int addressPad = saleHistoryEntries.Max(e => e.Address.Length);
+                int mintPad = 14;
+                int pricePad = 14;
+                int currencyPad = 8;
+                int markupPad = 14;
+
+                output.Add(string.Format("Sales History for {0} {1}", type, identifier));
+                output.Add("");
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9}", 
+                    "DateTime".PadLeft(datePad), 
+                    "Seller".PadLeft(sellerPad), 
+                    "Buyer".PadLeft(buyerPad), 
+                    "Offer".PadLeft(offerPad), 
+                    "CityId".PadLeft(cityIdPad), 
+                    "Address".PadLeft(addressPad), 
+                    "Mint".PadLeft(mintPad), 
+                    "Price".PadLeft(pricePad), 
+                    "Currency".PadLeft(currencyPad), 
+                    "Markup".PadLeft(markupPad)));
+
+                foreach (SaleHistoryQueryEntry entry in saleHistoryEntries)
+                {
+                    string entryString = "";
+
+                    entryString += string.Format("{0}", entry.DateTime).PadLeft(datePad);
+                    entryString += " - ";
+                    entryString += string.Format("{0}", entry.Seller).PadLeft(sellerPad);
+                    entryString += " - ";
+                    entryString += string.Format("{0}", entry.Buyer).PadLeft(buyerPad);
+                    entryString += " - ";
+                    entryString += string.Format("{0}", entry.Offer).PadLeft(offerPad);
+                    entryString += " - ";
+                    entryString += string.Format("{0}", entry.CityId).PadLeft(cityIdPad);
+                    entryString += " - ";
+                    entryString += string.Format("{0}", entry.Address).PadLeft(addressPad);
+                    entryString += " - ";
+                    entryString += string.Format("{0:N2}", entry.Mint).PadLeft(mintPad);
+                    entryString += " - ";
+                    entryString += string.Format("{0:N2}", entry.Price).PadLeft(pricePad);
+                    entryString += " - ";
+                    entryString += string.Format("{0}", entry.Currency).PadLeft(currencyPad);
+                    entryString += " - ";
+                    entryString += string.Format("{0:N2}%", entry.Markup*100).PadLeft(markupPad);
+
+                    output.Add(entryString);
+                }
+            }
+
+            return output;
+        }
+
         public void ClearSalesCache()
         {
             uplandApiManager.ClearSalesCache();
@@ -1535,7 +1678,7 @@ namespace Upland.InformationProcessor
                 foreach (Property localProperty in localProperties)
                 {
                     UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(localProperty.Id);
-                    List<SaleHistoryEntry> propSaleHistory = localDataManager.GetSaleHistoryByPropertyId(localProperty.Id).OrderByDescending(e => e.DateTime).ToList();
+                    List<SaleHistoryEntry> propSaleHistory = localDataManager.GetRawSaleHistoryByPropertyId(localProperty.Id).OrderByDescending(e => e.DateTime).ToList();
 
                     bool mostRecentSaleFound = false;
                     foreach(SaleHistoryEntry entry in propSaleHistory)
