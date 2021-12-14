@@ -74,6 +74,12 @@ namespace Upland.Infrastructure.LocalData
                             try
                             {
                                 Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                                // Due to blockchain updating, clear the owner and status
+                                property.Owner = null;
+                                if(property.Status != Consts.PROP_STATUS_LOCKED)
+                                {
+                                    property.Status = Consts.PROP_STATUS_UNLOCKED;
+                                }
                                 property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
 
                                 localDataRepository.UpsertProperty(property);
