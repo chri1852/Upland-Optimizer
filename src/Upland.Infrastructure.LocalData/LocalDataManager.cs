@@ -34,7 +34,7 @@ namespace Upland.Infrastructure.LocalData
 
             double defaultStep = 0.005;
             int totalprops = 0;
-            
+
             for (double y = north; y > south - defaultStep; y -= defaultStep)
             {
                 for (double x = west; x < east + defaultStep; x += defaultStep)
@@ -93,7 +93,7 @@ namespace Upland.Infrastructure.LocalData
                             {
                                 // check to make sure it is not under another city
                                 List<Property> checkProps = localDataRepository.GetProperties(new List<long> { prop.Prop_Id });
-                                if(checkProps.Count > 0)
+                                if (checkProps.Count > 0)
                                 {
                                     property = checkProps[0];
                                 }
@@ -222,7 +222,7 @@ namespace Upland.Infrastructure.LocalData
             List<Neighborhood> existingNeighborhoods = GetNeighborhoods();
             List<Neighborhood> neighborhoods = await uplandApiRepository.GetNeighborhoods();
 
-            foreach(Neighborhood neighborhood in neighborhoods)
+            foreach (Neighborhood neighborhood in neighborhoods)
             {
                 if (!existingNeighborhoods.Any(n => n.Id == neighborhood.Id))
                 {
@@ -357,7 +357,7 @@ namespace Upland.Infrastructure.LocalData
 
             return false;
         }
-        
+
         // Stack Overflow Black Magic
         private bool IsPointInPolygon(List<List<double>> polygon, Property property)
         {
@@ -458,7 +458,7 @@ namespace Upland.Infrastructure.LocalData
         {
             List<CollatedStatsObject> cityStats = GetCityStats();
 
-            foreach(CollatedStatsObject stat in cityStats)
+            foreach (CollatedStatsObject stat in cityStats)
             {
                 if (stat.PercentMinted > 0)
                 {
@@ -502,7 +502,7 @@ namespace Upland.Infrastructure.LocalData
                     collatedStats.Add(new CollatedStatsObject { Id = stat.Id });
                 }
 
-                switch(stat.Status)
+                switch (stat.Status)
                 {
                     case Consts.PROP_STATUS_FORSALE:
                         collatedStats.Last().ForSaleProps += stat.PropCount;
@@ -584,9 +584,44 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetRegisteredUser(discordUserId);
         }
 
-        public List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
+        public List<SaleHistoryEntry> GetRawSaleHistoryByPropertyId(long propertyId)
+        {
+            return localDataRepository.GetRawSaleHistoryByPropertyId(propertyId);
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByCityId(int cityId)
+        {
+            return localDataRepository.GetSaleHistoryByCityId(cityId);
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByNeighborhoodId(int neighborhoodId)
+        {
+            return localDataRepository.GetSaleHistoryByNeighborhoodId(neighborhoodId);
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByCollectionId(int collectionId)
+        {
+            return localDataRepository.GetSaleHistoryByCollectionId(collectionId);
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByStreetId(int streetId)
+        {
+            return localDataRepository.GetSaleHistoryByStreetId(streetId);
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByPropertyId(long propertyId)
         {
             return localDataRepository.GetSaleHistoryByPropertyId(propertyId);
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByBuyerUsername(string buyerUsername)
+        {
+            return localDataRepository.GetSaleHistoryByBuyerUsername(buyerUsername);
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryBySellerUsername(string sellerUsername)
+        {
+            return localDataRepository.GetSaleHistoryBySellerUsername(sellerUsername);
         }
 
         public List<CollatedStatsObject> GetHistoricalCityStatsByCityId(int cityId)

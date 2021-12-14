@@ -1181,7 +1181,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public List<SaleHistoryEntry> GetSaleHistoryByPropertyId(long propertyId)
+        public List<SaleHistoryEntry> GetRawSaleHistoryByPropertyId(long propertyId)
         {
             List<SaleHistoryEntry> saleHistoryEntries = new List<SaleHistoryEntry>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1195,7 +1195,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[GetSaleHistoryByPropertyId]";
+                    sqlCmd.CommandText = "[UPL].[GetRawSaleHistoryByPropertyId]";
                     sqlCmd.Parameters.Add(new SqlParameter("PropId", propertyId));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -1514,6 +1514,303 @@ namespace Upland.Infrastructure.LocalData
 
                 return EOSAccount;
             }
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByCityId(int cityId)
+        {
+            List<SaleHistoryQueryEntry> saleHistoryEntries = new List<SaleHistoryQueryEntry>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSaleHistoryByCityId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@CityId", cityId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            saleHistoryEntries.Add(
+                                ReadSaleHistoryQueryEntryFromReader(reader)
+                            );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return saleHistoryEntries;
+            }
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByNeighborhoodId(int neighborhoodId)
+        {
+            List<SaleHistoryQueryEntry> saleHistoryEntries = new List<SaleHistoryQueryEntry>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSaleHistoryByNeighborhoodId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@NeighborhoodId", neighborhoodId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            saleHistoryEntries.Add(
+                                ReadSaleHistoryQueryEntryFromReader(reader)
+                            );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return saleHistoryEntries;
+            }
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByCollectionId(int collectionId)
+        {
+            List<SaleHistoryQueryEntry> saleHistoryEntries = new List<SaleHistoryQueryEntry>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSaleHistoryByCollectionId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@CollectionId", collectionId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            saleHistoryEntries.Add(
+                                ReadSaleHistoryQueryEntryFromReader(reader)
+                            );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return saleHistoryEntries;
+            }
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByStreetId(int streetId)
+        {
+            List<SaleHistoryQueryEntry> saleHistoryEntries = new List<SaleHistoryQueryEntry>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSaleHistoryByStreetId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@StreetId", streetId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            saleHistoryEntries.Add(
+                                ReadSaleHistoryQueryEntryFromReader(reader)
+                            );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return saleHistoryEntries;
+            }
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByPropertyId(long propertyId)
+        {
+            List<SaleHistoryQueryEntry> saleHistoryEntries = new List<SaleHistoryQueryEntry>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSaleHistoryByPropertyId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@PropertyId", propertyId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            saleHistoryEntries.Add(
+                                ReadSaleHistoryQueryEntryFromReader(reader)
+                            );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return saleHistoryEntries;
+            }
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryByBuyerUsername(string buyerUsername)
+        {
+            List<SaleHistoryQueryEntry> saleHistoryEntries = new List<SaleHistoryQueryEntry>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSaleHistoryByBuyerUsername]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@BuyerUsername", buyerUsername));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            saleHistoryEntries.Add(
+                                ReadSaleHistoryQueryEntryFromReader(reader)
+                            );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return saleHistoryEntries;
+            }
+        }
+
+        public List<SaleHistoryQueryEntry> GetSaleHistoryBySellerUsername(string sellerUsername)
+        {
+            List<SaleHistoryQueryEntry> saleHistoryEntries = new List<SaleHistoryQueryEntry>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSaleHistoryBySellerUsername]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@SellerUsername", sellerUsername));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            saleHistoryEntries.Add(
+                                ReadSaleHistoryQueryEntryFromReader(reader)
+                            );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return saleHistoryEntries;
+            }
+        }
+
+        private SaleHistoryQueryEntry ReadSaleHistoryQueryEntryFromReader(SqlDataReader reader)
+        {
+            return new SaleHistoryQueryEntry
+            {
+                DateTime = (DateTime)reader["DateTime"],
+                Seller = (string)reader["Seller"],
+                Buyer = (string)reader["Buyer"],
+                Offer = (bool)reader["Offer"],
+                CityId = (int)reader["CityId"],
+                Address = (string)reader["Address"],
+                Mint = decimal.ToDouble((decimal)reader["Mint"]),
+                Price = decimal.ToDouble((decimal)reader["Price"]),
+                Currency = (string)reader["Currency"],
+                Markup = decimal.ToDouble((decimal)reader["Markup"])
+            };
         }
 
         public void DeleteRegisteredUser(decimal discordUserId)

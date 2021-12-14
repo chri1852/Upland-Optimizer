@@ -108,7 +108,7 @@
     <Build Include="Tables\UPL.SaleHistory.sql" />
     <Build Include="StoredProcedures\UPL.UpsertSaleHistory.sql" />
     <Build Include="StoredProcedures\UPL.DeleteSaleHistoryById.sql" />
-    <Build Include="StoredProcedures\UPL.GetSaleHistoryByPropertyId.sql" />
+    <Build Include="StoredProcedures\UPL.GetRawSaleHistoryByPropertyId.sql" />
     <Build Include="Tables\UPL.ConfigurationValues.sql" />
     <Build Include="StoredProcedures\UPL.UpsertConfigurationValue.sql" />
     <Build Include="StoredProcedures\UPL.GetConfigurationValue.sql" />
@@ -125,6 +125,13 @@
     <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByPropertyId.sql" />
     <Build Include="StoredProcedures\UPL.DeleteEOSUser.sql" />
     <Build Include="Indices\CreateIndicies.sql" />
-    <Build Include="StoredProcedures\GetCityPropertiesForSale.sql" />
+    <Build Include="StoredProcedures\UPL.GetCityPropertiesForSale.sql" />
+    <Build Include="StoredProcedures\UPL.GetSaleHistoryByCityId.sql" />
+    <Build Include="StoredProcedures\UPL.GetSaleHistoryByNeighborhoodId.sql" />
+    <Build Include="StoredProcedures\UPL.GetSaleHistoryByCollectionId.sql" />
+    <Build Include="StoredProcedures\UPL.GetSaleHistoryByPropertyId.sql" />
+    <Build Include="StoredProcedures\UPL.GetSaleHistoryBySellerUsername.sql" />
+    <Build Include="StoredProcedures\UPL.GetSaleHistoryByBuyerUsername.sql" />
+    <Build Include="StoredProcedures\UPL.GetSaleHistoryByStreetId.sql" />
   </ItemGroup>
 </Project>

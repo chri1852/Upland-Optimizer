@@ -1,6 +1,6 @@
-﻿CREATE PROCEDURE [UPL].[GetSaleHistoryByPropertyId]
+﻿CREATE PROCEDURE [UPL].[GetSaleHistoryByStreetId]
 (
-	@PropertyId  BIGINT
+	@StreetId  INT
 )
 AS
 BEGIN
@@ -36,7 +36,7 @@ BEGIN
 			AND BuyerEOS IS NOT NULL
 			AND OfferPropId IS NULL
 			AND P.MonthlyEarnings != 0
-			AND P.Id = @PropertyId
+			AND P.StreetId = @StreetId
 		ORDER BY S.DateTime DESC
 	END TRY
 

@@ -231,7 +231,7 @@ namespace Upland.InformationProcessor
             }
 
             long propId = long.Parse(action.act.data.a45);
-            List<SaleHistoryEntry> allEntries = localDataManager.GetSaleHistoryByPropertyId(propId);
+            List<SaleHistoryEntry> allEntries = localDataManager.GetRawSaleHistoryByPropertyId(propId);
             List<SaleHistoryEntry> buyEntries = allEntries
                 .Where(e => e.BuyerEOS == null && !e.Offer && e.AmountFiat > 0)
                 .OrderByDescending(e => e.DateTime).ToList();
@@ -271,7 +271,7 @@ namespace Upland.InformationProcessor
         private void ProcessRemoveFromSaleAction(HistoryAction action)
         {
             long propId = long.Parse(action.act.data.a45);
-            List<SaleHistoryEntry> historyEntries = localDataManager.GetSaleHistoryByPropertyId(propId);
+            List<SaleHistoryEntry> historyEntries = localDataManager.GetRawSaleHistoryByPropertyId(propId);
 
             foreach(SaleHistoryEntry entry in historyEntries)
             {
@@ -332,7 +332,7 @@ namespace Upland.InformationProcessor
                 return;
             }
 
-            List<SaleHistoryEntry> allEntries = localDataManager.GetSaleHistoryByPropertyId(propId);
+            List<SaleHistoryEntry> allEntries = localDataManager.GetRawSaleHistoryByPropertyId(propId);
             List<SaleHistoryEntry> buyEntries = allEntries
                 .Where(e => e.BuyerEOS == null && !e.Offer && e.Amount == double.Parse(action.act.data.p24.Split(" UP")[0]))
                 .OrderByDescending(e => e.DateTime).ToList();
@@ -399,8 +399,8 @@ namespace Upland.InformationProcessor
                     localDataManager.UpsertProperty(propTwo);
                 }
 
-                List<SaleHistoryEntry> allEntriesOne = localDataManager.GetSaleHistoryByPropertyId(propOne.Id);
-                List<SaleHistoryEntry> allEntriesTwo = localDataManager.GetSaleHistoryByPropertyId(propTwo.Id);
+                List<SaleHistoryEntry> allEntriesOne = localDataManager.GetRawSaleHistoryByPropertyId(propOne.Id);
+                List<SaleHistoryEntry> allEntriesTwo = localDataManager.GetRawSaleHistoryByPropertyId(propTwo.Id);
 
                 SaleHistoryEntry buyEntry = allEntriesTwo
                     .Where(e => e.SellerEOS == null && e.Offer && e.BuyerEOS == action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0])
@@ -446,7 +446,7 @@ namespace Upland.InformationProcessor
 
                 localDataManager.UpsertProperty(prop);
 
-                List<SaleHistoryEntry> allEntries = localDataManager.GetSaleHistoryByPropertyId(prop.Id);
+                List<SaleHistoryEntry> allEntries = localDataManager.GetRawSaleHistoryByPropertyId(prop.Id);
                 SaleHistoryEntry buyEntry = allEntries
                     .Where(e => e.SellerEOS == null && e.Offer && e.BuyerEOS == action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0])
                     .OrderByDescending(e => e.DateTime)
