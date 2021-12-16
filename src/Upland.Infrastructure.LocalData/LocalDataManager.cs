@@ -135,9 +135,7 @@ namespace Upland.Infrastructure.LocalData
                                     hasChanges = true;
                                     localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
                                 }
-
-                                // unlock a prop
-                                if (property.Status == Consts.PROP_STATUS_LOCKED)
+                                else if (property.Status == Consts.PROP_STATUS_LOCKED)
                                 {
                                     Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
                                     property.Status = uplandProp.Status;
@@ -145,16 +143,14 @@ namespace Upland.Infrastructure.LocalData
                                     property.Owner = uplandProp.Owner;
                                     hasChanges = true;
                                 }
-
-                                if (property.Status == Consts.PROP_STATUS_UNLOCKED)
+                                else if (property.Status == Consts.PROP_STATUS_UNLOCKED)
                                 {
                                     Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
                                     property.Status = prop.status;
                                     property.Owner = uplandProp.Owner;
                                     hasChanges = true;
                                 }
-
-                                if (property.Status == Consts.PROP_STATUS_FORSALE)
+                                else if (property.Status == Consts.PROP_STATUS_FORSALE)
                                 {
                                     Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
                                     property.Status = prop.status;
@@ -162,6 +158,44 @@ namespace Upland.Infrastructure.LocalData
                                     localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
                                     hasChanges = true;
                                 }
+                            }
+
+                            if (property.Status == Consts.PROP_STATUS_FORSALE)
+                            {
+
+                                List<SaleHistoryEntry> propSaleHistory = GetRawSaleHistoryByPropertyId(property.Id)
+                                    .OrderByDescending(e => e.DateTime)
+                                    .Where(p => p.SellerEOS != null && p.SellerEOS == property.Owner && p.BuyerEOS == null)
+                                    .ToList();
+                                if (propSaleHistory.Count == 0)
+                                {
+                                    UplandProperty uplandProp = await uplandApiRepository.GetPropertyById(property.Id);
+
+                                    SaleHistoryEntry newEntry = new SaleHistoryEntry
+                                    {
+                                        DateTime = DateTime.Now,
+                                        SellerEOS = property.Owner,
+                                        BuyerEOS = null,
+                                        PropId = property.Id,
+                                        OfferPropId = null,
+                                        Amount = null,
+                                        AmountFiat = null,
+                                        Offer = false,
+                                        Accepted = false
+                                    };
+
+                                    if (uplandProp.on_market.currency == "UPX")
+                                    {
+                                        newEntry.Amount = double.Parse(uplandProp.on_market.token.Split(" UP")[0]);
+                                    }
+                                    else
+                                    {
+                                        newEntry.AmountFiat = double.Parse(uplandProp.on_market.fiat.Split(" FI")[0]);
+                                    }
+
+                                    UpsertSaleHistory(newEntry);
+                                }
+
                             }
 
                             if (hasChanges)

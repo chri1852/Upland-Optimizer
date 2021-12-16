@@ -59,6 +59,9 @@ namespace Upland.Infrastructure.Blockchain
                 index = totalResults.Max(i => i.id);
             }
 
+            // DEBUG GETS THE UNIQUE STRUCTURE NAMES
+            //List<string> DEBUGSTRING = totalResults.Where(r => r.category == "structure").GroupBy(r => r.token_name).Select(g => g.First().token_name).ToList();
+
             return totalResults;
         }
 
