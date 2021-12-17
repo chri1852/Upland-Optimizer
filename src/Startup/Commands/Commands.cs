@@ -19,11 +19,13 @@ namespace Startup.Commands
     {
         private readonly Random _random;
         private readonly InformationProcessor _informationProcessor;
+        private readonly LocalDataManager _localDataManager;
 
-        public Commands(InformationProcessor informationProcessor)
+        public Commands(InformationProcessor informationProcessor, LocalDataManager localDataManager)
         {
             _random = new Random();
             _informationProcessor = informationProcessor;
+            _localDataManager = localDataManager;
         }
 
         [Command("Ping")]
@@ -62,11 +64,10 @@ namespace Startup.Commands
         [Command("RegisterMe")]
         public async Task RegisterMe(string uplandUserName)
         {
-            LocalDataManager localDataManager = new LocalDataManager();
             UplandApiRepository uplandApiRepository = new UplandApiRepository();
             List<UplandAuthProperty> properties;
 
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
             {
                 if (registeredUser.Verified)
@@ -90,7 +91,7 @@ namespace Startup.Commands
                 return;
             }
 
-            List<Property> localProps = localDataManager.GetProperties(properties.Select(p => p.Prop_Id).ToList());
+            List<Property> localProps = _localDataManager.GetProperties(properties.Select(p => p.Prop_Id).ToList());
             int verifyPrice = 0;
             Property verifyProperty = null;
             int nonFSACount = localProps.Where(p => !p.FSA).ToList().Count;
@@ -117,10 +118,11 @@ namespace Startup.Commands
 
             try
             {
-                localDataManager.CreateRegisteredUser(newUser);
+                _localDataManager.CreateRegisteredUser(newUser);
             }
-            catch
+            catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("Commands - RegisterMe", ex.Message);
                 await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
                 return;
             }
@@ -132,9 +134,7 @@ namespace Startup.Commands
         [Command("ClearMe")]
         public async Task ClearMe()
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
             {
                 if (registeredUser.Verified)
@@ -145,11 +145,12 @@ namespace Startup.Commands
                 {
                     try
                     {
-                        localDataManager.DeleteRegisteredUser(Context.User.Id);
+                        _localDataManager.DeleteRegisteredUser(Context.User.Id);
                         await ReplyAsync(string.Format("I got you {0}. I have cleared your registration. Try again with my !RegisterMe command with your Upland username", HelperFunctions.GetRandomName(_random)));
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        _localDataManager.CreateErrorLog("Commands - ClearMe", ex.Message);
                         await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
                         return;
                     }
@@ -163,10 +164,9 @@ namespace Startup.Commands
         [Command("VerifyMe")]
         public async Task VerifyMe()
         {
-            LocalDataManager localDataManager = new LocalDataManager();
             UplandApiRepository uplandApiRepository = new UplandApiRepository();
 
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
                 await ReplyAsync(string.Format("You don't appear to exist {0}. Try again with my !RegisterMe command with your Upland username", HelperFunctions.GetRandomName(_random)));
@@ -193,7 +193,7 @@ namespace Startup.Commands
                 }
                 else
                 {
-                    localDataManager.SetRegisteredUserVerified(registeredUser.DiscordUserId);
+                    _localDataManager.SetRegisteredUserVerified(registeredUser.DiscordUserId);
                     await ReplyAsync(string.Format("You are now Verified {0}! You can remove the property from sale, or don't. I'm not your dad.", HelperFunctions.GetRandomName(_random)));
                 }
             }
@@ -203,9 +203,7 @@ namespace Startup.Commands
         [Command("OptimizerRun")]
         public async Task OptimizerRun()
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
                 return;
@@ -221,7 +219,7 @@ namespace Startup.Commands
                 return;
             }
 
-            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
@@ -230,7 +228,7 @@ namespace Startup.Commands
             
             if (currentRun != null)
             {
-                localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
+                _localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
             }
 
             try
@@ -241,8 +239,9 @@ namespace Startup.Commands
 
                 return;
             }
-            catch
+            catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("Commands - OptimizerRun", ex.Message);
                 await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
                 return;
             }
@@ -251,15 +250,13 @@ namespace Startup.Commands
         [Command("OptimizerStatus")]
         public async Task OptimizerStatus()
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
                 return;
             }
 
-            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun != null)
             {
                 await ReplyAsync(string.Format("Roger that {0}. Your current run has a status of {1}.", HelperFunctions.GetRandomName(_random), currentRun.Status));
@@ -275,15 +272,13 @@ namespace Startup.Commands
         [Command("OptimizerResults")]
         public async Task OptimizerResults()
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
                 return;
             }
 
-            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun == null)
             {
                 await ReplyAsync(string.Format("I don't see any optimization runs for you {0}. Try using my !OptimizerRun command to run one.", HelperFunctions.GetRandomName(_random)));
@@ -317,8 +312,7 @@ namespace Startup.Commands
         [Command("SupportMe")]
         public async Task SupportMe()
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -339,8 +333,7 @@ namespace Startup.Commands
         [Command("CollectionInfo")]
         public async Task CollectionInfo(string fileType = "TXT")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -361,8 +354,7 @@ namespace Startup.Commands
         [Command("PropertyInfo")]
         public async Task PropertyInfo(string username = "___SELF___", string fileType = "TXT")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -388,8 +380,7 @@ namespace Startup.Commands
         [Command("NeighborhoodInfo")]
         public async Task NeighborhoodInfo(string fileType = "TXT")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -417,8 +408,7 @@ namespace Startup.Commands
         [Command("CollectionsForSale")]
         public async Task CollectionsForSale(int collectionId, string orderBy, string currency, string fileType = "CSV")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -447,8 +437,7 @@ namespace Startup.Commands
         [Command("NeighborhoodsForSale")]
         public async Task NeighborhoodsForSale(int neighborhoodId, string orderBy, string currency, string fileType = "CSV")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -477,8 +466,7 @@ namespace Startup.Commands
         [Command("CityInfo")]
         public async Task CityInfo(string fileType = "TXT")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -499,8 +487,7 @@ namespace Startup.Commands
         [Command("StreetInfo")]
         public async Task StreetInfo(string fileType = "TXT")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -521,8 +508,7 @@ namespace Startup.Commands
         [Command("CitysForSale")]
         public async Task CitysForSale(int cityId, string orderBy, string currency, string fileType = "CSV")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -551,8 +537,7 @@ namespace Startup.Commands
         [Command("BuildingsForSale")]
         public async Task BuildingsForSale(string type, int Id, string orderBy, string currency, string fileType = "CSV")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -582,8 +567,7 @@ namespace Startup.Commands
         [Command("StreetsForSale")]
         public async Task StreetsForSale(int streetId, string orderBy, string currency, string fileType = "CSV")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -612,8 +596,7 @@ namespace Startup.Commands
         [Command("UnmintedProperties")]
         public async Task UnmintedProperties(string type, int Id, string propType, string fileType = "CSV")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -643,8 +626,7 @@ namespace Startup.Commands
         [Command("AllProperties")]
         public async Task AllProperties(string type, int Id, string fileType = "CSV")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -674,8 +656,7 @@ namespace Startup.Commands
         [Command("SearchStreets")]
         public async Task SearchStreets(string name, string fileType = "TXT")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -736,8 +717,7 @@ namespace Startup.Commands
         [Command("GetSalesHistory")]
         public async Task GetSalesHistory(string type, string identifier, string fileType = "CSV")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -767,8 +747,7 @@ namespace Startup.Commands
         [Command("Help")]
         public async Task Help()
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             UplandApiRepository uplandApiRepository = new UplandApiRepository();
             List<UplandAuthProperty> properties;
 
@@ -835,8 +814,7 @@ namespace Startup.Commands
         [Command("Help")]
         public async Task Help(string command)
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             UplandApiRepository uplandApiRepository = new UplandApiRepository();
             List<UplandAuthProperty> properties;
 
@@ -942,7 +920,7 @@ namespace Startup.Commands
                 case "10":
                     helpOutput.Add(string.Format("!CollectionsForSale"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will find props for sale in the given collection id (not standard or city collections), and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add(string.Format("This command will find props for sale in the given collection id (not standard or city collections), and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. If you want a text file add TXT to the end of the command."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !CollectionsForSale 177 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties for sale for UPX in the Kansas City Main St collection, and returns a csv file from lowest to greatest markup.");
@@ -956,7 +934,7 @@ namespace Startup.Commands
                 case "11":
                     helpOutput.Add(string.Format("!NeighborhoodsForSale"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will find props for sale in the given neighborhood id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add(string.Format("This command will find props for sale in the given neighborhood id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. If you want a text file add TXT to the end of the command."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !NeighborhoodsForSale 810 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties for sale for UPX in the Chicago Ashburn neighborhood, and returns a csv file from lowest to greatest markup.");
@@ -970,7 +948,7 @@ namespace Startup.Commands
                 case "12":
                     helpOutput.Add(string.Format("!CitysForSale"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will find props for sale in the given city id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add(string.Format("This command will find props for sale in the given city id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. If you want a text file add TXT to the end of the command."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !CitysForSale 10 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties for sale for UPX in the Chicago, and returns a csv file from lowest to greatest markup.");
@@ -984,7 +962,7 @@ namespace Startup.Commands
                 case "13":
                     helpOutput.Add(string.Format("!BuildingsForSale"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will find props with Buildings for sale in the given type and id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add(string.Format("This command will find props with Buildings for sale in the given type and id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. If you want a text file add TXT to the end of the command."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !BuildingsForSale City 1 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties with buildings for sale for UPX in San Francisco, and returns a csv file from lowest to greatest markup.");
@@ -1001,7 +979,7 @@ namespace Startup.Commands
                 case "14":
                     helpOutput.Add(string.Format("!StreetsForSale"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will find props for sale on the given street id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. Note the sales data is cached to prevent you motley fools from accidently pinging upland to death. The oldest the data can get is 15 minutes before it is expired and fetched again. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add(string.Format("This command will find props for sale on the given street id, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. If you want a text file add TXT to the end of the command."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !StreetsForSale 31898 MARKUP UPX");
                     helpOutput.Add("The above command finds all properties for sale for UPX on Broadway in Nashville, and returns a csv file from lowest to greatest markup.");
@@ -1015,7 +993,7 @@ namespace Startup.Commands
                 case "15":
                     helpOutput.Add(string.Format("!UnmintedProperties"));
                     helpOutput.Add("");
-                    helpOutput.Add(string.Format("This command will find unminted properties in the given type and id, and return a csv file listing in order of mint price. Depending on the city this data may be old. Cities that have not sold out are updated every night. Sold out cities are updated Saturday night."));
+                    helpOutput.Add(string.Format("This command will find unminted properties in the given type and id, and return a csv file listing in order of mint price."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !UnmintedProperties City 1 FSA");
                     helpOutput.Add("The above command finds all FSA unminted properties in San Francisco, and returns a csv file from lowest to greatest mint price.");

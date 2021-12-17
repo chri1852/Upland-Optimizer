@@ -1615,11 +1615,12 @@ namespace Upland.InformationProcessor
                         propertyStructure.StructureType = HelperFunctions.TranslateStructureType(propertyStructure.StructureType);
                         localDataManager.CreatePropertyStructure(propertyStructure);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        localDataManager.CreateErrorLog("InformationProcessor = RebuildPropertyStructures", ex.Message);
                         // Most likely fails due to a missing property
-                        await localDataManager.PopulateIndividualPropertyById(propertyStructure.PropertyId, neighborhoods);
-                        localDataManager.CreatePropertyStructure(propertyStructure);
+                        //await localDataManager.PopulateIndividualPropertyById(propertyStructure.PropertyId, neighborhoods);
+                        //localDataManager.CreatePropertyStructure(propertyStructure);
                     }
 
                     savedIds.Add(propertyStructure.PropertyId);

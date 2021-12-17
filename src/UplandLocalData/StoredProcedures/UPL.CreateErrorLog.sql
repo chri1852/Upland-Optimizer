@@ -1,15 +1,24 @@
-﻿CREATE PROCEDURE [UPL].[GetPropertyByCityIdAndAddress]
+﻿CREATE PROCEDURE [UPL].[CreateErrorLog]
 (
-	@CityId INT,
-	@Address VARCHAR(200)
+	@Datetime   DATETIME,
+	@Location   VARCHAR(200),
+	@Message    VARCHAR(MAX)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT TOP(1) *
-		FROM UPL.Property (NOLOCK)
-		WHERE CityId = @CityId
-			AND Address LIKE @Address + '%'
+		INSERT INTO [UPL].[ErrorLog]
+		(
+			[Datetime],
+			[Location],
+			[Message]
+		)
+		VALUES
+		(
+			@Datetime,
+			@Location,
+			@Message
+		)
 	END TRY
 
 	BEGIN CATCH

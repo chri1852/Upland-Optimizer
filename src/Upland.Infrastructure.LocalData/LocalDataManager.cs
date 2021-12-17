@@ -313,6 +313,11 @@ namespace Upland.Infrastructure.LocalData
                     }
                 }
             }
+
+            if (failedIds.Count > 0)
+            {
+                localDataRepository.CreateErrorLog("LocalDataManager.cs - PopulateStreets", string.Join(", ", failedIds));
+            }
         }
 
         public async Task PopulateDatabaseCollectionInfo()
@@ -599,6 +604,11 @@ namespace Upland.Infrastructure.LocalData
             localDataRepository.CreateStreet(street);
         }
 
+        public void CreateErrorLog(string location, string message)
+        {
+            localDataRepository.CreateErrorLog(location, message);
+        }
+
         public List<Neighborhood> GetNeighborhoods()
         {
             return localDataRepository.GetNeighborhoods();
@@ -681,7 +691,7 @@ namespace Upland.Infrastructure.LocalData
 
         public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
         {
-            return localDataRepository.GetUplandUserNameByEOSAccount(eosAccount);
+            return localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
         }
 
         public DateTime GetLastHistoricalCityStatusDate()

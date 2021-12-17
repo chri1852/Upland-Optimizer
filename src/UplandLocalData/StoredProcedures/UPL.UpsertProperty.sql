@@ -11,7 +11,10 @@
 	@Longitude       DECIMAL(19,16),
 	@Status          VARCHAR(25),
 	@FSA             BIT,
-	@Owner           VARCHAR(12) = NULL
+	@Owner           VARCHAR(12) = NULL,
+	@MintedOn        DATETIME = NULL,
+	@MintedBy        VARCHAR(12) = NULL
+
 )
 AS
 BEGIN
@@ -30,7 +33,9 @@ BEGIN
 					[Longitude] = @Longitude,
 					[Status] = @Status,
 					[FSA] = @FSA,
-					[Owner] = @Owner
+					[Owner] = @Owner,
+					[MintedOn] = @MintedOn,
+					[MintedBy] = @MintedBy
 				WHERE [Id] = @Id
 			END
 		ELSE
@@ -48,7 +53,9 @@ BEGIN
 					[Longitude],
 					[Status],
 					[FSA],
-					[Owner]
+					[Owner],
+					[MintedOn],
+					[MintedBy]
 				)
 				Values
 				(
@@ -63,7 +70,9 @@ BEGIN
 					@Longitude,
 					@Status,
 					@FSA,
-					@Owner
+					@Owner,
+					@MintedOn,
+					@MintedBy
 				)
 			END
 	END TRY

@@ -232,6 +232,11 @@ namespace Upland.InformationProcessor
                 {
                     return name;
                 }
+
+                if (memo.Contains(name.ToUpper()))
+                {
+                    return name.ToUpper();
+                }
             }
 
             throw new Exception("Unknow City Detected");

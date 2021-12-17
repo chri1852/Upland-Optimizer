@@ -15,10 +15,12 @@ namespace Startup.Commands
     {
         private readonly Random _random;
         private readonly InformationProcessor _informationProcessor;
+        private readonly LocalDataManager _localDataManager;
 
-        public PremiumCommands(InformationProcessor informationProcessor)
+        public PremiumCommands(InformationProcessor informationProcessor, LocalDataManager localDataManager)
         {
             _informationProcessor = informationProcessor;
+            _localDataManager = localDataManager;
             _random = new Random();
         }
 
@@ -65,8 +67,9 @@ namespace Startup.Commands
                 await optimizer.RunAutoOptimization(registeredUser, qualityLevel);
                 return;
             }
-            catch
+            catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("PremiumCommands - OptimizerLevelRun", ex.Message);
                 await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
                 return;
             }
@@ -110,8 +113,9 @@ namespace Startup.Commands
 
                 return;
             }
-            catch
+            catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("PremiumCommands - OptimizerWhatIfRun", ex.Message);
                 await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
                 return;
             }

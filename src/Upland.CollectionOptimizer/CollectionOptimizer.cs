@@ -70,8 +70,9 @@ namespace Upland.CollectionOptimizer
                 await SetDataForOptimization(registeredUser.UplandUsername, collectionId, numberOfProperties, averageMonthlyUpx);
                 results = RunOptimization(registeredUser.UplandUsername, qualityLevel);
             }
-            catch
+            catch (Exception ex)
             {
+                LocalDataManager.CreateErrorLog("CollectionOptimizer - RunAutoOptimization", ex.Message);
                 LocalDataManager.SetOptimizationRunStatus(
                     new OptimizationRun
                     {

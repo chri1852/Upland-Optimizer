@@ -14,6 +14,7 @@ namespace Upland.Types.BlockchainTypes
         public DateTime timestamp { get; set; }
         public ActionEntry act { get; set; }
         public long global_sequence { get; set; }
+        public string trx_id { get; set; }
     }
 
     public class ActionEntry
