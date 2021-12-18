@@ -73,5 +73,10 @@ namespace Upland.Infrastructure.Blockchain
         {
             return (await blockchainRepository.GetPropertyActionsFromDateTime(timeFrom, minutesToAdd)).actions;
         }
+
+        public async Task<GetTransactionEntry> GetSingleTransactionById(string transactionId)
+        {
+            return await blockchainRepository.GetSingleTransactionById(transactionId);
+        }
     }
 }

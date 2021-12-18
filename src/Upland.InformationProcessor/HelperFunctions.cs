@@ -228,12 +228,12 @@ namespace Upland.InformationProcessor
         {
             foreach (string name in Consts.Cities.Values)
             {
-                if (memo.Contains(name))
+                if (memo.Contains(string.Format(" {0},", name)))
                 {
                     return name;
                 }
 
-                if (memo.Contains(name.ToUpper()))
+                if (memo.Contains(string.Format(" {0},", name.ToUpper())))
                 {
                     return name.ToUpper();
                 }

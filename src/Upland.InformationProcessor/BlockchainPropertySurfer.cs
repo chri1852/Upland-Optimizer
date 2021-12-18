@@ -73,7 +73,7 @@ namespace Upland.InformationProcessor
 
             // Advance a day at a time, unless there are more props
             //int minutesToMoveFoward = 1440;
-            int minutesToMoveFoward = 360; // One Hours
+            int minutesToMoveFoward = 60; // One Hours
             bool continueLoad = true;
 
             while(continueLoad)
@@ -86,6 +86,7 @@ namespace Upland.InformationProcessor
                 {
                     try
                     {
+                        Thread.Sleep(1000);
                         actions = await blockchainManager.GetPropertyActionsFromTime(startDate, minutesToMoveFoward);
                         if (actions != null)
                         {
@@ -110,7 +111,7 @@ namespace Upland.InformationProcessor
                 else
                 {
                     actions = actions.OrderBy(a => a.global_sequence).ToList();
-                    ProcessActions(actions);
+                    await ProcessActions(actions);
 
                     if (actions.Count < 1000)
                     {
@@ -137,7 +138,7 @@ namespace Upland.InformationProcessor
             this.isProcessing = false;
         }
 
-        private void ProcessActions(List<HistoryAction> actions)
+        private async Task ProcessActions(List<HistoryAction> actions)
         {
             long maxGlobalSequence = long.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_MAXGLOBALSEQUENCE));
 
@@ -170,7 +171,7 @@ namespace Upland.InformationProcessor
                         ProcessRemoveFromSaleAction(action);
                         break;
                     case "n52":
-                        ProcessBuyForFiatAction(action);
+                        await ProcessBuyForFiatAction(action);
                         break;
                     case "n33":
                         ProcessBecomeUplanderAction(action);
@@ -234,12 +235,22 @@ namespace Upland.InformationProcessor
             localDataManager.UpsertEOSUser(action.act.data.p53, uplandUsername, action.timestamp);
         }
 
-        private void ProcessBuyForFiatAction(HistoryAction action)
+        private async Task ProcessBuyForFiatAction(HistoryAction action)
         {
             if (action.act.data.a45 == null || action.act.data.p14 == null)
             {
-                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Missing Data", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.act.data.p53, action.act.data.p52, action.trx_id));
-                return;
+                GetTransactionEntry transactionEntry = await blockchainManager.GetSingleTransactionById(action.trx_id);
+
+                if (transactionEntry.traces.Where(t => t.act.name == "n52").ToList().Count == 1)
+                {
+                    action.act.data.a45 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.a45;
+                    action.act.data.p14 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.a45;
+                }
+                else
+                {
+                    localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Missing Data", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.act.data.p53, action.act.data.p52, action.trx_id));
+                    return;
+                }
             }
 
             long propId = long.Parse(action.act.data.a45);
@@ -424,6 +435,33 @@ namespace Upland.InformationProcessor
 
                     propTwoCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(", ")[3]);
                     propTwoAddress = action.act.data.memo.Split(" owns ")[2].Split(", ")[0];
+                }
+                else if (Regex.Match(action.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success || Regex.Match(action.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                {
+                    // First match 3 commas
+                    if (Regex.Match(action.act.data.memo.Split(")")[1], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                    {
+                        string cityName = action.act.data.memo.Split(")")[1].Split(", ")[2];
+                        propOneCityId = HelperFunctions.GetCityIdByName(cityName);
+                        propOneAddress = action.act.data.memo.Split(")")[1].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
+                    }
+                    else
+                    {
+                        propOneCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(")")[1].Split(", ")[1]);
+                        propOneAddress = action.act.data.memo.Split(" owns ")[1].Split(", ")[0];
+                    }
+
+                    if (Regex.Match(action.act.data.memo.Split(")")[3], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                    {
+                        string cityName = action.act.data.memo.Split(")")[3].Split(", ")[2];
+                        propTwoCityId = HelperFunctions.GetCityIdByName(cityName);
+                        propTwoAddress = action.act.data.memo.Split(")")[3].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
+                    }
+                    else
+                    {
+                        propTwoCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(")")[3].Split(", ")[1]);
+                        propTwoAddress = action.act.data.memo.Split(" owns ")[2].Split(", ")[0];
+                    }
                 }
                 else
                 {

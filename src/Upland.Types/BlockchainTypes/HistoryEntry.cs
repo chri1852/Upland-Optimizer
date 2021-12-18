@@ -17,6 +17,16 @@ namespace Upland.Types.BlockchainTypes
         public string trx_id { get; set; }
     }
 
+    public class GetTransactionEntry
+    {
+        public List<TRANSACTIONENTRY_SUBCLASS> traces { get; set; }
+    }
+
+    public class TRANSACTIONENTRY_SUBCLASS
+    {
+        public ActionEntry act { get; set; }
+    }
+
     public class ActionEntry
     {
         public string name { get; set; }

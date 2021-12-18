@@ -1659,6 +1659,7 @@ namespace Upland.InformationProcessor
             {
                 propIds.Add(long.Parse(id));
             }
+
             List<Property> localProperties = localDataManager.GetProperties(propIds);
 
             if (action == "OpenForSaleOwned")
@@ -1682,7 +1683,7 @@ namespace Upland.InformationProcessor
                     List<SaleHistoryEntry> propSaleHistory = localDataManager.GetRawSaleHistoryByPropertyId(localProperty.Id).OrderByDescending(e => e.DateTime).ToList();
 
                     bool mostRecentSaleFound = false;
-                    foreach(SaleHistoryEntry entry in propSaleHistory)
+                    foreach (SaleHistoryEntry entry in propSaleHistory)
                     {
                         // Skip Offers and completed
                         if (entry.Offer == true || (entry.BuyerEOS != null && entry.SellerEOS != null))
@@ -1705,7 +1706,7 @@ namespace Upland.InformationProcessor
                         else
                         {
                             localDataManager.DeleteSaleHistoryById(entry.Id.Value);
-                        }    
+                        }
                     }
 
                     localProperty.Owner = uplandProperty.owner;
@@ -1739,6 +1740,36 @@ namespace Upland.InformationProcessor
                         localDataManager.UpsertSaleHistory(newEntry);
                     }
 
+                    localDataManager.UpsertProperty(localProperty);
+                }
+            }
+            else if (action == "SetOwner")
+            {
+                foreach (Property localProperty in localProperties)
+                {
+                    UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(localProperty.Id);
+
+                    if (uplandProperty.status == Consts.PROP_STATUS_LOCKED)
+                    {
+                        localProperty.Status = uplandProperty.status;
+                        localProperty.Owner = null;
+                        localDataManager.UpsertProperty(localProperty);
+                    }
+                    else if (uplandProperty.status == Consts.PROP_STATUS_OWNED || uplandProperty.status == Consts.PROP_STATUS_FORSALE)
+                    {
+                        localProperty.Owner = uplandProperty.owner;
+                        localProperty.Status = Consts.PROP_STATUS_OWNED;
+                        localDataManager.UpsertProperty(localProperty);
+                    }
+                }
+            }
+            else if (action == "SetMinted")
+            {
+                foreach (Property localProperty in localProperties)
+                {
+                    localProperty.MintedBy = localProperty.Owner;
+                    localProperty.MintedOn = new DateTime(2021, 06, 28, 00, 00, 00);
+                    
                     localDataManager.UpsertProperty(localProperty);
                 }
             }
