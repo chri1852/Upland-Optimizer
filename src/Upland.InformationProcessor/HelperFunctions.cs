@@ -226,17 +226,37 @@ namespace Upland.InformationProcessor
 
         public static string SusOutCityNameByMemoString(string memo)
         {
+            string returnName = "";
+
             foreach (string name in Consts.Cities.Values)
             {
                 if (memo.Contains(string.Format(" {0},", name)))
                 {
-                    return name;
+                    returnName = name;
+                    break;
                 }
 
                 if (memo.Contains(string.Format(" {0},", name.ToUpper())))
                 {
-                    return name.ToUpper();
+                    returnName = name.ToUpper();
+                    break;
                 }
+            }
+
+            if (returnName.ToUpper() == "RUTHERFORD")
+            {
+                if(memo.ToUpper().Contains("EAST RUTHERFORD"))
+                {
+                    return "East Rutherford";
+                }
+                else
+                {
+                    return returnName;
+                }
+            }
+            else if (returnName != "")
+            {
+                return returnName;
             }
 
             throw new Exception("Unknow City Detected");

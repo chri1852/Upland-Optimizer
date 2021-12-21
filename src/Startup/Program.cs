@@ -34,8 +34,8 @@ class Program
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
     private LocalDataManager _localDataManager;
-    
-    
+
+
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -107,7 +107,7 @@ class Program
 
         await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
-        //await informationProcessor.ResyncPropsList("SetMinted", "");
+        //await informationProcessor.ResyncPropsList("SetForSale", "74663278158647");
     }
     
     /*

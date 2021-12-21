@@ -1657,7 +1657,7 @@ namespace Upland.InformationProcessor
             List<long> propIds = new List<long>();
             foreach (string id in propList.Split(","))
             {
-                propIds.Add(long.Parse(id));
+                propIds.Add(long.Parse(id));  
             }
 
             List<Property> localProperties = localDataManager.GetProperties(propIds);
@@ -1768,8 +1768,17 @@ namespace Upland.InformationProcessor
                 foreach (Property localProperty in localProperties)
                 {
                     localProperty.MintedBy = localProperty.Owner;
-                    localProperty.MintedOn = new DateTime(2021, 06, 28, 00, 00, 00);
+                    localProperty.MintedOn = new DateTime(2021, 12, 21, 00, 00, 00);
                     
+                    localDataManager.UpsertProperty(localProperty);
+                }
+            }
+            else if (action == "SetForSale")
+            {
+                foreach (Property localProperty in localProperties)
+                {
+                    localProperty.Status = Consts.PROP_STATUS_FORSALE;
+
                     localDataManager.UpsertProperty(localProperty);
                 }
             }

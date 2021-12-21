@@ -215,7 +215,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        private int GetNeighborhoodIdForProp(List<Neighborhood> neighborhoods, Property property)
+        public int GetNeighborhoodIdForProp(List<Neighborhood> neighborhoods, Property property)
         {
             foreach (Neighborhood neighborhood in neighborhoods)
             {
