@@ -178,6 +178,16 @@ namespace Upland.Infrastructure.UplandApi
             return assets;
         }
 
+        public async Task<List<UplandAsset>> GetBlockExplorersByUserName(string username)
+        {
+            List<UplandAsset> assets;
+            string requestUri = @"https://nft.upland.me/assets/block-explorers/" + username;
+
+            assets = await CallApi<List<UplandAsset>>(requestUri, false);
+
+            return assets;
+        }
+
         public async Task<UplandUserProfile> GetProfileByUsername(string username)
         {
             UplandUserProfile profile;

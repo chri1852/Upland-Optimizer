@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Upland.Infrastructure.Blockchain;
 using Upland.Infrastructure.LocalData;
@@ -1271,9 +1272,13 @@ namespace Upland.InformationProcessor
             {
                 assets.AddRange(await uplandApiManager.GetDecorationsByUsername(userName));
             }
+            else if (type == "BLOCKEXPLORER")
+            {
+                assets.AddRange(await uplandApiManager.GetBlockExplorersByUserName(userName));
+            }
             else
             {
-                output.Add(string.Format("That wasn't a valid type. Choose: NFLPA, Spirit, or Decoration"));
+                output.Add(string.Format("That wasn't a valid type. Choose: NFLPA, Spirit, Decoration, or BlockExplorer"));
                 return output;
             }
 
@@ -1295,6 +1300,9 @@ namespace Upland.InformationProcessor
                 case "DECORATION":
                     assets = assets.OrderBy(a => a.DisplayName).OrderBy(a => ((Decoration)a).Rarity).ToList();
                     break;
+                case "BLOCKEXPLORER":
+                    assets = assets.OrderBy(a => a.DisplayName).ToList();
+                    break;
             }
 
             if (fileType == "CSV")
@@ -1310,6 +1318,9 @@ namespace Upland.InformationProcessor
                     case "DECORATION":
                         output.Add("Name,Building,Rarity,Mint,Current Supply,Max Supply,Link");
                         break;
+                    case "BLOCKEXPLORER":
+                        output.Add("Name,Description,Mint,Max Supply,Link");
+                        break;
                 }
 
                 foreach (Asset asset in assets)
@@ -1323,22 +1334,36 @@ namespace Upland.InformationProcessor
                             assetString += string.Format("{0},", ((NFLPALegit)asset).PlayerName);
                             assetString += string.Format("{0},", ((NFLPALegit)asset).LegitType);
                             assetString += string.Format("{0},", ((NFLPALegit)asset).Year);
+                            assetString += string.Format("{0},", asset.Mint);
+                            assetString += string.Format("{0},", asset.CurrentSupply);
+                            assetString += string.Format("{0},", asset.MaxSupply);
+                            assetString += string.Format("{0}", asset.Link);
                             break;
                         case "SPIRIT":
                             assetString += string.Format("{0},", asset.DisplayName);
                             assetString += string.Format("{0},", ((SpiritLegit)asset).Rarity);
+                            assetString += string.Format("{0},", asset.Mint);
+                            assetString += string.Format("{0},", asset.CurrentSupply);
+                            assetString += string.Format("{0},", asset.MaxSupply);
+                            assetString += string.Format("{0}", asset.Link);
                             break;
                         case "DECORATION":
                             assetString += string.Format("{0},", asset.DisplayName);
                             assetString += string.Format("{0},", ((Decoration)asset).Subtitle);
                             assetString += string.Format("{0},", ((Decoration)asset).Rarity);
+                            assetString += string.Format("{0},", asset.Mint);
+                            assetString += string.Format("{0},", asset.CurrentSupply);
+                            assetString += string.Format("{0},", asset.MaxSupply);
+                            assetString += string.Format("{0}", asset.Link);
+                            break;
+                        case "BLOCKEXPLORER":
+                            assetString += string.Format("{0},", asset.DisplayName);
+                            assetString += string.Format("{0},", ((BlockExplorer)asset).Description);
+                            assetString += string.Format("{0},", asset.Mint);
+                            assetString += string.Format("{0},", asset.MaxSupply);
+                            assetString += string.Format("{0}", asset.Link);
                             break;
                     }
-
-                    assetString += string.Format("{0},", asset.Mint);
-                    assetString += string.Format("{0},", asset.CurrentSupply);
-                    assetString += string.Format("{0},", asset.MaxSupply);
-                    assetString += string.Format("{0}", asset.Link);
 
                     output.Add(assetString);
                 }
@@ -1401,6 +1426,17 @@ namespace Upland.InformationProcessor
                             , "Max Supply".PadLeft(maxPad)
                             , "Link".PadLeft(linkPad)));
                         break;
+                    case "BLOCKEXPLORER":
+                        slotOnePad = assets.Max(a => a.DisplayName.Length);
+                        slotTwoPad = assets.Max(a => ((BlockExplorer)a).Description.Length);
+
+                        output.Add(string.Format("{0} - {1} - {2} - {3} - {4}"
+                            , "Name".PadLeft(slotOnePad)
+                            , "Description".PadLeft(slotTwoPad)
+                            , "Mint".PadLeft(mintPad)
+                            , "Max Supply".PadLeft(maxPad)
+                            , "Link".PadLeft(linkPad)));
+                        break;
                 }
 
                 foreach (Asset asset in assets)
@@ -1434,6 +1470,14 @@ namespace Upland.InformationProcessor
                                 , ((Decoration)asset).Rarity.PadLeft(slotThreePad)
                                 , string.Format("{0:N0}", asset.Mint).PadLeft(mintPad)
                                 , string.Format("{0:N0}", asset.CurrentSupply).PadLeft(currentPad)
+                                , string.Format("{0:N0}", asset.MaxSupply).PadLeft(maxPad)
+                                , asset.Link.PadLeft(linkPad)));
+                            break;
+                        case "BLOCKEXPLORER":
+                            output.Add(string.Format("{0} - {1} - {2} - {3} - {4}"
+                                , asset.DisplayName.PadLeft(slotOnePad)
+                                , ((BlockExplorer)asset).Description.PadLeft(slotTwoPad)
+                                , string.Format("{0:N0}", asset.Mint).PadLeft(mintPad)
                                 , string.Format("{0:N0}", asset.MaxSupply).PadLeft(maxPad)
                                 , asset.Link.PadLeft(linkPad)));
                             break;
@@ -1657,7 +1701,7 @@ namespace Upland.InformationProcessor
             List<long> propIds = new List<long>();
             foreach (string id in propList.Split(","))
             {
-                propIds.Add(long.Parse(id));  
+                propIds.Add(long.Parse(id));
             }
 
             List<Property> localProperties = localDataManager.GetProperties(propIds);
@@ -1745,6 +1789,7 @@ namespace Upland.InformationProcessor
             }
             else if (action == "SetOwner")
             {
+                int count = 0;
                 foreach (Property localProperty in localProperties)
                 {
                     UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(localProperty.Id);
@@ -1761,25 +1806,157 @@ namespace Upland.InformationProcessor
                         localProperty.Status = Consts.PROP_STATUS_OWNED;
                         localDataManager.UpsertProperty(localProperty);
                     }
+                    count++;
                 }
             }
             else if (action == "SetMinted")
             {
+                int count = 0;
                 foreach (Property localProperty in localProperties)
                 {
                     localProperty.MintedBy = localProperty.Owner;
                     localProperty.MintedOn = new DateTime(2021, 12, 21, 00, 00, 00);
-                    
+
                     localDataManager.UpsertProperty(localProperty);
+                    count++;
+                }
+            }
+            else if (action == "SetMonthlyEarnings")
+            {
+                int count = 0;
+                foreach (Property localProperty in localProperties)
+                {
+                    UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(localProperty.Id);
+
+                    if (uplandProperty.status == Consts.PROP_STATUS_LOCKED)
+                    {
+                        localDataManager.DeleteSaleHistoryByPropertyId(localProperty.Id);
+                        localProperty.Status = Consts.PROP_STATUS_LOCKED;
+                    }
+
+                    localProperty.MonthlyEarnings = uplandProperty.Yield_Per_Hour.HasValue ? uplandProperty.Yield_Per_Hour.Value * 720 : 0;
+
+                    localDataManager.UpsertProperty(localProperty);
+                    count++;
                 }
             }
             else if (action == "SetForSale")
             {
+                int count = 0;
                 foreach (Property localProperty in localProperties)
                 {
-                    localProperty.Status = Consts.PROP_STATUS_FORSALE;
+                    UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(localProperty.Id);
+                    List<SaleHistoryEntry> sales = localDataManager.GetRawSaleHistoryByPropertyId(localProperty.Id).OrderByDescending(s => s.DateTime).ToList();
+
+                    if (uplandProperty.status == Consts.PROP_STATUS_FORSALE)
+                    {
+                        localProperty.Status = Consts.PROP_STATUS_FORSALE;
+                        bool foundSale = false;
+                        foreach (SaleHistoryEntry entry in sales)
+                        {
+                            if (entry.SellerEOS != null && entry.BuyerEOS == null)
+                            {
+                                if (entry.SellerEOS != uplandProperty.owner)
+                                {
+                                    localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                                    continue;
+                                }
+
+                                if (uplandProperty.on_market.currency == "UPX")
+                                {
+                                    if (entry.Amount != double.Parse(uplandProperty.on_market.token.Split(" UP")[0]) || foundSale)
+                                    {
+                                        localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                                    }
+                                    else
+                                    {
+                                        foundSale = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (entry.AmountFiat != double.Parse(uplandProperty.on_market.fiat.Split(" FI")[0]) || foundSale)
+                                    {
+                                        localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                                    }
+                                    else
+                                    {
+                                        foundSale = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!foundSale)
+                        {
+                            SaleHistoryEntry newEntry = new SaleHistoryEntry
+                            {
+                                Id = null,
+                                DateTime = DateTime.UtcNow,
+                                SellerEOS = uplandProperty.owner,
+                                BuyerEOS = null,
+                                PropId = localProperty.Id,
+                                OfferPropId = null,
+                                Offer = false,
+                                Accepted = false
+                            };
+
+                            if (uplandProperty.on_market.currency == "UPX")
+                            {
+                                newEntry.Amount = double.Parse(uplandProperty.on_market.token.Split(" UP")[0]);
+                                newEntry.AmountFiat = null;
+                            }
+                            else
+                            {
+                                newEntry.Amount = null;
+                                newEntry.AmountFiat = double.Parse(uplandProperty.on_market.fiat.Split(" FI")[0]);
+                            }
+
+                            localProperty.Owner = uplandProperty.owner;
+
+                            localDataManager.UpsertSaleHistory(newEntry);
+                        }
+                        localProperty.Owner = uplandProperty.owner;
+                    }
+                    else
+                    {
+                        localProperty.Status = uplandProperty.status;
+                        localProperty.Owner = uplandProperty.owner;
+                        foreach (SaleHistoryEntry entry in sales)
+                        {
+                            if (entry.SellerEOS != null && entry.BuyerEOS == null)
+                            {
+                                localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                            }
+                        }
+                    }
 
                     localDataManager.UpsertProperty(localProperty);
+                    count++;
+                }
+            }
+            else if (action == "DupeSaleEntry")
+            {
+                int count = 0;
+                foreach (Property localProperty in localProperties)
+                {
+                    List<SaleHistoryEntry> sales = localDataManager.GetRawSaleHistoryByPropertyId(localProperty.Id).OrderByDescending(s => s.DateTime).ToList();
+                    bool firstSaved = false;
+                    foreach (SaleHistoryEntry entry in sales)
+                    {
+                        if (entry.SellerEOS != null && entry.BuyerEOS == null)
+                        {
+                            if (firstSaved)
+                            {
+                                localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                            }
+                            else
+                            {
+                                firstSaved = true;
+                            }
+                        }
+                    }
+                    count++;
                 }
             }
         }

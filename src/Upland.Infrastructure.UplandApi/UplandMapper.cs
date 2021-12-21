@@ -165,6 +165,18 @@ namespace Upland.Infrastructure.UplandApi
             return decorations;
         }
 
+        public static List<BlockExplorer> MapBlockExplorers(List<UplandAsset> assets)
+        {
+            List<BlockExplorer> blockExplorers = new List<BlockExplorer>();
+
+            foreach (UplandAsset asset in assets)
+            {
+                blockExplorers.Add(MapBlockExplorer(asset));
+            }
+
+            return blockExplorers;
+        }
+
         public static Decoration MapDecoration(UplandAsset asset)
         {
             Decoration decoration = new Decoration();
@@ -180,6 +192,21 @@ namespace Upland.Infrastructure.UplandApi
             decoration.Link = @"https://play.upland.me/nft-3d/decoration/" + asset.DGoodId;
 
             return decoration;
+        }
+
+        public static BlockExplorer MapBlockExplorer(UplandAsset asset)
+        {
+            BlockExplorer blockExplorer = new BlockExplorer();
+
+            blockExplorer.Description = asset.Description;
+
+            blockExplorer.DGoodId = asset.DGoodId;
+            blockExplorer.DisplayName = asset.Name;
+            blockExplorer.Mint = asset.SerialNumber;
+            blockExplorer.MaxSupply = asset.TotalCount;
+            blockExplorer.Link = @"https://play.upland.me/nft/block_explorer/" + asset.OwnerUsername + "/" + asset.DGoodId;
+
+            return blockExplorer;
         }
 
         private static bool IsCollectionCityCollection(UplandCollection uplandCollection)

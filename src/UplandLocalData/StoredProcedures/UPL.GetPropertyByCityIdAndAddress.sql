@@ -9,7 +9,7 @@ BEGIN
 		SELECT TOP(1) *
 		FROM UPL.Property (NOLOCK)
 		WHERE CityId = @CityId
-			AND Address LIKE @Address + '%'
+			AND Address = @Address
 	END TRY
 
 	BEGIN CATCH

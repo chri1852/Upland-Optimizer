@@ -233,6 +233,7 @@ namespace Upland.InformationProcessor
             foreach (Property prop in properties)
             {
                 prop.Owner = action.act.data.p53;
+                prop.MintedBy = action.act.data.p53;
                 localDataManager.UpsertProperty(prop);
             }
 

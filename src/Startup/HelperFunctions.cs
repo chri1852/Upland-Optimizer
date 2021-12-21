@@ -332,6 +332,9 @@ namespace Startup
                     helpOutput.Add("EX: !GetAssets Hornbrod Spirit");
                     helpOutput.Add("The above command finds all Spirit Legits owned by Hornbrod and returns a txt file.");
                     helpOutput.Add("");
+                    helpOutput.Add("EX: !GetAssets Hornbrod BlockExplorer");
+                    helpOutput.Add("The above command finds all Block Explorers owned by Hornbrod and returns a txt file.");
+                    helpOutput.Add("");
                     helpOutput.Add("EX: !GetAssets Hornbrod Decoration CSV");
                     helpOutput.Add("The above command finds all Decorations owned by Hornbrod and returns a csv file.");
                     break;
