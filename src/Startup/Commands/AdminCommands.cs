@@ -18,11 +18,13 @@ namespace Startup.Commands
     {
         private readonly Random _random;
         private readonly InformationProcessor _informationProcessor;
+        private readonly LocalDataManager _localDataManager;
 
-        public AdminCommands(InformationProcessor informationProcessor)
+        public AdminCommands(InformationProcessor informationProcessor, LocalDataManager localDataManager)
         {
             _random = new Random();
             _informationProcessor = informationProcessor;
+            _localDataManager = localDataManager;
         }
 
         private async Task<bool> checkIfAdmin(ulong discordUserId)
@@ -45,9 +47,7 @@ namespace Startup.Commands
                 return;
             }
 
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(Consts.TestUserDiscordId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserDiscordId);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("Test User Run is in Progress, Please Wait."));
@@ -56,7 +56,7 @@ namespace Startup.Commands
 
             if (currentRun != null)
             {
-                localDataManager.DeleteOptimizerRuns(Consts.TestUserDiscordId);
+                _localDataManager.DeleteOptimizerRuns(Consts.TestUserDiscordId);
             }
 
             try
@@ -76,6 +76,7 @@ namespace Startup.Commands
             }
             catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("AdminCommands - AdminOptimizerRun", ex.Message);
                 await ReplyAsync(string.Format("Test Run Has Failed For: {0} - {1}", uplandUsername.ToUpper(), ex.Message));
                 return;
             }
@@ -89,8 +90,7 @@ namespace Startup.Commands
                 return;
             }
 
-            LocalDataManager localDataManager = new LocalDataManager();
-            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(Consts.TestUserDiscordId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserDiscordId);
 
             if (currentRun.Status == Consts.RunStatusCompleted)
             {
@@ -112,37 +112,15 @@ namespace Startup.Commands
                 return;
             }
 
-            LocalDataManager localDataManager = new LocalDataManager();
-
             try
             {
                 await ReplyAsync(string.Format("Running Collection Update in Child Task"));
-                await localDataManager.PopulateDatabaseCollectionInfo();
+                await _localDataManager.PopulateDatabaseCollectionInfo();
             }
             catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("AdminCommands - AdminPopulateCollections", ex.Message);
                 await ReplyAsync(string.Format("Update Failed: {0}", ex.Message));
-            }
-        }
-
-        [Command("AdminPropertyInfo")]
-        public async Task AdminPropertyInfo(string userName, string fileType = "TXT")
-        {
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            if (!await checkIfAdmin(Context.User.Id))
-            {
-                return;
-            }
-
-            List<string> propertyData = await _informationProcessor.GetPropertyInfo(userName.ToLower(), fileType.ToUpper());
-
-            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, propertyData));
-            using (Stream stream = new MemoryStream())
-            {
-                stream.Write(resultBytes, 0, resultBytes.Length);
-                stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, string.Format("PropertyInfo_{0}.{1}", userName.ToUpper(), fileType.ToUpper() == "TXT" ? "txt" : "csv"));
             }
         }
 
@@ -156,13 +134,13 @@ namespace Startup.Commands
 
             try
             {
-                LocalDataManager localDataManager = new LocalDataManager();
-                bool enableUpdates = !bool.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
-                localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, enableUpdates.ToString());
+                bool enableUpdates = !bool.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
+                _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, enableUpdates.ToString());
                 await ReplyAsync(string.Format("Blockchain Updating is now {0}.", enableUpdates ? "Enabled" : "Disabled"));
             }
             catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("AdminCommands - ToggleBlockchainUpdates", ex.Message);
                 await ReplyAsync(string.Format("Failed To Toggle BlockchainUpdates: {0}", ex.Message));
             }
         }
@@ -196,15 +174,14 @@ namespace Startup.Commands
                 return;
             }
 
-            LocalDataManager localDataManager = new LocalDataManager();
-
             try
             {
-                localDataManager.SetRegisteredUserPaid(uplandUsername);
+                _localDataManager.SetRegisteredUserPaid(uplandUsername);
                 await ReplyAsync(string.Format("{0} is now a Supporter.", uplandUsername));
             }
             catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("AdminCommands - SetUserPaid", ex.Message);
                 await ReplyAsync(string.Format("Failed: {0}", ex.Message));
             }
         }
@@ -225,6 +202,7 @@ namespace Startup.Commands
             }
             catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("AdminCommands - AdminResyncPropertyList", ex.Message);
                 await ReplyAsync(string.Format("Failed Resyncing Properties: {0}", ex.Message));
             }
         }
@@ -244,6 +222,7 @@ namespace Startup.Commands
             }
             catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("AdminCommands - AdminRebuildPropertyStructures", ex.Message);
                 await ReplyAsync(string.Format("Failed Rebuilding PropertyStructures: {0}", ex.Message));
             }
         }
@@ -264,6 +243,7 @@ namespace Startup.Commands
             }
             catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("AdminCommands - AdminRefreshCityById", ex.Message);
                 await ReplyAsync(string.Format("Failed Refreshing CityId {0}: {1}", cityId, ex.Message));
             }
         }

@@ -67,6 +67,11 @@ namespace Upland.Infrastructure.UplandApi
             return UplandMapper.MapDecorations(await _uplandApiRepository.GetDecorationsByUserName(userName));
         }
 
+        public async Task<List<BlockExplorer>> GetBlockExplorersByUserName(string userName)
+        {
+            return UplandMapper.MapBlockExplorers(await _uplandApiRepository.GetBlockExplorersByUserName(userName));
+        }
+
         public async Task<UplandUserProfile> GetUplandUserProfile(string userName)
         {
             UplandUserProfile profile = await _uplandApiRepository.GetProfileByUsername(userName);

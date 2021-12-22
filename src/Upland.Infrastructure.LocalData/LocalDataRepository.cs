@@ -85,6 +85,37 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void CreateErrorLog(string location, string message)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CreateErrorLog]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Datetime", DateTime.Now));
+                    sqlCmd.Parameters.Add(new SqlParameter("Location", location));
+                    sqlCmd.Parameters.Add(new SqlParameter("Message", message));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
         public List<long> GetCollectionPropertyIds(int collectionId)
         {
             SqlConnection sqlConnection = GetSQLConnector();
@@ -383,6 +414,8 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("Status", property.Status));
                     sqlCmd.Parameters.Add(new SqlParameter("FSA", property.FSA));
                     sqlCmd.Parameters.Add(new SqlParameter("Owner", property.Owner));
+                    sqlCmd.Parameters.Add(new SqlParameter("MintedOn", property.MintedOn));
+                    sqlCmd.Parameters.Add(new SqlParameter("MintedBy", property.MintedBy));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -499,21 +532,7 @@ namespace Upland.Infrastructure.LocalData
                         while (reader.Read())
                         {
                             properties.Add(
-                                new Property
-                                {
-                                    Id = (long)reader["Id"],
-                                    Address = (string)reader["Address"],
-                                    CityId = (int)reader["CityId"],
-                                    Size = (int)reader["Size"],
-                                    MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
-                                    StreetId = (int)reader["StreetId"],
-                                    NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
-                                    Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
-                                    Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
-                                    Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
-                                    FSA = (bool)reader["FSA"],
-                                    Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null
-                                }
+                                ReadPropertyFromReader(reader)
                              );
                         }
                         reader.Close();
@@ -553,21 +572,7 @@ namespace Upland.Infrastructure.LocalData
                         while (reader.Read())
                         {
                             properties.Add(
-                                new Property
-                                {
-                                    Id = (long)reader["Id"],
-                                    Address = (string)reader["Address"],
-                                    CityId = (int)reader["CityId"],
-                                    Size = (int)reader["Size"],
-                                    MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
-                                    StreetId = (int)reader["StreetId"],
-                                    NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
-                                    Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
-                                    Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
-                                    Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
-                                    FSA = (bool)reader["FSA"],
-                                    Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null
-                                }
+                                ReadPropertyFromReader(reader)
                              );
                         }
                         reader.Close();
@@ -607,21 +612,7 @@ namespace Upland.Infrastructure.LocalData
                         while (reader.Read())
                         {
                             properties.Add(
-                                new Property
-                                {
-                                    Id = (long)reader["Id"],
-                                    Address = (string)reader["Address"],
-                                    CityId = (int)reader["CityId"],
-                                    Size = (int)reader["Size"],
-                                    MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
-                                    StreetId = (int)reader["StreetId"],
-                                    NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
-                                    Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
-                                    Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
-                                    Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
-                                    FSA = (bool)reader["FSA"],
-                                    Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null
-                                }
+                                ReadPropertyFromReader(reader)
                              );
                         }
                         reader.Close();
@@ -661,21 +652,7 @@ namespace Upland.Infrastructure.LocalData
                         while (reader.Read())
                         {
                             properties.Add(
-                                new Property
-                                {
-                                    Id = (long)reader["Id"],
-                                    Address = (string)reader["Address"],
-                                    CityId = (int)reader["CityId"],
-                                    Size = (int)reader["Size"],
-                                    MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
-                                    StreetId = (int)reader["StreetId"],
-                                    NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
-                                    Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
-                                    Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
-                                    Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null,
-                                    FSA = reader["FSA"] != DBNull.Value ? (bool)reader["FSA"] : false,
-                                    Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null
-                                }
+                                ReadPropertyFromReader(reader)
                              );
                         }
                         reader.Close();
@@ -761,18 +738,7 @@ namespace Upland.Infrastructure.LocalData
                     {
                         while (reader.Read())
                         {
-                            property.Id = (long)reader["Id"];
-                            property.Address = (string)reader["Address"];
-                            property.CityId = (int)reader["CityId"];
-                            property.Size = (int)reader["Size"];
-                            property.MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]);
-                            property.StreetId = (int)reader["StreetId"];
-                            property.NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null;
-                            property.Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null;
-                            property.Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null;
-                            property.Status = reader["Status"] != DBNull.Value ? (string?)reader["Status"] : null;
-                            property.FSA = reader["FSA"] != DBNull.Value ? (bool)reader["FSA"] : false;
-                            property.Owner = reader["Owner"] != DBNull.Value ? (string?)reader["Owner"] : null;      
+                            property = ReadPropertyFromReader(reader);
                         }
                         reader.Close();
                     }
@@ -1478,7 +1444,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public Tuple<string,string> GetUplandUserNameByEOSAccount(string eosAccount)
+        public Tuple<string,string> GetUplandUsernameByEOSAccount(string eosAccount)
         {
             Tuple<string, string> EOSAccount = null;
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1810,6 +1776,27 @@ namespace Upland.Infrastructure.LocalData
                 Price = decimal.ToDouble((decimal)reader["Price"]),
                 Currency = (string)reader["Currency"],
                 Markup = decimal.ToDouble((decimal)reader["Markup"])
+            };
+        }
+
+        private Property ReadPropertyFromReader(SqlDataReader reader)
+        {
+            return new Property
+            {
+                Id = (long)reader["Id"],
+                Address = (string)reader["Address"],
+                CityId = (int)reader["CityId"],
+                Size = (int)reader["Size"],
+                MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
+                StreetId = (int)reader["StreetId"],
+                NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
+                Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,
+                Longitude = reader["Longitude"] != DBNull.Value ? (decimal?)reader["Longitude"] : null,
+                Status = reader["Status"] != DBNull.Value ? (string)reader["Status"] : null,
+                FSA = (bool)reader["FSA"],
+                Owner = reader["Owner"] != DBNull.Value ? (string)reader["Owner"] : null,
+                MintedOn = reader["MintedOn"] != DBNull.Value ? (DateTime?)reader["MintedOn"] : null,
+                MintedBy = reader["MintedBy"] != DBNull.Value ? (string)reader["MintedBy"] : null
             };
         }
 

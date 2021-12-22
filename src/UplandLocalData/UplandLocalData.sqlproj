@@ -133,5 +133,7 @@
     <Build Include="StoredProcedures\UPL.GetSaleHistoryBySellerUsername.sql" />
     <Build Include="StoredProcedures\UPL.GetSaleHistoryByBuyerUsername.sql" />
     <Build Include="StoredProcedures\UPL.GetSaleHistoryByStreetId.sql" />
+    <Build Include="Tables\UPL.ErrorLog.sql" />
+    <Build Include="StoredProcedures\UPL.CreateErrorLog.sql" />
   </ItemGroup>
 </Project>

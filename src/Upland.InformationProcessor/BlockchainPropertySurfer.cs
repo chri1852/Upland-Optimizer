@@ -7,9 +7,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Upland.Infrastructure.Blockchain;
 using Upland.Infrastructure.LocalData;
+using Upland.Infrastructure.UplandApi;
 using Upland.Types;
 using Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
+using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
 {
@@ -17,25 +19,30 @@ namespace Upland.InformationProcessor
     {
         private readonly LocalDataManager localDataManager;
         private readonly BlockchainManager blockchainManager;
+        private readonly UplandApiManager uplandApiManager;
+        private List<Neighborhood> neighborhoods;
         private bool isProcessing;
 
         public BlockchainPropertySurfer()
         {
             localDataManager = new LocalDataManager();
             blockchainManager = new BlockchainManager();
+            uplandApiManager = new UplandApiManager();
+            neighborhoods = new List<Neighborhood>();
             isProcessing = false;
         }
 
         public async Task RunBlockChainUpdate()
         {
-            DateTime lastSaleUpdate = localDataManager.GetLastSaleHistoryDateTime();
+            DateTime lastDateProcessed = DateTime.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_MAXTIMESTAMPPROCESSED));
 
             try
             {
-                await BuildBlockChainFromDate(lastSaleUpdate);
+                await BuildBlockChainFromDate(lastDateProcessed);
             }
-            catch
+            catch (Exception ex)
             {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - RunBlockChainUpdate", ex.Message);
                 this.isProcessing = false;
             }
         }
@@ -70,8 +77,6 @@ namespace Upland.InformationProcessor
                 historyTimeStamp = new DateTime(historyTimeStamp.Year, historyTimeStamp.Month, historyTimeStamp.Day);
             }
 
-            // Advance a day at a time, unless there are more props
-            //int minutesToMoveFoward = 1440;
             int minutesToMoveFoward = 60; // One Hours
             bool continueLoad = true;
 
@@ -85,6 +90,7 @@ namespace Upland.InformationProcessor
                 {
                     try
                     {
+                        Thread.Sleep(1000);
                         actions = await blockchainManager.GetPropertyActionsFromTime(startDate, minutesToMoveFoward);
                         if (actions != null)
                         {
@@ -95,9 +101,10 @@ namespace Upland.InformationProcessor
                             Thread.Sleep(5000);
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Just Eat it to Retry
+                        localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - BuildBlockChainFromDate - Loop", ex.Message);
+                        Thread.Sleep(5000);
                     }
                 }
 
@@ -107,8 +114,8 @@ namespace Upland.InformationProcessor
                 }
                 else
                 {
-                    actions = actions.OrderBy(a => a.global_sequence).ToList();
-                    ProcessActions(actions);
+                    actions = actions.OrderBy(a => a.timestamp).ToList();
+                    await ProcessActions(actions);
 
                     if (actions.Count < 1000)
                     {
@@ -135,22 +142,25 @@ namespace Upland.InformationProcessor
             this.isProcessing = false;
         }
 
-        private void ProcessActions(List<HistoryAction> actions)
+        private async Task ProcessActions(List<HistoryAction> actions)
         {
-            long maxGlobalSequence = long.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_MAXGLOBALSEQUENCE));
+            DateTime maxTimestampProcessed = DateTime.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_MAXTIMESTAMPPROCESSED));
+            int skipped = 0;
 
             foreach (HistoryAction action in actions)
             {
-                if (action.global_sequence <= maxGlobalSequence )
+                
+                if (action.timestamp < maxTimestampProcessed)
                 {
                     // We've already processed this event
                     continue;
                 }
+                
 
                 switch(action.act.name)
                 {
                     case "a4":
-                        ProcessMintingAction(action);
+                        await ProcessMintingAction(action);
                         break;
                     case "n12":
                         ProcessOfferAction(action);
@@ -168,7 +178,7 @@ namespace Upland.InformationProcessor
                         ProcessRemoveFromSaleAction(action);
                         break;
                     case "n52":
-                        ProcessBuyForFiatAction(action);
+                        await ProcessBuyForFiatAction(action);
                         break;
                     case "n33":
                         ProcessBecomeUplanderAction(action);
@@ -179,18 +189,23 @@ namespace Upland.InformationProcessor
                     default:
                         continue;
                 }
-                
-                if (action.global_sequence > maxGlobalSequence)
+
+                if (action.timestamp > maxTimestampProcessed)
                 {
-                    maxGlobalSequence = action.global_sequence;
-                    // Update the Max Global Sequence seen, this ensures we don't process the same event twice
-                    localDataManager.UpsertConfigurationValue(Consts.CONFIG_MAXGLOBALSEQUENCE, maxGlobalSequence.ToString());
+                    maxTimestampProcessed = action.timestamp;
+                    localDataManager.UpsertConfigurationValue(Consts.CONFIG_MAXTIMESTAMPPROCESSED, action.timestamp.ToString());
                 }
             }
         }
 
         private void ProcessDeleteVisitorAction(HistoryAction action)
         {
+            if (action.act.data.p52 == null)
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessDeleteVisitorAction", string.Format("p52 (Visitor EOS): {0}, Trx_id: {1}", action.act.data.p52, action.trx_id));
+                return;
+            }
+
             List<Property> properties = localDataManager.GetPropertiesByUplandUsername(action.act.data.p52);
             localDataManager.DeleteEOSUser(action.act.data.p52);
 
@@ -198,6 +213,8 @@ namespace Upland.InformationProcessor
             {
                 prop.Owner = null;
                 prop.Status = Consts.PROP_STATUS_UNLOCKED;
+                prop.MintedBy = null;
+                prop.MintedOn = null;
                 localDataManager.UpsertProperty(prop);
             }
         }
@@ -206,6 +223,7 @@ namespace Upland.InformationProcessor
         {
             if (action.act.data.p53 == null || action.act.data.p52 == null)
             {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBecomeUplanderAction", string.Format("p53 (New EOS): {0}, p52 (Visitor EOS): {1}, Trx_id: {2}", action.act.data.p53, action.act.data.p52, action.trx_id));
                 return;
             }
             string uplandUsername = action.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding ")[0];
@@ -215,6 +233,7 @@ namespace Upland.InformationProcessor
             foreach (Property prop in properties)
             {
                 prop.Owner = action.act.data.p53;
+                prop.MintedBy = action.act.data.p53;
                 localDataManager.UpsertProperty(prop);
             }
 
@@ -223,11 +242,22 @@ namespace Upland.InformationProcessor
             localDataManager.UpsertEOSUser(action.act.data.p53, uplandUsername, action.timestamp);
         }
 
-        private void ProcessBuyForFiatAction(HistoryAction action)
+        private async Task ProcessBuyForFiatAction(HistoryAction action)
         {
             if (action.act.data.a45 == null || action.act.data.p14 == null)
             {
-                return;
+                GetTransactionEntry transactionEntry = await blockchainManager.GetSingleTransactionById(action.trx_id);
+
+                if (transactionEntry.traces.Where(t => t.act.name == "n52").ToList().Count == 1)
+                {
+                    action.act.data.a45 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.a45;
+                    action.act.data.p14 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.p14;
+                }
+                else
+                {
+                    localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Missing Data", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.act.data.a45, action.act.data.p14, action.trx_id));
+                    return;
+                }
             }
 
             long propId = long.Parse(action.act.data.a45);
@@ -238,7 +268,7 @@ namespace Upland.InformationProcessor
 
             if (buyEntries.Count == 0)
             {
-                // For some reason got set, check to see if the buyer eos action type
+                // If for some reason the sale already got set, check to see if it is there
                 buyEntries = allEntries
                 .Where(e => e.BuyerEOS == action.act.data.p14 && !e.Offer && e.AmountFiat > 0)
                 .OrderByDescending(e => e.DateTime).ToList();
@@ -270,6 +300,12 @@ namespace Upland.InformationProcessor
 
         private void ProcessRemoveFromSaleAction(HistoryAction action)
         {
+            if (action.act.data.a45 == null || action.act.data.a54 == null)
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.act.data.a45, action.act.data.a54, action.trx_id));
+                return;
+            }
+
             long propId = long.Parse(action.act.data.a45);
             List<SaleHistoryEntry> historyEntries = localDataManager.GetRawSaleHistoryByPropertyId(propId);
 
@@ -292,6 +328,12 @@ namespace Upland.InformationProcessor
 
         private void ProcessPlaceForSaleAction(HistoryAction action)
         {
+            if (action.act.data.a45 == null || action.act.data.a54 == null || action.act.data.p11 == null || action.act.data.p3 == null)
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.act.data.a45, action.act.data.a54, action.act.data.p11, action.act.data.p3, action.trx_id));
+                return;
+            }
+
             SaleHistoryEntry historyEntry = new SaleHistoryEntry
             {
                 DateTime = action.timestamp,
@@ -306,10 +348,14 @@ namespace Upland.InformationProcessor
                 historyEntry.AmountFiat = double.Parse(action.act.data.p3.Split(" FI")[0]);
                 historyEntry.Amount = null;
             }
-            else
+            else if (Regex.Match(action.act.data.p3, "^0.00 FI").Success)
             {
                 historyEntry.Amount = double.Parse(action.act.data.p11.Split(" UP")[0]);
                 historyEntry.AmountFiat = null;
+            }
+            else
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Failed Parsing Amount", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.act.data.a45, action.act.data.a54, action.act.data.p11, action.act.data.p3, action.trx_id));
             }
 
             Property property = localDataManager.GetProperty(historyEntry.PropId);
@@ -324,11 +370,18 @@ namespace Upland.InformationProcessor
 
         private void ProcessPurchaseAction(HistoryAction action)
         {
+            if (action.act.data.p14 == null || action.act.data.a45 == null || action.act.data.p24 == null || action.act.data.memo == null)
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.act.data.p14, action.act.data.a45, action.act.data.p24, action.act.data.memo, action.trx_id));
+                return;
+            }
+
             long propId = long.Parse(action.act.data.a45);
 
             Property property = localDataManager.GetProperty(propId);
             if (property == null || property.Address == null || property.Address == "")
             {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Missing Prop", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.act.data.p14, action.act.data.a45, action.act.data.p24, action.act.data.memo, action.trx_id));
                 return;
             }
 
@@ -339,16 +392,42 @@ namespace Upland.InformationProcessor
 
             if (buyEntries.Count == 0)
             {
-                return;
+                if (!allEntries.Any(b =>
+                         b.SellerEOS == property.Owner &&
+                         b.BuyerEOS == action.act.data.p14 &&
+                         b.PropId == property.Id &&
+                         !b.Offer &&
+                         !b.Accepted &&
+                         b.AmountFiat == null &&
+                         b.Amount > 0
+                    ))
+                {
+                    localDataManager.UpsertSaleHistory(
+                        new SaleHistoryEntry
+                        {
+                            DateTime = action.timestamp,
+                            SellerEOS = property.Owner,
+                            BuyerEOS = action.act.data.p14,
+                            PropId = propId,
+                            Amount = double.Parse(action.act.data.p24.Split(" UP")[0]),
+                            AmountFiat = null,
+                            OfferPropId = null,
+                            Offer = false,
+                            Accepted = false
+                        }
+                    );
+                }
             }
-
-            buyEntries.First().BuyerEOS = action.act.data.p14;
-            buyEntries.First().DateTime = action.timestamp;
-            localDataManager.UpsertSaleHistory(buyEntries.First());
+            else
+            {
+                buyEntries.First().BuyerEOS = action.act.data.p14;
+                buyEntries.First().DateTime = action.timestamp;
+                localDataManager.UpsertSaleHistory(buyEntries.First());
+            }
 
             foreach(SaleHistoryEntry entry in allEntries)
             {
-                if(entry.Id != buyEntries.First().Id && (entry.BuyerEOS == null || entry.SellerEOS == null))
+                if (entry.BuyerEOS == null || entry.SellerEOS == null)
                 {
                     localDataManager.DeleteSaleHistoryById(entry.Id.Value);
                 }
@@ -361,7 +440,13 @@ namespace Upland.InformationProcessor
 
         private void ProcessOfferResolutionAction(HistoryAction action)
         {
-            if(Regex.Match(action.act.data.memo, @"\) and Upland user ").Success)
+            if (action.act.data.p25 == null || action.act.data.memo == null)
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
+                return;
+            }
+
+            if (Regex.Match(action.act.data.memo, @"\) and Upland user ").Success)
             {
                 int propOneCityId = 1;
                 int propTwoCityId = 1;
@@ -375,6 +460,33 @@ namespace Upland.InformationProcessor
 
                     propTwoCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(", ")[3]);
                     propTwoAddress = action.act.data.memo.Split(" owns ")[2].Split(", ")[0];
+                }
+                else if (Regex.Match(action.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success || Regex.Match(action.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                {
+                    // First match 3 commas
+                    if (Regex.Match(action.act.data.memo.Split(")")[1], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                    {
+                        string cityName = action.act.data.memo.Split(")")[1].Split(",")[2].Trim();
+                        propOneCityId = HelperFunctions.GetCityIdByName(cityName);
+                        propOneAddress = action.act.data.memo.Split(")")[1].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
+                    }
+                    else
+                    {
+                        propOneCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(")")[1].Split(",")[1].Trim());
+                        propOneAddress = action.act.data.memo.Split(" owns ")[1].Split(",")[0].Trim();
+                    }
+
+                    if (Regex.Match(action.act.data.memo.Split(")")[3], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                    {
+                        string cityName = action.act.data.memo.Split(")")[3].Split(",")[2].Trim();
+                        propTwoCityId = HelperFunctions.GetCityIdByName(cityName);
+                        propTwoAddress = action.act.data.memo.Split(")")[3].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
+                    }
+                    else
+                    {
+                        propTwoCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(")")[3].Split(",")[1].Trim());
+                        propTwoAddress = action.act.data.memo.Split(" owns ")[2].Split(",")[0].Trim();
+                    }
                 }
                 else
                 {
@@ -391,12 +503,20 @@ namespace Upland.InformationProcessor
                 {
                     localDataManager.UpsertProperty(propOne);
                 }
+                else
+                {
+                    localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
+                }
 
                 propTwo.Owner = action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0];
                 propTwo.Status = Consts.PROP_STATUS_OWNED;
                 if (propTwo != null && propTwo.Address != null && propTwo.Address != "")
                 {
                     localDataManager.UpsertProperty(propTwo);
+                }
+                else
+                {
+                    localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
                 }
 
                 List<SaleHistoryEntry> allEntriesOne = localDataManager.GetRawSaleHistoryByPropertyId(propOne.Id);
@@ -414,6 +534,34 @@ namespace Upland.InformationProcessor
                     buyEntry.DateTime = action.timestamp;
                     localDataManager.UpsertSaleHistory(buyEntry);
                 }
+                else
+                {
+                    if (!allEntriesTwo.Any(b =>
+                         b.SellerEOS == action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0] &&
+                         b.BuyerEOS == action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0] &&
+                         b.PropId == propTwo.Id &&
+                         b.Offer &&
+                         b.Accepted &&
+                         b.AmountFiat == null &&
+                         b.Amount == null &&
+                         b.OfferPropId == propOne.Id
+                    ))
+                    {
+                        // buy offer entry is null, lets create one
+                        localDataManager.UpsertSaleHistory(new SaleHistoryEntry
+                        {
+                            DateTime = action.timestamp,
+                            SellerEOS = action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0],
+                            BuyerEOS = action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0],
+                            PropId = propTwo.Id,
+                            Amount = null,
+                            AmountFiat = null,
+                            OfferPropId = propOne.Id,
+                            Offer = true,
+                            Accepted = true
+                        });
+                    }
+                 }
 
                 foreach (SaleHistoryEntry entry in allEntriesOne)
                 {
@@ -437,10 +585,13 @@ namespace Upland.InformationProcessor
                 Property prop = localDataManager.GetPropertyByCityIdAndAddress(
                     HelperFunctions.GetCityIdByName(cityName), 
                     action.act.data.memo.Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0]);
+
                 if(prop == null || prop.Id == 0 || prop.Address == null || prop.Address == "")
                 {
+                    localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
                     return;
                 }
+
                 prop.Owner = action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0];
                 prop.Status = Consts.PROP_STATUS_OWNED;
 
@@ -459,6 +610,19 @@ namespace Upland.InformationProcessor
                     buyEntry.DateTime = action.timestamp;
                     localDataManager.UpsertSaleHistory(buyEntry);
                 }
+                else
+                {
+                    if (!allEntries.Any(b =>
+                         b.SellerEOS == action.act.data.p25 &&
+                         b.BuyerEOS == action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0] &&
+                         b.PropId == prop.Id &&
+                         b.Offer &&
+                         b.Accepted
+                    ))
+                    {
+                        localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Buy Entry", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
+                    }
+                }
 
                 foreach (SaleHistoryEntry entry in allEntries)
                 {
@@ -472,6 +636,12 @@ namespace Upland.InformationProcessor
 
         private void ProcessOfferAction(HistoryAction action)
         {
+            if (action.act.data.p23 == null || action.act.data.p15 == null || action.act.data.p21 == null)
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.act.data.p23, action.act.data.p15, string.Join(" ", action.act.data.p21), action.trx_id));
+                return;
+            }
+
             SaleHistoryEntry historyEntry = new SaleHistoryEntry
             {
                 DateTime = action.timestamp,
@@ -486,11 +656,15 @@ namespace Upland.InformationProcessor
                 historyEntry.Amount = double.Parse(action.act.data.p21[1].Split(" UP")[0]);
                 historyEntry.AmountFiat = null;
             }
-            else
+            else if(action.act.data.p21[0] == "uint64")
             {
                 historyEntry.OfferPropId = long.Parse(action.act.data.p21[1]);
                 historyEntry.AmountFiat = null;
                 historyEntry.Amount = null;
+            }
+            else
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Could Not Parse p21", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.act.data.p23, action.act.data.p15, string.Join(" ", action.act.data.p21), action.trx_id));
             }
 
             Property property = localDataManager.GetProperty(long.Parse(action.act.data.p15));
@@ -501,8 +675,14 @@ namespace Upland.InformationProcessor
             }
         }
 
-        private void ProcessMintingAction(HistoryAction action)
+        private async Task ProcessMintingAction(HistoryAction action)
         {
+            if (action.act.data.a45 == null || action.act.data.p44 == null || action.act.data.a54 == null || action.act.data.memo == null)
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.act.data.a45, action.act.data.p44, action.act.data.a54, action.act.data.memo, action.trx_id));
+                return;
+            }
+
             string uplandUsername = action.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding EOS account ")[0];
             Property property = localDataManager.GetProperty(long.Parse(action.act.data.a45));
             Tuple<string, string> existingAccount = localDataManager.GetUplandUsernameByEOSAccount(action.act.data.a54);
@@ -529,12 +709,47 @@ namespace Upland.InformationProcessor
                 localDataManager.UpsertEOSUser(action.act.data.a54, uplandUsername, action.timestamp);
             }
 
+            // We might be missing this property in the database
+            if (property == null || property.Address == null || property.Address == "")
+            {
+                property = await TryToLoadPropertyById(long.Parse(action.act.data.a45));
+            }
+
             if (property != null && property.Address != null && property.Address != "")
             {
                 property.Owner = action.act.data.a54;
                 property.Status = Consts.PROP_STATUS_OWNED;
+                property.MintedOn = action.timestamp;
+                property.MintedBy = action.act.data.a54;
                 localDataManager.UpsertProperty(property);
             }
+            else
+            {
+                localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction - Property Not Found", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.act.data.a45, action.act.data.p44, action.act.data.a54, action.act.data.memo, action.trx_id));
+            }
+        }
+
+        private async Task<Property> TryToLoadPropertyById(long propertyId)
+        {
+            // Load the neighborhoods if not done already
+            if(neighborhoods.Count == 0)
+            {
+                neighborhoods = localDataManager.GetNeighborhoods();
+            }
+
+            UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(propertyId);
+
+            // PropId does not exist
+            if (uplandProperty.Prop_Id == 0 || uplandProperty.Full_Address == null)
+            {
+                return new Property();
+            }
+
+            Property property = UplandMapper.Map(await uplandApiManager.GetUplandPropertyById(propertyId));
+
+            property.NeighborhoodId = localDataManager.GetNeighborhoodIdForProp(neighborhoods, property);
+
+            return property;
         }
     }
 }

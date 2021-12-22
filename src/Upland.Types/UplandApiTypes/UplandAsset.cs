@@ -13,6 +13,9 @@ namespace Upland.Types.UplandApiTypes
         public Stat Stat { get; set; }
         public string OwnerUsername { get; set; }
         public bool IsLocked { get; set; }
+        public string Description { get; set; }
+        public int TotalCount { get; set; }
+        public string Name { get; set; }
     }
 
     public class Stat

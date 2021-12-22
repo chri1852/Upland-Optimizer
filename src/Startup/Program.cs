@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Timers;
 using System.Text.Json;
 
-/*
+
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using Upland.Infrastructure.LocalData;
@@ -22,7 +22,7 @@ using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types.UplandApiTypes;
-*/
+
 
 class Program
 {
@@ -33,8 +33,9 @@ class Program
     private BlockchainPropertySurfer _blockchainPropertySurfer;
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
-    
-    /*
+    private LocalDataManager _localDataManager;
+
+
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -62,7 +63,7 @@ class Program
         //Console.Write("Enter the Level (1-8)....: ");
         //qualityLevel = Console.ReadLine();
         //await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel), 201, 20, 1000);
-        //await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel));
+        //await collectionOptimizer.RunDebugOptimization("marineone", 7);
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -81,8 +82,8 @@ class Program
         //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
         //output = await informationProcessor.GetBuildingsUnderConstruction(1);
         //List<SaleHistoryQueryEntry> entries = localDataManager.GetSaleHistoryByPropertyId(79565478804919);
-        output = informationProcessor.GetSaleHistoryByType("Property", "10, 9843 S Exchange Ave", "txt");
-        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
+        //output = informationProcessor.GetSaleHistoryByType("Property", "10, 9843 S Exchange Ave", "txt");
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
         //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
@@ -96,21 +97,23 @@ class Program
         // Rebuild Property Structure List
         //await informationProcessor.RebuildPropertyStructures();
         //await informationProcessor.RunCityStatusUpdate();
-
+        //await informationProcessor.RefreshCityById("PART", 1);
         //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
 
         // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
 
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
         //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
-        //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
-        //await informationProcessor.ResyncPropsList("ManyOpenForSale", "79518284499519");
+
+        await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
+        //await blockchainPropertySurfer.BuildBlockChainFromBegining();
+        //await informationProcessor.ResyncPropsList("SetForSale", "74663278158647");
     }
-    */
     
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    
+    */
 
     public async Task RunBotAsync()
     {
@@ -118,9 +121,11 @@ class Program
         _commands = new CommandService();
         _informationProcessor = new InformationProcessor();
         _blockchainPropertySurfer = new BlockchainPropertySurfer();
+        _localDataManager = new LocalDataManager();
 
         _services = new ServiceCollection()
             .AddSingleton(_informationProcessor)
+            .AddSingleton(_localDataManager)
             .AddSingleton(_client)
             .AddSingleton(_commands)
             .BuildServiceProvider();
@@ -207,13 +212,29 @@ class Program
                             await context.Channel.SendMessageAsync(string.Format("ERROR: I don't know that command. Try running !Help."));
                             break;
                         case "The input text has too many parameters.":
-                            await context.Channel.SendMessageAsync(string.Format("ERROR: There are too many parameters on that command. Try looking at the !Help documentation for that command."));
+                            await context.Channel.SendMessageAsync(string.Format("ERROR: There are too many parameters on that command."));
+
+                            await context.Channel.SendMessageAsync(string.Format("{0}", string.Join(Environment.NewLine,
+                                Startup.HelperFunctions.GetHelpTextForCommandNumber(
+                                    Startup.HelperFunctions.GetHelpNumber(context.Message.Content.Split("!")[1].Split(" ")[0].ToUpper())
+                                ))));
+
                             break;
                         case "The input text has too few parameters.":
-                            await context.Channel.SendMessageAsync(string.Format("ERROR: There are too few parameters on that command. Try looking at the !Help documentation for that command."));
+                            await context.Channel.SendMessageAsync(string.Format("ERROR: There are too few parameters on that command."));
+
+                            await context.Channel.SendMessageAsync(string.Format("{0}", string.Join(Environment.NewLine,
+                                Startup.HelperFunctions.GetHelpTextForCommandNumber(
+                                    Startup.HelperFunctions.GetHelpNumber(context.Message.Content.Split("!")[1].Split(" ")[0].ToUpper())
+                                ))));
                             break;
                         case "Failed to parse Int32.":
-                            await context.Channel.SendMessageAsync(string.Format("ERROR: Looks like you typed a word instead of a number. Try looking at the !Help documentation for that command."));
+                            await context.Channel.SendMessageAsync(string.Format("ERROR: Looks like you typed a word instead of a number."));
+
+                            await context.Channel.SendMessageAsync(string.Format("{0}", string.Join(Environment.NewLine,
+                                Startup.HelperFunctions.GetHelpTextForCommandNumber(
+                                    Startup.HelperFunctions.GetHelpNumber(context.Message.Content.Split("!")[1].Split(" ")[0].ToUpper())
+                                ))));
                             break;
                         case "Object reference not set to an instance of an object.":
                         case "The server responded with error 503: ServiceUnavailable":
@@ -279,23 +300,25 @@ class Program
             }
             catch (Exception ex)
             {
+                _localDataManager.CreateErrorLog("Program.cs - RunRefreshActions - Rebuild Structures", ex.Message);
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
             }
 
             // Only Rebuild All on Saturday
-            if (time.DayOfWeek == DayOfWeek.Saturday)
+            // Disabled due to relying on the blockchain
+            /*
+            try
             {
-                try
-                {
-                    Console.WriteLine(string.Format("{0}: Refreshing All Cities", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                    await informationProcessor.RunCityStatusUpdate();
-                    Console.WriteLine(string.Format("{0}: Refreshing All Cities Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(string.Format("{0}: Refreshing All Cities Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
-                }
+                Console.WriteLine(string.Format("{0}: Refreshing All Cities", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
+                await informationProcessor.RunCityStatusUpdate();
+                Console.WriteLine(string.Format("{0}: Refreshing All Cities Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
             }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("Program.cs - RunRefreshActions - Rebuild", ex.Message);
+                Console.WriteLine(string.Format("{0}: Refreshing All Cities Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
+            }
+            */
         }
     }
 

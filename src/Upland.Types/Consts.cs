@@ -7,7 +7,7 @@ namespace Upland.Types
     public static class Consts
     {
         // Config Values
-        public static readonly string CONFIG_MAXGLOBALSEQUENCE = "MaxGlobalSequence";
+        public static readonly string CONFIG_MAXTIMESTAMPPROCESSED = "MaxTimeStampProcessed";
         public static readonly string CONFIG_ENABLEBLOCKCHAINUPDATES = "EnableBlockChainUpdates";
 
         public static readonly List<int> StandardCollectionIds = new List<int>

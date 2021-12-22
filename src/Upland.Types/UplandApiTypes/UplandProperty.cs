@@ -15,6 +15,8 @@ namespace Upland.Types.UplandApiTypes
         public int? Area { get; set; }
         public decimal CenterLat { get; set; }
         public decimal CenterLng { get; set; }
+        public string transaction_id { get; set; }
+        public string last_transaction_id { get; set; }
         public string status { get; set; }
         public uplandLabels labels { get; set; }
         public string owner { get; set; }

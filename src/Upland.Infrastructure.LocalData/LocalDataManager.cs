@@ -215,7 +215,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        private int GetNeighborhoodIdForProp(List<Neighborhood> neighborhoods, Property property)
+        public int GetNeighborhoodIdForProp(List<Neighborhood> neighborhoods, Property property)
         {
             foreach (Neighborhood neighborhood in neighborhoods)
             {
@@ -312,6 +312,11 @@ namespace Upland.Infrastructure.LocalData
                         failedIds.Add(i);
                     }
                 }
+            }
+
+            if (failedIds.Count > 0)
+            {
+                localDataRepository.CreateErrorLog("LocalDataManager.cs - PopulateStreets", string.Join(", ", failedIds));
             }
         }
 
@@ -599,6 +604,11 @@ namespace Upland.Infrastructure.LocalData
             localDataRepository.CreateStreet(street);
         }
 
+        public void CreateErrorLog(string location, string message)
+        {
+            localDataRepository.CreateErrorLog(location, message);
+        }
+
         public List<Neighborhood> GetNeighborhoods()
         {
             return localDataRepository.GetNeighborhoods();
@@ -681,7 +691,7 @@ namespace Upland.Infrastructure.LocalData
 
         public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
         {
-            return localDataRepository.GetUplandUserNameByEOSAccount(eosAccount);
+            return localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
         }
 
         public DateTime GetLastHistoricalCityStatusDate()

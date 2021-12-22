@@ -19,6 +19,9 @@ namespace Upland.Types
         public string? Status { get; set; }
         public bool FSA { get; set; }
         public string Owner { get; set; }
+        public DateTime? MintedOn { get; set; }
+        public string MintedBy { get; set; }
+
         public bool Equals(Property other)
         {
             return other.Id == this.Id;
