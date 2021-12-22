@@ -1815,7 +1815,7 @@ namespace Upland.InformationProcessor
                 foreach (Property localProperty in localProperties)
                 {
                     localProperty.MintedBy = localProperty.Owner;
-                    localProperty.MintedOn = new DateTime(2021, 12, 21, 00, 00, 00);
+                    localProperty.MintedOn = new DateTime(2021, 12, 22, 00, 00, 00);
 
                     localDataManager.UpsertProperty(localProperty);
                     count++;
