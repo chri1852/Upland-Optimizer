@@ -150,13 +150,14 @@ namespace Upland.InformationProcessor
             int pricePad = 14;
             int markupPad = 14;
             int mintPad = 14;
+            int cityPad = 6;
             int addressPad = propDictionary.Max(p => p.Value.Address.Length);
             int ownerPad = forSaleProps.Max(p => p.Owner.Length);
             int neighborhoodPad = 14;
             int buildingPad = 29;
             output.Add(string.Format("{0} Data expires at {1}", reportHeader, expireDate));
             output.Add("");
-            output.Add(string.Format("{0} - Currency - {1} - {2} - {3} - {4} - {5} - {6}", "Price".PadLeft(pricePad), "Mint".PadLeft(mintPad), "Markup".PadLeft(markupPad), "Address".PadLeft(addressPad), "Owner".PadLeft(ownerPad), "NeighborhoodId".PadLeft(neighborhoodPad), "Building".PadLeft(buildingPad)));
+            output.Add(string.Format("{0} - Currency - {1} - {2} - {3} - {4} - {5} - {6} - {7}", "Price".PadLeft(pricePad), "Mint".PadLeft(mintPad), "Markup".PadLeft(markupPad), "CityId".PadLeft(cityPad), "Address".PadLeft(addressPad), "Owner".PadLeft(ownerPad), "NeighborhoodId".PadLeft(neighborhoodPad), "Building".PadLeft(buildingPad)));
 
             foreach (UplandForSaleProp prop in forSaleProps)
             {
@@ -175,6 +176,8 @@ namespace Upland.InformationProcessor
                 propString += string.Format("{0:N0}", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(mintPad);
                 propString += " - ";
                 propString += string.Format("{0:N2}%", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(markupPad);
+                propString += " - ";
+                propString += string.Format("{0}", propDictionary[prop.Prop_Id].CityId).PadLeft(cityPad);
                 propString += " - ";
                 propString += string.Format("{0}", propDictionary[prop.Prop_Id].Address).PadLeft(addressPad);
                 propString += " - ";

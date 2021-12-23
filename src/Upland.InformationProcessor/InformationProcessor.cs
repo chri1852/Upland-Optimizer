@@ -525,6 +525,100 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public List<string> SearchProperties(int cityId, string address, string fileType)
+        {
+            List<string> output = new List<string>();
+
+            if (cityId != 0 && !Consts.Cities.ContainsKey(cityId))
+            {
+                output.Add(string.Format("{0} is not a valid cityId. Try running my !CityInfo command.", cityId));
+                return output;
+            }
+
+            List<PropertySearchEntry> properties = localDataManager.SearchProperties(cityId, address);
+
+            if (properties.Count == 0)
+            {
+                output.Add(string.Format("Sorry, No properties Found for cityId {0} and address {1}.", cityId, address));
+                return output;
+            }
+
+            properties = properties.OrderBy(n => n.Address).OrderBy(n => n.CityId).ToList();
+
+            if (fileType == "TXT")
+            {
+                int idPad = 14;
+                int cityPad = 6;
+                int addressPad = properties.OrderByDescending(n => n.Address.Length).First().Address.Length;
+                int streetPad = 8;
+                int neighborhoodPad = 14;
+                int sizePad = 6;
+                int mintPad = string.Format("{0:N2}", properties.OrderByDescending(n => string.Format("{0:N2}", n.Mint).Length).First().Mint).Length;
+                int statusPad = 9;
+                int fsaPad = 5;
+                int ownerPad = properties.OrderByDescending(n => n.Owner.Length).First().Owner.Length;
+                int buildingPad = properties.OrderByDescending(n => n.Building.Length).First().Building.Length;
+
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9} - {10}", 
+                    "Id".PadLeft(idPad), 
+                    "CityId".PadLeft(cityPad), 
+                    "Address".PadLeft(addressPad), 
+                    "StreetId".PadLeft(streetPad),
+                    "NeighborhoodId".PadLeft(neighborhoodPad),
+                    "Size".PadLeft(sizePad),
+                    "Mint".PadLeft(mintPad),
+                    "Status".PadLeft(statusPad),
+                    "FSA".PadLeft(fsaPad),
+                    "Owner".PadLeft(ownerPad),
+                    "Building".PadLeft(buildingPad)
+                    ));
+                output.Add("");
+
+                foreach (PropertySearchEntry property in properties)
+                {
+                    string propertyString = string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9} - {10}"
+                        , property.Id.ToString().PadLeft(idPad)
+                        , property.CityId.ToString().PadLeft(cityPad)
+                        , property.Address.PadLeft(addressPad)
+                        , property.StreetId.ToString().PadLeft(streetPad)
+                        , property.NeighborhoodId.ToString().PadLeft(neighborhoodPad)
+                        , property.Size.ToString().PadLeft(sizePad)
+                        , property.Mint.ToString().PadLeft(mintPad)
+                        , property.Status.PadLeft(statusPad)
+                        , property.FSA.ToString().PadLeft(fsaPad)
+                        , property.Owner.PadLeft(ownerPad)
+                        , property.Building.PadLeft(buildingPad)
+                    );
+
+                    output.Add(propertyString);
+                }
+            }
+            else
+            {
+                output.Add("Id,CityId,Address,StreetId,NeighborhoodId,Size,Mint,Status,FSA,Owner,Building");
+                foreach (PropertySearchEntry property in properties)
+                {
+                    string propertyString = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}"
+                        , property.Id.ToString()
+                        , property.CityId.ToString()
+                        , property.Address.Replace(',', ' ')
+                        , property.StreetId.ToString()
+                        , property.NeighborhoodId.ToString()
+                        , property.Size.ToString()
+                        , property.Mint.ToString()
+                        , property.Status.ToString()
+                        , property.FSA.ToString()
+                        , property.Owner.ToString()
+                        , property.Building.ToString()
+                    );
+
+                    output.Add(propertyString);
+                }
+            }
+
+            return output;
+        }
+
         public async Task<List<string>> GetCollectionPropertiesForSale(int collectionId, string orderBy, string currency, string fileType)
         {
             List<string> output = new List<string>();
@@ -1319,7 +1413,7 @@ namespace Upland.InformationProcessor
                         output.Add("Name,Building,Rarity,Mint,Current Supply,Max Supply,Link");
                         break;
                     case "BLOCKEXPLORER":
-                        output.Add("Name,Description,Mint,Max Supply,Link");
+                        output.Add("Name,Mint,Max Supply,Link");
                         break;
                 }
 
@@ -1358,7 +1452,6 @@ namespace Upland.InformationProcessor
                             break;
                         case "BLOCKEXPLORER":
                             assetString += string.Format("{0},", asset.DisplayName);
-                            assetString += string.Format("{0},", ((BlockExplorer)asset).Description);
                             assetString += string.Format("{0},", asset.Mint);
                             assetString += string.Format("{0},", asset.MaxSupply);
                             assetString += string.Format("{0}", asset.Link);
@@ -1428,11 +1521,9 @@ namespace Upland.InformationProcessor
                         break;
                     case "BLOCKEXPLORER":
                         slotOnePad = assets.Max(a => a.DisplayName.Length);
-                        slotTwoPad = assets.Max(a => ((BlockExplorer)a).Description.Length);
 
-                        output.Add(string.Format("{0} - {1} - {2} - {3} - {4}"
+                        output.Add(string.Format("{0} - {1} - {2} - {3}"
                             , "Name".PadLeft(slotOnePad)
-                            , "Description".PadLeft(slotTwoPad)
                             , "Mint".PadLeft(mintPad)
                             , "Max Supply".PadLeft(maxPad)
                             , "Link".PadLeft(linkPad)));
@@ -1474,9 +1565,8 @@ namespace Upland.InformationProcessor
                                 , asset.Link.PadLeft(linkPad)));
                             break;
                         case "BLOCKEXPLORER":
-                            output.Add(string.Format("{0} - {1} - {2} - {3} - {4}"
+                            output.Add(string.Format("{0} - {1} - {2} - {3}"
                                 , asset.DisplayName.PadLeft(slotOnePad)
-                                , ((BlockExplorer)asset).Description.PadLeft(slotTwoPad)
                                 , string.Format("{0:N0}", asset.Mint).PadLeft(mintPad)
                                 , string.Format("{0:N0}", asset.MaxSupply).PadLeft(maxPad)
                                 , asset.Link.PadLeft(linkPad)));

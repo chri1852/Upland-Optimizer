@@ -48,15 +48,13 @@ namespace Upland.CollectionOptimizer
             this.DebugMode = false;
         }
 
-        public async Task RunDebugOptimization(string username, int qualityLevel, int collectionId = -1, int numberOfProperties = -1, double averageMonthlyUpx = -1)
+        public async Task RunAutoOptimization(RegisteredUser registeredUser, OptimizerRunRequest runRequest)
         {
-            this.DebugMode = true;
-            await SetDataForOptimization(username, collectionId, numberOfProperties, averageMonthlyUpx);
-            string results = RunOptimization(username, qualityLevel);
-        }
+            if(runRequest.DebugRun)
+            {
+                await RunDebugOptimization(runRequest);
+            }
 
-        public async Task RunAutoOptimization(RegisteredUser registeredUser, int qualityLevel, int collectionId = -1, int numberOfProperties = -1, double averageMonthlyUpx = -1)
-        {
             string results = "";
             LocalDataManager.CreateOptimizationRun(
                 new OptimizationRun
@@ -67,8 +65,8 @@ namespace Upland.CollectionOptimizer
 
             try
             {
-                await SetDataForOptimization(registeredUser.UplandUsername, collectionId, numberOfProperties, averageMonthlyUpx);
-                results = RunOptimization(registeredUser.UplandUsername, qualityLevel);
+                await SetDataForOptimization(runRequest);
+                results = RunOptimization(registeredUser.UplandUsername, runRequest.Level);
             }
             catch (Exception ex)
             {
@@ -92,21 +90,28 @@ namespace Upland.CollectionOptimizer
                 });
             LocalDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
         }
-        
-        private void CreateHypotheicalProperties(int collectionId, int numberOfProperties, double averageMonthlyUpx)
+
+        private async Task RunDebugOptimization(OptimizerRunRequest runRequest)
         {
-            if(Consts.StandardCollectionIds.Contains(collectionId))
+            this.DebugMode = true;
+            await SetDataForOptimization(runRequest);
+            string results = RunOptimization(runRequest.Username, runRequest.Level);
+        }
+
+        private void CreateHypotheicalProperties(OptimizerRunRequest runRequest)
+        {
+            if(Consts.StandardCollectionIds.Contains(runRequest.WhatIfCollectionId))
             {
                 return;
             }
 
-            List<Property> properties = HelperFunctions.BuildHypotheicalProperties(this.Collections[collectionId].CityId.Value, numberOfProperties, averageMonthlyUpx);
-            int matchingCityCollectionId = this.Collections.Where(c => c.Value.IsCityCollection && c.Value.CityId == this.Collections[collectionId].CityId.Value).First().Value.Id;
+            List<Property> properties = HelperFunctions.BuildHypotheicalProperties(this.Collections[runRequest.WhatIfCollectionId].CityId.Value, runRequest.WhatIfNumProperties, runRequest.WhatIfAverageMonthlyUpx);
+            int matchingCityCollectionId = this.Collections.Where(c => c.Value.IsCityCollection && c.Value.CityId == this.Collections[runRequest.WhatIfCollectionId].CityId.Value).First().Value.Id;
 
             foreach (Property property in properties)
             {
-                this.Collections[collectionId].MatchingPropertyIds.Add(property.Id);
-                if (matchingCityCollectionId != collectionId)
+                this.Collections[runRequest.WhatIfCollectionId].MatchingPropertyIds.Add(property.Id);
+                if (matchingCityCollectionId != runRequest.WhatIfCollectionId)
                 {
                     this.Collections[matchingCityCollectionId].MatchingPropertyIds.Add(property.Id);
                 }
@@ -179,17 +184,26 @@ namespace Upland.CollectionOptimizer
             return conflictingCollections;
         }
 
-        private async Task SetDataForOptimization(string username, int collectionId = -1, int numberOfProperties = -1, double averageMonthlyUpx = -1)
+        private async Task SetDataForOptimization(OptimizerRunRequest runRequest)
         {
             LoadCollections();
 
             // Only build the hypotheticals if requested
-            if (collectionId != -1 && numberOfProperties != -1 && averageMonthlyUpx != -1)
+            if (runRequest.WhatIfRun)
             {
-                CreateHypotheicalProperties(collectionId, numberOfProperties, averageMonthlyUpx);
+                CreateHypotheicalProperties(runRequest);
             }
 
-            await LoadUserProperties(username);
+            // its an exclude run, lets remove the requested collections
+            if (runRequest.ExcludeRun)
+            {
+                foreach(int excludeId in runRequest.ExcludeCollectionIds)
+                {
+                    this.Collections.Remove(excludeId);
+                }
+            }
+
+            await LoadUserProperties(runRequest.Username);
             PopulatePropertiesAndCollections();
 
             BuildAllCityProCollections();

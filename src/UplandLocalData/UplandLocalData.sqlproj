@@ -135,5 +135,6 @@
     <Build Include="StoredProcedures\UPL.GetSaleHistoryByStreetId.sql" />
     <Build Include="Tables\UPL.ErrorLog.sql" />
     <Build Include="StoredProcedures\UPL.CreateErrorLog.sql" />
+    <Build Include="StoredProcedures\UPL.SearchPropertyByCityIdAndAddress.sql" />
   </ItemGroup>
 </Project>

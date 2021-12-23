@@ -6,6 +6,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Upland.InformationProcessor;
+using Upland.Infrastructure.LocalData;
 using System.Collections.Generic;
 using System.Timers;
 using System.Text.Json;
@@ -13,7 +14,6 @@ using System.Text.Json;
 
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
-using Upland.Infrastructure.LocalData;
 using System.IO;
 using Upland.Types.Types;
 using System.Linq;
@@ -35,7 +35,7 @@ class Program
     private Timer _blockchainUpdateTimer;
     private LocalDataManager _localDataManager;
 
-
+    
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -58,12 +58,8 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        //Console.Write("Enter the Upland Username: ");
-        //username = Console.ReadLine();
-        //Console.Write("Enter the Level (1-8)....: ");
-        //qualityLevel = Console.ReadLine();
-        //await collectionOptimizer.RunDebugOptimization(username, int.Parse(qualityLevel), 201, 20, 1000);
-        //await collectionOptimizer.RunDebugOptimization("marineone", 7);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", new List<int> { 173, 222, 80 }, 7, true);
+        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -72,18 +68,19 @@ class Program
 
         // Test Information Processing Functions
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
-        //output = await informationProcessor.GetSalesDataByCityId(1);
+        output = await informationProcessor.GetCityPropertiesForSale(1, "Price", "All", "TXT");
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
         //output = informationProcessor.GetCityInformation("TXT"); 
         //output = informationProcessor.GetAllProperties("Street", 31898, "CSV");
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
-        //output = await informationProcessor.GetAssetsByTypeAndUserName("nflpa", "loyldoyl", "txt");
+        //output = await informationProcessor.GetAssetsByTypeAndUserName("blockExplorer", "loyldoyl", "txt");
         //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
         //output = await informationProcessor.GetBuildingsUnderConstruction(1);
         //List<SaleHistoryQueryEntry> entries = localDataManager.GetSaleHistoryByPropertyId(79565478804919);
         //output = informationProcessor.GetSaleHistoryByType("Property", "10, 9843 S Exchange Ave", "txt");
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
+        //output = informationProcessor.SearchProperties(10, "3101 W", "TXT");
+        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
         //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
@@ -105,9 +102,9 @@ class Program
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
         //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
 
-        await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
+        //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
-        //await informationProcessor.ResyncPropsList("SetForSale", "74663278158647");
+        //await informationProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
     }
     
     /*
@@ -239,12 +236,14 @@ class Program
                         case "Object reference not set to an instance of an object.":
                         case "The server responded with error 503: ServiceUnavailable":
                             await context.Channel.SendMessageAsync(string.Format("ERROR: Upland may be in Maintenance right now, try again later. If not something has gone horribly wrong, please contact Grombrindal."));
+                            _localDataManager.CreateErrorLog("Program.cs - HandleCommandAsync", result.ErrorReason);
                             break;
                         case "The server responded with error 40005: Request entity too large":
                             await context.Channel.SendMessageAsync(string.Format("ERROR: That file exceeds the size limit set discord unfortunaley. Try requesting it as a CSV instead."));
                             break;
                         default:
                             await context.Channel.SendMessageAsync(string.Format("ERROR: Contact Grombrindal."));
+                            _localDataManager.CreateErrorLog("Program.cs - HandleCommandAsync", result.ErrorReason);
                             break;
                     }
                 }
