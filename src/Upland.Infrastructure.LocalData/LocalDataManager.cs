@@ -699,6 +699,11 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
         }
 
+        public List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts()
+        {
+            return localDataRepository.GetRegisteredUsersEOSAccounts();
+        }
+
         public DateTime GetLastHistoricalCityStatusDate()
         {
             return localDataRepository.GetLastHistoricalCityStatusDate();
@@ -727,6 +732,11 @@ namespace Upland.Infrastructure.LocalData
         public void IncreaseRegisteredUserRunCount(decimal discordUserId)
         {
             localDataRepository.IncreaseRegisteredUserRunCount(discordUserId);
+        }
+
+        public void AddRegisteredUserSendUPX(decimal discordUserId, int sendUPX)
+        {
+            localDataRepository.AddRegisteredUserSendUPX(discordUserId, sendUPX);
         }
 
         public void DeleteRegisteredUser(decimal discordUserId)

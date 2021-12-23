@@ -71,7 +71,12 @@ namespace Upland.Infrastructure.Blockchain
 
         public async Task<List<HistoryAction>> GetPropertyActionsFromTime(DateTime timeFrom, int minutesToAdd)
         {
-            return (await blockchainRepository.GetPropertyActionsFromDateTime(timeFrom, minutesToAdd)).actions;
+            return (await blockchainRepository.GetPropertyActionsFromTime(timeFrom, minutesToAdd)).actions;
+        }
+
+        public async Task<List<HistoryAction>> GetSendActionsFromTime(DateTime timeFrom, int minutesToAdd)
+        {
+            return (await blockchainRepository.GetSendActionsFromTime(timeFrom, minutesToAdd)).actions;
         }
 
         public async Task<GetTransactionEntry> GetSingleTransactionById(string transactionId)

@@ -15,5 +15,6 @@ namespace Upland.Types.Types
         public long PropertyId { get; set; }
         public int Price { get; set; }
         public bool Verified { get; set; }
+        public int SentUPX { get; set; }
     }
 }

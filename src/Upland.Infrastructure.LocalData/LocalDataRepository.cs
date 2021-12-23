@@ -1448,6 +1448,36 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void AddRegisteredUserSendUPX(decimal discordUserId, int sendUPX)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[AddRegisteredUserSendUPX]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("SendUPX", sendUPX));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
         public RegisteredUser GetRegisteredUser(decimal discordUserId)
         {
             RegisteredUser registeredUser = null;
@@ -1532,6 +1562,47 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return EOSAccount;
+            }
+        }
+
+        public List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts()
+        {
+            List<Tuple<decimal, string, string>> EOSAccounts = new List<Tuple<decimal, string, string>>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetRegisteredUsersEOSAccounts]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            EOSAccounts.Add(new Tuple<decimal, string, string>(
+                                (decimal)reader["DiscordUserId"],
+                                (string)reader["UplandUsername"],
+                                (string)reader["EOSAccount"]
+                            ));
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return EOSAccounts;
             }
         }
 

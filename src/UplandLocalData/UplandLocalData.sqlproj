@@ -136,5 +136,7 @@
     <Build Include="Tables\UPL.ErrorLog.sql" />
     <Build Include="StoredProcedures\UPL.CreateErrorLog.sql" />
     <Build Include="StoredProcedures\UPL.SearchPropertyByCityIdAndAddress.sql" />
+    <Build Include="StoredProcedures\UPL.AddRegisteredUserSendUPX.sql" />
+    <Build Include="StoredProcedures\UPL.GetRegisteredUsersEOSAccounts.sql" />
   </ItemGroup>
 </Project>

@@ -18,7 +18,8 @@ BEGIN
 			[Paid],
 			[PropertyId],
 			[Price],
-			[Verified]
+			[Verified],
+			[SendUPX]
 		)
 		VALUES
 		(
@@ -29,6 +30,7 @@ BEGIN
 			0,
 			@PropertyId,
 			@Price,
+			0,
 			0
 		)
 	END TRY

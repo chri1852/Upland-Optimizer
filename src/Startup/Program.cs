@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Timers;
 using System.Text.Json;
 
-
+/*
 // ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;  
 using System.IO;
@@ -22,7 +22,7 @@ using Upland.Types.BlockchainTypes;
 using Upland.Types;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types.UplandApiTypes;
-
+*/
 
 class Program
 {
@@ -31,11 +31,13 @@ class Program
     private IServiceProvider _services;
     private InformationProcessor _informationProcessor;
     private BlockchainPropertySurfer _blockchainPropertySurfer;
+    private BlockchainSendFinder _blockchainSendFinder;
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
+    private Timer _sendTimer;
     private LocalDataManager _localDataManager;
 
-    
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         LocalDataManager localDataManager = new LocalDataManager();
@@ -45,6 +47,7 @@ class Program
         UplandApiManager uplandApiManager = new UplandApiManager();
         BlockchainManager blockchainManager = new BlockchainManager();
         BlockchainPropertySurfer blockchainPropertySurfer = new BlockchainPropertySurfer();
+        BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder();
 
         string username;
         string qualityLevel;
@@ -105,12 +108,14 @@ class Program
         //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
         //await informationProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
+        //await informationProcessor.ResyncPropsList("SetForSale", "74663278158647");
+        await blockchainSendFinder.RunBlockChainUpdate();
     }
+    */
     
-    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    
 
     public async Task RunBotAsync()
     {
@@ -118,6 +123,7 @@ class Program
         _commands = new CommandService();
         _informationProcessor = new InformationProcessor();
         _blockchainPropertySurfer = new BlockchainPropertySurfer();
+        _blockchainSendFinder = new BlockchainSendFinder();
         _localDataManager = new LocalDataManager();
 
         _services = new ServiceCollection()
@@ -133,6 +139,7 @@ class Program
 
         InitializeRefreshTimer();
         InitializeBlockchainUpdateTimer();
+        InitializeSendTimer();
 
         await RegisterCommandsAsync();
 
@@ -279,8 +286,22 @@ class Program
                 await _blockchainPropertySurfer.RunBlockChainUpdate();
             });
         };
-        _blockchainUpdateTimer.Interval = 30000;
+        _blockchainUpdateTimer.Interval = 30000; // Every 30 Seconds
         _blockchainUpdateTimer.Start();
+    }
+
+    private void InitializeSendTimer()
+    {
+        _sendTimer = new Timer();
+        _sendTimer.Elapsed += (sender, e) =>
+        {
+            Task child = Task.Factory.StartNew(async () =>
+            {
+                await _blockchainSendFinder.RunBlockChainUpdate();
+            });
+        };
+        _sendTimer.Interval = 300000; // Every 5 Minutes
+        _sendTimer.Start();
     }
 
     private async Task RunRefreshActions()
@@ -302,24 +323,6 @@ class Program
                 _localDataManager.CreateErrorLog("Program.cs - RunRefreshActions - Rebuild Structures", ex.Message);
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
             }
-
-            // Only Rebuild All on Saturday
-            // Disabled due to relying on the blockchain
-            /*
-            try
-            {
-                Console.WriteLine(string.Format("{0}: Refreshing All Cities", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                await informationProcessor.RunCityStatusUpdate();
-                Console.WriteLine(string.Format("{0}: Refreshing All Cities Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-            }
-            catch (Exception ex)
-            {
-                _localDataManager.CreateErrorLog("Program.cs - RunRefreshActions - Rebuild", ex.Message);
-                Console.WriteLine(string.Format("{0}: Refreshing All Cities Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
-            }
-            */
         }
     }
-
-
 }

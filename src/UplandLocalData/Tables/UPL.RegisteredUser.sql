@@ -9,6 +9,7 @@
 	[PropertyId]        BIGINT            NOT NULL,
 	[Price]             INT               NOT NULL,
 	[Verified]          BIT               NOT NULL,
+	[SendUPX]           INT               NOT NULL,
 
 	CONSTRAINT pk_RegisteredUserId PRIMARY KEY(Id)
 )

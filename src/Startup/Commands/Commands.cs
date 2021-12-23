@@ -194,6 +194,18 @@ namespace Startup.Commands
                 else
                 {
                     _localDataManager.SetRegisteredUserVerified(registeredUser.DiscordUserId);
+
+                    // Add the EOS Account if we dont have it
+                    Tuple<string, string> currentUser = _localDataManager.GetUplandUsernameByEOSAccount(property.owner);
+                    if (currentUser == null)
+                    {
+                        _localDataManager.UpsertEOSUser(property.owner, registeredUser.UplandUsername, DateTime.UtcNow);
+                    }
+                    else
+                    {
+                        _localDataManager.CreateErrorLog("Commands - VerifyMe", string.Format("Could Not Find EOS User with Username {0}", registeredUser.UplandUsername));
+                    }
+
                     await ReplyAsync(string.Format("You are now Verified {0}! You can remove the property from sale, or don't. I'm not your dad.", HelperFunctions.GetRandomName(_random)));
                 }
             }
@@ -209,13 +221,30 @@ namespace Startup.Commands
                 return;
             }
 
-            if (!registeredUser.Paid && registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < Consts.FreeRuns)
+            int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
+            int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
+
+            if (!registeredUser.Paid && registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < freeRuns)
             {
-                await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, Consts.FreeRuns, HelperFunctions.GetRandomName(_random)));
+                if (upxToNextFreeRun != 0)
+                {
+                    await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. You are {3} upx away from your next free run. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                }
+                else
+                {
+                    await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random)));
+                }
             }
-            else if (!registeredUser.Paid && registeredUser.RunCount == Consts.FreeRuns)
+            else if (!registeredUser.Paid && registeredUser.RunCount >= freeRuns)
             {
-                await ReplyAsync(string.Format("You've used all {0} of your free runs {1}. To learn how to support this tool try my !SupportMe command.", Consts.FreeRuns, HelperFunctions.GetRandomName(_random)));
+                if (upxToNextFreeRun != 0)
+                {
+                    await ReplyAsync(string.Format("You've used all of your free runs {0}. You are {1} upx away from your next free run. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                }
+                else
+                {
+                    await ReplyAsync(string.Format("You've used all of your free runs {0}. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random)));
+                }
                 return;
             }
 
@@ -326,6 +355,22 @@ namespace Startup.Commands
             }
             else
             {
+                int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
+
+                if (registeredUser.RunCount >= freeRuns - 2)
+                {
+                    string response = "Looks like you are ";
+                    if(registeredUser.RunCount >= freeRuns)
+                    {
+                        response += "all ";
+                    }
+                    else
+                    {
+                        response += "almost all ";
+                    }
+                    await ReplyAsync(string.Format("{0}out of Optimizer Runs. You can earn new runs by sending the properties listed in the Locations channel. Once you send 500 UPX worth you will earn an additional Optimizer Run, or you can become a support to get Unlimited Optimizer Runs.", response));
+                }
+
                 await ReplyAsync(string.Format("Hey {0}, Sounds like you really like this tool, to help support this tool why don't you ping Grombrindal.{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
                 await ReplyAsync(string.Format("For the low price of $5 you will get perpetual access to run this when ever you like, access to additional features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs. USD, UPX, Waxp, Ham Sandwiches, MTG Bulk Rares, and more are all accepted in payment."));
             }

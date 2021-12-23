@@ -145,7 +145,6 @@ namespace Upland.InformationProcessor
         private async Task ProcessActions(List<HistoryAction> actions)
         {
             DateTime maxTimestampProcessed = DateTime.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_MAXTIMESTAMPPROCESSED));
-            int skipped = 0;
 
             foreach (HistoryAction action in actions)
             {

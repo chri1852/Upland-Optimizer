@@ -8,7 +8,9 @@ namespace Upland.Types
     {
         // Config Values
         public static readonly string CONFIG_MAXTIMESTAMPPROCESSED = "MaxTimeStampProcessed";
+        public static readonly string CONFIG_MAXSENDTIMESTAMPPROCESSED = "MaxSendTimeStampProcessed";
         public static readonly string CONFIG_ENABLEBLOCKCHAINUPDATES = "EnableBlockChainUpdates";
+        public static readonly string CONFIG_PROPIDSTOMONITORFORSENDS = "PropIdsToMonitorForSends";
 
         public static readonly List<int> StandardCollectionIds = new List<int>
         {
@@ -75,6 +77,7 @@ namespace Upland.Types
         public static readonly string RunStatusCompleted= "Completed";
         public static readonly string RunStatusFailed = "Failed";
         public static readonly ulong TestUserDiscordId = 1;
+        public static readonly int UPXPricePerRun = 500;
 
         public static readonly int MaxStreetNumber = 39899;
     }
