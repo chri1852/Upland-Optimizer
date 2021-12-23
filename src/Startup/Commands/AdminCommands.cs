@@ -18,12 +18,14 @@ namespace Startup.Commands
     {
         private readonly Random _random;
         private readonly InformationProcessor _informationProcessor;
+        private readonly ResyncProcessor _resyncProcessor;
         private readonly LocalDataManager _localDataManager;
 
-        public AdminCommands(InformationProcessor informationProcessor, LocalDataManager localDataManager)
+        public AdminCommands(InformationProcessor informationProcessor, ResyncProcessor resyncProcessor, LocalDataManager localDataManager)
         {
             _random = new Random();
             _informationProcessor = informationProcessor;
+            _resyncProcessor = resyncProcessor;
             _localDataManager = localDataManager;
         }
 
@@ -198,7 +200,7 @@ namespace Startup.Commands
             try
             {
                 await ReplyAsync(string.Format("Resyncing Properties."));
-                await _informationProcessor.ResyncPropsList(action, propertyList);
+                await _resyncProcessor.ResyncPropsList(action, propertyList);
                 await ReplyAsync(string.Format("Properties Resynced."));
             }
             catch (Exception ex)
