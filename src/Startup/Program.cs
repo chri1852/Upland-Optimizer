@@ -30,6 +30,7 @@ class Program
     private CommandService _commands;
     private IServiceProvider _services;
     private InformationProcessor _informationProcessor;
+    private ResyncProcessor _resyncProcessor;
     private BlockchainPropertySurfer _blockchainPropertySurfer;
     private BlockchainSendFinder _blockchainSendFinder;
     private Timer _refreshTimer;
@@ -43,6 +44,7 @@ class Program
         LocalDataManager localDataManager = new LocalDataManager();
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
         InformationProcessor informationProcessor = new InformationProcessor();
+        ResyncProcessor resyncProcessor = new ResyncProcessor();
         BlockchainRepository blockchainRepository = new BlockchainRepository();
         UplandApiManager uplandApiManager = new UplandApiManager();
         BlockchainManager blockchainManager = new BlockchainManager();
@@ -71,7 +73,7 @@ class Program
 
         // Test Information Processing Functions
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
-        output = await informationProcessor.GetCityPropertiesForSale(1, "Price", "All", "TXT");
+        //output = await informationProcessor.GetCityPropertiesForSale(1, "Price", "All", "TXT");
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
         //output = informationProcessor.GetCityInformation("TXT"); 
@@ -83,7 +85,7 @@ class Program
         //List<SaleHistoryQueryEntry> entries = localDataManager.GetSaleHistoryByPropertyId(79565478804919);
         //output = informationProcessor.GetSaleHistoryByType("Property", "10, 9843 S Exchange Ave", "txt");
         //output = informationProcessor.SearchProperties(10, "3101 W", "TXT");
-        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
         //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
@@ -107,9 +109,9 @@ class Program
 
         //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
-        //await informationProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
-        //await informationProcessor.ResyncPropsList("SetForSale", "74663278158647");
-        await blockchainSendFinder.RunBlockChainUpdate();
+        //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
+        //await resyncProcessor.ResyncPropsList("SetForSale", "74663278158647");
+        //await blockchainSendFinder.RunBlockChainUpdate();
     }
     */
     
@@ -122,12 +124,14 @@ class Program
         _client = new DiscordSocketClient();
         _commands = new CommandService();
         _informationProcessor = new InformationProcessor();
+        _resyncProcessor = new ResyncProcessor();
         _blockchainPropertySurfer = new BlockchainPropertySurfer();
         _blockchainSendFinder = new BlockchainSendFinder();
         _localDataManager = new LocalDataManager();
 
         _services = new ServiceCollection()
             .AddSingleton(_informationProcessor)
+            .AddSingleton(_resyncProcessor)
             .AddSingleton(_localDataManager)
             .AddSingleton(_client)
             .AddSingleton(_commands)
