@@ -64,13 +64,14 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername.ToUpper()));
 
                 CollectionOptimizer optimizer = new CollectionOptimizer();
+                OptimizerRunRequest runRequest = new OptimizerRunRequest(uplandUsername.ToLower(), qualityLevel);
                 await optimizer.RunAutoOptimization(new RegisteredUser
                 {
                     DiscordUserId = Consts.TestUserDiscordId,
                     DiscordUsername = "TEST_USER_NAME",
                     UplandUsername = uplandUsername.ToLower()
                 },
-                qualityLevel);
+                runRequest);
 
                 return;
             }

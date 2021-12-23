@@ -235,7 +235,8 @@ namespace Startup.Commands
             {
                 CollectionOptimizer optimizer = new CollectionOptimizer();
                 await ReplyAsync(string.Format("Got it {0}! I have started your optimization run.", HelperFunctions.GetRandomName(_random)));
-                await optimizer.RunAutoOptimization(registeredUser, 7);
+                OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower());
+                await optimizer.RunAutoOptimization(registeredUser, runRequest);
 
                 return;
             }
@@ -683,6 +684,36 @@ namespace Startup.Commands
             }
         }
 
+        [Command("SearchProperties")]
+        public async Task SearchStreets(int cityId, string address, string fileType = "TXT")
+        {
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            await ReplyAsync(string.Format("Sounds Good! Searching for Properties {0}!", HelperFunctions.GetRandomName(_random)));
+
+            List<string> propertiesData = _informationProcessor.SearchProperties(cityId, address, fileType.ToUpper());
+
+            if (propertiesData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), propertiesData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, propertiesData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("PropertySearchResults.{0}", fileType.ToUpper() == "CSV" ? "csv" : "txt"));
+            }
+        }
+
         [Command("GetAssets")]
         public async Task GetAssets(string userName, string type, string fileType = "TXT")
         {
@@ -801,12 +832,14 @@ namespace Startup.Commands
             helpMenu.Add("   15. !UnmintedProperties");
             helpMenu.Add("   16. !AllProperties");
             helpMenu.Add("   17. !SearchStreets");
-            helpMenu.Add("   18. !GetAssets");
-            helpMenu.Add("   19. !GetSalesHistory"); 
+            helpMenu.Add("   18. !SearchProperties");
+            helpMenu.Add("   19. !GetAssets");
+            helpMenu.Add("   20. !GetSalesHistory"); 
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   20. !OptimizerLevelRun");
-            helpMenu.Add("   21. !OptimizerWhatIfRun");
+            helpMenu.Add("   21. !OptimizerLevelRun");
+            helpMenu.Add("   22. !OptimizerWhatIfRun");
+            helpMenu.Add("   23. !OptimizerExcludeRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }

@@ -63,8 +63,8 @@ namespace Startup.Commands
             {
                 CollectionOptimizer optimizer = new CollectionOptimizer();
                 await ReplyAsync(string.Format("Got it {0}! I have started your level {1} optimization run.", HelperFunctions.GetRandomName(_random), qualityLevel));
-
-                await optimizer.RunAutoOptimization(registeredUser, qualityLevel);
+                OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower(), qualityLevel);
+                await optimizer.RunAutoOptimization(registeredUser, runRequest);
                 return;
             }
             catch (Exception ex)
@@ -107,15 +107,76 @@ namespace Startup.Commands
             try
             {
                 CollectionOptimizer optimizer = new CollectionOptimizer();
-                await ReplyAsync(string.Format("Bingo {0}! I have started your level What If optimization run.", HelperFunctions.GetRandomName(_random)));
-
-                await optimizer.RunAutoOptimization(registeredUser, 7, collectionId, numberOfProps, averageMonthlyUpx);
+                await ReplyAsync(string.Format("Bingo {0}! I have started your What If optimization run.", HelperFunctions.GetRandomName(_random)));
+                OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower(), collectionId, numberOfProps, averageMonthlyUpx);
+                await optimizer.RunAutoOptimization(registeredUser, runRequest);
 
                 return;
             }
             catch (Exception ex)
             {
                 _localDataManager.CreateErrorLog("PremiumCommands - OptimizerWhatIfRun", ex.Message);
+                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+        }
+
+        [Command("OptimizerExcludeRun")]
+        public async Task OptimizerExcludeRun(string collectionIds)
+        {
+            LocalDataManager localDataManager = new LocalDataManager();
+
+            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            if (!await EnsureRegisteredVerifiedAndPaid(registeredUser))
+            {
+                return;
+            }
+
+            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
+            {
+                await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            List<int> excludeCollectionIds = new List<int>();
+            foreach(string id in collectionIds.Split(","))
+            {
+                int collectionId = -1;
+                if (int.TryParse(id, out collectionId))
+                {
+                    if (Consts.StandardCollectionIds.Contains(collectionId))
+                    {
+                        await ReplyAsync(string.Format("This command doesn't work on standard collections {0}.", HelperFunctions.GetRandomName(_random)));
+                        return;
+                    }
+
+                    excludeCollectionIds.Add(collectionId);
+                }
+                else
+                {
+                    await ReplyAsync(string.Format("I don't think {0} is a number {1}.", id, HelperFunctions.GetRandomName(_random)));
+                    return;
+                }
+            }
+
+            if (currentRun != null)
+            {
+                localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
+            }
+
+            try
+            {
+                CollectionOptimizer optimizer = new CollectionOptimizer();
+                await ReplyAsync(string.Format("Bingo {0}! I have started your exclude optimization run.", HelperFunctions.GetRandomName(_random)));
+                OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower(), excludeCollectionIds);
+                await optimizer.RunAutoOptimization(registeredUser, runRequest);
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("PremiumCommands - OptimizerExcludeRun", ex.Message);
                 await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
                 return;
             }

@@ -756,6 +756,59 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<PropertySearchEntry> SearchProperties(int cityId, string address)
+        {
+            List<PropertySearchEntry> properties = new List<PropertySearchEntry>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[SearchPropertyByCityIdAndAddress]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Address", address));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            properties.Add(new PropertySearchEntry
+                            {
+                                Id = (long)reader["Id"],
+                                CityId = (int)reader["CityId"],
+                                Address = (string)reader["Address"],
+                                StreetId = (int)reader["StreetId"],
+                                NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
+                                Size = (int)reader["Size"],
+                                Mint = Math.Round(decimal.ToDouble((decimal)reader["Mint"]), 2),
+                                Status = reader["Status"] != DBNull.Value ? (string)reader["Status"] : "",
+                                FSA = (bool)reader["FSA"],
+                                Owner = reader["Owner"] != DBNull.Value ? (string)reader["Owner"] : "",
+                                Building = reader["Building"] != DBNull.Value ? (string)reader["Building"] : "None",
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return properties;
+            }
+        }
+
         public void CreateOptimizationRun(OptimizationRun optimizationRun)
         {
             SqlConnection sqlConnection = GetSQLConnector();

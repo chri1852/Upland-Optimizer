@@ -499,6 +499,11 @@ namespace Upland.Infrastructure.LocalData
             return matches;
         }
 
+        public List<PropertySearchEntry> SearchProperties(int cityId, string address)
+        {
+            return localDataRepository.SearchProperties(cityId, address);
+        }
+
         public void SetHistoricalCityStats(DateTime timeStamp)
         {
             List<CollatedStatsObject> cityStats = GetCityStats();
