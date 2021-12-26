@@ -53,6 +53,162 @@ namespace Upland.InformationProcessor
             {
                 await Process_FullResync(localProperties);
             }
+            else if (action == "NeighborhoodSaleResync")
+            {
+                List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
+
+                foreach (Neighborhood neighborhood in neighborhoods)
+                {
+                    int okayProps = 0;
+
+                    Dictionary<long, Property> properties = localDataManager
+                        .GetPropertiesByCityId(neighborhood.CityId)
+                            .Where(p => p.NeighborhoodId == neighborhood.Id)
+                            .ToDictionary(p => p.Id, p => p);
+
+                    List<UplandForSaleProp> forSaleProps = localDataManager
+                        .GetCityPropertiesForSale(neighborhood.CityId)
+                        .Where(p => properties.ContainsKey(p.Prop_Id))
+                        .OrderBy(p => p.SortValue).ToList();
+
+                    foreach(UplandForSaleProp prop in forSaleProps)
+                    {
+                        UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(prop.Prop_Id);
+                        Property localProperty = properties[prop.Prop_Id];
+
+                        if (uplandProperty.status != Consts.PROP_STATUS_FORSALE)
+                        {
+                            Process_Single_SetForSale(localProperty, uplandProperty);
+                        }
+                        else
+                        {
+                            if (Process_Single_SetForSale_CleanSaleHistory(localProperty, uplandProperty))
+                            {
+                                okayProps++;
+                            }
+                            else
+                            {
+                                Process_Single_SetForSale(localProperty, uplandProperty);
+                            }
+                        }
+
+                        if (okayProps == 10)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (action == "CollectionSaleResync")
+            {
+                List<Collection> collections = localDataManager.GetCollections();
+
+                foreach (Collection collection in collections)
+                {
+                    if (Consts.StandardCollectionIds.Contains(collection.Id) || collection.IsCityCollection)
+                    {
+                        continue;
+                    }
+
+                    int okayProps = 0;
+                    List<UplandForSaleProp> forSaleProps = localDataManager
+                        .GetCityPropertiesForSale(collection.CityId.Value)
+                        .Where(p => collection.MatchingPropertyIds.Contains(p.Prop_Id))
+                        .OrderBy(p => p.SortValue).ToList();
+
+                    foreach (UplandForSaleProp prop in forSaleProps)
+                    {
+                        UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(prop.Prop_Id);
+                        Property localProperty = localDataManager.GetProperty(prop.Prop_Id);
+
+                        if (uplandProperty.status != Consts.PROP_STATUS_FORSALE)
+                        {
+                            Process_Single_SetForSale(localProperty, uplandProperty);
+                        }
+                        else
+                        {
+                            if (Process_Single_SetForSale_CleanSaleHistory(localProperty, uplandProperty))
+                            {
+                                okayProps++;
+                            }
+                            else
+                            {
+                                Process_Single_SetForSale(localProperty, uplandProperty);
+                            }
+                        }
+
+                        if (okayProps == 10)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (action == "BuildingSaleResync")
+            {
+                // Lets grab the Structures
+                Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+
+                foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
+                {
+                    int okayProps = 0;
+
+                    Dictionary<long, Property> properties = localDataManager
+                        .GetPropertiesByCityId(cityId)
+                        .ToDictionary(p => p.Id, p => p);
+
+                    List<UplandForSaleProp> forSaleProps = localDataManager
+                        .GetCityPropertiesForSale(cityId)
+                        .Where(p => propertyStructures.ContainsKey(p.Prop_Id))
+                        .OrderBy(p => p.SortValue).ToList();
+
+                    foreach (UplandForSaleProp prop in forSaleProps)
+                    {
+                        UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(prop.Prop_Id);
+                        Property localProperty = properties[prop.Prop_Id];
+
+                        if (uplandProperty.status != Consts.PROP_STATUS_FORSALE)
+                        {
+                            Process_Single_SetForSale(localProperty, uplandProperty);
+                        }
+                        else
+                        {
+                            if (Process_Single_SetForSale_CleanSaleHistory(localProperty, uplandProperty))
+                            {
+                                okayProps++;
+                            }
+                            else
+                            {
+                                Process_Single_SetForSale(localProperty, uplandProperty);
+                            }
+                        }
+
+                        if (okayProps == 100)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (action == "CityUnmintedFullResync")
+            {
+                foreach (string cId in propList.Split(","))
+                {
+                    int cityId = int.Parse(cId);
+
+                    List<Property> properties = localDataManager
+                        .GetPropertiesByCityId(cityId)
+                        .Where(p => p.Status == Consts.PROP_STATUS_UNLOCKED)
+                        .ToList();
+
+                    foreach (Property localProperty in properties)
+                    {
+                        UplandProperty uplandProperty = await uplandApiManager.GetUplandPropertyById(localProperty.Id);
+
+                        Process_Single_FullResync(localProperty, uplandProperty);
+                    }
+                }
+            }
         }
 
         private async Task Process_SetOwner(List<Property> localProperties) 

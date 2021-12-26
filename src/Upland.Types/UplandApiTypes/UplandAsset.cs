@@ -37,5 +37,10 @@ namespace Upland.Types.UplandApiTypes
         public int DecorationId { get; set; }
         public int LegitId { get; set; }
         public string TeamName { get; set; }
+        public int FanPoints { get; set; }
+        public string Season { get; set; }
+        public string PlayerPosition { get; set; }
+        public string PlayerFullNameUppercase { get; set; }
+        public string ModelType { get; set; }
     }
 }

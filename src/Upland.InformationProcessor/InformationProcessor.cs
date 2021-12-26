@@ -1404,7 +1404,7 @@ namespace Upland.InformationProcessor
                 switch (type)
                 {
                     case "NFLPA":
-                        output.Add("Team,Player,Type,Year,Mint,Current Supply,Max Supply,Link");
+                        output.Add("Team,Player,Position,Category,Type,Season,Fan Points,Mint,Current Supply,Max Supply,Link");
                         break;
                     case "SPIRIT":
                         output.Add("Name,Rarity,Mint,Current Supply,Max Supply,Link");
@@ -1426,8 +1426,11 @@ namespace Upland.InformationProcessor
                         case "NFLPA":
                             assetString += string.Format("{0},", ((NFLPALegit)asset).TeamName);
                             assetString += string.Format("{0},", ((NFLPALegit)asset).PlayerName);
-                            assetString += string.Format("{0},", ((NFLPALegit)asset).LegitType);
+                            assetString += string.Format("{0},", ((NFLPALegit)asset).Position);
+                            assetString += string.Format("{0},", ((NFLPALegit)asset).Category.ToUpper());
+                            assetString += string.Format("{0},", ((NFLPALegit)asset).LegitType == null ? "" : ((NFLPALegit)asset).LegitType.ToUpper());
                             assetString += string.Format("{0},", ((NFLPALegit)asset).Year);
+                            assetString += string.Format("{0},", ((NFLPALegit)asset).FanPoints);
                             assetString += string.Format("{0},", asset.Mint);
                             assetString += string.Format("{0},", asset.CurrentSupply);
                             assetString += string.Format("{0},", asset.MaxSupply);
@@ -1467,6 +1470,9 @@ namespace Upland.InformationProcessor
                 int slotTwoPad = 0;
                 int slotThreePad = 0;
                 int slotFourPad = 0;
+                int slotFivePad = 0;
+                int slotSixPad = 0;
+                int slotSevenPad = 0;
                 int mintPad = 6;
                 int currentPad = 14;
                 int maxPad = 10;
@@ -1480,14 +1486,20 @@ namespace Upland.InformationProcessor
                     case "NFLPA":
                         slotOnePad = assets.Max(a => ((NFLPALegit)a).TeamName.Length);
                         slotTwoPad = assets.Max(a => ((NFLPALegit)a).PlayerName.Length);
-                        slotThreePad = assets.Max(a => ((NFLPALegit)a).LegitType.Length);
-                        slotFourPad = 4;
+                        slotThreePad = assets.Max(a => ((NFLPALegit)a).Position.Length);
+                        slotFourPad = assets.Max(a => ((NFLPALegit)a).Category.Length);
+                        slotFivePad = assets.Max(a => ((NFLPALegit)a).LegitType.Length);
+                        slotSixPad = 6;
+                        slotSevenPad = 10;
 
-                        output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
+                        output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9} - {10}"
                             , "Team".PadLeft(slotOnePad)
                             , "Player".PadLeft(slotTwoPad)
-                            , "Type".PadLeft(slotThreePad)
-                            , "Year".PadLeft(slotFourPad)
+                            , "Position".PadLeft(slotThreePad)
+                            , "Category".PadLeft(slotFourPad)
+                            , "Type".PadLeft(slotFivePad)
+                            , "Season".PadLeft(slotSixPad)
+                            , "Fan Points".PadLeft(slotSevenPad)
                             , "Mint".PadLeft(mintPad)
                             , "Current Supply".PadLeft(currentPad)
                             , "Max Supply".PadLeft(maxPad)
@@ -1535,11 +1547,14 @@ namespace Upland.InformationProcessor
                     switch (type)
                     {
                         case "NFLPA":
-                            output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
+                            output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9} - {10}"
                                 , ((NFLPALegit)asset).TeamName.PadLeft(slotOnePad)
                                 , ((NFLPALegit)asset).PlayerName.PadLeft(slotTwoPad)
-                                , ((NFLPALegit)asset).LegitType.PadLeft(slotThreePad)
-                                , ((NFLPALegit)asset).Year.PadLeft(slotFourPad)
+                                , ((NFLPALegit)asset).Position.PadLeft(slotThreePad)
+                                , ((NFLPALegit)asset).Category.ToUpper().PadLeft(slotFourPad)
+                                , ((NFLPALegit)asset).LegitType.ToUpper().PadLeft(slotFivePad)
+                                , ((NFLPALegit)asset).Year.PadLeft(slotSixPad)
+                                , ((NFLPALegit)asset).FanPoints.ToString().PadLeft(slotSevenPad)
                                 , string.Format("{0:N0}", asset.Mint).PadLeft(mintPad)
                                 , string.Format("{0:N0}", asset.CurrentSupply).PadLeft(currentPad)
                                 , string.Format("{0:N0}", asset.MaxSupply).PadLeft(maxPad)

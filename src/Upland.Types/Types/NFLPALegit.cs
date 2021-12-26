@@ -7,5 +7,7 @@
         public string Year { get; set; }
         public string PlayerName { get; set; }
         public string LegitType { get; set; }
+        public int FanPoints { get; set; }
+        public string Position { get; set; }
     }
 }

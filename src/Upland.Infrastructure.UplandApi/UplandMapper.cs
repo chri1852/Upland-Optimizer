@@ -93,27 +93,11 @@ namespace Upland.Infrastructure.UplandApi
             legit.TeamName = asset.Metadata.TeamName;
             legit.Category = asset.Category;
 
-            legit.Year = asset.Metadata.DisplayName.Split(" ")[0];
-            
-            if (asset.Metadata.DisplayName.Contains(" ESSENTIAL "))
-            {
-                legit.PlayerName = asset.Metadata.DisplayName.Substring(5, asset.Metadata.DisplayName.Length - 5).Split(" ESSENTIAL ")[0];
-                legit.LegitType = string.Format("{0} {1}", "ESSENTIAL", asset.Metadata.DisplayName.Split(" ESSENTIAL ")[1]);
-            }
-            else if (asset.Metadata.DisplayName.Contains(" MEMENTO "))
-            {
-                legit.PlayerName = asset.Metadata.DisplayName.Substring(5, asset.Metadata.DisplayName.Length - 5).Split(" MEMENTO ")[0];
-                legit.LegitType = string.Format("{0} {1}", "MEMENTO", asset.Metadata.DisplayName.Split(" MEMENTO ")[1]);
-            }
-            else if (asset.Metadata.DisplayName.Contains(" REPLICA "))
-            {
-                legit.PlayerName = asset.Metadata.DisplayName.Substring(5, asset.Metadata.DisplayName.Length - 5).Split(" REPLICA ")[0];
-                legit.LegitType = string.Format("{0} {1}", "REPLICA", asset.Metadata.DisplayName.Split(" REPLICA ")[1]);
-            }
-            else
-            {
-                legit.PlayerName = asset.Metadata.DisplayName;
-            }
+            legit.PlayerName = asset.Metadata.PlayerFullNameUppercase;
+            legit.Position = asset.Metadata.PlayerPosition;
+            legit.LegitType = asset.Metadata.ModelType;
+            legit.Year = asset.Metadata.Season;
+            legit.FanPoints = asset.Metadata.FanPoints;
 
             legit.DGoodId = asset.DGoodId;
             legit.DisplayName = asset.Metadata.DisplayName;
