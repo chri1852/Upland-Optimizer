@@ -20,12 +20,14 @@ namespace Startup.Commands
         private readonly Random _random;
         private readonly InformationProcessor _informationProcessor;
         private readonly LocalDataManager _localDataManager;
+        private readonly ProfileAppraiser _profileAppraiser;
 
-        public Commands(InformationProcessor informationProcessor, LocalDataManager localDataManager)
+        public Commands(InformationProcessor informationProcessor, LocalDataManager localDataManager, ProfileAppraiser profileAppraiser)
         {
             _random = new Random();
             _informationProcessor = informationProcessor;
             _localDataManager = localDataManager;
+            _profileAppraiser = profileAppraiser;
         }
 
         [Command("Ping")]
@@ -820,6 +822,73 @@ namespace Startup.Commands
             }
         }
 
+        [Command("Appraisal")]
+        public async Task Appraisal(string fileType = "TXT")
+        {
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+            List<string> appraiserOutput = new List<string>();
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
+            int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
+
+            if (!registeredUser.Paid && registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < freeRuns)
+            {
+                if (upxToNextFreeRun != 0)
+                {
+                    await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. You are {3} upx away from your next free run. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                }
+                else
+                {
+                    await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random)));
+                }
+            }
+            else if (!registeredUser.Paid && registeredUser.RunCount >= freeRuns)
+            {
+                if (upxToNextFreeRun != 0)
+                {
+                    await ReplyAsync(string.Format("You've used all of your free runs {0}. You are {1} upx away from your next free run. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                }
+                else
+                {
+                    await ReplyAsync(string.Format("You've used all of your free runs {0}. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random)));
+                }
+                return;
+            }
+
+            try
+            {
+                appraiserOutput = await _profileAppraiser.RunAppraisal(registeredUser.UplandUsername, fileType);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("Commands - Appraisal", ex.Message);
+                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            if (appraiserOutput.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), appraiserOutput[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, appraiserOutput));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("{0}_Appraisal.{2}", registeredUser.UplandUsername, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
+            }
+
+            _localDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
+        }
+
         [Command("Help")]
         public async Task Help()
         {
@@ -879,12 +948,13 @@ namespace Startup.Commands
             helpMenu.Add("   17. !SearchStreets");
             helpMenu.Add("   18. !SearchProperties");
             helpMenu.Add("   19. !GetAssets");
-            helpMenu.Add("   20. !GetSalesHistory"); 
+            helpMenu.Add("   20. !GetSalesHistory");
+            helpMenu.Add("   21. !Appraisal");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   21. !OptimizerLevelRun");
-            helpMenu.Add("   22. !OptimizerWhatIfRun");
-            helpMenu.Add("   23. !OptimizerExcludeRun");
+            helpMenu.Add("   22. !OptimizerLevelRun");
+            helpMenu.Add("   23. !OptimizerWhatIfRun");
+            helpMenu.Add("   24. !OptimizerExcludeRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }

@@ -594,6 +594,21 @@ namespace Upland.Infrastructure.LocalData
             return collatedStats;
         }
 
+        public List<PropertyAppraisalData> GetPreviousSalesAppraisalData()
+        {
+            return localDataRepository.GetPreviousSalesAppraisalData();
+        }
+
+        public List<PropertyAppraisalData> GetCurrentFloorAppraisalData()
+        {
+            return localDataRepository.GetCurrentFloorAppraisalData();
+        }
+
+        public List<Tuple<string, double>> GetBuildingAppraisalData()
+        {
+            return localDataRepository.GetBuildingAppraisalData();
+        }
+
         public void CreateOptimizationRun(OptimizationRun optimizationRun)
         {
             localDataRepository.CreateOptimizationRun(optimizationRun);

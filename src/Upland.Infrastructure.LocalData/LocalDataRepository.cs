@@ -388,6 +388,139 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<PropertyAppraisalData> GetPreviousSalesAppraisalData()
+        {
+            List<PropertyAppraisalData> data = new List<PropertyAppraisalData>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPreviousSalesAppraisalData]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            data.Add(
+                                new PropertyAppraisalData
+                                {
+                                    Type = (string)reader["Type"],
+                                    Id = (int)reader["Id"],
+                                    Currency = (string)reader["Currency"],
+                                    Value = (decimal)reader["PerUp2"],
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return data;
+            }
+        }
+
+        public List<PropertyAppraisalData> GetCurrentFloorAppraisalData()
+        {
+            List<PropertyAppraisalData> data = new List<PropertyAppraisalData>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCurrentFloorAppraisalData]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            data.Add(
+                                new PropertyAppraisalData
+                                {
+                                    Type = (string)reader["Type"],
+                                    Id = (int)reader["Id"],
+                                    Currency = (string)reader["Currency"],
+                                    Value = (decimal)reader["FloorValue"],
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return data;
+            }
+        }
+
+        public List<Tuple<string, double>> GetBuildingAppraisalData()
+        {
+            List<Tuple<string, double>> data = new List<Tuple<string, double>>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetBuildingApprasialData]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            data.Add(
+                                new Tuple<string, double>
+                                (
+                                    (string)reader["StructureType"],
+                                    (double)reader["Median"]
+                                )
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return data;
+            }
+        }
+
         public void UpsertProperty(Property property)
         {
             SqlConnection sqlConnection = GetSQLConnector();

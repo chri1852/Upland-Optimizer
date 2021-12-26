@@ -138,5 +138,8 @@
     <Build Include="StoredProcedures\UPL.SearchPropertyByCityIdAndAddress.sql" />
     <Build Include="StoredProcedures\UPL.AddRegisteredUserSendUPX.sql" />
     <Build Include="StoredProcedures\UPL.GetRegisteredUsersEOSAccounts.sql" />
+    <Build Include="StoredProcedures\UPL.GetPreviousSalesAppraisalData.sql" />
+    <Build Include="StoredProcedures\UPL.GetCurrentFloorAppraisalData.sql" />
+    <Build Include="StoredProcedures\UPL.GetBuildingApprasialData.sql" />
   </ItemGroup>
 </Project>

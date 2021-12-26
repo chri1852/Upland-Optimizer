@@ -113,8 +113,10 @@ namespace Startup
                     return "19";
                 case "GETSALESHISTORY":
                     return "20";
-                case "OPTIMIZERLEVELRUN":
+                case "APPRAISAL":
                     return "21";
+                case "OPTIMIZERLEVELRUN":
+                    return "22";
                 case "OPTIMIZERWHATIFRUN":
                     return "22";
                 case "OPTIMIZEREXCLUDERUN":
@@ -374,13 +376,25 @@ namespace Startup
                     helpOutput.Add("The above command finds the sales history for 9843 S Exchange Ave in Chicago, and returns a txt file sorted by date");
                     break;
                 case "21":
+                    helpOutput.Add(string.Format("!Appraisal"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command returns an appraisal for all your properties based on the last 4 weeks of market sales, and the floor. Non-supporters will only be able to run this a limited number of times before needing to earn more runs by sending 500 upx to the locations in the locations channel. Note Ultra-Rares, very large properties, or properties in areas with low numbers of sales might have strange numbers."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !Appraisal");
+                    helpOutput.Add("The above command runs your appraisal and returns a text file.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !Appraisal csv");
+                    helpOutput.Add("The above command runs your appraisal and returns a csv file.");
+                    helpOutput.Add("");
+                    break;
+                case "22":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
-                case "22":
+                case "23":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
@@ -388,7 +402,7 @@ namespace Startup
                     helpOutput.Add("EX: !OptimizerWhatIfRun 188 3 250.10");
                     helpOutput.Add("The above command will run a WhatIfRun with your current properties, and 3 fake properties in the French Quarter collection with an average monthly upx earnings of 250.10 upx.");
                     break;
-                case "23":
+                case "24":
                     helpOutput.Add(string.Format("!OptimizerExcludeRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run and exclude a list of collectionIds seperated by a comma from optimization. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
