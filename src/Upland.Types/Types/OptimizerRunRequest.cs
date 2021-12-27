@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Upland.Types.Types
 {
@@ -23,12 +21,12 @@ namespace Upland.Types.Types
         public OptimizerRunRequest(string username, List<int> excludeCollectionIds, int level = 7, bool debugRun = false) : this(username, level, -1, 0, 0, excludeCollectionIds, false, false, true, debugRun) { }
 
         public OptimizerRunRequest(
-            string username, 
-            int level, 
-            int whatIfCollectionId, 
-            int whatIfNumProperties, 
-            double whatIfAverageMonthlyUpx, 
-            List<int> excludeCollectionIds, 
+            string username,
+            int level,
+            int whatIfCollectionId,
+            int whatIfNumProperties,
+            double whatIfAverageMonthlyUpx,
+            List<int> excludeCollectionIds,
             bool standardRun,
             bool whatIfRun,
             bool exclueRun,

@@ -21,13 +21,15 @@ namespace Startup.Commands
         private readonly InformationProcessor _informationProcessor;
         private readonly LocalDataManager _localDataManager;
         private readonly ProfileAppraiser _profileAppraiser;
+        private readonly ForSaleProcessor _forSaleProcessor;
 
-        public Commands(InformationProcessor informationProcessor, LocalDataManager localDataManager, ProfileAppraiser profileAppraiser)
+        public Commands(InformationProcessor informationProcessor, LocalDataManager localDataManager, ProfileAppraiser profileAppraiser, ForSaleProcessor forSaleProcessor)
         {
             _random = new Random();
             _informationProcessor = informationProcessor;
             _localDataManager = localDataManager;
             _profileAppraiser = profileAppraiser;
+            _forSaleProcessor = forSaleProcessor;
         }
 
         [Command("Ping")]
@@ -214,6 +216,38 @@ namespace Startup.Commands
             return;
         }
 
+        [Command("HowManyRuns")]
+        public async Task HowManyRuns()
+        {
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            if (registeredUser.Paid)
+            {
+                await ReplyAsync(string.Format("You're a Supporter {0}, you don't need to worry about runs anymore!", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
+            int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
+
+            if (registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < freeRuns)
+            {
+                await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                return;
+            }
+            else if (registeredUser.RunCount >= freeRuns)
+            {
+
+                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+
+                return;
+            }
+        }
+
         [Command("OptimizerRun")]
         public async Task OptimizerRun()
         {
@@ -230,22 +264,22 @@ namespace Startup.Commands
             {
                 if (upxToNextFreeRun != 0)
                 {
-                    await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. You are {3} upx away from your next free run. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                    await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
                 }
                 else
                 {
-                    await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random)));
+                    await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random)));
                 }
             }
             else if (!registeredUser.Paid && registeredUser.RunCount >= freeRuns)
             {
                 if (upxToNextFreeRun != 0)
                 {
-                    await ReplyAsync(string.Format("You've used all of your free runs {0}. You are {1} upx away from your next free run. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                    await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
                 }
                 else
                 {
-                    await ReplyAsync(string.Format("You've used all of your free runs {0}. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random)));
+                    await ReplyAsync(string.Format("You've used all of your runs {0}. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random)));
                 }
                 return;
             }
@@ -256,7 +290,7 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
-            
+
             if (currentRun != null)
             {
                 _localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
@@ -362,7 +396,7 @@ namespace Startup.Commands
                 if (registeredUser.RunCount >= freeRuns - 2)
                 {
                     string response = "Looks like you are ";
-                    if(registeredUser.RunCount >= freeRuns)
+                    if (registeredUser.RunCount >= freeRuns)
                     {
                         response += "all ";
                     }
@@ -391,7 +425,7 @@ namespace Startup.Commands
             List<string> collectionData = _informationProcessor.GetCollectionInformation(fileType.ToUpper());
 
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, collectionData));
-            using(Stream stream = new MemoryStream())
+            using (Stream stream = new MemoryStream())
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -409,7 +443,7 @@ namespace Startup.Commands
                 return;
             }
 
-            if(username == "___SELF___")
+            if (username == "___SELF___")
             {
                 username = registeredUser.UplandUsername;
             }
@@ -464,9 +498,9 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Sounds Good {0}! Lets find out whats for sale!", HelperFunctions.GetRandomName(_random)));
-            List<string> collectionReport = await _informationProcessor.GetCollectionPropertiesForSale(collectionId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
+            List<string> collectionReport = _forSaleProcessor.GetCollectionPropertiesForSale(collectionId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
 
-            if(collectionReport.Count == 1)
+            if (collectionReport.Count == 1)
             {
                 // An Error Occured
                 await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), collectionReport[0]));
@@ -493,7 +527,7 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Sounds Good {0}! Lets find out whats for sale!", HelperFunctions.GetRandomName(_random)));
-            List<string> neighborhoodReport = await _informationProcessor.GetNeighborhoodPropertiesForSale(neighborhoodId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
+            List<string> neighborhoodReport = _forSaleProcessor.GetNeighborhoodPropertiesForSale(neighborhoodId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
 
             if (neighborhoodReport.Count == 1)
             {
@@ -564,7 +598,7 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Running that query now {0}!", HelperFunctions.GetRandomName(_random)));
-            List<string> salesData = await _informationProcessor.GetCityPropertiesForSale(cityId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
+            List<string> salesData = _forSaleProcessor.GetCityPropertiesForSale(cityId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
 
             if (salesData.Count == 1)
             {
@@ -594,7 +628,7 @@ namespace Startup.Commands
 
             await ReplyAsync(string.Format("Looking for Buildings now {0}!", HelperFunctions.GetRandomName(_random)));
 
-            List<string> salesData = await _informationProcessor.GetBuildingPropertiesForSale(type.ToUpper(), Id, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
+            List<string> salesData = _forSaleProcessor.GetBuildingPropertiesForSale(type.ToUpper(), Id, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
 
             if (salesData.Count == 1)
             {
@@ -623,7 +657,7 @@ namespace Startup.Commands
             }
 
             await ReplyAsync(string.Format("Running that query now {0}!", HelperFunctions.GetRandomName(_random)));
-            List<string> salesData = await _informationProcessor.GetStreetPropertiesForSale(streetId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
+            List<string> salesData = _forSaleProcessor.GetStreetPropertiesForSale(streetId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
 
             if (salesData.Count == 1)
             {
@@ -840,22 +874,22 @@ namespace Startup.Commands
             {
                 if (upxToNextFreeRun != 0)
                 {
-                    await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. You are {3} upx away from your next free run. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                    await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
                 }
                 else
                 {
-                    await ReplyAsync(string.Format("You've used {0} out of {1} of your free runs {2}. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random)));
+                    await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random)));
                 }
             }
             else if (!registeredUser.Paid && registeredUser.RunCount >= freeRuns)
             {
                 if (upxToNextFreeRun != 0)
                 {
-                    await ReplyAsync(string.Format("You've used all of your free runs {0}. You are {1} upx away from your next free run. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                    await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
                 }
                 else
                 {
-                    await ReplyAsync(string.Format("You've used all of your free runs {0}. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random)));
+                    await ReplyAsync(string.Format("You've used all of your runs {0}. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random)));
                 }
                 return;
             }
@@ -950,11 +984,12 @@ namespace Startup.Commands
             helpMenu.Add("   19. !GetAssets");
             helpMenu.Add("   20. !GetSalesHistory");
             helpMenu.Add("   21. !Appraisal");
+            helpMenu.Add("   22. !HowManyRuns");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   22. !OptimizerLevelRun");
-            helpMenu.Add("   23. !OptimizerWhatIfRun");
-            helpMenu.Add("   24. !OptimizerExcludeRun");
+            helpMenu.Add("   23. !OptimizerLevelRun");
+            helpMenu.Add("   24. !OptimizerWhatIfRun");
+            helpMenu.Add("   25. !OptimizerExcludeRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }

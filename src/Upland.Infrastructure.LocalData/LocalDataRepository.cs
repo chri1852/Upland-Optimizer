@@ -804,7 +804,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public List<UplandForSaleProp> GetCityPropertiesForSale(int cityId)
+        public List<UplandForSaleProp> GetPropertiesForSale_City(int cityId, bool onlyBuildings)
         {
             List<UplandForSaleProp> properties = new List<UplandForSaleProp>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -818,8 +818,147 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[GetCityPropertiesForSale]";
+                    sqlCmd.CommandText = "[UPL].[GetPropertiesForSale_City]";
                     sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
+                    sqlCmd.Parameters.Add(new SqlParameter("OnlyBuildings", onlyBuildings));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            properties.Add(new UplandForSaleProp
+                            {
+                                Prop_Id = (long)reader["PropId"],
+                                Price = decimal.ToDouble((decimal)reader["Price"]),
+                                Currency = (string)reader["Currency"],
+                                Owner = (string)reader["Owner"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return properties;
+            }
+        }
+
+        public List<UplandForSaleProp> GetPropertiesForSale_Neighborhood(int neighborhoodId, bool onlyBuildings)
+        {
+            List<UplandForSaleProp> properties = new List<UplandForSaleProp>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertiesForSale_Neighborhood]";
+                    sqlCmd.Parameters.Add(new SqlParameter("NeighborhoodId", neighborhoodId));
+                    sqlCmd.Parameters.Add(new SqlParameter("OnlyBuildings", onlyBuildings));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            properties.Add(new UplandForSaleProp
+                            {
+                                Prop_Id = (long)reader["PropId"],
+                                Price = decimal.ToDouble((decimal)reader["Price"]),
+                                Currency = (string)reader["Currency"],
+                                Owner = (string)reader["Owner"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return properties;
+            }
+        }
+
+        public List<UplandForSaleProp> GetPropertiesForSale_Street(int streetId, bool onlyBuildings)
+        {
+            List<UplandForSaleProp> properties = new List<UplandForSaleProp>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertiesForSale_Street]";
+                    sqlCmd.Parameters.Add(new SqlParameter("StreetId", streetId));
+                    sqlCmd.Parameters.Add(new SqlParameter("OnlyBuildings", onlyBuildings));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            properties.Add(new UplandForSaleProp
+                            {
+                                Prop_Id = (long)reader["PropId"],
+                                Price = decimal.ToDouble((decimal)reader["Price"]),
+                                Currency = (string)reader["Currency"],
+                                Owner = (string)reader["Owner"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return properties;
+            }
+        }
+
+        public List<UplandForSaleProp> GetPropertiesForSale_Collection(int collectionId, bool onlyBuildings)
+        {
+            List<UplandForSaleProp> properties = new List<UplandForSaleProp>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertiesForSale_Collection]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CollectionId", collectionId));
+                    sqlCmd.Parameters.Add(new SqlParameter("OnlyBuildings", onlyBuildings));
 
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -1660,7 +1799,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public Tuple<string,string> GetUplandUsernameByEOSAccount(string eosAccount)
+        public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
         {
             Tuple<string, string> EOSAccount = null;
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1682,7 +1821,7 @@ namespace Upland.Infrastructure.LocalData
                         {
                             EOSAccount = new Tuple<string, string>((string)reader["EOSAccount"], (string)reader["UplandUsername"]);
                         }
-                         reader.Close();
+                        reader.Close();
                     }
                 }
                 catch
@@ -2372,7 +2511,7 @@ namespace Upland.Infrastructure.LocalData
                             propertyStructures.Add(new PropertyStructure
                             {
                                 Id = (int)reader["Id"],
-                                PropertyId = (long)reader["PropertyId"], 
+                                PropertyId = (long)reader["PropertyId"],
                                 StructureType = (string)reader["StructureType"]
                             });
                         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Upland.Types.UplandApiTypes
 {
@@ -16,8 +15,8 @@ namespace Upland.Types.UplandApiTypes
         public string Currency { get; set; }
         public string Owner { get; set; }
 
-        public double SortValue 
-        { 
+        public double SortValue
+        {
             get
             {
                 if (this.Currency == "USD")
@@ -27,7 +26,7 @@ namespace Upland.Types.UplandApiTypes
                 else
                 {
                     return this.Price;
-                }    
+                }
             }
         }
 

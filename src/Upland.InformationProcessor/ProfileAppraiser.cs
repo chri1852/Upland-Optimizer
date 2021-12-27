@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
@@ -25,10 +24,10 @@ namespace Upland.InformationProcessor
 
         private List<Collection> _collections;
 
-        public ProfileAppraiser()
+        public ProfileAppraiser(LocalDataManager localDataManager, UplandApiManager uplandApiManager)
         {
-            _localDataManager = new LocalDataManager();
-            _uplandApiManager = new UplandApiManager();
+            _localDataManager = localDataManager;
+            _uplandApiManager = uplandApiManager;
 
             _collections = _localDataManager.GetCollections();
 
@@ -68,9 +67,9 @@ namespace Upland.InformationProcessor
 
                 // Street
                 Tuple<string, int, string> streetTupleUPX = new Tuple<string, int, string>("STREET", property.StreetId, "UPX");
-                
+
                 if (_previousSalesData.ContainsKey(streetTupleUPX)) { upxValues.Add(_previousSalesData[streetTupleUPX] * property.Size); }
-                if (_currentFloorData.ContainsKey(streetTupleUPX))  { upxValues.Add(_currentFloorData[streetTupleUPX]); }
+                if (_currentFloorData.ContainsKey(streetTupleUPX)) { upxValues.Add(_currentFloorData[streetTupleUPX]); }
 
                 if (_currentFloorData.ContainsKey(streetTupleUPX) && _currentFloorData[streetTupleUPX] > maxFloor) { maxFloor = _currentFloorData[streetTupleUPX]; }
 
@@ -99,7 +98,7 @@ namespace Upland.InformationProcessor
 
                     if (_currentFloorData.ContainsKey(collectionTupleUPX) && _currentFloorData[collectionTupleUPX] > maxFloor) { maxFloor = _currentFloorData[collectionTupleUPX]; }
 
-                    if (maxCollectionCategory< collection.Category) { maxCollectionCategory = collection.Category;  }
+                    if (maxCollectionCategory < collection.Category) { maxCollectionCategory = collection.Category; }
                 }
 
                 if (upxValues.Count == 0)
@@ -156,7 +155,7 @@ namespace Upland.InformationProcessor
                     , appraisal.Property.Size
                     , Math.Round(appraisal.Property.MonthlyEarnings * 12 / 0.1728)
                     , appraisal.UPX_Lower
-                    ,  appraisal.UPX_Upper
+                    , appraisal.UPX_Upper
                     , string.Join(" ", appraisal.Notes)
                 ));
             }
@@ -211,7 +210,7 @@ namespace Upland.InformationProcessor
                     , appraisal.Property.Address.PadLeft(addressPad)
                     , string.Format("{0:N0}", appraisal.Property.Size).PadLeft(sizePad)
                     , string.Format("{0:N2}", Math.Round(appraisal.Property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
-                    , string.Format("{0:N}",  appraisal.UPX_Lower).PadLeft(lowerPad)
+                    , string.Format("{0:N}", appraisal.UPX_Lower).PadLeft(lowerPad)
                     , string.Format("{0:N}", appraisal.UPX_Upper).PadLeft(upperPad)
                     , string.Join(", ", appraisal.Notes).PadLeft(notePad)
                 ));

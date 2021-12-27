@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 

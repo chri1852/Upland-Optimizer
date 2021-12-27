@@ -12,16 +12,17 @@ namespace Upland.InformationProcessor
 {
     public class BlockchainSendFinder
     {
-        private readonly LocalDataManager localDataManager;
-        private readonly BlockchainManager blockchainManager;
+        private readonly LocalDataManager _localDataManager;
+        private readonly BlockchainManager _blockchainManager;
+
         private List<Tuple<decimal, string, string>> registeredUserEOSAccounts;
         private List<string> propertyIdsToWatch;
         private bool isProcessing;
 
-        public BlockchainSendFinder()
+        public BlockchainSendFinder(LocalDataManager localDataManager, BlockchainManager blockchainManager)
         {
-            localDataManager = new LocalDataManager();
-            blockchainManager = new BlockchainManager();
+            _localDataManager = localDataManager;
+            _blockchainManager = blockchainManager;
             registeredUserEOSAccounts = localDataManager.GetRegisteredUsersEOSAccounts();
             propertyIdsToWatch = localDataManager.GetConfigurationValue(Consts.CONFIG_PROPIDSTOMONITORFORSENDS).Split(",").ToList();
             isProcessing = false;
@@ -29,7 +30,7 @@ namespace Upland.InformationProcessor
 
         public async Task RunBlockChainUpdate()
         {
-            DateTime lastDateProcessed = DateTime.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_MAXSENDTIMESTAMPPROCESSED));
+            DateTime lastDateProcessed = DateTime.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXSENDTIMESTAMPPROCESSED));
 
             try
             {
@@ -37,14 +38,14 @@ namespace Upland.InformationProcessor
             }
             catch (Exception ex)
             {
-                localDataManager.CreateErrorLog("BlockchainSendFinder.cs - RunBlockChainUpdate", ex.Message);
+                _localDataManager.CreateErrorLog("BlockchainSendFinder.cs - RunBlockChainUpdate", ex.Message);
                 this.isProcessing = false;
             }
         }
 
         public async Task SearchSendsFromDate(DateTime startDate)
         {
-            bool enableUpdates = bool.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
+            bool enableUpdates = bool.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
 
             if (!enableUpdates || this.isProcessing)
             {
@@ -67,7 +68,7 @@ namespace Upland.InformationProcessor
                     try
                     {
                         Thread.Sleep(1000);
-                        actions = await blockchainManager.GetSendActionsFromTime(startDate, minutesToMoveFoward);
+                        actions = await _blockchainManager.GetSendActionsFromTime(startDate, minutesToMoveFoward);
                         if (actions != null)
                         {
                             retry = false;
@@ -79,7 +80,7 @@ namespace Upland.InformationProcessor
                     }
                     catch (Exception ex)
                     {
-                        localDataManager.CreateErrorLog("BlockchainSendFinder.cs - SearchSendsFromDate - Loop", ex.Message);
+                        _localDataManager.CreateErrorLog("BlockchainSendFinder.cs - SearchSendsFromDate - Loop", ex.Message);
                         Thread.Sleep(5000);
                     }
                 }
@@ -114,7 +115,7 @@ namespace Upland.InformationProcessor
 
         public void ProcessActions(List<HistoryAction> actions)
         {
-            DateTime maxTimestampProcessed = DateTime.Parse(localDataManager.GetConfigurationValue(Consts.CONFIG_MAXSENDTIMESTAMPPROCESSED));
+            DateTime maxTimestampProcessed = DateTime.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXSENDTIMESTAMPPROCESSED));
 
             foreach (HistoryAction action in actions)
             {
@@ -130,11 +131,11 @@ namespace Upland.InformationProcessor
                     {
                         try
                         {
-                            localDataManager.AddRegisteredUserSendUPX(registeredUserEOSAccounts.Where(e => e.Item3 == action.act.data.p51).First().Item1, int.Parse(action.act.data.p54.Split(".00 UP")[0]));
+                            _localDataManager.AddRegisteredUserSendUPX(registeredUserEOSAccounts.Where(e => e.Item3 == action.act.data.p51).First().Item1, int.Parse(action.act.data.p54.Split(".00 UP")[0]));
                         }
                         catch (Exception ex)
                         {
-                            localDataManager.CreateErrorLog("BlockchainSendFinder - ProcessActions", string.Format("Failed Adding UPX, a45: {0}, p51: {1}, p54: {2}, ex: {3}", action.act.data.a45, action.act.data.p51, action.act.data.p54, ex.Message));
+                            _localDataManager.CreateErrorLog("BlockchainSendFinder - ProcessActions", string.Format("Failed Adding UPX, a45: {0}, p51: {1}, p54: {2}, ex: {3}", action.act.data.a45, action.act.data.p51, action.act.data.p54, ex.Message));
                         }
                     }
                 }
@@ -143,7 +144,7 @@ namespace Upland.InformationProcessor
             if (actions.Max(a => a.timestamp) > maxTimestampProcessed)
             {
                 maxTimestampProcessed = actions.Max(a => a.timestamp);
-                localDataManager.UpsertConfigurationValue(Consts.CONFIG_MAXSENDTIMESTAMPPROCESSED, maxTimestampProcessed.ToString());
+                _localDataManager.UpsertConfigurationValue(Consts.CONFIG_MAXSENDTIMESTAMPPROCESSED, maxTimestampProcessed.ToString());
             }
         }
     }

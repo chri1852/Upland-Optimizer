@@ -11,7 +11,7 @@ namespace Upland.CollectionOptimizer
         {
             Dictionary<int, Collection> clonedCollections = new Dictionary<int, Collection>();
 
-            foreach(KeyValuePair<int, Collection> entry in collections)
+            foreach (KeyValuePair<int, Collection> entry in collections)
             {
                 clonedCollections.Add(entry.Key, entry.Value.Clone());
             }
@@ -58,11 +58,11 @@ namespace Upland.CollectionOptimizer
         #region /* Debug Console Functions */
 
         public static void WriteCollecitonToConsole(
-            Dictionary<int, Collection> FilledCollections, 
-            Dictionary<long, Property> Properties, 
-            List<long> SlottedPropertyIds, 
-            Dictionary<int, Collection> UnfilledCollections, 
-            Dictionary<int, Collection> UnoptimizedCollections, 
+            Dictionary<int, Collection> FilledCollections,
+            Dictionary<long, Property> Properties,
+            List<long> SlottedPropertyIds,
+            Dictionary<int, Collection> UnfilledCollections,
+            Dictionary<int, Collection> UnoptimizedCollections,
             Dictionary<int, Collection> MissingCollections)
         {
             int TotalCollectionRewards = 0;

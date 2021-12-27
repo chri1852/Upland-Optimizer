@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,7 +35,7 @@ namespace Upland.CollectionOptimizer
             this.Collections = new Dictionary<int, Collection>();
             this.SlottedPropertyIds = new List<long>();
             this.FilledCollections = new Dictionary<int, Collection>();
-    
+
             this.CityProCollections = new List<StandardCollectionBuilder>();
             this.KingOfTheStreetCollections = new List<StandardCollectionBuilder>();
 
@@ -50,7 +49,7 @@ namespace Upland.CollectionOptimizer
 
         public async Task RunAutoOptimization(RegisteredUser registeredUser, OptimizerRunRequest runRequest)
         {
-            if(runRequest.DebugRun)
+            if (runRequest.DebugRun)
             {
                 await RunDebugOptimization(runRequest);
             }
@@ -100,7 +99,7 @@ namespace Upland.CollectionOptimizer
 
         private void CreateHypotheicalProperties(OptimizerRunRequest runRequest)
         {
-            if(Consts.StandardCollectionIds.Contains(runRequest.WhatIfCollectionId))
+            if (Consts.StandardCollectionIds.Contains(runRequest.WhatIfCollectionId))
             {
                 return;
             }
@@ -142,7 +141,7 @@ namespace Upland.CollectionOptimizer
                 conflictingCollections.Add(entry.Value.Id, entry.Value.Clone());
                 break;
             }
-            
+
             // If the first collection is 0 all thats left is standard and city collections
             if (firstCollection == 0)
             {
@@ -160,7 +159,7 @@ namespace Upland.CollectionOptimizer
             foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.MonthlyUpx))
             {
                 // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
-                if (!conflictingCollections.ContainsKey(entry.Value.Id) 
+                if (!conflictingCollections.ContainsKey(entry.Value.Id)
                     && DoesCollectionConflictWithList(entry.Value, conflictingCollections)
                     && conflictingCollections.Count < qualityLevel)
                 {
@@ -197,7 +196,7 @@ namespace Upland.CollectionOptimizer
             // its an exclude run, lets remove the requested collections
             if (runRequest.ExcludeRun)
             {
-                foreach(int excludeId in runRequest.ExcludeCollectionIds)
+                foreach (int excludeId in runRequest.ExcludeCollectionIds)
                 {
                     this.Collections.Remove(excludeId);
                 }
@@ -220,7 +219,7 @@ namespace Upland.CollectionOptimizer
             while (this.Collections.Count > 0)
             {
                 Dictionary<int, Collection> conflictingCollections = GetConflictingCollections(qualityLevel);
-                
+
                 int collectionToSlotId = RecursionWrapper(conflictingCollections);
 
                 if (this.DebugMode)
@@ -279,7 +278,7 @@ namespace Upland.CollectionOptimizer
         {
             foreach (KeyValuePair<int, Collection> entry in collections)
             {
-                if(DoesCollectionConflictWithList(entry.Value, collections.Where(c => c.Key != entry.Value.Id)))
+                if (DoesCollectionConflictWithList(entry.Value, collections.Where(c => c.Key != entry.Value.Id)))
                 {
                     return true;
                 }
@@ -296,7 +295,7 @@ namespace Upland.CollectionOptimizer
             }
             else
             {
-                if(!AnyCollectionConflict(collections))
+                if (!AnyCollectionConflict(collections))
                 {
                     return collections.Sum(c => c.Value.MonthlyUpx);
                 }
@@ -395,7 +394,7 @@ namespace Upland.CollectionOptimizer
                 }
             }
         }
-        
+
         private void BuildAllCityProCollections()
         {
             IEnumerable<KeyValuePair<int, int>> cityList = this.Properties
@@ -449,7 +448,7 @@ namespace Upland.CollectionOptimizer
         }
 
         private void RemovePropIdsFromStandardCollections(List<long> removeIds)
-        { 
+        {
             foreach (StandardCollectionBuilder collection in this.CityProCollections)
             {
                 collection.Props.RemoveAll(p => removeIds.Contains(p.Key));
@@ -542,7 +541,7 @@ namespace Upland.CollectionOptimizer
             }
 
             Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(collections);
-            
+
             if (this.CityProCollections.Any(c => c.Props.Where(p => !ignorePropertyIds.Contains(p.Key)).Count() >= 5))
             {
                 StandardCollectionBuilder topCityProCollection =
@@ -587,7 +586,7 @@ namespace Upland.CollectionOptimizer
             Collection newbie = new Collection
             {
                 Id = 7,
-                Name ="Newbie",
+                Name = "Newbie",
                 Boost = 1.1,
                 NumberOfProperties = 1,
                 SlottedPropertyIds = new List<long>(),
@@ -620,7 +619,7 @@ namespace Upland.CollectionOptimizer
 
             foreach (Collection collection in collections)
             {
-                if(!Consts.StandardCollectionIds.Contains(collection.Id))
+                if (!Consts.StandardCollectionIds.Contains(collection.Id))
                 {
                     string collectionCity = Consts.Cities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
                     outputStrings.Add(string.Format("{0} - {1} - {2:N2} --> {3:N2}", collectionCity, collection.Name, collection.MonthlyUpx / collection.Boost, collection.MonthlyUpx));

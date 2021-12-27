@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types;
-using System.Linq;
-using Upland.Types.UplandApiTypes;
 using Upland.Types.Types;
-using System.Text.Json;
+using Upland.Types.UplandApiTypes;
 
 namespace Upland.Infrastructure.LocalData
 {
@@ -76,7 +75,7 @@ namespace Upland.Infrastructure.LocalData
                                 Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
                                 // Due to blockchain updating, clear the owner and status
                                 property.Owner = null;
-                                if(property.Status != Consts.PROP_STATUS_LOCKED)
+                                if (property.Status != Consts.PROP_STATUS_LOCKED)
                                 {
                                     property.Status = Consts.PROP_STATUS_UNLOCKED;
                                 }
@@ -699,9 +698,24 @@ namespace Upland.Infrastructure.LocalData
             return localDataRepository.GetHistoricalCityStatusByCityId(cityId);
         }
 
-        public List<UplandForSaleProp> GetCityPropertiesForSale(int cityId)
+        public List<UplandForSaleProp> GetPropertiesForSale_City(int cityId, bool onlyBuildings)
         {
-            return localDataRepository.GetCityPropertiesForSale(cityId);
+            return localDataRepository.GetPropertiesForSale_City(cityId, onlyBuildings);
+        }
+
+        public List<UplandForSaleProp> GetPropertiesForSale_Neighborhood(int neighborhoodId, bool onlyBuildings)
+        {
+            return localDataRepository.GetPropertiesForSale_Neighborhood(neighborhoodId, onlyBuildings);
+        }
+
+        public List<UplandForSaleProp> GetPropertiesForSale_Street(int streetId, bool onlyBuildings)
+        {
+            return localDataRepository.GetPropertiesForSale_Street(streetId, onlyBuildings);
+        }
+
+        public List<UplandForSaleProp> GetPropertiesForSale_Collection(int collectionId, bool onlyBuildings)
+        {
+            return localDataRepository.GetPropertiesForSale_Collection(collectionId, onlyBuildings);
         }
 
         public string GetConfigurationValue(string name)
