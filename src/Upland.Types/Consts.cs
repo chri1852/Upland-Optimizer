@@ -53,6 +53,8 @@ namespace Upland.Types
 
             // Fresno Sub Cities
             { 18   , "Clovis"         },
+            { 30   , "Alameda"        },
+            { 31   , "Berkeley"       },
 
             // Oakland Sub Cities
             { 19   , "Piedmont"       },
@@ -77,6 +79,6 @@ namespace Upland.Types
         public static readonly ulong TestUserDiscordId = 1;
         public static readonly int UPXPricePerRun = 500;
 
-        public static readonly int MaxStreetNumber = 39899;
+        public static readonly int MaxStreetNumber = 40965;
     }
 }

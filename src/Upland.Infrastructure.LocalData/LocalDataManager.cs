@@ -21,11 +21,10 @@ namespace Upland.Infrastructure.LocalData
             localDataRepository = new LocalDataRepository();
         }
 
-        public async Task PopulateAllPropertiesInArea(double north, double south, double east, double west, int cityId, bool fullPropertyRetrieve)
+        public async Task PopulateAllPropertiesInArea(double north, double south, double east, double west, int cityId)
         {
             List<long> retryIds = new List<long>();
             List<long> loadedProps = new List<long>();
-            List<long> ignoreIds = new List<long>();
             Dictionary<long, Property> allCityProperties = new Dictionary<long, Property>();
             List<Neighborhood> neighborhoods = GetNeighborhoods();
 
@@ -42,168 +41,54 @@ namespace Upland.Infrastructure.LocalData
                     totalprops += sectorProps.Count;
                     foreach (UplandProperty prop in sectorProps)
                     {
-                        if (loadedProps.Contains(prop.Prop_Id) || ignoreIds.Contains(prop.Prop_Id))
+                        if (loadedProps.Contains(prop.Prop_Id))
                         {
                             continue;
                         }
 
-                        // Get the full property Data
-                        if (fullPropertyRetrieve)
+                        // Check to see if the prop exists
+                        if (!allCityProperties.ContainsKey(prop.Prop_Id))
                         {
-                            // Check to see if the prop exists
-                            if (!allCityProperties.ContainsKey(prop.Prop_Id))
+                            // check to make sure it is not under another city if it is continue
+                            List<Property> checkProps = localDataRepository.GetProperties(new List<long> { prop.Prop_Id });
+                            if (checkProps.Count > 0)
                             {
-                                // check to make sure it is not under another city if it is continue
-                                List<Property> checkProps = localDataRepository.GetProperties(new List<long> { prop.Prop_Id });
-                                if (checkProps.Count > 0)
-                                {
-                                    continue;
-                                }
-                            }
-                            else
-                            {
-                                // if the property is in the city and has a non 0 mint continue
-                                if (allCityProperties[prop.Prop_Id].MonthlyEarnings != 0)
-                                {
-                                    continue;
-                                }
-                            }
-
-                            // now lets populate it
-                            try
-                            {
-                                Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
-                                // Due to blockchain updating, clear the owner and status
-                                property.Owner = null;
-                                if (property.Status != Consts.PROP_STATUS_LOCKED)
-                                {
-                                    property.Status = Consts.PROP_STATUS_UNLOCKED;
-                                }
-                                property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
-
-                                localDataRepository.UpsertProperty(property);
-                                loadedProps.Add(prop.Prop_Id);
-                            }
-                            catch
-                            {
-                                retryIds.Add(prop.Prop_Id);
+                                continue;
                             }
                         }
                         else
                         {
-                            Property property;
-
-                            // Check to see if the prop exists, otherwise lets try and grab it.
-                            if (!allCityProperties.ContainsKey(prop.Prop_Id))
+                            // if the property is in the city and has a non 0 mint continue
+                            if (allCityProperties[prop.Prop_Id].MonthlyEarnings != 0)
                             {
-                                // check to make sure it is not under another city
-                                List<Property> checkProps = localDataRepository.GetProperties(new List<long> { prop.Prop_Id });
-                                if (checkProps.Count > 0)
-                                {
-                                    property = checkProps[0];
-                                }
-                                else
-                                {
-                                    property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
-                                    property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
-                                }
+                                continue;
                             }
-                            else
-                            {
-                                property = allCityProperties[prop.Prop_Id];
-                            }
-
-                            bool hasChanges = false;
-
-                            if (property.MonthlyEarnings == 0 && prop.status != Consts.PROP_STATUS_LOCKED)
-                            {
-                                Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
-                                property.MonthlyEarnings = uplandProp.MonthlyEarnings;
-                                hasChanges = true;
-                            }
-
-                            if (property.Status != prop.status)
-                            {
-                                // Lock a prop
-                                if (property.Status != Consts.PROP_STATUS_LOCKED && prop.status == Consts.PROP_STATUS_LOCKED)
-                                {
-                                    // Lets Just update the status and FSA
-                                    property.Status = prop.status;
-                                    property.FSA = prop.labels.fsa_allow;
-                                    property.Owner = null;
-                                    hasChanges = true;
-                                    localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
-                                }
-                                else if (property.Status == Consts.PROP_STATUS_LOCKED)
-                                {
-                                    Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
-                                    property.Status = uplandProp.Status;
-                                    property.MonthlyEarnings = uplandProp.MonthlyEarnings;
-                                    property.Owner = uplandProp.Owner;
-                                    hasChanges = true;
-                                }
-                                else if (property.Status == Consts.PROP_STATUS_UNLOCKED)
-                                {
-                                    Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
-                                    property.Status = prop.status;
-                                    property.Owner = uplandProp.Owner;
-                                    hasChanges = true;
-                                }
-                                else if (property.Status == Consts.PROP_STATUS_FORSALE)
-                                {
-                                    Property uplandProp = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
-                                    property.Status = prop.status;
-                                    property.Owner = uplandProp.Owner;
-                                    localDataRepository.DeleteSaleHistoryByPropertyId(property.Id);
-                                    hasChanges = true;
-                                }
-                            }
-
-                            if (property.Status == Consts.PROP_STATUS_FORSALE)
-                            {
-
-                                List<SaleHistoryEntry> propSaleHistory = GetRawSaleHistoryByPropertyId(property.Id)
-                                    .OrderByDescending(e => e.DateTime)
-                                    .Where(p => p.SellerEOS != null && p.SellerEOS == property.Owner && p.BuyerEOS == null)
-                                    .ToList();
-                                if (propSaleHistory.Count == 0)
-                                {
-                                    UplandProperty uplandProp = await uplandApiRepository.GetPropertyById(property.Id);
-
-                                    SaleHistoryEntry newEntry = new SaleHistoryEntry
-                                    {
-                                        DateTime = DateTime.Now,
-                                        SellerEOS = property.Owner,
-                                        BuyerEOS = null,
-                                        PropId = property.Id,
-                                        OfferPropId = null,
-                                        Amount = null,
-                                        AmountFiat = null,
-                                        Offer = false,
-                                        Accepted = false
-                                    };
-
-                                    if (uplandProp.on_market.currency == "UPX")
-                                    {
-                                        newEntry.Amount = double.Parse(uplandProp.on_market.token.Split(" UP")[0]);
-                                    }
-                                    else
-                                    {
-                                        newEntry.AmountFiat = double.Parse(uplandProp.on_market.fiat.Split(" FI")[0]);
-                                    }
-
-                                    UpsertSaleHistory(newEntry);
-                                }
-
-                            }
-
-                            if (hasChanges)
-                            {
-                                localDataRepository.UpsertProperty(property);
-                            }
-
-                            loadedProps.Add(property.Id);
                         }
+
+                        // now lets populate it
+                        try
+                        {
+                            Property property = UplandMapper.Map(await uplandApiRepository.GetPropertyById(prop.Prop_Id));
+
+                            // Due to blockchain updating, clear the owner and status
+                            property.Owner = null;
+                            property.MintedBy = null;
+                            property.MintedOn = null;
+
+                            if (property.Status != Consts.PROP_STATUS_LOCKED)
+                            {
+                                property.Status = Consts.PROP_STATUS_UNLOCKED;
+                            }
+
+                            property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+
+                            localDataRepository.UpsertProperty(property);
+                            loadedProps.Add(prop.Prop_Id);
+                        }
+                        catch
+                        {
+                            retryIds.Add(prop.Prop_Id);
+                        }    
                     }
                 }
             }
@@ -289,7 +174,7 @@ namespace Upland.Infrastructure.LocalData
             List<Street> existingStreets = GetStreets();
             List<int> failedIds = new List<int>();
 
-            for (int i = 1; i <= Consts.MaxStreetNumber; i++)
+            for (int i = existingStreets.Max(s => s.Id); i <= Consts.MaxStreetNumber; i++)
             {
                 if (!existingStreets.Any(s => s.Id == i))
                 {

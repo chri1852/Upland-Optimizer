@@ -81,7 +81,7 @@ namespace Upland.InformationProcessor
                 case 6:
                     return new List<double> { 40.745700, 40.561811, -73.827239, -74.051086 };
                 case 7:
-                    return new List<double> { 37.894152, 37.697192, -122.108366, -122.346632 };
+                    return new List<double> { 37.906678, 37.719677, -122.100362, -122.344958 };
                 case 8:
                     return new List<double> { 40.650337, 40.492300, -74.045197, -74.264237 };
                 case 9:
@@ -283,6 +283,8 @@ namespace Upland.InformationProcessor
                 case 18:
                     return 5; // Fresno
                 case 19:
+                case 30:
+                case 31:
                     return 7; // Oakland
                 case 20:
                 case 21:

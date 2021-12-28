@@ -882,7 +882,7 @@ namespace Upland.InformationProcessor
 
             if (fileType == "CSV")
             {
-                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Status,FSA,Address,Structure");
+                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Status,Owner,FSA,Address,Structure");
 
                 foreach (Property property in properties.Values)
                 {
@@ -894,6 +894,7 @@ namespace Upland.InformationProcessor
                     propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
                     propString += string.Format("{0},", property.CityId);
                     propString += string.Format("{0},", property.Status);
+                    propString += string.Format("{0},", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).Item2);
                     propString += string.Format("{0},", property.FSA);
                     propString += string.Format("{0},", property.Address);
                     propString += string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None");
@@ -908,32 +909,35 @@ namespace Upland.InformationProcessor
                 int neighborhoodPad = 14;
                 int cityPad = 6;
                 int statusPad = 8;
+                int ownerPad = 15;
                 int fsaPad = 5;
                 int addressPad = properties.Max(p => p.Value.Address.Length);
                 int structurePad = propertyStructures.Max(p => p.Value.Length);
 
                 output.Add(string.Format("Properties For {0} {1}", type, Id));
                 output.Add("");
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}"
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9}"
                     , "Id".PadLeft(idPad)
                     , "Size".PadLeft(sizePad)
                     , "Mint".PadLeft(mintPad)
                     , "NeighborhoodId".PadLeft(neighborhoodPad)
                     , "CityId".PadLeft(cityPad)
                     , "Status".PadLeft(statusPad)
+                    , "Owner".PadLeft(ownerPad)
                     , "FSA".PadLeft(fsaPad)
                     , "Address".PadLeft(addressPad)
                     , "Structure".PadLeft(structurePad)));
 
                 foreach (Property property in properties.Values)
                 {
-                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}"
+                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}- {9}"
                         , property.Id.ToString().PadLeft(idPad)
                         , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
                         , string.Format("{0:N2}", Math.Round(property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
                         , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
                         , string.Format("{0}", cityId).PadLeft(cityPad)
                         , string.Format("{0}", property.Status).PadLeft(statusPad)
+                        , string.Format("{0}", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).Item2).PadLeft(ownerPad)
                         , string.Format("{0}", property.FSA).PadLeft(fsaPad)
                         , property.Address.PadLeft(addressPad)
                         , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(structurePad)
@@ -1372,28 +1376,10 @@ namespace Upland.InformationProcessor
             }
         }
 
-        public async Task RefreshCityById(string type, int cityId)
+        public async Task LoadMissingCityProperties(int cityId)
         {
-            bool fullRefresh = type.ToUpper() == "FULL" ? true : false;
             List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
-            await _localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId, fullRefresh);
-        }
-
-        public async Task RunCityStatusUpdate()
-        {
-            List<CollatedStatsObject> cityStats = _localDataManager.GetCityStats();
-
-            foreach (int cityId in Consts.Cities.Keys)
-            {
-                // Don't process the bullshit cities
-                if (!Consts.NON_BULLSHIT_CITY_IDS.Contains(cityId))
-                {
-                    continue;
-                }
-
-                List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
-                await _localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId, false);
-            }
+            await _localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId);
         }
 
         public async Task<List<string>> GetBuildingsUnderConstruction(int userLevel)

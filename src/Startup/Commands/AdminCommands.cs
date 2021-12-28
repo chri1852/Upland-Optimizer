@@ -229,8 +229,8 @@ namespace Startup.Commands
             }
         }
 
-        [Command("AdminRefreshCityById")]
-        public async Task AdminRefreshCityById(string type, int cityId)
+        [Command("AdminLoadCityAndProperties")]
+        public async Task AdminRefreshCityById(int cityId)
         {
             if (!await checkIfAdmin(Context.User.Id))
             {
@@ -239,14 +239,14 @@ namespace Startup.Commands
 
             try
             {
-                await ReplyAsync(string.Format("Performing {0} of CityId {1}", type.ToUpper(), cityId));
-                await _informationProcessor.RefreshCityById(type.ToUpper(), cityId);
-                await ReplyAsync(string.Format("CityId {0} Refreshed.", cityId));
+                await ReplyAsync(string.Format("Performing Load of CityId {1}",cityId));
+                await _informationProcessor.LoadMissingCityProperties(cityId);
+                await ReplyAsync(string.Format("CityId {0} Loaded.", cityId));
             }
             catch (Exception ex)
             {
-                _localDataManager.CreateErrorLog("AdminCommands - AdminRefreshCityById", ex.Message);
-                await ReplyAsync(string.Format("Failed Refreshing CityId {0}: {1}", cityId, ex.Message));
+                _localDataManager.CreateErrorLog("AdminCommands - AdminLoadCityAndProperties", ex.Message);
+                await ReplyAsync(string.Format("Failed Loading CityId {0}: {1}", cityId, ex.Message));
             }
         }
     }
