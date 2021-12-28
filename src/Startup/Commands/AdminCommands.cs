@@ -230,7 +230,7 @@ namespace Startup.Commands
         }
 
         [Command("AdminLoadCityAndProperties")]
-        public async Task AdminRefreshCityById(int cityId)
+        public async Task AdminLoadCityAndProperties(int cityId)
         {
             if (!await checkIfAdmin(Context.User.Id))
             {
@@ -239,7 +239,7 @@ namespace Startup.Commands
 
             try
             {
-                await ReplyAsync(string.Format("Performing Load of CityId {1}",cityId));
+                await ReplyAsync(string.Format("Performing Load of CityId {0}",cityId));
                 await _informationProcessor.LoadMissingCityProperties(cityId);
                 await ReplyAsync(string.Format("CityId {0} Loaded.", cityId));
             }

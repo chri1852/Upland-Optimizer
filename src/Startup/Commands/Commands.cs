@@ -896,7 +896,7 @@ namespace Startup.Commands
 
             try
             {
-                appraiserOutput = await _profileAppraiser.RunAppraisal(registeredUser.UplandUsername, fileType);
+                appraiserOutput = await _profileAppraiser.RunAppraisal(registeredUser.UplandUsername.ToLower(), fileType);
             }
             catch (Exception ex)
             {
@@ -917,7 +917,7 @@ namespace Startup.Commands
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendFileAsync(stream, string.Format("{0}_Appraisal.{2}", registeredUser.UplandUsername, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
+                await Context.Channel.SendFileAsync(stream, string.Format("{0}_Appraisal.{1}", registeredUser.UplandUsername, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
             }
 
             _localDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);

@@ -138,7 +138,7 @@ namespace Upland.InformationProcessor
             return propertyAppraisals;
         }
 
-        public List<string> BuildAppraisalCsvStrings(List<PropertyAppraisal> propertyAppraisals, string username)
+        private List<string> BuildAppraisalCsvStrings(List<PropertyAppraisal> propertyAppraisals, string username)
         {
             List<string> output = new List<string>();
 
@@ -163,7 +163,7 @@ namespace Upland.InformationProcessor
             return output;
         }
 
-        public List<string> BuildAppraisalTxtStrings(List<PropertyAppraisal> propertyAppraisals, string username)
+        private List<string> BuildAppraisalTxtStrings(List<PropertyAppraisal> propertyAppraisals, string username)
         {
             List<string> output = new List<string>();
 

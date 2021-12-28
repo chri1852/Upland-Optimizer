@@ -107,7 +107,7 @@ namespace Upland.InformationProcessor
                 forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
             }
 
-            Dictionary<long, Property> properties = _localDataManager.GetProperties(forSaleProps.Select(f => f.Prop_Id).ToList()).ToDictionary(p => p.Id, p => p); ;
+            Dictionary<long, Property> properties = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(f => f.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p); ;
 
             if (forSaleProps.Count == 0)
             {
@@ -287,7 +287,7 @@ namespace Upland.InformationProcessor
             List<UplandForSaleProp> forSaleProps = new List<UplandForSaleProp>();
 
             forSaleProps.AddRange(_localDataManager.GetPropertiesForSale_City(cityId, false));
-            propDictionary = _localDataManager.GetProperties(forSaleProps.Select(f => f.Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
+            propDictionary = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(f => f.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
 
             if (currency == "USD")
             {
@@ -353,7 +353,7 @@ namespace Upland.InformationProcessor
                 forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
             }
 
-            Dictionary<long, Property> properties = _localDataManager.GetProperties(forSaleProps.Select(f => f.Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
+            Dictionary<long, Property> properties = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(f => f.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
 
             if (forSaleProps.Count == 0)
             {

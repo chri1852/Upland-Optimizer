@@ -402,6 +402,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 240;
                     sqlCmd.CommandText = "[UPL].[GetPreviousSalesAppraisalData]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -447,6 +448,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 240;
                     sqlCmd.CommandText = "[UPL].[GetCurrentFloorAppraisalData]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -492,6 +494,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 240;
                     sqlCmd.CommandText = "[UPL].[GetBuildingApprasialData]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
