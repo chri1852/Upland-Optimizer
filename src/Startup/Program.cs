@@ -9,13 +9,12 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
-// ONLY UNCOMMENT FOR DEBUGING
 using Upland.CollectionOptimizer;
 using Upland.InformationProcessor;
 using Upland.Infrastructure.Blockchain;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
-
+using Upland.Types;
 
 class Program
 {
@@ -38,7 +37,7 @@ class Program
     private ProfileAppraiser _profileAppraiser;
     private ResyncProcessor _resyncProcessor;
 
-
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
@@ -88,8 +87,9 @@ class Program
         //List<SaleHistoryQueryEntry> entries = localDataManager.GetSaleHistoryByPropertyId(79565478804919);
         //output = informationProcessor.GetSaleHistoryByType("Property", "10, 9843 S Exchange Ave", "txt");
         //output = informationProcessor.SearchProperties(10, "3101 W", "TXT");
-        output = forSaleProcessor.GetBuildingPropertiesForSale("city", 0, "Price", "all", "txt");
-        await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
+        //output = forSaleProcessor.GetBuildingPropertiesForSale("city", 0, "Price", "all", "txt");
+        //output = informationProcessor.GetAllProperties("NEIGHBORHOOD", 1300, "TXT");
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
         //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
@@ -117,11 +117,11 @@ class Program
         //await resyncProcessor.ResyncPropsList("CityUnmintedFullResync", "1");
         //await blockchainSendFinder.RunBlockChainUpdate();
     }
-
-    /*
+    */
+    
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    
 
     public async Task RunBotAsync()
     {
