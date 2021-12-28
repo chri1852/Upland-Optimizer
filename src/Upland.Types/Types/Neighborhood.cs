@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Upland.Types.Types
 {
@@ -10,7 +8,7 @@ namespace Upland.Types.Types
         public string Name { get; set; }
         public int CityId { get; set; }
         public List<List<List<List<double>>>> Coordinates { get; set; }
-        
+
         // For loading from upland
         public int City_Id { get; set; }
         public NeighborhoodCoordinates Boundaries { get; set; }

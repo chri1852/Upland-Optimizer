@@ -1,7 +1,6 @@
 ﻿using Discord.Commands;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Upland.CollectionOptimizer;
 using Upland.InformationProcessor;
@@ -140,7 +139,7 @@ namespace Startup.Commands
             }
 
             List<int> excludeCollectionIds = new List<int>();
-            foreach(string id in collectionIds.Split(","))
+            foreach (string id in collectionIds.Split(","))
             {
                 int collectionId = -1;
                 if (int.TryParse(id, out collectionId))

@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
-using System;
-using Upland.Types;
-using Upland.Types.UplandApiTypes;
 using System.Linq;
+using Upland.Types;
 using Upland.Types.Types;
+using Upland.Types.UplandApiTypes;
 
 namespace Upland.Infrastructure.UplandApi
 {
@@ -12,8 +11,8 @@ namespace Upland.Infrastructure.UplandApi
         public static List<Collection> Map(List<UplandCollection> uplandCollections)
         {
             List<Collection> collections = new List<Collection>();
-             
-            foreach(UplandCollection uplandCollection in uplandCollections)
+
+            foreach (UplandCollection uplandCollection in uplandCollections)
             {
                 collections.Add(Map(uplandCollection));
             }
@@ -63,7 +62,7 @@ namespace Upland.Infrastructure.UplandApi
             property.CityId = udProperty.City.Id;
             property.StreetId = udProperty.Street.Id;
             property.Size = udProperty.Area.HasValue ? udProperty.Area.Value : 0;
-            property.MonthlyEarnings = udProperty.Yield_Per_Hour.HasValue ? udProperty.Yield_Per_Hour.Value  * 720 : 0;
+            property.MonthlyEarnings = udProperty.Yield_Per_Hour.HasValue ? udProperty.Yield_Per_Hour.Value * 720 : 0;
             property.NeighborhoodId = null;
             property.Latitude = udProperty.CenterLat;
             property.Longitude = udProperty.CenterLng;

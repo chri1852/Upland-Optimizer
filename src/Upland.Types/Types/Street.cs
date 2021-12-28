@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Upland.Types.Types
+﻿namespace Upland.Types.Types
 {
     public class Street
     {
@@ -16,25 +12,25 @@ namespace Upland.Types.Types
         public int id
         {
             set { Id = value; }
-            get { return Id;  }
+            get { return Id; }
         }
 
         public string name
         {
             set { Name = value; }
-            get { return Name;  }
+            get { return Name; }
         }
 
         public string type
         {
-            set { Type = value;  }
-            get { return Type;   }
+            set { Type = value; }
+            get { return Type; }
         }
 
         public int city_id
         {
             set { CityId = value; }
-            get { return CityId;  }
+            get { return CityId; }
         }
     }
 }

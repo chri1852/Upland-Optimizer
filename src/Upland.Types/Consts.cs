@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Upland.Types
 {
@@ -58,6 +56,8 @@ namespace Upland.Types
 
             // Oakland Sub Cities
             { 19   , "Piedmont"       },
+            { 30   , "Alameda"        },
+            { 31   , "Berkeley"       },
 
             // Nashville Subcities
             { 20   , "Joelton"        },
@@ -74,11 +74,11 @@ namespace Upland.Types
         public static readonly int WarningRuns = 1;
         public static readonly int FreeRuns = 6;
         public static readonly string RunStatusInProgress = "In Progress";
-        public static readonly string RunStatusCompleted= "Completed";
+        public static readonly string RunStatusCompleted = "Completed";
         public static readonly string RunStatusFailed = "Failed";
         public static readonly ulong TestUserDiscordId = 1;
         public static readonly int UPXPricePerRun = 500;
 
-        public static readonly int MaxStreetNumber = 39899;
+        public static readonly int MaxStreetNumber = 40965;
     }
 }

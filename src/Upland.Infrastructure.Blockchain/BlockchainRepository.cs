@@ -239,7 +239,7 @@ namespace Upland.Infrastructure.Blockchain
         {
             HttpResponseMessage httpResponse;
             string responseJson;
-            
+
             httpResponse = await this.httpClient.GetAsync(requestUri);
             responseJson = await httpResponse.Content.ReadAsStringAsync();
 

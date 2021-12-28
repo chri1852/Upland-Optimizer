@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
@@ -18,7 +17,7 @@ namespace Upland.Infrastructure.UplandApi
         {
             _saleCache = new Dictionary<int, Tuple<DateTime, List<UplandForSaleProp>>>();
             _uplandApiRepository = new UplandApiRepository();
-        } 
+        }
 
         public async Task<List<UplandForSaleProp>> GetForSalePropsByCityId(int cityId)
         {
@@ -95,7 +94,7 @@ namespace Upland.Infrastructure.UplandApi
 
         private async Task<List<UplandForSaleProp>> CallApiForSalePropsByArea(int cityId)
         {
-            switch(cityId)
+            switch (cityId)
             {
                 case 1:
                     return await _uplandApiRepository.GetForSalePropsInArea(37.828621064959904, 37.68835114990779, -122.33772472323983, -122.67472342810042);

@@ -19,13 +19,13 @@ namespace Upland.Infrastructure.Blockchain
 
         public async Task<List<PropertyStructure>> GetPropertyStructures()
         {
-            List<dGood> nfts =  await blockchainRepository.GetAllNFTs();
+            List<dGood> nfts = await blockchainRepository.GetAllNFTs();
             List<a21Entry> propStructs = await blockchainRepository.GetNftsRelatedToPropertys();
             List<PropertyStructure> returnStructures = new List<PropertyStructure>();
 
             nfts = nfts.Where(n => n.category == "structure").ToList();
 
-            foreach(dGood nft in nfts)
+            foreach (dGood nft in nfts)
             {
                 returnStructures.Add(new PropertyStructure
                 {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using Upland.Types;
 using Upland.Types.Types;
@@ -13,14 +12,14 @@ namespace Upland.InformationProcessor
     {
         public static string GetCollectionCategory(int category)
         {
-            switch(category)
+            switch (category)
             {
-                case 1:  { return "Standard";   }
-                case 2:  { return "Limited";    }
-                case 3:  { return "Exclusive";  }
-                case 4:  { return "Rare";       }
-                case 5:  { return "Ultra Rare"; }
-                default: { return "Unknown";    }
+                case 1: { return "Standard"; }
+                case 2: { return "Limited"; }
+                case 3: { return "Exclusive"; }
+                case 4: { return "Rare"; }
+                case 5: { return "Ultra Rare"; }
+                default: { return "Unknown"; }
             }
         }
 
@@ -29,16 +28,16 @@ namespace Upland.InformationProcessor
             switch (structureType)
             {
                 case "smltownhouse": { return "Small Town House Pitched Roof"; }
-                case "townhouse"   : { return "Town House"; }
-                case "aptbuilding" : { return "Apartment Building"; }
-                case "ranchhouse"  : { return "Ranch House"; }
+                case "townhouse": { return "Town House"; }
+                case "aptbuilding": { return "Apartment Building"; }
+                case "ranchhouse": { return "Ranch House"; }
                 case "smltwnhouse2": { return "Small Town House Flat Roof"; }
-                case "luxmodern"   : { return "Luxury Modern House"; }
-                case "luxranch"    : { return "Luxury Ranch House"; }
+                case "luxmodern": { return "Luxury Modern House"; }
+                case "luxranch": { return "Luxury Ranch House"; }
                 case "ferrybuildng": { return "San Francisco Ferry Building"; }
-                case "coittower"   : { return "Coit Tower"; }
-                case "chiftblstdm" : { return "Soldier Field"; }
-                case "cleftblstdm" : { return "FirstEnergy Stadium"; }
+                case "coittower": { return "Coit Tower"; }
+                case "chiftblstdm": { return "Soldier Field"; }
+                case "cleftblstdm": { return "FirstEnergy Stadium"; }
                 default: { return "Unknown"; }
             }
         }
@@ -47,9 +46,9 @@ namespace Upland.InformationProcessor
         {
             switch (userLevel)
             {
-                case 0: 
+                case 0:
                     return "Visitor";
-                case 1: 
+                case 1:
                     return "Uplander";
                 case 2:
                     return "Pro";
@@ -72,39 +71,39 @@ namespace Upland.InformationProcessor
             switch (cityId)
             {
                 case 1:
-                    return new List<double> {37.874861, 37.595937, -122.345007, -122.520960};
+                    return new List<double> { 37.874861, 37.595937, -122.345007, -122.520960 };
                 case 3:
-                    return new List<double> {40.882824, 40.680972,  -73.902522,  -74.052383};
+                    return new List<double> { 40.882824, 40.680972, -73.902522, -74.052383 };
                 case 4:
-                    return new List<double> {40.659563, 40.627391,  -73.757297,  -73.813173};
+                    return new List<double> { 40.659563, 40.627391, -73.757297, -73.813173 };
                 case 5:
-                    return new List<double> {36.953982, 36.648627, -119.592434, -119.941636};
+                    return new List<double> { 36.953982, 36.648627, -119.592434, -119.941636 };
                 case 6:
-                    return new List<double> {40.745700, 40.561811,  -73.827239,  -74.051086};
+                    return new List<double> { 40.745700, 40.561811, -73.827239, -74.051086 };
                 case 7:
-                    return new List<double> {37.894152, 37.697192, -122.108366, -122.346632};
+                    return new List<double> { 37.906678, 37.719677, -122.100362, -122.344958 };
                 case 8:
-                    return new List<double> {40.650337, 40.492300,  -74.045197,  -74.264237};
+                    return new List<double> { 40.650337, 40.492300, -74.045197, -74.264237 };
                 case 9:
-                    return new List<double> {35.431051, 35.253613, -118.797393, -119.190841};
+                    return new List<double> { 35.431051, 35.253613, -118.797393, -119.190841 };
                 case 10:
-                    return new List<double> {42.032864, 41.638941,  -87.514990,  -87.946204};
+                    return new List<double> { 42.032864, 41.638941, -87.514990, -87.946204 };
                 case 11:
-                    return new List<double> {41.605164, 41.390193,  -81.519952,  -81.883188};
+                    return new List<double> { 41.605164, 41.390193, -81.519952, -81.883188 };
                 case 12:
-                    return new List<double> {37.422572, 37.320392, -121.926698, -122.013043};
+                    return new List<double> { 37.422572, 37.320392, -121.926698, -122.013043 };
                 case 13:
-                    return new List<double> {40.855192, 40.785172,  -74.056121,  -74.130538};
+                    return new List<double> { 40.855192, 40.785172, -74.056121, -74.130538 };
                 case 14:
-                    return new List<double> {39.359456, 38.823596,  -94.370848,  -94.770819};
+                    return new List<double> { 39.359456, 38.823596, -94.370848, -94.770819 };
                 case 15:
-                    return new List<double> {30.179050, 29.863468,  -89.621784,  -90.142948};
+                    return new List<double> { 30.179050, 29.863468, -89.621784, -90.142948 };
                 case 16:
-                    return new List<double> {36.409888, 35.964879,  -86.511996,  -87.060626};
+                    return new List<double> { 36.409888, 35.964879, -86.511996, -87.060626 };
                 case 29:
                     return new List<double> { 40.921864, 40.782411, -73.763343, -73.942215 };
                 default:
-                    return new List<double> {0, 0, 0, 0};
+                    return new List<double> { 0, 0, 0, 0 };
             }
         }
 
@@ -186,7 +185,7 @@ namespace Upland.InformationProcessor
                 propString += string.Format("{0}", propDictionary[prop.Prop_Id].NeighborhoodId.HasValue ? propDictionary[prop.Prop_Id].NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad);
                 propString += " - ";
 
-                if(propBuildings.ContainsKey(prop.Prop_Id))
+                if (propBuildings.ContainsKey(prop.Prop_Id))
                 {
                     propString += string.Format("{0}", propBuildings[prop.Prop_Id]).PadLeft(buildingPad);
                 }
@@ -248,7 +247,7 @@ namespace Upland.InformationProcessor
 
             if (returnName.ToUpper() == "RUTHERFORD")
             {
-                if(memo.ToUpper().Contains("EAST RUTHERFORD"))
+                if (memo.ToUpper().Contains("EAST RUTHERFORD"))
                 {
                     return "East Rutherford";
                 }
@@ -272,18 +271,20 @@ namespace Upland.InformationProcessor
                 return 13;
             }
             // Since the sub cities get wrapped up to the main city we need to do some finagaling
-            if(Consts.Cities.Where(c => c.Value.ToUpper() == cityName.ToUpper()).ToList().Count == 0)
+            if (Consts.Cities.Where(c => c.Value.ToUpper() == cityName.ToUpper()).ToList().Count == 0)
             {
                 throw new Exception("Unknow City Detected");
             }
 
             int cityId = Consts.Cities.Where(c => c.Value.ToUpper() == cityName.ToUpper()).First().Key;
 
-            switch(cityId)
+            switch (cityId)
             {
                 case 18:
                     return 5; // Fresno
                 case 19:
+                case 30:
+                case 31:
                     return 7; // Oakland
                 case 20:
                 case 21:

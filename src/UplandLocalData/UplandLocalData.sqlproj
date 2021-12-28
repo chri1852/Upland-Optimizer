@@ -125,7 +125,6 @@
     <Build Include="StoredProcedures\UPL.DeleteSaleHistoryByPropertyId.sql" />
     <Build Include="StoredProcedures\UPL.DeleteEOSUser.sql" />
     <Build Include="Indices\CreateIndicies.sql" />
-    <Build Include="StoredProcedures\UPL.GetCityPropertiesForSale.sql" />
     <Build Include="StoredProcedures\UPL.GetSaleHistoryByCityId.sql" />
     <Build Include="StoredProcedures\UPL.GetSaleHistoryByNeighborhoodId.sql" />
     <Build Include="StoredProcedures\UPL.GetSaleHistoryByCollectionId.sql" />
@@ -138,5 +137,12 @@
     <Build Include="StoredProcedures\UPL.SearchPropertyByCityIdAndAddress.sql" />
     <Build Include="StoredProcedures\UPL.AddRegisteredUserSendUPX.sql" />
     <Build Include="StoredProcedures\UPL.GetRegisteredUsersEOSAccounts.sql" />
+    <Build Include="StoredProcedures\UPL.GetPreviousSalesAppraisalData.sql" />
+    <Build Include="StoredProcedures\UPL.GetCurrentFloorAppraisalData.sql" />
+    <Build Include="StoredProcedures\UPL.GetBuildingApprasialData.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertiesForSale_City.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Neighborhood.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Street.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Collection.sql" />
   </ItemGroup>
 </Project>

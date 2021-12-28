@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Upland.Infrastructure.Blockchain;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types;
-using Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
@@ -15,23 +13,23 @@ namespace Upland.InformationProcessor
 {
     public class InformationProcessor
     {
-        private readonly LocalDataManager localDataManager;
-        private readonly UplandApiManager uplandApiManager;
-        private readonly BlockchainManager blockchainManager;
+        private readonly LocalDataManager _localDataManager;
+        private readonly UplandApiManager _uplandApiManager;
+        private readonly BlockchainManager _blockchainManager;
 
-        public InformationProcessor()
+        public InformationProcessor(LocalDataManager localDataManager, UplandApiManager uplandApiManager, BlockchainManager blockchainManager)
         {
-            localDataManager = new LocalDataManager();
-            uplandApiManager = new UplandApiManager();
-            blockchainManager = new BlockchainManager();
+            _localDataManager = localDataManager;
+            _uplandApiManager = uplandApiManager;
+            _blockchainManager = blockchainManager;
         }
 
         public List<string> GetCollectionInformation(string fileType)
         {
             List<string> output = new List<string>();
 
-            List<CollatedStatsObject> collectionStats = localDataManager.GetCollectionStats();
-            List<Collection> collections = localDataManager.GetCollections();
+            List<CollatedStatsObject> collectionStats = _localDataManager.GetCollectionStats();
+            List<Collection> collections = _localDataManager.GetCollections();
             collections = collections.OrderBy(c => c.Category).OrderBy(c => c.CityId).ToList();
 
             if (fileType == "TXT")
@@ -143,9 +141,9 @@ namespace Upland.InformationProcessor
         public List<string> GetNeighborhoodInformation(string fileType)
         {
             List<string> output = new List<string>();
-            List<CollatedStatsObject> neighborhoodStats = localDataManager.GetNeighborhoodStats();
+            List<CollatedStatsObject> neighborhoodStats = _localDataManager.GetNeighborhoodStats();
 
-            List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
+            List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods();
             neighborhoods = neighborhoods.OrderBy(n => n.Name).OrderBy(n => n.CityId).ToList();
 
             if (fileType == "TXT")
@@ -235,9 +233,9 @@ namespace Upland.InformationProcessor
         public List<string> GetStreetInformation(string fileType)
         {
             List<string> output = new List<string>();
-            List<CollatedStatsObject> streetStats = localDataManager.GetStreetStats();
+            List<CollatedStatsObject> streetStats = _localDataManager.GetStreetStats();
 
-            List<Street> streets = localDataManager.GetStreets();
+            List<Street> streets = _localDataManager.GetStreets();
             streets = streets.OrderBy(n => n.Name).OrderBy(n => n.CityId).ToList();
 
             if (fileType == "TXT")
@@ -332,7 +330,7 @@ namespace Upland.InformationProcessor
         public List<string> GetCityInformation(string fileType)
         {
             List<string> array = new List<string>();
-            List<CollatedStatsObject> cityStats = localDataManager.GetCityStats();
+            List<CollatedStatsObject> cityStats = _localDataManager.GetCityStats();
 
             if (fileType == "TXT")
             {
@@ -402,13 +400,13 @@ namespace Upland.InformationProcessor
         public async Task<List<string>> GetPropertyInfo(string username, string fileType)
         {
             List<string> output = new List<string>();
-            List<Property> properties = await localDataManager.GetPropertysByUsername(username);
+            List<Property> properties = await _localDataManager.GetPropertysByUsername(username);
 
             properties = properties.OrderBy(p => p.Address).OrderBy(p => p.CityId).ToList();
 
             // Lets grab the Structures
-            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
-            
+            Dictionary<long, string> propertyStructures = _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+
             if (fileType == "CSV")
             {
                 output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Address,Structure");
@@ -474,7 +472,7 @@ namespace Upland.InformationProcessor
         public List<string> SearchStreets(string name, string fileType)
         {
             List<string> output = new List<string>();
-            List<Street> streets = localDataManager.SearchStreets(name);
+            List<Street> streets = _localDataManager.SearchStreets(name);
 
             if (streets.Count == 0)
             {
@@ -535,7 +533,7 @@ namespace Upland.InformationProcessor
                 return output;
             }
 
-            List<PropertySearchEntry> properties = localDataManager.SearchProperties(cityId, address);
+            List<PropertySearchEntry> properties = _localDataManager.SearchProperties(cityId, address);
 
             if (properties.Count == 0)
             {
@@ -559,10 +557,10 @@ namespace Upland.InformationProcessor
                 int ownerPad = properties.OrderByDescending(n => n.Owner.Length).First().Owner.Length;
                 int buildingPad = properties.OrderByDescending(n => n.Building.Length).First().Building.Length;
 
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9} - {10}", 
-                    "Id".PadLeft(idPad), 
-                    "CityId".PadLeft(cityPad), 
-                    "Address".PadLeft(addressPad), 
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9} - {10}",
+                    "Id".PadLeft(idPad),
+                    "CityId".PadLeft(cityPad),
+                    "Address".PadLeft(addressPad),
                     "StreetId".PadLeft(streetPad),
                     "NeighborhoodId".PadLeft(neighborhoodPad),
                     "Size".PadLeft(sizePad),
@@ -619,406 +617,6 @@ namespace Upland.InformationProcessor
             return output;
         }
 
-        public async Task<List<string>> GetCollectionPropertiesForSale(int collectionId, string orderBy, string currency, string fileType)
-        {
-            List<string> output = new List<string>();
-
-            List<Collection> collections = localDataManager.GetCollections();
-
-            if (!collections.Any(c => c.Id == collectionId))
-            {
-                // Collection don't exist
-                output.Add(string.Format("{0} is not a valid collectionId. Try running my !CollectionInfo command.", collectionId.ToString()));
-                return output;
-            }
-
-            if (collections.Any(c => c.Id == collectionId && c.IsCityCollection))
-            {
-                // Don't do city collections
-                output.Add(string.Format("This doesn't work for city collections.", collectionId.ToString()));
-                return output;
-            }
-
-            Collection collection = collections.Where(c => c.Id == collectionId).First();
-            List<UplandForSaleProp> forSaleProps = localDataManager.GetCityPropertiesForSale(collection.CityId.Value);
-
-            if (currency == "USD")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "USD" && collection.MatchingPropertyIds.Contains(p.Prop_Id)).ToList();
-            }
-            else if (currency == "UPX")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "UPX" && collection.MatchingPropertyIds.Contains(p.Prop_Id)).ToList();
-            }
-            else
-            {
-                forSaleProps = forSaleProps.Where(p => collection.MatchingPropertyIds.Contains(p.Prop_Id)).ToList();
-            }
-
-            if (forSaleProps.Count == 0)
-            {
-                // Nothing on sale
-                output.Add(string.Format("There is nothing on sale in this collection.", collectionId.ToString()));
-                return output;
-            }
-
-            Dictionary<long, Property> properties = localDataManager.GetPropertiesByCollectionId(collectionId).ToDictionary(p => p.Id, p => p);
-
-            if(orderBy == "MARKUP")
-            {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12/0.1728).ToList();
-            }
-            else // PRICE
-            {
-                forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
-            }
-
-            // Lets grab the Structures
-            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
-
-            if (fileType == "CSV")
-            {
-                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, properties, propertyStructures));
-            }
-            else
-            {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", collection.Name), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
-            }
-
-            return output;
-        }
-
-        public async Task<List<string>> GetNeighborhoodPropertiesForSale(int neighborhoodId, string orderBy, string currency, string fileType)
-        {
-            List<string> output = new List<string>();
-
-            List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
-
-            if (!neighborhoods.Any(n => n.Id == neighborhoodId))
-            {
-                // Neighborhood don't exist
-                output.Add(string.Format("{0} is not a valid neighborhoodId. Try running my !NeighborhoodInfo command.", neighborhoodId.ToString()));
-                return output;
-            }
-
-            Neighborhood neighborhood = neighborhoods.Where(n => n.Id == neighborhoodId).First();
-            List<UplandForSaleProp> forSaleProps = localDataManager.GetCityPropertiesForSale(neighborhood.CityId);
-
-            if (currency == "USD")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "USD").ToList();
-            }
-            else if (currency == "UPX")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
-            }
-
-            Dictionary<long, Property> properties = localDataManager.GetPropertiesByCityId(neighborhood.CityId).ToDictionary(p => p.Id, p => p);
-
-            forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].NeighborhoodId == neighborhoodId).ToList();
-
-            if (forSaleProps.Count == 0)
-            {
-                // Nothing on sale
-                output.Add(string.Format("There is nothing on sale in this neighborhood.", neighborhoodId.ToString()));
-                return output;
-            }
-
-            if (orderBy.ToUpper() == "MARKUP")
-            {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
-            }
-            else // PRICE
-            {
-                forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
-            }
-
-            // Lets grab the Structures
-            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
-
-            if (fileType == "CSV")
-            {
-                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, properties, propertyStructures));
-            }
-            else
-            {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", neighborhood.Name), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
-            }
-
-            return output;
-        }
-
-        public async Task<List<string>> GetBuildingPropertiesForSale(string type, int Id, string orderBy, string currency, string fileType)
-        {
-            List<string> output = new List<string>();
-            List<UplandForSaleProp> forSaleProps = new List<UplandForSaleProp>();
-            Dictionary<long, Property> properties = new Dictionary<long, Property>();
-            int cityId = 0;
-
-            if (type.ToUpper() == "CITY")
-            {
-                cityId = Id;
-                if (Id != 0 && !Consts.Cities.ContainsKey(Id))
-                {
-                    output.Add(string.Format("{0} is not a valid cityId. Try running my !CityInfo command.", Id));
-                    return output;
-                }
-
-                if (cityId == 0)
-                {
-                    List<Property> allProps = new List<Property>();
-                    foreach (int cId in Consts.Cities.Keys)
-                    {
-                        allProps.AddRange(localDataManager.GetPropertiesByCityId(cId));
-                        forSaleProps.AddRange(localDataManager.GetCityPropertiesForSale(cId));
-                    }
-
-                    properties = allProps.ToDictionary(p => p.Id, p => p);
-                    forSaleProps = forSaleProps.GroupBy(p => p.Prop_Id)
-                        .Select(g => g.First())
-                        .ToList();
-                }
-                else
-                {
-                    properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
-                    forSaleProps = localDataManager.GetCityPropertiesForSale(cityId);
-                }
-
-                forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id)).ToList();
-                cityId = 1; // Fix for Sales Cache time, just use San Francisco
-            }
-            else if(type.ToUpper() == "NEIGHBORHOOD")
-            {
-                List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
-
-                if (!neighborhoods.Any(n => n.Id == Id))
-                {
-                    // Neighborhood don't exist
-                    output.Add(string.Format("{0} is not a valid neighborhoodId. Try running my !NeighborhoodInfo command.", Id.ToString()));
-                    return output;
-                }
-
-                Neighborhood neighborhood = neighborhoods.Where(n => n.Id == Id).First();
-                cityId = neighborhood.CityId;
-                forSaleProps = localDataManager.GetCityPropertiesForSale(cityId);
-                properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
-                forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].NeighborhoodId == Id).ToList();
-            }
-            else if (type.ToUpper() == "STREET")
-            {
-                List<Street> streets = localDataManager.GetStreets();
-
-                if (!streets.Any(s => s.Id == Id))
-                {
-                    // Street don't exist
-                    output.Add(string.Format("{0} is not a valid streetId. Try running my !SearchStreets command.", Id.ToString()));
-                    return output;
-                }
-
-                cityId = streets.Where(n => n.Id == Id).First().CityId;
-                forSaleProps = localDataManager.GetCityPropertiesForSale(cityId);
-                properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
-                forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].StreetId == Id).ToList();
-            }
-            else if(type.ToUpper() == "COLLECTION")
-            {
-                List<Collection> collections = localDataManager.GetCollections();
-
-                if (!collections.Any(c => c.Id == Id))
-                {
-                    // Collection don't exist
-                    output.Add(string.Format("{0} is not a valid collectionId. Try running my !CollectionInfo command.", Id.ToString()));
-                    return output;
-                }
-
-                if (collections.Any(c => c.Id == Id && c.IsCityCollection))
-                {
-                    // Don't do city collections
-                    output.Add(string.Format("This doesn't work for city collections.", Id.ToString()));
-                    return output;
-                }
-
-                Collection collection = collections.Where(c => c.Id == Id).First();
-                cityId = collection.CityId.Value;
-                forSaleProps = localDataManager.GetCityPropertiesForSale(cityId);
-                properties = localDataManager.GetPropertiesByCityId(cityId).ToDictionary(p => p.Id, p => p);
-                forSaleProps = forSaleProps.Where(p => collection.MatchingPropertyIds.Contains(p.Prop_Id)).ToList();
-            }
-            else
-            {
-                output.Add(string.Format("That wasn't a valid type. Choose: City, Neighborhood, or Collection"));
-                return output;
-            }
-
-            if (currency == "USD")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "USD").ToList();
-            }
-            else if (currency == "UPX")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
-            }
-
-            // Lets grab the Structures
-            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
-
-            forSaleProps = forSaleProps.Where(p => propertyStructures.ContainsKey(p.Prop_Id)).ToList();
-
-            if (forSaleProps.Count == 0)
-            {
-                // Nothing on sale
-                output.Add(string.Format("There are no buildings on sale for {0} in {1} {2}", currency, type.ToUpper(), Id));
-                return output;
-            }
-
-            if (orderBy.ToUpper() == "MARKUP")
-            {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
-            }
-            else // PRICE
-            {
-                forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
-            }
-
-            if (fileType == "CSV")
-            {
-                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, properties, propertyStructures));
-            }
-            else
-            {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report Buildings In {0}Id {1}.", type.ToUpper(), Id), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
-            }
-
-            return output;
-        }
-
-        public async Task<List<string>> GetCityPropertiesForSale(int cityId, string orderBy, string currency, string fileType)
-        {
-            List<string> output = new List<string>();
-
-            if (!Consts.Cities.ContainsKey(cityId))
-            {
-                output.Add(string.Format("{0} is not a valid cityId.", cityId));
-                return output;
-            }
-
-            Dictionary<long, Property> propDictionary = new Dictionary<long, Property>();
-            List<UplandForSaleProp> forSaleProps = new List<UplandForSaleProp>();
-
-            forSaleProps.AddRange(localDataManager.GetCityPropertiesForSale(cityId));
-            List<Property> allProperties = new List<Property>();
-
-            allProperties.AddRange(localDataManager.GetPropertiesByCityId(cityId));
-                
-            foreach (Property prop in allProperties)
-            {
-                if (!propDictionary.ContainsKey(prop.Id))
-                {
-                    propDictionary.Add(prop.Id, prop);
-                }
-            }
-
-            forSaleProps = forSaleProps.Where(p => propDictionary.ContainsKey(p.Prop_Id)).ToList();
-
-            if (currency == "USD")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "USD").ToList();
-            }
-            else if (currency == "UPX")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
-            }
-
-            if (forSaleProps.Count == 0)
-            {
-                output.Add(string.Format("No Props Found, I bet you tried to run this on Piedmont or something."));
-                return output;
-            }
-
-            if (orderBy.ToUpper() == "MARKUP")
-            {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / propDictionary[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
-            }
-            else // PRICE
-            {
-                forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
-            }
-
-            // Lets grab the Structures
-            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
-
-            if (fileType == "CSV")
-            {
-                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, propDictionary, propertyStructures));
-            }
-            else
-            {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, propDictionary, propertyStructures, string.Format("For Sale Report For CityId {0}.", cityId), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
-            }
-
-            return output;
-        }
-
-        public async Task<List<string>> GetStreetPropertiesForSale(int streetId, string orderBy, string currency, string fileType)
-        {
-            List<string> output = new List<string>();
-
-            List<Street> streets = localDataManager.GetStreets();
-
-            if (!streets.Any(s => s.Id == streetId))
-            {
-                // Neighborhood don't exist
-                output.Add(string.Format("{0} is not a valid streetId. Try running my !StreetInfo or !SearchStreets command.", streetId.ToString()));
-                return output;
-            }
-
-            Street street = streets.Where(s => s.Id == streetId).First();
-            List<UplandForSaleProp> forSaleProps = localDataManager.GetCityPropertiesForSale(street.CityId);
-
-            if (currency == "USD")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "USD").ToList();
-            }
-            else if (currency == "UPX")
-            {
-                forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
-            }
-
-            Dictionary<long, Property> properties = localDataManager.GetPropertiesByCityId(street.CityId).ToDictionary(p => p.Id, p => p);
-
-            forSaleProps = forSaleProps.Where(p => properties.ContainsKey(p.Prop_Id) && properties[p.Prop_Id].StreetId == streetId).ToList();
-
-            if (forSaleProps.Count == 0)
-            {
-                // Nothing on sale
-                output.Add(string.Format("There is nothing on sale on this street.", streetId.ToString()));
-                return output;
-            }
-
-            if (orderBy.ToUpper() == "MARKUP")
-            {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
-            }
-            else // PRICE
-            {
-                forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
-            }
-
-            // Lets grab the Structures
-            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
-
-            if (fileType == "CSV")
-            {
-                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, properties, propertyStructures));
-            }
-            else
-            {
-                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", street.Name), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
-            }
-
-            return output;
-        }
-
         public List<string> GetUnmintedProperties(string type, int Id, string propType, string fileType)
         {
             List<string> output = new List<string>();
@@ -1033,7 +631,7 @@ namespace Upland.InformationProcessor
                     output.Add(string.Format("{0} is not a valid cityId. Try running my !CityInfo command.", Id));
                     return output;
                 }
-                properties = localDataManager
+                properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
                     .OrderBy(p => p.MonthlyEarnings)
@@ -1041,7 +639,7 @@ namespace Upland.InformationProcessor
             }
             else if (type.ToUpper() == "NEIGHBORHOOD")
             {
-                List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
+                List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods();
 
                 if (!neighborhoods.Any(n => n.Id == Id))
                 {
@@ -1051,7 +649,7 @@ namespace Upland.InformationProcessor
                 }
 
                 cityId = neighborhoods.Where(n => n.Id == Id).First().CityId;
-                properties = localDataManager
+                properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.NeighborhoodId == Id)
                     .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
@@ -1060,7 +658,7 @@ namespace Upland.InformationProcessor
             }
             else if (type.ToUpper() == "COLLECTION")
             {
-                List<Collection> collections = localDataManager.GetCollections();
+                List<Collection> collections = _localDataManager.GetCollections();
 
                 if (!collections.Any(c => c.Id == Id))
                 {
@@ -1078,7 +676,7 @@ namespace Upland.InformationProcessor
 
                 Collection collection = collections.Where(c => c.Id == Id).First();
                 cityId = collection.CityId.Value;
-                properties = localDataManager
+                properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => collection.MatchingPropertyIds.Contains(p.Id))
                     .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
@@ -1087,7 +685,7 @@ namespace Upland.InformationProcessor
             }
             else if (type.ToUpper() == "STREET")
             {
-                List<Street> streets = localDataManager.GetStreets();
+                List<Street> streets = _localDataManager.GetStreets();
 
                 if (!streets.Any(s => s.Id == Id))
                 {
@@ -1097,7 +695,7 @@ namespace Upland.InformationProcessor
                 }
 
                 cityId = streets.Where(n => n.Id == Id).First().CityId;
-                properties = localDataManager
+                properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.StreetId == Id)
                     .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
@@ -1199,14 +797,14 @@ namespace Upland.InformationProcessor
                     return output;
                 }
 
-                properties = localDataManager
+                properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .OrderBy(p => p.MonthlyEarnings)
                     .ToDictionary(p => p.Id, p => p);
             }
             else if (type.ToUpper() == "NEIGHBORHOOD")
             {
-                List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
+                List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods();
 
                 if (!neighborhoods.Any(n => n.Id == Id))
                 {
@@ -1216,7 +814,7 @@ namespace Upland.InformationProcessor
                 }
 
                 cityId = neighborhoods.Where(n => n.Id == Id).First().CityId;
-                properties = localDataManager
+                properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.NeighborhoodId == Id)
                     .OrderBy(p => p.MonthlyEarnings)
@@ -1224,7 +822,7 @@ namespace Upland.InformationProcessor
             }
             else if (type.ToUpper() == "STREET")
             {
-                List<Street> streets = localDataManager.GetStreets();
+                List<Street> streets = _localDataManager.GetStreets();
 
                 if (!streets.Any(s => s.Id == Id))
                 {
@@ -1234,7 +832,7 @@ namespace Upland.InformationProcessor
                 }
 
                 cityId = streets.Where(n => n.Id == Id).First().CityId;
-                properties = localDataManager
+                properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.StreetId == Id)
                     .OrderBy(p => p.MonthlyEarnings)
@@ -1242,7 +840,7 @@ namespace Upland.InformationProcessor
             }
             else if (type.ToUpper() == "COLLECTION")
             {
-                List<Collection> collections = localDataManager.GetCollections();
+                List<Collection> collections = _localDataManager.GetCollections();
 
                 if (!collections.Any(c => c.Id == Id))
                 {
@@ -1260,7 +858,7 @@ namespace Upland.InformationProcessor
 
                 Collection collection = collections.Where(c => c.Id == Id).First();
                 cityId = collection.CityId.Value;
-                properties = localDataManager
+                properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => collection.MatchingPropertyIds.Contains(p.Id))
                     .OrderBy(p => p.MonthlyEarnings)
@@ -1280,11 +878,11 @@ namespace Upland.InformationProcessor
             }
 
             // Lets grab the Structures
-            Dictionary<long, string> propertyStructures = localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+            Dictionary<long, string> propertyStructures = _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
 
             if (fileType == "CSV")
             {
-                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Status,FSA,Address,Structure");
+                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Status,Owner,FSA,Address,Structure");
 
                 foreach (Property property in properties.Values)
                 {
@@ -1296,6 +894,7 @@ namespace Upland.InformationProcessor
                     propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
                     propString += string.Format("{0},", property.CityId);
                     propString += string.Format("{0},", property.Status);
+                    propString += string.Format("{0},", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).Item2);
                     propString += string.Format("{0},", property.FSA);
                     propString += string.Format("{0},", property.Address);
                     propString += string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None");
@@ -1310,32 +909,35 @@ namespace Upland.InformationProcessor
                 int neighborhoodPad = 14;
                 int cityPad = 6;
                 int statusPad = 8;
+                int ownerPad = 15;
                 int fsaPad = 5;
                 int addressPad = properties.Max(p => p.Value.Address.Length);
                 int structurePad = propertyStructures.Max(p => p.Value.Length);
 
                 output.Add(string.Format("Properties For {0} {1}", type, Id));
                 output.Add("");
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}"
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9}"
                     , "Id".PadLeft(idPad)
                     , "Size".PadLeft(sizePad)
                     , "Mint".PadLeft(mintPad)
                     , "NeighborhoodId".PadLeft(neighborhoodPad)
                     , "CityId".PadLeft(cityPad)
                     , "Status".PadLeft(statusPad)
+                    , "Owner".PadLeft(ownerPad)
                     , "FSA".PadLeft(fsaPad)
                     , "Address".PadLeft(addressPad)
                     , "Structure".PadLeft(structurePad)));
 
                 foreach (Property property in properties.Values)
                 {
-                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}"
+                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}- {9}"
                         , property.Id.ToString().PadLeft(idPad)
                         , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
                         , string.Format("{0:N2}", Math.Round(property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
                         , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
                         , string.Format("{0}", cityId).PadLeft(cityPad)
                         , string.Format("{0}", property.Status).PadLeft(statusPad)
+                        , string.Format("{0}", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).Item2).PadLeft(ownerPad)
                         , string.Format("{0}", property.FSA).PadLeft(fsaPad)
                         , property.Address.PadLeft(addressPad)
                         , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(structurePad)
@@ -1348,7 +950,7 @@ namespace Upland.InformationProcessor
 
         public async Task<List<string>> GetAssetsByTypeAndUserName(string type, string userName, string fileType)
         {
-            List<string> output = new List<string>(); 
+            List<string> output = new List<string>();
             List<Asset> assets = new List<Asset>();
 
             type = type.ToUpper();
@@ -1356,19 +958,19 @@ namespace Upland.InformationProcessor
 
             if (type == "NFLPA")
             {
-                assets.AddRange(await uplandApiManager.GetNFLPALegitsByUsername(userName));
+                assets.AddRange(await _uplandApiManager.GetNFLPALegitsByUsername(userName));
             }
-            else if(type == "SPIRIT")
+            else if (type == "SPIRIT")
             {
-                assets.AddRange(await uplandApiManager.GetSpiritLegitsByUsername(userName));
+                assets.AddRange(await _uplandApiManager.GetSpiritLegitsByUsername(userName));
             }
             else if (type == "DECORATION")
             {
-                assets.AddRange(await uplandApiManager.GetDecorationsByUsername(userName));
+                assets.AddRange(await _uplandApiManager.GetDecorationsByUsername(userName));
             }
             else if (type == "BLOCKEXPLORER")
             {
-                assets.AddRange(await uplandApiManager.GetBlockExplorersByUserName(userName));
+                assets.AddRange(await _uplandApiManager.GetBlockExplorersByUserName(userName));
             }
             else
             {
@@ -1611,13 +1213,13 @@ namespace Upland.InformationProcessor
 
             if (type == "PROPERTY")
             {
-                if(!int.TryParse(identifier.Split(",")[0], out intId))
+                if (!int.TryParse(identifier.Split(",")[0], out intId))
                 {
                     output.Add(string.Format("{0} not a valid City Id", identifier.Split(",")[0]));
                     return output;
                 }
                 string address = identifier.Substring(identifier.IndexOf(',') + 1).Trim();
-                Property searchProp = localDataManager.GetPropertyByCityIdAndAddress(intId, address);
+                Property searchProp = _localDataManager.GetPropertyByCityIdAndAddress(intId, address);
 
                 if (searchProp == null || searchProp.Id == 0)
                 {
@@ -1631,25 +1233,25 @@ namespace Upland.InformationProcessor
             switch (type.ToUpper())
             {
                 case "CITY":
-                    saleHistoryEntries = localDataManager.GetSaleHistoryByCityId(intId);
+                    saleHistoryEntries = _localDataManager.GetSaleHistoryByCityId(intId);
                     break;
                 case "NEIGHBORHOOD":
-                    saleHistoryEntries = localDataManager.GetSaleHistoryByNeighborhoodId(intId);
+                    saleHistoryEntries = _localDataManager.GetSaleHistoryByNeighborhoodId(intId);
                     break;
                 case "COLLECTION":
-                    saleHistoryEntries = localDataManager.GetSaleHistoryByCollectionId(intId);
+                    saleHistoryEntries = _localDataManager.GetSaleHistoryByCollectionId(intId);
                     break;
                 case "STREET":
-                    saleHistoryEntries = localDataManager.GetSaleHistoryByStreetId(intId);
+                    saleHistoryEntries = _localDataManager.GetSaleHistoryByStreetId(intId);
                     break;
                 case "PROPERTY":
-                    saleHistoryEntries = localDataManager.GetSaleHistoryByPropertyId(propId);
+                    saleHistoryEntries = _localDataManager.GetSaleHistoryByPropertyId(propId);
                     break;
                 case "BUYER":
-                    saleHistoryEntries = localDataManager.GetSaleHistoryByBuyerUsername(identifier.ToLower());
+                    saleHistoryEntries = _localDataManager.GetSaleHistoryByBuyerUsername(identifier.ToLower());
                     break;
                 case "SELLER":
-                    saleHistoryEntries = localDataManager.GetSaleHistoryBySellerUsername(identifier.ToLower());
+                    saleHistoryEntries = _localDataManager.GetSaleHistoryBySellerUsername(identifier.ToLower());
                     break;
             }
 
@@ -1674,7 +1276,7 @@ namespace Upland.InformationProcessor
                         entry.Mint,
                         entry.Price,
                         entry.Currency,
-                        entry.Markup*100
+                        entry.Markup * 100
                     ));
                 }
             }
@@ -1693,16 +1295,16 @@ namespace Upland.InformationProcessor
 
                 output.Add(string.Format("Sales History for {0} {1}", type, identifier));
                 output.Add("");
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9}", 
-                    "DateTime".PadLeft(datePad), 
-                    "Seller".PadLeft(sellerPad), 
-                    "Buyer".PadLeft(buyerPad), 
-                    "Offer".PadLeft(offerPad), 
-                    "CityId".PadLeft(cityIdPad), 
-                    "Address".PadLeft(addressPad), 
-                    "Mint".PadLeft(mintPad), 
-                    "Price".PadLeft(pricePad), 
-                    "Currency".PadLeft(currencyPad), 
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9}",
+                    "DateTime".PadLeft(datePad),
+                    "Seller".PadLeft(sellerPad),
+                    "Buyer".PadLeft(buyerPad),
+                    "Offer".PadLeft(offerPad),
+                    "CityId".PadLeft(cityIdPad),
+                    "Address".PadLeft(addressPad),
+                    "Mint".PadLeft(mintPad),
+                    "Price".PadLeft(pricePad),
+                    "Currency".PadLeft(currencyPad),
                     "Markup".PadLeft(markupPad)));
 
                 foreach (SaleHistoryQueryEntry entry in saleHistoryEntries)
@@ -1727,7 +1329,7 @@ namespace Upland.InformationProcessor
                     entryString += " - ";
                     entryString += string.Format("{0}", entry.Currency).PadLeft(currencyPad);
                     entryString += " - ";
-                    entryString += string.Format("{0:N2}%", entry.Markup*100).PadLeft(markupPad);
+                    entryString += string.Format("{0:N2}%", entry.Markup * 100).PadLeft(markupPad);
 
                     output.Add(entryString);
                 }
@@ -1738,19 +1340,19 @@ namespace Upland.InformationProcessor
 
         public void ClearSalesCache()
         {
-            uplandApiManager.ClearSalesCache();
+            _uplandApiManager.ClearSalesCache();
         }
 
         public async Task RebuildPropertyStructures()
         {
-            List<PropertyStructure> propertyStructures = await blockchainManager.GetPropertyStructures();
-            List<Neighborhood> neighborhoods = localDataManager.GetNeighborhoods();
-            List<long> underConstructionProps = await blockchainManager.GetPropertiesUnderConstruction();
-            localDataManager.TruncatePropertyStructure();
+            List<PropertyStructure> propertyStructures = await _blockchainManager.GetPropertyStructures();
+            List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods();
+            List<long> underConstructionProps = await _blockchainManager.GetPropertiesUnderConstruction();
+            _localDataManager.TruncatePropertyStructure();
 
             List<long> savedIds = new List<long>();
 
-            foreach(PropertyStructure propertyStructure in propertyStructures)
+            foreach (PropertyStructure propertyStructure in propertyStructures)
             {
                 if (underConstructionProps.Contains(propertyStructure.PropertyId))
                 {
@@ -1762,14 +1364,11 @@ namespace Upland.InformationProcessor
                     try
                     {
                         propertyStructure.StructureType = HelperFunctions.TranslateStructureType(propertyStructure.StructureType);
-                        localDataManager.CreatePropertyStructure(propertyStructure);
+                        _localDataManager.CreatePropertyStructure(propertyStructure);
                     }
                     catch (Exception ex)
                     {
-                        localDataManager.CreateErrorLog("InformationProcessor = RebuildPropertyStructures", ex.Message);
-                        // Most likely fails due to a missing property
-                        //await localDataManager.PopulateIndividualPropertyById(propertyStructure.PropertyId, neighborhoods);
-                        //localDataManager.CreatePropertyStructure(propertyStructure);
+                        _localDataManager.CreateErrorLog("InformationProcessor = RebuildPropertyStructures", ex.Message);
                     }
 
                     savedIds.Add(propertyStructure.PropertyId);
@@ -1777,28 +1376,10 @@ namespace Upland.InformationProcessor
             }
         }
 
-        public async Task RefreshCityById(string type, int cityId)
+        public async Task LoadMissingCityProperties(int cityId)
         {
-            bool fullRefresh = type.ToUpper() == "FULL" ? true : false;
             List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
-            await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId, fullRefresh);
-        }
-
-        public async Task RunCityStatusUpdate()
-        {
-            List<CollatedStatsObject> cityStats = localDataManager.GetCityStats();
-
-            foreach (int cityId in Consts.Cities.Keys)
-            {
-                // Don't process the bullshit cities
-                if(!Consts.NON_BULLSHIT_CITY_IDS.Contains(cityId))
-                {
-                    continue;
-                }
-                
-                List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
-                await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId, false);
-            }
+            await _localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId);
         }
 
         public async Task<List<string>> GetBuildingsUnderConstruction(int userLevel)
@@ -1806,11 +1387,11 @@ namespace Upland.InformationProcessor
             List<SparkStakingReport> rawSparkReport = new List<SparkStakingReport>();
             List<UplandUserProfile> uniqueUserProfiles = new List<UplandUserProfile>();
 
-            List<long> propsUnderConstruction = await blockchainManager.GetPropertiesUnderConstruction();
+            List<long> propsUnderConstruction = await _blockchainManager.GetPropertiesUnderConstruction();
 
             foreach (long prop in propsUnderConstruction)
             {
-                UplandProperty property = await uplandApiManager.GetUplandPropertyById(prop);
+                UplandProperty property = await _uplandApiManager.GetUplandPropertyById(prop);
 
                 if (property == null || property.building == null || property.building.construction == null)
                 {
@@ -1843,7 +1424,7 @@ namespace Upland.InformationProcessor
                     continue;
                 }
 
-                UplandUserProfile profile = await uplandApiManager.GetUplandUserProfile(username);
+                UplandUserProfile profile = await _uplandApiManager.GetUplandUserProfile(username);
 
                 if (profile == null)
                 {

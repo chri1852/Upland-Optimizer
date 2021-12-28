@@ -1,55 +1,57 @@
-﻿using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using Upland.InformationProcessor;
-using Upland.Infrastructure.LocalData;
+using System;
 using System.Collections.Generic;
-using System.Timers;
-using System.Text.Json;
-
-/*
-// ONLY UNCOMMENT FOR DEBUGING
-using Upland.CollectionOptimizer;  
 using System.IO;
-using Upland.Types.Types;
-using System.Linq;
+using System.Reflection;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Timers;
+using Upland.CollectionOptimizer;
+using Upland.InformationProcessor;
 using Upland.Infrastructure.Blockchain;
-using Upland.Types.BlockchainTypes;
-using Upland.Types;
+using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
-using Upland.Types.UplandApiTypes;
-*/
+using Upland.Types;
 
 class Program
 {
     private DiscordSocketClient _client;
     private CommandService _commands;
     private IServiceProvider _services;
-    private InformationProcessor _informationProcessor;
-    private ResyncProcessor _resyncProcessor;
-    private BlockchainPropertySurfer _blockchainPropertySurfer;
-    private BlockchainSendFinder _blockchainSendFinder;
+
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
     private Timer _sendTimer;
+
     private LocalDataManager _localDataManager;
+    private UplandApiManager _uplandApiManager;
+    private BlockchainManager _blockchainManager;
+
+    private BlockchainPropertySurfer _blockchainPropertySurfer;
+    private BlockchainSendFinder _blockchainSendFinder;
+    private ForSaleProcessor _forSaleProcessor;
+    private InformationProcessor _informationProcessor;
+    private ProfileAppraiser _profileAppraiser;
+    private ResyncProcessor _resyncProcessor;
 
     /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
-        LocalDataManager localDataManager = new LocalDataManager();
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
-        InformationProcessor informationProcessor = new InformationProcessor();
-        ResyncProcessor resyncProcessor = new ResyncProcessor();
-        BlockchainRepository blockchainRepository = new BlockchainRepository();
+
+        LocalDataManager localDataManager = new LocalDataManager();
         UplandApiManager uplandApiManager = new UplandApiManager();
         BlockchainManager blockchainManager = new BlockchainManager();
-        BlockchainPropertySurfer blockchainPropertySurfer = new BlockchainPropertySurfer();
-        BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder();
+
+        BlockchainPropertySurfer blockchainPropertySurfer = new BlockchainPropertySurfer(localDataManager, uplandApiManager, blockchainManager);
+        BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder(localDataManager, blockchainManager);
+        ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
+        InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
+        ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
+        ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
 
         string username;
         string qualityLevel;
@@ -63,7 +65,7 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", new List<int> { 173, 222, 80 }, 7, true);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("cyclonix123", 7, true);
         //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Populate initial City Data
@@ -79,12 +81,14 @@ class Program
         //output = informationProcessor.GetCityInformation("TXT"); 
         //output = informationProcessor.GetAllProperties("Street", 31898, "CSV");
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
-        //output = await informationProcessor.GetAssetsByTypeAndUserName("blockExplorer", "loyldoyl", "txt");
+        //output = await informationProcessor.GetAssetsByTypeAndUserName("NFLPA", "stoney300", "txt");
         //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
         //output = await informationProcessor.GetBuildingsUnderConstruction(1);
         //List<SaleHistoryQueryEntry> entries = localDataManager.GetSaleHistoryByPropertyId(79565478804919);
         //output = informationProcessor.GetSaleHistoryByType("Property", "10, 9843 S Exchange Ave", "txt");
         //output = informationProcessor.SearchProperties(10, "3101 W", "TXT");
+        //output = forSaleProcessor.GetBuildingPropertiesForSale("city", 0, "Price", "all", "txt");
+        //output = informationProcessor.GetAllProperties("NEIGHBORHOOD", 1300, "TXT");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
@@ -110,7 +114,7 @@ class Program
         //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
-        //await resyncProcessor.ResyncPropsList("SetForSale", "74663278158647");
+        //await resyncProcessor.ResyncPropsList("CityUnmintedFullResync", "1");
         //await blockchainSendFinder.RunBlockChainUpdate();
     }
     */
@@ -123,16 +127,24 @@ class Program
     {
         _client = new DiscordSocketClient();
         _commands = new CommandService();
-        _informationProcessor = new InformationProcessor();
-        _resyncProcessor = new ResyncProcessor();
-        _blockchainPropertySurfer = new BlockchainPropertySurfer();
-        _blockchainSendFinder = new BlockchainSendFinder();
+
         _localDataManager = new LocalDataManager();
+        _uplandApiManager = new UplandApiManager();
+        _blockchainManager = new BlockchainManager();
+
+        _blockchainPropertySurfer = new BlockchainPropertySurfer(_localDataManager, _uplandApiManager, _blockchainManager);
+        _blockchainSendFinder = new BlockchainSendFinder(_localDataManager, _blockchainManager);
+        _forSaleProcessor = new ForSaleProcessor(_localDataManager);
+        _informationProcessor = new InformationProcessor(_localDataManager, _uplandApiManager, _blockchainManager);
+        _profileAppraiser = new ProfileAppraiser(_localDataManager, _uplandApiManager);
+        _resyncProcessor = new ResyncProcessor(_localDataManager, _uplandApiManager);
 
         _services = new ServiceCollection()
-            .AddSingleton(_informationProcessor)
-            .AddSingleton(_resyncProcessor)
             .AddSingleton(_localDataManager)
+            .AddSingleton(_forSaleProcessor)
+            .AddSingleton(_informationProcessor)
+            .AddSingleton(_profileAppraiser)
+            .AddSingleton(_resyncProcessor)
             .AddSingleton(_client)
             .AddSingleton(_commands)
             .BuildServiceProvider();
@@ -214,7 +226,7 @@ class Program
                 {
                     Console.WriteLine(string.Format("{0}: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), result.ErrorReason));
                     Console.WriteLine(string.Format("{0}: {1} - {2}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), message.Author.Username, message.Content));
-                    switch(result.ErrorReason)
+                    switch (result.ErrorReason)
                     {
                         case "Unknown command.":
                             await context.Channel.SendMessageAsync(string.Format("ERROR: I don't know that command. Try running !Help."));
@@ -311,15 +323,13 @@ class Program
     private async Task RunRefreshActions()
     {
         DateTime time = DateTime.UtcNow;
-        if (time.Hour == 6) 
+        if (time.Hour == 6)
         {
-            InformationProcessor informationProcessor = new InformationProcessor();
-
             // Rebuild the structures list every night
             try
             {
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                await informationProcessor.RebuildPropertyStructures();
+                await _informationProcessor.RebuildPropertyStructures();
                 Console.WriteLine(string.Format("{0}: Rebuilding Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
             }
             catch (Exception ex)
