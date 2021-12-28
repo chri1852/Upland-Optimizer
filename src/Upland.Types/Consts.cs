@@ -53,11 +53,11 @@ namespace Upland.Types
 
             // Fresno Sub Cities
             { 18   , "Clovis"         },
-            { 30   , "Alameda"        },
-            { 31   , "Berkeley"       },
 
             // Oakland Sub Cities
             { 19   , "Piedmont"       },
+            { 30   , "Alameda"        },
+            { 31   , "Berkeley"       },
 
             // Nashville Subcities
             { 20   , "Joelton"        },
