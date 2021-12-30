@@ -103,7 +103,7 @@ namespace Upland.InformationProcessor
 
                 if (upxValues.Count == 0)
                 {
-                    upxValues.Add((int)Math.Round(property.MonthlyEarnings * 12 / 0.1728));
+                    upxValues.Add((int)Math.Round(property.Mint));
                     propertyAppraisal.Notes.Add("Not Enough Sales Data");
                 }
 
@@ -153,7 +153,7 @@ namespace Upland.InformationProcessor
                     , appraisal.Property.CityId
                     , appraisal.Property.Address
                     , appraisal.Property.Size
-                    , Math.Round(appraisal.Property.MonthlyEarnings * 12 / 0.1728)
+                    , appraisal.Property.Mint
                     , appraisal.UPX_Lower
                     , appraisal.UPX_Upper
                     , string.Join(" ", appraisal.Notes)
@@ -209,7 +209,7 @@ namespace Upland.InformationProcessor
                     , appraisal.Property.CityId.ToString().PadLeft(cityIdPad)
                     , appraisal.Property.Address.PadLeft(addressPad)
                     , string.Format("{0:N0}", appraisal.Property.Size).PadLeft(sizePad)
-                    , string.Format("{0:N2}", Math.Round(appraisal.Property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
+                    , string.Format("{0:N2}", appraisal.Property.Mint).PadLeft(mintPad)
                     , string.Format("{0:N}", appraisal.UPX_Lower).PadLeft(lowerPad)
                     , string.Format("{0:N}", appraisal.UPX_Upper).PadLeft(upperPad)
                     , string.Join(", ", appraisal.Notes).PadLeft(notePad)

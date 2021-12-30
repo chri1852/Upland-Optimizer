@@ -79,6 +79,7 @@ namespace Upland.Types
         public static readonly ulong TestUserDiscordId = 1;
         public static readonly int UPXPricePerRun = 500;
 
+        public static readonly double RateOfReturn = 0.1728;
         public static readonly int MaxStreetNumber = 40965;
     }
 }

@@ -417,7 +417,7 @@ namespace Startup
                     helpOutput.Add(string.Format("This command will run an optimizer run and exclude a list of collectionIds seperated by a comma from optimization. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerExcludeRun 222,80");
-                    helpOutput.Add("The above command will run a Exclude run ignoring the Bronx Riverdale and Oakland Grand Ave collections.");
+                    helpOutput.Add("The above command will run a Exclude run ignoring the Bronx Riverdale, and Oakland Grand Ave collections.");
                     break;
                 default:
                     helpOutput.Add(string.Format("Not sure what command you are refering to. Try running my !Help command."));

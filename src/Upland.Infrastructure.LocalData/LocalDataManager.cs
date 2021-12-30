@@ -59,7 +59,7 @@ namespace Upland.Infrastructure.LocalData
                         else
                         {
                             // if the property is in the city and has a non 0 mint continue
-                            if (allCityProperties[prop.Prop_Id].MonthlyEarnings != 0)
+                            if (allCityProperties[prop.Prop_Id].Mint != 0)
                             {
                                 continue;
                             }
@@ -610,7 +610,22 @@ namespace Upland.Infrastructure.LocalData
 
         public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
         {
-            return localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
+            Tuple<string, string> returnTuple;
+            if (eosAccount == null || eosAccount.Trim() == "")
+            {
+                returnTuple = new Tuple<string, string>("", "");
+            }
+            else
+            {
+                returnTuple = localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
+
+                if (returnTuple == null)
+                {
+                    returnTuple = new Tuple<string, string>("", "");
+                }
+            }
+
+            return returnTuple;
         }
 
         public List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts()

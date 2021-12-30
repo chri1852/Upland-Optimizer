@@ -32,7 +32,7 @@ namespace Upland.Infrastructure.UplandApi
             collection.SlottedPropertyIds = new List<long>();
             collection.EligablePropertyIds = new List<long>();
             collection.Description = uplandCollection.Requirements;
-            collection.MonthlyUpx = 0;
+            collection.TotalMint = 0;
             collection.MatchingPropertyIds = new List<long>();
             collection.Reward = uplandCollection.One_Time_Reward;
             collection.CityId = uplandCollection.City_Id;
@@ -62,7 +62,7 @@ namespace Upland.Infrastructure.UplandApi
             property.CityId = udProperty.City.Id;
             property.StreetId = udProperty.Street.Id;
             property.Size = udProperty.Area.HasValue ? udProperty.Area.Value : 0;
-            property.MonthlyEarnings = udProperty.Yield_Per_Hour.HasValue ? udProperty.Yield_Per_Hour.Value * 720 : 0;
+            property.Mint = udProperty.Yield_Per_Hour.HasValue ? udProperty.Yield_Per_Hour.Value * 720 : 0;
             property.NeighborhoodId = null;
             property.Latitude = udProperty.CenterLat;
             property.Longitude = udProperty.CenterLng;

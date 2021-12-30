@@ -60,7 +60,7 @@ namespace Upland.InformationProcessor
 
             if (orderBy == "MARKUP")
             {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
+                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].Mint).ToList();
             }
             else // PRICE
             {
@@ -118,7 +118,7 @@ namespace Upland.InformationProcessor
 
             if (orderBy.ToUpper() == "MARKUP")
             {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
+                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].Mint).ToList();
             }
             else // PRICE
             {
@@ -168,7 +168,7 @@ namespace Upland.InformationProcessor
                 else
                 {
                     forSaleProps = _localDataManager.GetPropertiesForSale_City(cityId, true);
-                    properties = _localDataManager.GetProperties(forSaleProps.Select(f => f.Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
+                    properties = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(g => g.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
                 }
 
                 cityId = 1; // Fix for Sales Cache time, just use San Francisco
@@ -187,7 +187,7 @@ namespace Upland.InformationProcessor
                 Neighborhood neighborhood = neighborhoods.Where(n => n.Id == Id).First();
                 cityId = neighborhood.CityId;
                 forSaleProps = _localDataManager.GetPropertiesForSale_Neighborhood(neighborhood.Id, true);
-                properties = _localDataManager.GetProperties(forSaleProps.Select(f => f.Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
+                properties = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(g => g.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
             }
             else if (type.ToUpper() == "STREET")
             {
@@ -201,7 +201,7 @@ namespace Upland.InformationProcessor
                 }
 
                 forSaleProps = _localDataManager.GetPropertiesForSale_Street(Id, true);
-                properties = _localDataManager.GetProperties(forSaleProps.Select(f => f.Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
+                properties = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(g => g.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
             }
             else if (type.ToUpper() == "COLLECTION")
             {
@@ -223,7 +223,7 @@ namespace Upland.InformationProcessor
 
                 Collection collection = collections.Where(c => c.Id == Id).First();
                 forSaleProps = _localDataManager.GetPropertiesForSale_Collection(collection.Id, true);
-                properties = _localDataManager.GetProperties(forSaleProps.Select(f => f.Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
+                properties = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(g => g.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
             }
             else
             {
@@ -254,7 +254,7 @@ namespace Upland.InformationProcessor
 
             if (orderBy.ToUpper() == "MARKUP")
             {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
+                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].Mint).ToList();
             }
             else // PRICE
             {
@@ -306,7 +306,7 @@ namespace Upland.InformationProcessor
 
             if (orderBy.ToUpper() == "MARKUP")
             {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / propDictionary[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
+                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / propDictionary[p.Prop_Id].Mint).ToList();
             }
             else // PRICE
             {
@@ -364,7 +364,7 @@ namespace Upland.InformationProcessor
 
             if (orderBy.ToUpper() == "MARKUP")
             {
-                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].MonthlyEarnings * 12 / 0.1728).ToList();
+                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].Mint).ToList();
             }
             else // PRICE
             {

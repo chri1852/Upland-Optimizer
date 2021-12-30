@@ -543,7 +543,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("CityId", property.CityId));
                     sqlCmd.Parameters.Add(new SqlParameter("StreetId", property.StreetId));
                     sqlCmd.Parameters.Add(new SqlParameter("Size", property.Size));
-                    sqlCmd.Parameters.Add(new SqlParameter("MonthlyEarnings", property.MonthlyEarnings));
+                    sqlCmd.Parameters.Add(new SqlParameter("Mint", property.Mint));
                     sqlCmd.Parameters.Add(new SqlParameter("NeighborhoodId", property.NeighborhoodId));
                     sqlCmd.Parameters.Add(new SqlParameter("Latitude", property.Latitude));
                     sqlCmd.Parameters.Add(new SqlParameter("Longitude", property.Longitude));
@@ -2186,7 +2186,7 @@ namespace Upland.Infrastructure.LocalData
                 Address = (string)reader["Address"],
                 CityId = (int)reader["CityId"],
                 Size = (int)reader["Size"],
-                MonthlyEarnings = decimal.ToDouble((decimal)reader["MonthlyEarnings"]),
+                Mint = decimal.ToDouble((decimal)reader["Mint"]),
                 StreetId = (int)reader["StreetId"],
                 NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int?)reader["NeighborhoodId"] : null,
                 Latitude = reader["Latitude"] != DBNull.Value ? (decimal?)reader["Latitude"] : null,

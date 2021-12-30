@@ -12,7 +12,7 @@ BEGIN
 			S.Offer,
 			P.CityId, 
 			P.Address, 
-			CONVERT(DECIMAL(10,2),P.MonthlyEarnings*12/0.1728) AS 'Mint',
+			P.Mint,
 			CASE
 				WHEN S.Amount IS NULL THEN S.AmountFiat
 				ELSE S.Amount 
@@ -22,8 +22,8 @@ BEGIN
 				ELSE 'UPX' 
 			END AS 'Currency',
 			CASE
-				WHEN S.Amount IS NULL THEN CONVERT(DECIMAL(10,2), S.AmountFiat*1000 / (P.MonthlyEarnings*12/0.172))
-				ELSE CONVERT(DECIMAL(10,2),S.Amount / (P.MonthlyEarnings*12/0.172))
+				WHEN S.Amount IS NULL THEN CONVERT(DECIMAL(10,2), S.AmountFiat*1000 / P.Mint)
+				ELSE CONVERT(DECIMAL(10,2),S.Amount / P.Mint)
 			END AS 'Markup'
 		FROM UPL.SaleHistory S (NOLOCK)
 			JOIN UPL.Property P (NOLOCK)
@@ -37,7 +37,7 @@ BEGIN
 		WHERE SellerEOS IS NOT NULL
 			AND BuyerEOS IS NOT NULL
 			AND OfferPropId IS NULL
-			AND P.MonthlyEarnings != 0
+			AND P.Mint != 0
 			AND CP.CollectionId = @CollectionId
 		ORDER BY S.DateTime DESC
 	END TRY

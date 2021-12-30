@@ -22,7 +22,7 @@ namespace Upland.CollectionOptimizer
             };
         }
 
-        public double MonthlyUpx(List<long> ignoreProps)
+        public double TotalMint(List<long> ignoreProps)
         {
             if (Props.Where(p => !ignoreProps.Contains(p.Key)).Count() < this.NumberOfProps)
             {

@@ -128,8 +128,8 @@ namespace Upland.InformationProcessor
                 }
 
                 propString += string.Format("{0},", prop.Currency.ToUpper());
-                propString += string.Format("{0:F0},", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
-                propString += string.Format("{0:F0},", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728));
+                propString += string.Format("{0:F0},", Math.Round(propDictionary[prop.Prop_Id].Mint));
+                propString += string.Format("{0:F0},", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].Mint));
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].CityId);
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].Address);
                 propString += string.Format("{0},", prop.Owner);
@@ -172,9 +172,9 @@ namespace Upland.InformationProcessor
                 }
 
                 propString += string.Format(" -    {0}   - ", prop.Currency.ToUpper());
-                propString += string.Format("{0:N0}", Math.Round(propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(mintPad);
+                propString += string.Format("{0:N0}", Math.Round(propDictionary[prop.Prop_Id].Mint)).PadLeft(mintPad);
                 propString += " - ";
-                propString += string.Format("{0:N2}%", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].MonthlyEarnings * 12 / 0.1728)).PadLeft(markupPad);
+                propString += string.Format("{0:N2}%", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].Mint)).PadLeft(markupPad);
                 propString += " - ";
                 propString += string.Format("{0}", propDictionary[prop.Prop_Id].CityId).PadLeft(cityPad);
                 propString += " - ";

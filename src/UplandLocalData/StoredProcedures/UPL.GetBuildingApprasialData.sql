@@ -7,7 +7,7 @@ BEGIN
 
 		SELECT DISTINCT
 			PS.StructureType, 
-			ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY SH.Amount - (P.MonthlyEarnings*12/0.1728)) OVER (PARTITION BY PS.StructureType), -2) AS 'Median'
+			ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY SH.Amount - P.Mint) OVER (PARTITION BY PS.StructureType), -2) AS 'Median'
 		FROM UPL.PropertyStructure PS (NOLOCK)
 			JOIN UPL.SaleHistory SH (NOLOCK)
 				ON PS.PropertyId = SH.PropId

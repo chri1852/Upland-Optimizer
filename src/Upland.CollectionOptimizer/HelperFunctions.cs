@@ -21,20 +21,20 @@ namespace Upland.CollectionOptimizer
 
         public static double CalculateBaseMonthlyUPX(Dictionary<long, Property> Properties)
         {
-            return Properties.Sum(p => p.Value.MonthlyEarnings);
+            return (Properties.Sum(p => p.Value.Mint) * Consts.RateOfReturn / 12);
         }
 
         public static double CalculateMonthlyUpx(Dictionary<int, Collection> FilledCollections, Dictionary<long, Property> Properties, List<long> SlottedPropertyIds)
         {
             double total = 0;
 
-            total += FilledCollections.Sum(c => c.Value.MonthlyUpx);
-            total += Properties.Where(p => !SlottedPropertyIds.Contains(p.Value.Id)).Sum(p => p.Value.MonthlyEarnings);
+            total += FilledCollections.Sum(c => c.Value.TotalMint);
+            total += Properties.Where(p => !SlottedPropertyIds.Contains(p.Value.Id)).Sum(p => p.Value.Mint);
 
-            return total;
+            return total * (Consts.RateOfReturn/12);
         }
 
-        public static List<Property> BuildHypotheicalProperties(int cityId, int numberOfProperties, double averageMonthlyUpx)
+        public static List<Property> BuildHypotheicalProperties(int cityId, int numberOfProperties, double averageMintUpx)
         {
             List<Property> properties = new List<Property>();
             for (int i = 0; i < numberOfProperties; i++)
@@ -46,7 +46,7 @@ namespace Upland.CollectionOptimizer
                     CityId = cityId,
                     StreetId = -1 * i,
                     Size = 1,
-                    MonthlyEarnings = averageMonthlyUpx
+                    Mint = averageMintUpx
                 };
 
                 properties.Add(prop);
@@ -66,7 +66,7 @@ namespace Upland.CollectionOptimizer
             Dictionary<int, Collection> MissingCollections)
         {
             int TotalCollectionRewards = 0;
-            List<Collection> collections = FilledCollections.OrderByDescending(c => c.Value.MonthlyUpx).Select(c => c.Value).ToList();
+            List<Collection> collections = FilledCollections.OrderByDescending(c => c.Value.TotalMint).Select(c => c.Value).ToList();
             Console.WriteLine();
             foreach (Collection collection in collections)
             {
@@ -91,11 +91,11 @@ namespace Upland.CollectionOptimizer
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write(" - ");
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("{0:N2}", collection.MonthlyUpx / collection.Boost);
+                Console.Write("{0:N2}", (collection.TotalMint * (Consts.RateOfReturn / 12)) / collection.Boost);
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write(" --> ");
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("{0:N2}", collection.MonthlyUpx);
+                Console.WriteLine("{0:N2}", collection.TotalMint * (Consts.RateOfReturn / 12));
                 Console.ForegroundColor = ConsoleColor.Cyan;
 
                 foreach (long propertyId in collection.SlottedPropertyIds)

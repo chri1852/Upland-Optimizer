@@ -417,7 +417,7 @@ namespace Upland.InformationProcessor
 
                     propString += string.Format("{0},", property.Id);
                     propString += string.Format("{0},", property.Size);
-                    propString += string.Format("{0:F0},", Math.Round(property.MonthlyEarnings * 12 / 0.1728));
+                    propString += string.Format("{0:F0},", property.Mint);
                     propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
                     propString += string.Format("{0},", property.CityId);
                     propString += string.Format("{0},", property.Address);
@@ -458,7 +458,7 @@ namespace Upland.InformationProcessor
                     output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
                         , property.Id.ToString().PadLeft(idPad)
                         , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
-                        , string.Format("{0:N2}", Math.Round(property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
+                        , string.Format("{0:N2}", property.Mint).PadLeft(mintPad)
                         , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
                         , property.Address.PadLeft(addressPad)
                         , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(buildingPad)
@@ -634,7 +634,7 @@ namespace Upland.InformationProcessor
                 properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
-                    .OrderBy(p => p.MonthlyEarnings)
+                    .OrderBy(p => p.Mint)
                     .ToDictionary(p => p.Id, p => p);
             }
             else if (type.ToUpper() == "NEIGHBORHOOD")
@@ -653,7 +653,7 @@ namespace Upland.InformationProcessor
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.NeighborhoodId == Id)
                     .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
-                    .OrderBy(p => p.MonthlyEarnings)
+                    .OrderBy(p => p.Mint)
                     .ToDictionary(p => p.Id, p => p);
             }
             else if (type.ToUpper() == "COLLECTION")
@@ -680,7 +680,7 @@ namespace Upland.InformationProcessor
                     .GetPropertiesByCityId(cityId)
                     .Where(p => collection.MatchingPropertyIds.Contains(p.Id))
                     .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
-                    .OrderBy(p => p.MonthlyEarnings)
+                    .OrderBy(p => p.Mint)
                     .ToDictionary(p => p.Id, p => p);
             }
             else if (type.ToUpper() == "STREET")
@@ -699,7 +699,7 @@ namespace Upland.InformationProcessor
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.StreetId == Id)
                     .Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_OWNED && p.Status != Consts.PROP_STATUS_FORSALE)
-                    .OrderBy(p => p.MonthlyEarnings)
+                    .OrderBy(p => p.Mint)
                     .ToDictionary(p => p.Id, p => p);
             }
             else
@@ -734,7 +734,7 @@ namespace Upland.InformationProcessor
 
                     propString += string.Format("{0},", property.Id);
                     propString += string.Format("{0},", property.Size);
-                    propString += string.Format("{0:F0},", Math.Round(property.MonthlyEarnings * 12 / 0.1728));
+                    propString += string.Format("{0:F0},", property.Mint);
                     propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
                     propString += string.Format("{0},", property.CityId);
                     propString += string.Format("{0},", property.Address);
@@ -765,7 +765,7 @@ namespace Upland.InformationProcessor
                     output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
                         , property.Id.ToString().PadLeft(idPad)
                         , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
-                        , string.Format("{0:N2}", Math.Round(property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
+                        , string.Format("{0:N2}", property.Mint).PadLeft(mintPad)
                         , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
                         , string.Format("{0}", cityId).PadLeft(cityPad)
                         , property.Address.PadLeft(addressPad)
@@ -799,7 +799,7 @@ namespace Upland.InformationProcessor
 
                 properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
-                    .OrderBy(p => p.MonthlyEarnings)
+                    .OrderBy(p => p.Mint)
                     .ToDictionary(p => p.Id, p => p);
             }
             else if (type.ToUpper() == "NEIGHBORHOOD")
@@ -817,7 +817,7 @@ namespace Upland.InformationProcessor
                 properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.NeighborhoodId == Id)
-                    .OrderBy(p => p.MonthlyEarnings)
+                    .OrderBy(p => p.Mint)
                     .ToDictionary(p => p.Id, p => p);
             }
             else if (type.ToUpper() == "STREET")
@@ -835,7 +835,7 @@ namespace Upland.InformationProcessor
                 properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.StreetId == Id)
-                    .OrderBy(p => p.MonthlyEarnings)
+                    .OrderBy(p => p.Mint)
                     .ToDictionary(p => p.Id, p => p);
             }
             else if (type.ToUpper() == "COLLECTION")
@@ -861,7 +861,7 @@ namespace Upland.InformationProcessor
                 properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => collection.MatchingPropertyIds.Contains(p.Id))
-                    .OrderBy(p => p.MonthlyEarnings)
+                    .OrderBy(p => p.Mint)
                     .ToDictionary(p => p.Id, p => p);
             }
             else
@@ -890,7 +890,7 @@ namespace Upland.InformationProcessor
 
                     propString += string.Format("{0},", property.Id);
                     propString += string.Format("{0},", property.Size);
-                    propString += string.Format("{0:F0},", Math.Round(property.MonthlyEarnings * 12 / 0.1728));
+                    propString += string.Format("{0:F0},", property.Mint);
                     propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
                     propString += string.Format("{0},", property.CityId);
                     propString += string.Format("{0},", property.Status);
@@ -933,7 +933,7 @@ namespace Upland.InformationProcessor
                     output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}- {9}"
                         , property.Id.ToString().PadLeft(idPad)
                         , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
-                        , string.Format("{0:N2}", Math.Round(property.MonthlyEarnings * 12 / 0.1728)).ToString().PadLeft(mintPad)
+                        , string.Format("{0:N2}", property.Mint).ToString().PadLeft(mintPad)
                         , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
                         , string.Format("{0}", cityId).PadLeft(cityPad)
                         , string.Format("{0}", property.Status).PadLeft(statusPad)

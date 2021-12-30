@@ -8,7 +8,7 @@ BEGIN
 	BEGIN TRY
 		IF @CityId = 0
 			BEGIN
-				SELECT P.Id, P.CityId, P.Address, P.StreetId, P.NeighborhoodId, P.Size, MonthlyEarnings*12/0.1728 AS 'Mint', P.Status, P.FSA, U.UplandUsername AS 'Owner', S.StructureType AS 'Building'
+				SELECT P.Id, P.CityId, P.Address, P.StreetId, P.NeighborhoodId, P.Size, P.Mint, P.Status, P.FSA, U.UplandUsername AS 'Owner', S.StructureType AS 'Building'
 				FROM UPL.Property P (NOLOCK)
 					LEFT JOIN UPL.EOSUser U (NOLOCK)
 						ON P.Owner = U.EOSAccount
@@ -18,7 +18,7 @@ BEGIN
 			END
 		ELSE
 			BEGIN
-				SELECT P.Id, P.CityId, P.Address, P.StreetId, P.NeighborhoodId, P.Size, MonthlyEarnings*12/0.1728 AS 'Mint', P.Status, P.FSA, U.UplandUsername AS 'Owner', S.StructureType AS 'Building'
+				SELECT P.Id, P.CityId, P.Address, P.StreetId, P.NeighborhoodId, P.Size, P.Mint, P.Status, P.FSA, U.UplandUsername AS 'Owner', S.StructureType AS 'Building'
 				FROM UPL.Property P (NOLOCK)
 					LEFT JOIN UPL.EOSUser U (NOLOCK)
 						ON P.Owner = U.EOSAccount
