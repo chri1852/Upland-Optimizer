@@ -15,6 +15,7 @@ using Upland.Infrastructure.Blockchain;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
 using Upland.Types;
+using Upland.Types.Types;
 
 class Program
 {
@@ -65,8 +66,8 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        //OptimizerRunRequest runRequest = new OptimizerRunRequest("cyclonix123", 7, true);
-        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
+        await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -75,11 +76,11 @@ class Program
 
         // Test Information Processing Functions
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
-        //output = await informationProcessor.GetCityPropertiesForSale(1, "Price", "All", "TXT");
+        //output = forSaleProcessor.GetCityPropertiesForSale(17, "Price", "All", "TXT");
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
-        // output = await informationProcessor.GetBuildingPropertiesForSale("City", 0, "markup", "all", "CSV");
+        //output = forSaleProcessor.GetBuildingPropertiesForSale("City", 7, "price", "all", "CSV");
         //output = informationProcessor.GetCityInformation("TXT"); 
-        //output = informationProcessor.GetAllProperties("Street", 31898, "CSV");
+        //output = informationProcessor.GetAllProperties("Neighborhood", 397, "CSV");
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
         //output = await informationProcessor.GetAssetsByTypeAndUserName("NFLPA", "stoney300", "txt");
         //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
@@ -89,6 +90,8 @@ class Program
         //output = informationProcessor.SearchProperties(10, "3101 W", "TXT");
         //output = forSaleProcessor.GetBuildingPropertiesForSale("city", 0, "Price", "all", "txt");
         //output = informationProcessor.GetAllProperties("NEIGHBORHOOD", 1300, "TXT");
+        //output = await profileAppraiser.RunAppraisal("Hornbrod", "TXT");
+        //output = informationProcessor.GetUnmintedProperties("CITY", 15, "NONFSA", "TXT");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
