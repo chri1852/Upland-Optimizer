@@ -144,5 +144,6 @@
     <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Neighborhood.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Street.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Collection.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Seller.sql" />
   </ItemGroup>
 </Project>

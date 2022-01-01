@@ -992,6 +992,52 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<UplandForSaleProp> GetPropertiesForSale_Seller(string uplandUsername, bool onlyBuildings)
+        {
+            List<UplandForSaleProp> properties = new List<UplandForSaleProp>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertiesForSale_Seller]";
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("OnlyBuildings", onlyBuildings));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            properties.Add(new UplandForSaleProp
+                            {
+                                Prop_Id = (long)reader["PropId"],
+                                Price = decimal.ToDouble((decimal)reader["Price"]),
+                                Currency = (string)reader["Currency"],
+                                Owner = (string)reader["Owner"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return properties;
+            }
+        }
+
         public Property GetPropertyByCityIdAndAddress(int cityId, string address)
         {
             Property property = new Property();

@@ -66,8 +66,8 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
-        await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("marklarx", 7, true);
+        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -90,8 +90,10 @@ class Program
         //output = informationProcessor.SearchProperties(10, "3101 W", "TXT");
         //output = forSaleProcessor.GetBuildingPropertiesForSale("city", 0, "Price", "all", "txt");
         //output = informationProcessor.GetAllProperties("NEIGHBORHOOD", 1300, "TXT");
-        //output = await profileAppraiser.RunAppraisal("Hornbrod", "TXT");
+        //output = await profileAppraiser.RunAppraisal("hornbrod", "TXT");
         //output = informationProcessor.GetUnmintedProperties("CITY", 15, "NONFSA", "TXT");
+        //output = forSaleProcessor.GetUsernamePropertiesForSale("sothbys", "Price", "all", "txt");
+        //output = forSaleProcessor.GetCollectionPropertiesForSale(223, "Price", "all", "txt");
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
@@ -121,10 +123,10 @@ class Program
         //await blockchainSendFinder.RunBlockChainUpdate();
     }
     */
-    
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    
+    */
 
     public async Task RunBotAsync()
     {

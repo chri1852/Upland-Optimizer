@@ -234,7 +234,7 @@ namespace Startup.Commands
             int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
             int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
 
-            if (registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < freeRuns)
+            if (registeredUser.RunCount < freeRuns)
             {
                 await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
                 return;
@@ -675,6 +675,35 @@ namespace Startup.Commands
             }
         }
 
+        [Command("UsernameForSale")]
+        public async Task UsernameForSale(string uplandUsername, string orderBy, string currency, string fileType = "CSV")
+        {
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            await ReplyAsync(string.Format("Running that query now {0}!", HelperFunctions.GetRandomName(_random)));
+            List<string> salesData = _forSaleProcessor.GetUsernamePropertiesForSale(uplandUsername.ToLower(), orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
+
+            if (salesData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), salesData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, salesData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("UserForSaleData_{0}.{1}", uplandUsername, fileType.ToUpper() == "CSV" ? "csv" : "txt"));
+            }
+        }
+
         [Command("UnmintedProperties")]
         public async Task UnmintedProperties(string type, int Id, string propType, string fileType = "CSV")
         {
@@ -792,6 +821,36 @@ namespace Startup.Commands
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
                 await Context.Channel.SendFileAsync(stream, string.Format("NeighborhoodSearchResults.{0}", fileType.ToUpper() == "CSV" ? "csv" : "txt"));
+            }
+        }
+
+        [Command("SearchCollections")]
+        public async Task SearchCollections(string name, string fileType = "TXT")
+        {
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            await ReplyAsync(string.Format("Can Do {0}! Searching for Collections!", HelperFunctions.GetRandomName(_random)));
+
+            List<string> collectionsData = _informationProcessor.SearchCollections(name.ToUpper(), fileType.ToUpper());
+
+            if (collectionsData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), collectionsData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, collectionsData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("CollectionSearchResults.{0}", fileType.ToUpper() == "CSV" ? "csv" : "txt"));
             }
         }
 
@@ -1007,20 +1066,22 @@ namespace Startup.Commands
             helpMenu.Add("   12. !CitysForSale");
             helpMenu.Add("   13. !BuildingsForSale");
             helpMenu.Add("   14. !StreetsForSale");
-            helpMenu.Add("   15. !UnmintedProperties");
-            helpMenu.Add("   16. !AllProperties");
-            helpMenu.Add("   17. !SearchStreets");
-            helpMenu.Add("   18. !SearchProperties");
-            helpMenu.Add("   19. !SearchNeighborhoods");
-            helpMenu.Add("   20. !GetAssets");
-            helpMenu.Add("   21. !GetSalesHistory");
-            helpMenu.Add("   22. !Appraisal");
-            helpMenu.Add("   23. !HowManyRuns");
+            helpMenu.Add("   15. !UsernameForSale");
+            helpMenu.Add("   16. !UnmintedProperties");
+            helpMenu.Add("   17. !AllProperties");
+            helpMenu.Add("   18. !SearchStreets");
+            helpMenu.Add("   19. !SearchProperties");
+            helpMenu.Add("   20. !SearchNeighborhoods");
+            helpMenu.Add("   21. !SearchCollections");
+            helpMenu.Add("   22. !GetAssets");
+            helpMenu.Add("   23. !GetSalesHistory");
+            helpMenu.Add("   24. !Appraisal");
+            helpMenu.Add("   25. !HowManyRuns");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   24. !OptimizerLevelRun");
-            helpMenu.Add("   25. !OptimizerWhatIfRun");
-            helpMenu.Add("   26. !OptimizerExcludeRun");
+            helpMenu.Add("   26. !OptimizerLevelRun");
+            helpMenu.Add("   27. !OptimizerWhatIfRun");
+            helpMenu.Add("   28. !OptimizerExcludeRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }

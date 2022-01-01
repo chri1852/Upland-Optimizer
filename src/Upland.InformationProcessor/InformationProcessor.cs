@@ -574,6 +574,81 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public List<string> SearchCollections(string name, string fileType)
+        {
+            List<string> output = new List<string>();
+            List<Collection> collections = _localDataManager.SearchCollections(name);
+
+            if (collections.Count == 0)
+            {
+                output.Add(string.Format("Sorry, No Collections Found for {0}.", name));
+                return output;
+            }
+
+            collections = collections.OrderBy(n => n.Name).OrderBy(n => n.CityId).ToList();
+
+            if (fileType == "TXT")
+            {
+                int idPad = 5;
+                int cityPad = 6;
+                int namePad = collections.OrderByDescending(n => n.Name.Length).First().Name.Length;
+                int categoryPad = 10;
+                int boostPad = 6;
+                int numberPropsPad = 20;
+                int rewardPad = 7;
+                int descriptionPad = collections.OrderByDescending(n => n.Description.Length).First().Description.Length;
+
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
+                    , "Id".PadLeft(idPad)
+                    , "CityId".PadLeft(cityPad)
+                    , "Name".PadLeft(namePad)
+                    , "Category".PadLeft(categoryPad)
+                    , "Boost".PadLeft(boostPad)
+                    , "Number of Properties".PadLeft(numberPropsPad)
+                    , "Reward".PadLeft(rewardPad)
+                    , "Description".PadLeft(descriptionPad)
+                ));
+                output.Add("");
+
+                foreach (Collection collection in collections)
+                {
+                    string collectionString = string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
+                        , collection.Id.ToString().PadLeft(idPad)
+                        , collection.CityId.ToString().PadLeft(cityPad)
+                        , collection.Name.PadLeft(namePad)
+                        , HelperFunctions.GetCollectionCategory(collection.Category).PadLeft(categoryPad)
+                        , string.Format("{0:N2}", collection.Boost).PadLeft(boostPad)
+                        , string.Format("{0:N0}", collection.NumberOfProperties).PadLeft(numberPropsPad)
+                        , string.Format("{0:N0}", collection.Reward).PadLeft(rewardPad)
+                        , collection.Description.PadLeft(descriptionPad)
+                    );
+
+                    output.Add(collectionString);
+                }
+            }
+            else
+            {
+                output.Add("Id,CityId,Name,Category,Boost,NumberOfProperties,Reward,Description");
+                foreach (Collection collection in collections)
+                {
+                    string collectionString = string.Format("{0},{1},{2},{3},{4},{5},{6},{7}"
+                        , collection.Id.ToString()
+                        , collection.CityId.ToString()
+                        , collection.Name.Replace(',', ' ')
+                        , HelperFunctions.GetCollectionCategory(collection.Category)
+                        , string.Format("{0}", collection.Boost)
+                        , string.Format("{0}", collection.NumberOfProperties)
+                        , string.Format("{0}", collection.Reward)
+                        , collection.Description.Replace(',', ' ')
+                    );
+
+                    output.Add(collectionString);
+                }
+            }
+
+            return output;
+        }
+
         public List<string> SearchProperties(int cityId, string address, string fileType)
         {
             List<string> output = new List<string>();

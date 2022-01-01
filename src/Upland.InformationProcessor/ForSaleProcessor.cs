@@ -385,5 +385,53 @@ namespace Upland.InformationProcessor
 
             return output;
         }
+
+        public List<string> GetUsernamePropertiesForSale(string uplandUsername, string orderBy, string currency, string fileType)
+        {
+            List<string> output = new List<string>();
+
+            List<UplandForSaleProp> forSaleProps = _localDataManager.GetPropertiesForSale_Seller(uplandUsername, false);
+
+            if (currency == "USD")
+            {
+                forSaleProps = forSaleProps.Where(p => p.Currency == "USD").ToList();
+            }
+            else if (currency == "UPX")
+            {
+                forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
+            }
+
+            Dictionary<long, Property> properties = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(f => f.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
+
+            if (forSaleProps.Count == 0)
+            {
+                // Nothing on sale
+                output.Add(string.Format("There is nothing for sale by {0}.", uplandUsername));
+                return output;
+            }
+
+            if (orderBy.ToUpper() == "MARKUP")
+            {
+                forSaleProps = forSaleProps.OrderBy(p => 100 * p.SortValue / properties[p.Prop_Id].Mint).ToList();
+            }
+            else // PRICE
+            {
+                forSaleProps = forSaleProps.OrderBy(p => p.SortValue).ToList();
+            }
+
+            // Lets grab the Structures
+            Dictionary<long, string> propertyStructures = _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+
+            if (fileType == "CSV")
+            {
+                output.AddRange(HelperFunctions.CreateForSaleCSVString(forSaleProps, properties, propertyStructures));
+            }
+            else
+            {
+                output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", uplandUsername), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
+            }
+
+            return output;
+        }
     }
 }

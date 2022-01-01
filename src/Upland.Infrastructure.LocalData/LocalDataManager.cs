@@ -400,6 +400,23 @@ namespace Upland.Infrastructure.LocalData
             return matches;
         }
 
+        public List<Collection> SearchCollections(string name)
+        {
+            name = name.ToUpper();
+            List<Collection> collections = localDataRepository.GetCollections();
+            List<Collection> matches = new List<Collection>();
+
+            foreach (Collection collection in collections)
+            {
+                if (collection.Name.ToUpper().Contains(name))
+                {
+                    matches.Add(collection);
+                }
+            }
+
+            return matches;
+        }
+
         public List<PropertySearchEntry> SearchProperties(int cityId, string address)
         {
             return localDataRepository.SearchProperties(cityId, address);
@@ -618,6 +635,11 @@ namespace Upland.Infrastructure.LocalData
         public List<UplandForSaleProp> GetPropertiesForSale_Collection(int collectionId, bool onlyBuildings)
         {
             return localDataRepository.GetPropertiesForSale_Collection(collectionId, onlyBuildings);
+        }
+
+        public List<UplandForSaleProp> GetPropertiesForSale_Seller(string uplandUsername, bool onlyBuildings)
+        {
+            return localDataRepository.GetPropertiesForSale_Seller(uplandUsername, onlyBuildings);
         }
 
         public string GetConfigurationValue(string name)

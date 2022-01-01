@@ -103,30 +103,34 @@ namespace Startup
                     return "13";
                 case "STREETSFORSALE":
                     return "14";
-                case "UNMINTEDPROPERTIES":
+                case "USERNAMEFORSALE":
                     return "15";
-                case "ALLPROPERTIES":
+                case "UNMINTEDPROPERTIES":
                     return "16";
-                case "SEARCHSTREETS":
+                case "ALLPROPERTIES":
                     return "17";
-                case "SEARCHPROPERTIES":
+                case "SEARCHSTREETS":
                     return "18";
-                case "SEARCHNEIGHBORHOODS":
+                case "SEARCHPROPERTIES":
                     return "19";
-                case "GETASSETS":
+                case "SEARCHNEIGHBORHOODS":
                     return "20";
-                case "GETSALESHISTORY":
+                case "SEARCHCOLLECTIONS":
                     return "21";
-                case "APPRAISAL":
+                case "GETASSETS":
                     return "22";
-                case "HOWMANYRUNS":
+                case "GETSALESHISTORY":
                     return "23";
-                case "OPTIMIZERLEVELRUN":
+                case "APPRAISAL":
                     return "24";
-                case "OPTIMIZERWHATIFRUN":
+                case "HOWMANYRUNS":
                     return "25";
-                case "OPTIMIZEREXCLUDERUN":
+                case "OPTIMIZERLEVELRUN":
                     return "26";
+                case "OPTIMIZERWHATIFRUN":
+                    return "27";
+                case "OPTIMIZEREXCLUDERUN":
+                    return "28";
                 default:
                     return "0";
             }
@@ -289,6 +293,20 @@ namespace Startup
                     helpOutput.Add("The above command finds all properties for sale for USD on Main St in Kansas City, and returns a txt file from lowest to greatest price.");
                     break;
                 case "15":
+                    helpOutput.Add(string.Format("!UsernameForSale"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command will find props for sale by the given upland username, and return a csv file listing in order of MARKUP or PRICE, for sales in ALL currencys, USD, or UPX. If you want a text file add TXT to the end of the command."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !UsernameForSale hornbrod MARKUP UPX");
+                    helpOutput.Add("The above command finds all properties for sale for UPX by hornbrod, and returns a csv file from lowest to greatest markup.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !UsernameForSale sothbys PRICE ALL");
+                    helpOutput.Add("The above command finds all properties for sale by sothbys, and returns a csv from lowest to greatest price (USD = UPX * 1000).");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !UsernameForSale ben68 PRICE USD TXT");
+                    helpOutput.Add("The above command finds all properties for sale for USD by ben68, and returns a txt file from lowest to greatest price.");
+                    break;
+                case "16":
                     helpOutput.Add(string.Format("!UnmintedProperties"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will find unminted properties in the given type and id, and return a csv file listing in order of mint price."));
@@ -305,7 +323,7 @@ namespace Startup
                     helpOutput.Add("EX: !UnmintedProperties Collection 2 ALL TXT");
                     helpOutput.Add("The above command finds all unminted properties in the Mission District Collection, and returns a txt file from lowest to greatest mint price.");
                     break;
-                case "16":
+                case "17":
                     helpOutput.Add(string.Format("!AllProperties"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will find all properties in the given type and id, and return a csv file listing in order of mint price. On the city level this will only work for Rutherford and Santa Clara."));
@@ -322,7 +340,7 @@ namespace Startup
                     helpOutput.Add("EX: !AllProperties Collection 2 TXT");
                     helpOutput.Add("The above command finds all properties in the Mission District Collection, and returns a txt file from lowest to greatest mint price.");
                     break;
-                case "17":
+                case "18":
                     helpOutput.Add(string.Format("!SearchStreets"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command searches for streets with the given name, and return a txt file with the matching street names."));
@@ -333,7 +351,7 @@ namespace Startup
                     helpOutput.Add("EX: !SearchStreets Broadway csv");
                     helpOutput.Add("The above command finds all streets with BROADWAY in their name, and returns a csv file.");
                     break;
-                case "18":
+                case "19":
                     helpOutput.Add(string.Format("!SearchProperties"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command searches for properties with the given cityId and address, and return a txt file with the matching street names."));
@@ -347,7 +365,7 @@ namespace Startup
                     helpOutput.Add("EX: !SearchProperties 29 \"Fordham\" csv");
                     helpOutput.Add("The above command finds all properties in the Bronx with Fordham in their address, and returns a csv file.");
                     break;
-                case "19":
+                case "20":
                     helpOutput.Add(string.Format("!SearchNeighborhoods"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command searches for neighborhoods with the given name, and return a txt file with the matching neighborhoods."));
@@ -358,7 +376,18 @@ namespace Startup
                     helpOutput.Add("EX: !SearchNeighborhoods South csv");
                     helpOutput.Add("The above command finds all neighborhoods with SOUTH in their name, and returns a csv file.");
                     break;
-                case "20":
+                case "21":
+                    helpOutput.Add(string.Format("!SearchCollections"));
+                    helpOutput.Add("");
+                    helpOutput.Add(string.Format("This command searches for collections with the given name, and return a txt file with the matching collections."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !SearchCollections Miss");
+                    helpOutput.Add("The above command finds all neighborhoods with MISS in their name and returns a txt file.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !SearchCollections May csv");
+                    helpOutput.Add("The above command finds all neighborhoods with MAY in their name, and returns a csv file.");
+                    break;
+                case "22":
                     helpOutput.Add(string.Format("!GetAssets"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command returns the assets of the given type owned by the given username."));
@@ -375,7 +404,7 @@ namespace Startup
                     helpOutput.Add("EX: !GetAssets Hornbrod Decoration CSV");
                     helpOutput.Add("The above command finds all Decorations owned by Hornbrod and returns a csv file.");
                     break;
-                case "21":
+                case "23":
                     helpOutput.Add(string.Format("!GetSalesHistory"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command returns the sales history for a given type (City, Neighborhood, Collection, Street, Property, Buyer, Seller) and its identifier. Note this does not include property swaps, only upx and fiat transactions."));
@@ -392,7 +421,7 @@ namespace Startup
                     helpOutput.Add("EX: !GetSalesHistory Property \"10, 9843 S Exchange Ave\" TXT");
                     helpOutput.Add("The above command finds the sales history for 9843 S Exchange Ave in Chicago, and returns a txt file sorted by date");
                     break;
-                case "22":
+                case "24":
                     helpOutput.Add(string.Format("!Appraisal"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command returns an appraisal for all your properties based on the last 4 weeks of market sales, and the floor. Non-supporters will only be able to run this a limited number of times before needing to earn more runs by sending 500 upx to the locations in the locations channel. Note Ultra-Rares, very large properties, or properties in areas with low numbers of sales might have strange numbers."));
@@ -404,7 +433,7 @@ namespace Startup
                     helpOutput.Add("The above command runs your appraisal and returns a csv file.");
                     helpOutput.Add("");
                     break;
-                case "23":
+                case "25":
                     helpOutput.Add(string.Format("!HowManyRuns"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command lets you know how many runs you have used, and how to get more."));
@@ -413,14 +442,14 @@ namespace Startup
                     helpOutput.Add("This command lets you know how many runs you have used, and how to get more.");
                     helpOutput.Add("");
                     break;
-                case "24":
+                case "26":
                     helpOutput.Add(string.Format("!OptimizerLevelRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with a level you specify between 3 and 10. Levels 9 and especially 10 can take quite some time to run. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
                     helpOutput.Add("");
                     helpOutput.Add("EX: !OptimizerLevelRun 5");
                     break;
-                case "25":
+                case "27":
                     helpOutput.Add(string.Format("!OptimizerWhatIfRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run with some additional fake properties in the requested collection. You will need to specify the collection Id to add the properties to, the number of properties to add, and the average monthly upx of the properties. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
@@ -428,7 +457,7 @@ namespace Startup
                     helpOutput.Add("EX: !OptimizerWhatIfRun 188 3 250.10");
                     helpOutput.Add("The above command will run a WhatIfRun with your current properties, and 3 fake properties in the French Quarter collection with an average monthly upx earnings of 250.10 upx.");
                     break;
-                case "26":
+                case "28":
                     helpOutput.Add(string.Format("!OptimizerExcludeRun"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will run an optimizer run and exclude a list of collectionIds seperated by a comma from optimization. You can get the results and check the status with the standard !OptimizerStatus and !OptimizerResults commands."));
