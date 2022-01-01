@@ -123,10 +123,10 @@ class Program
         //await blockchainSendFinder.RunBlockChainUpdate();
     }
     */
-    /*
+    
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    
 
     public async Task RunBotAsync()
     {
