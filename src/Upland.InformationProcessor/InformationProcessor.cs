@@ -523,6 +523,57 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public List<string> SearchNeighborhoods(string name, string fileType)
+        {
+            List<string> output = new List<string>();
+            List<Neighborhood> neighborhoods = _localDataManager.SearchNeighborhoods(name);
+
+            if (neighborhoods.Count == 0)
+            {
+                output.Add(string.Format("Sorry, No Neighborhoods Found for {0}.", name));
+                return output;
+            }
+
+            neighborhoods = neighborhoods.OrderBy(n => n.Name).OrderBy(n => n.CityId).ToList();
+
+            if (fileType == "TXT")
+            {
+                int idPad = 5;
+                int cityPad = 6;
+                int namePad = neighborhoods.OrderByDescending(n => n.Name.Length).First().Name.Length;
+
+                output.Add(string.Format("{0} - {1} - {2}", "Id".PadLeft(idPad), "CityId".PadLeft(cityPad), "Name".PadLeft(namePad)));
+                output.Add("");
+
+                foreach (Neighborhood neighborhood in neighborhoods)
+                {
+                    string neighborhoodString = string.Format("{0} - {1} - {2}"
+                        , neighborhood.Id.ToString().PadLeft(idPad)
+                        , neighborhood.CityId.ToString().PadLeft(cityPad)
+                        , neighborhood.Name.PadLeft(namePad)
+                    );
+
+                    output.Add(neighborhoodString);
+                }
+            }
+            else
+            {
+                output.Add("Id,CityId,Name");
+                foreach (Neighborhood neighborhood in neighborhoods)
+                {
+                    string neighborhoodString = string.Format("{0},{1},{2},"
+                        , neighborhood.Id.ToString()
+                        , neighborhood.CityId.ToString()
+                        , neighborhood.Name.Replace(',', ' ')
+                    );
+
+                    output.Add(neighborhoodString);
+                }
+            }
+
+            return output;
+        }
+
         public List<string> SearchProperties(int cityId, string address, string fileType)
         {
             List<string> output = new List<string>();

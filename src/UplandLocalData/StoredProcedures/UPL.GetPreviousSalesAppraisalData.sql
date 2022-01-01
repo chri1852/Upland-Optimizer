@@ -7,8 +7,10 @@ BEGIN
 			Type VARCHAR(20),
 			Id INT,
 			Currency VARCHAR(3),
-			PerUp2 Decimal(11,2)
+			PerUp2 Decimal(11,2),
+			AverageSize INT
 		)
+
 		DECLARE @ValidStreets TABLE
 		(
 			Id INT
@@ -26,7 +28,7 @@ BEGIN
 		SET @PreviousSalesData = DATEADD(WW,-4,GETDATE())
 
 		INSERT INTO @PreviousSale
-		SELECT 'STREET', P.StreetId, 'UPX', SUM(S.Amount)/ SUM(P.Size)
+		SELECT 'STREET', P.StreetId, 'UPX', SUM(S.Amount)/ SUM(P.Size), SUM(P.Size)/COUNT(*)
 		FROM UPL.SaleHistory S (NOLOCK)
 			JOIN UPL.Property P (NOLOCK)
 				ON S.PropId = P.Id
@@ -44,7 +46,7 @@ BEGIN
 		HAVING COUNT(*) > 25
 
 		INSERT INTO @PreviousSale
-		SELECT 'NEIGHBORHOOD', P.NeighborhoodId, 'UPX', SUM(S.Amount)/ SUM(P.Size)
+		SELECT 'NEIGHBORHOOD', P.NeighborhoodId, 'UPX', SUM(S.Amount)/ SUM(P.Size), SUM(P.Size)/COUNT(*)
 		FROM UPL.SaleHistory S (NOLOCK)
 			JOIN UPL.Property P (NOLOCK)
 				ON S.PropId = P.Id
@@ -61,7 +63,7 @@ BEGIN
 		HAVING COUNT(*) > 25
 
 		INSERT INTO @PreviousSale
-		SELECT 'COLLECTION', CP.CollectionId, 'UPX', SUM(S.Amount)/ SUM(P.Size)
+		SELECT 'COLLECTION', CP.CollectionId, 'UPX', SUM(S.Amount)/ SUM(P.Size), SUM(P.Size)/COUNT(*)
 		FROM UPL.SaleHistory S (NOLOCK)
 			JOIN UPL.Property P (NOLOCK)
 				ON S.PropId = P.Id
@@ -82,7 +84,7 @@ BEGIN
 		HAVING COUNT(*) > 25
 
 		INSERT INTO @PreviousSale
-		SELECT 'COLLECTION', CP.CollectionId, 'UPX', SUM(S.Amount)/ SUM(P.Size)
+		SELECT 'COLLECTION', CP.CollectionId, 'UPX', SUM(S.Amount)/ SUM(P.Size), SUM(P.Size)/COUNT(*)
 		FROM UPL.SaleHistory S (NOLOCK)
 			JOIN UPL.Property P (NOLOCK)
 				ON S.PropId = P.Id
@@ -103,7 +105,7 @@ BEGIN
 		HAVING COUNT(*) > 25
 
 		INSERT INTO @PreviousSale
-		SELECT 'COLLECTION', CP.CollectionId, 'UPX', SUM(S.Amount)/ SUM(P.Size)
+		SELECT 'COLLECTION', CP.CollectionId, 'UPX', SUM(S.Amount)/ SUM(P.Size), SUM(P.Size)/COUNT(*)
 		FROM UPL.SaleHistory S (NOLOCK)
 			JOIN UPL.Property P (NOLOCK)
 				ON S.PropId = P.Id

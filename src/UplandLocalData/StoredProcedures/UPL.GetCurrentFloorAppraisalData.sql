@@ -23,6 +23,27 @@ BEGIN
 		HAVING COUNT(*) > 50
 
 		INSERT INTO @CurrentFloor
+		SELECT 'CITY', C.CityId, 'UPX', PH.Amt
+		FROM (SELECT DISTINCT CityId FROM UPL.Property (NOLOCK)) C
+			JOIN (
+				SELECT P.CityId, MIN(H.Amount) AS 'Amt'
+				FROM UPL.Property P (NOLOCK)
+					JOIN UPL.SaleHistory H (NOLOCK)
+						ON P.Id = H.PropId
+					LEFT JOIN UPL.PropertyStructure PS (NOLOCK)
+						ON H.PropId = PS.PropertyId
+				WHERE P.Id = H.PropId
+					AND H.BuyerEOS IS NULL
+					AND H.SellerEOS IS NOT NULL
+					AND H.OfferPropId IS NULL
+					AND H.AmountFiat IS NULL 
+					AND PS.StructureType IS NULL
+				GROUP BY P.CityId
+				HAVING COUNT(*) > 50
+			) AS PH
+				ON C.CityID = PH.CityId
+
+		INSERT INTO @CurrentFloor
 		SELECT 'STREET', S.Id, 'UPX', PH.Amt
 		FROM UPL.Street S (NOLOCK)
 			JOIN (

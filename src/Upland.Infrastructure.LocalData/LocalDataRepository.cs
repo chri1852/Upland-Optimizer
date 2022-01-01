@@ -415,6 +415,7 @@ namespace Upland.Infrastructure.LocalData
                                     Id = (int)reader["Id"],
                                     Currency = (string)reader["Currency"],
                                     Value = (decimal)reader["PerUp2"],
+                                    AverageSize = (int)reader[ "AverageSize"]
                                 }
                              );
                         }

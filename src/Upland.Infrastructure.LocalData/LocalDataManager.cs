@@ -383,6 +383,23 @@ namespace Upland.Infrastructure.LocalData
             return matches;
         }
 
+        public List<Neighborhood> SearchNeighborhoods(string name)
+        {
+            name = name.ToUpper();
+            List<Neighborhood> neighborhoods = localDataRepository.GetNeighborhoods();
+            List<Neighborhood> matches = new List<Neighborhood>();
+
+            foreach (Neighborhood neighborhood in neighborhoods)
+            {
+                if (neighborhood.Name.ToUpper().Contains(name))
+                {
+                    matches.Add(neighborhood);
+                }
+            }
+
+            return matches;
+        }
+
         public List<PropertySearchEntry> SearchProperties(int cityId, string address)
         {
             return localDataRepository.SearchProperties(cityId, address);

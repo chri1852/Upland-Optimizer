@@ -765,6 +765,36 @@ namespace Startup.Commands
             }
         }
 
+        [Command("SearchNeighborhoods")]
+        public async Task SearchNeighborhoods(string name, string fileType = "TXT")
+        {
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            await ReplyAsync(string.Format("Sounds Great {0}! Searching for Neighborhoods!", HelperFunctions.GetRandomName(_random)));
+
+            List<string> neighborhoodsData = _informationProcessor.SearchNeighborhoods(name.ToUpper(), fileType.ToUpper());
+
+            if (neighborhoodsData.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), neighborhoodsData[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, neighborhoodsData));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("NeighborhoodSearchResults.{0}", fileType.ToUpper() == "CSV" ? "csv" : "txt"));
+            }
+        }
+
         [Command("SearchProperties")]
         public async Task SearchStreets(int cityId, string address, string fileType = "TXT")
         {
@@ -981,15 +1011,16 @@ namespace Startup.Commands
             helpMenu.Add("   16. !AllProperties");
             helpMenu.Add("   17. !SearchStreets");
             helpMenu.Add("   18. !SearchProperties");
-            helpMenu.Add("   19. !GetAssets");
-            helpMenu.Add("   20. !GetSalesHistory");
-            helpMenu.Add("   21. !Appraisal");
-            helpMenu.Add("   22. !HowManyRuns");
+            helpMenu.Add("   19. !SearchNeighborhoods");
+            helpMenu.Add("   20. !GetAssets");
+            helpMenu.Add("   21. !GetSalesHistory");
+            helpMenu.Add("   22. !Appraisal");
+            helpMenu.Add("   23. !HowManyRuns");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   23. !OptimizerLevelRun");
-            helpMenu.Add("   24. !OptimizerWhatIfRun");
-            helpMenu.Add("   25. !OptimizerExcludeRun");
+            helpMenu.Add("   24. !OptimizerLevelRun");
+            helpMenu.Add("   25. !OptimizerWhatIfRun");
+            helpMenu.Add("   26. !OptimizerExcludeRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }

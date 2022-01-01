@@ -19,13 +19,15 @@ namespace Startup.Commands
         private readonly InformationProcessor _informationProcessor;
         private readonly ResyncProcessor _resyncProcessor;
         private readonly LocalDataManager _localDataManager;
+        private readonly ProfileAppraiser _profileAppraiser;
 
-        public AdminCommands(InformationProcessor informationProcessor, ResyncProcessor resyncProcessor, LocalDataManager localDataManager)
+        public AdminCommands(InformationProcessor informationProcessor, ResyncProcessor resyncProcessor, LocalDataManager localDataManager, ProfileAppraiser profileAppraiser)
         {
             _random = new Random();
             _informationProcessor = informationProcessor;
             _resyncProcessor = resyncProcessor;
             _localDataManager = localDataManager;
+            _profileAppraiser = profileAppraiser;
         }
 
         private async Task<bool> checkIfAdmin(ulong discordUserId)
@@ -103,6 +105,43 @@ namespace Startup.Commands
                     stream.Seek(0, SeekOrigin.Begin);
                     await Context.Channel.SendFileAsync(stream, "AdminOptimizerResults.txt");
                 }
+            }
+        }
+
+        [Command("AdminAppraisal")]
+        public async Task AdminAppraisal(string uplandUsername)
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            List<string> appraiserOutput = new List<string>();
+
+            try
+            {
+                appraiserOutput = await _profileAppraiser.RunAppraisal(uplandUsername.ToLower(), "TXT");
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("Commands - Appraisal", ex.Message);
+                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            if (appraiserOutput.Count == 1)
+            {
+                // An Error Occured
+                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), appraiserOutput[0]));
+                return;
+            }
+
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, appraiserOutput));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("{0}_Appraisal.txt", uplandUsername));
             }
         }
 

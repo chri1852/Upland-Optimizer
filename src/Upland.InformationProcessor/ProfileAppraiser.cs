@@ -12,8 +12,8 @@ namespace Upland.InformationProcessor
 {
     public class ProfileAppraiser
     {
-        private Dictionary<Tuple<string, int, string>, decimal> _previousSalesData;
-        private Dictionary<Tuple<string, int, string>, decimal> _currentFloorData;
+        private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _previousSalesData;
+        private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _currentFloorData;
         private Dictionary<string, double> _buildingData;
         private Dictionary<long, string> _propertyStructures;
 
@@ -61,27 +61,40 @@ namespace Upland.InformationProcessor
                 PropertyAppraisal propertyAppraisal = new PropertyAppraisal();
                 propertyAppraisal.Notes = new List<string>();
                 propertyAppraisal.Property = property;
-                List<decimal> upxValues = new List<decimal>();
-                decimal maxFloor = 0;
+
+                List<decimal> salesValues = new List<decimal>();
+                List<decimal> floorValues = new List<decimal>();
+
                 int maxCollectionCategory = 0;
+                double maxFloor = 0;
+                double upperBound = propertyAppraisal.Property.Mint;
+                bool isLargeProp = false;
+
+                // City
+                Tuple<string, int, string> cityTupleUPX = new Tuple<string, int, string>("CITY", property.CityId, "UPX");
+                if (_currentFloorData.ContainsKey(cityTupleUPX)) { floorValues.Add(_currentFloorData[cityTupleUPX].Value); }
 
                 // Street
                 Tuple<string, int, string> streetTupleUPX = new Tuple<string, int, string>("STREET", property.StreetId, "UPX");
 
-                if (_previousSalesData.ContainsKey(streetTupleUPX)) { upxValues.Add(_previousSalesData[streetTupleUPX] * property.Size); }
-                if (_currentFloorData.ContainsKey(streetTupleUPX)) { upxValues.Add(_currentFloorData[streetTupleUPX]); }
-
-                if (_currentFloorData.ContainsKey(streetTupleUPX) && _currentFloorData[streetTupleUPX] > maxFloor) { maxFloor = _currentFloorData[streetTupleUPX]; }
+                if (_previousSalesData.ContainsKey(streetTupleUPX)) 
+                { 
+                    salesValues.Add(_previousSalesData[streetTupleUPX].Value * property.Size);
+                    isLargeProp = isLargeProp ? isLargeProp : propertyAppraisal.Property.Size > _previousSalesData[streetTupleUPX].AverageSize * 10;
+                }
+                if (_currentFloorData.ContainsKey(streetTupleUPX)) { floorValues.Add(_currentFloorData[streetTupleUPX].Value); }
 
                 // Neighborhood
                 if (property.NeighborhoodId != null)
                 {
                     Tuple<string, int, string> neighborhoodTupleUPX = new Tuple<string, int, string>("NEIGHBORHOOD", property.NeighborhoodId.Value, "UPX");
 
-                    if (_previousSalesData.ContainsKey(neighborhoodTupleUPX)) { upxValues.Add(_previousSalesData[neighborhoodTupleUPX] * property.Size); }
-                    if (_currentFloorData.ContainsKey(neighborhoodTupleUPX)) { upxValues.Add(_currentFloorData[neighborhoodTupleUPX]); }
-
-                    if (_currentFloorData.ContainsKey(neighborhoodTupleUPX) && _currentFloorData[neighborhoodTupleUPX] > maxFloor) { maxFloor = _currentFloorData[neighborhoodTupleUPX]; }
+                    if (_previousSalesData.ContainsKey(neighborhoodTupleUPX)) 
+                    { 
+                        salesValues.Add(_previousSalesData[neighborhoodTupleUPX].Value * property.Size);
+                        isLargeProp = isLargeProp ? isLargeProp : propertyAppraisal.Property.Size > _previousSalesData[neighborhoodTupleUPX].AverageSize * 10;
+                    }
+                    if (_currentFloorData.ContainsKey(neighborhoodTupleUPX)) { floorValues.Add(_currentFloorData[neighborhoodTupleUPX].Value); }
                 }
                 else
                 {
@@ -93,36 +106,82 @@ namespace Upland.InformationProcessor
                 {
                     Tuple<string, int, string> collectionTupleUPX = new Tuple<string, int, string>("COLLECTION", collection.Id, "UPX");
 
-                    if (_previousSalesData.ContainsKey(collectionTupleUPX)) { upxValues.Add(_previousSalesData[collectionTupleUPX] * property.Size); }
-                    if (_currentFloorData.ContainsKey(collectionTupleUPX)) { upxValues.Add(_currentFloorData[collectionTupleUPX]); }
-
-                    if (_currentFloorData.ContainsKey(collectionTupleUPX) && _currentFloorData[collectionTupleUPX] > maxFloor) { maxFloor = _currentFloorData[collectionTupleUPX]; }
+                    if (_previousSalesData.ContainsKey(collectionTupleUPX)) 
+                    { 
+                        salesValues.Add(_previousSalesData[collectionTupleUPX].Value * property.Size);
+                        isLargeProp = isLargeProp ? isLargeProp : propertyAppraisal.Property.Size > _previousSalesData[collectionTupleUPX].AverageSize * 10;
+                    }
+                    if (_currentFloorData.ContainsKey(collectionTupleUPX)) { floorValues.Add(_currentFloorData[collectionTupleUPX].Value); }
 
                     if (maxCollectionCategory < collection.Category) { maxCollectionCategory = collection.Category; }
                 }
 
-                if (upxValues.Count == 0)
+                // Handle Low Data
+                if (salesValues.Count == 0 && floorValues.Count == 0)
                 {
-                    upxValues.Add((int)Math.Round(property.Mint));
-                    propertyAppraisal.Notes.Add("Not Enough Sales Data");
-                }
-
-                upxValues = upxValues.GroupBy(v => v).Select(g => g.First()).OrderByDescending(v => v).ToList();
-
-                if (maxFloor > upxValues[0])
-                {
-                    propertyAppraisal.UPX_Upper = (double)maxFloor;
-                    propertyAppraisal.UPX_Lower = (double)upxValues[0];
+                    propertyAppraisal.UPX_Upper = propertyAppraisal.Property.Mint;
+                    propertyAppraisal.UPX_Lower = 0;
+                    propertyAppraisal.Notes.Add("No Data Found To Calculate Value");
                 }
                 else
                 {
-                    propertyAppraisal.UPX_Upper = (double)upxValues[0];
-                    propertyAppraisal.UPX_Lower = (double)maxFloor;
+                    if (salesValues.Count == 0)
+                    {
+                        salesValues.Add((int)Math.Round(property.Mint));
+                        propertyAppraisal.Notes.Add("No Sales Data");
+                    }
+
+                    if (floorValues.Count == 0)
+                    {
+                        salesValues.Add((int)Math.Round(property.Mint));
+                        propertyAppraisal.Notes.Add("No Floor Data");
+                    }
+                }
+
+                if (floorValues.Count > 0)
+                {
+                    maxFloor = (double)floorValues.Max(v => v);
+                }
+
+                if(floorValues.Count + salesValues.Count > 0)
+                {
+                    salesValues.AddRange(floorValues);
+                    upperBound = (double)salesValues.GroupBy(v => v).Select(g => g.First()).OrderByDescending(v => v).First();
+                }
+
+                if (maxFloor > upperBound)
+                {
+                    propertyAppraisal.UPX_Upper = maxFloor;
+                    propertyAppraisal.UPX_Lower = upperBound;
+                }
+                else if(upperBound > maxFloor)
+                {
+                    propertyAppraisal.UPX_Upper = upperBound;
+                    propertyAppraisal.UPX_Lower = maxFloor;
+                }
+                else
+                {
+                    // max floor and upxValues[0] are equal, drop one and put the mint in
+                    if (propertyAppraisal.Property.Mint >= maxFloor)
+                    {
+                        propertyAppraisal.UPX_Upper = propertyAppraisal.Property.Mint;
+                        propertyAppraisal.UPX_Lower = maxFloor;
+                    }
+                    else
+                    {
+                        propertyAppraisal.UPX_Upper = maxFloor;
+                        propertyAppraisal.UPX_Lower = maxFloor;
+                    }
                 }
 
                 if (maxCollectionCategory == 5)
                 {
                     propertyAppraisal.Notes.Add(string.Format("Ultra Rare"));
+                }
+
+                if (isLargeProp)
+                {
+                    propertyAppraisal.Notes.Add(string.Format("Large Property"));
                 }
 
                 if (_propertyStructures.ContainsKey(property.Id))
@@ -230,9 +289,9 @@ namespace Upland.InformationProcessor
             if (_expirationDate == null || _expirationDate < DateTime.Now)
             {
                 _previousSalesData = _localDataManager.GetPreviousSalesAppraisalData()
-                    .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d.Value);
+                    .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                 _currentFloorData = _localDataManager.GetCurrentFloorAppraisalData()
-                    .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d.Value);
+                    .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                 _buildingData = _localDataManager.GetBuildingAppraisalData()
                     .ToDictionary(d => d.Item1, d => d.Item2);
                 _propertyStructures = _localDataManager.GetPropertyStructures()
