@@ -29,23 +29,6 @@ namespace Upland.InformationProcessor
             List<CollatedStatsObject> neighborhoodStats = _localDataManager.GetNeighborhoodStats();
             List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods().Where(n => n.CityId == 16).OrderBy(n => n.Id).ToList();
 
-            /*
-            List<Color> hoodColors = new List<Color>();
-            hoodColors.Add(Color.FromArgb(16, 8, 255));
-            hoodColors.Add(Color.FromArgb(16, 9, 255));
-            hoodColors.Add(Color.FromArgb(16, 4, 255));
-            hoodColors.Add(Color.FromArgb(16, 12, 255));
-            hoodColors.Add(Color.FromArgb(16, 10, 255));
-            hoodColors.Add(Color.FromArgb(16, 1, 255));
-            hoodColors.Add(Color.FromArgb(16, 3, 255));
-            hoodColors.Add(Color.FromArgb(16, 7, 255));
-            hoodColors.Add(Color.FromArgb(16, 13, 255));
-            hoodColors.Add(Color.FromArgb(16, 2, 255));
-            hoodColors.Add(Color.FromArgb(16, 5, 255));
-            hoodColors.Add(Color.FromArgb(16, 6, 255));
-            hoodColors.Add(Color.FromArgb(16, 11, 255));
-            hoodColors.Add(Color.FromArgb(16, 14, 255));
-            */
             ColorPalette palette = testMap.Palette;
 
             foreach (Neighborhood neighborhood in neighborhoods)
