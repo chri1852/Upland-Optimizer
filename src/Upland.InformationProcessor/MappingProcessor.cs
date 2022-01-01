@@ -29,6 +29,7 @@ namespace Upland.InformationProcessor
             List<CollatedStatsObject> neighborhoodStats = _localDataManager.GetNeighborhoodStats();
             List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods().Where(n => n.CityId == 16).OrderBy(n => n.Id).ToList();
 
+            /*
             List<Color> hoodColors = new List<Color>();
             hoodColors.Add(Color.FromArgb(16, 8, 255));
             hoodColors.Add(Color.FromArgb(16, 9, 255));
@@ -44,9 +45,8 @@ namespace Upland.InformationProcessor
             hoodColors.Add(Color.FromArgb(16, 6, 255));
             hoodColors.Add(Color.FromArgb(16, 11, 255));
             hoodColors.Add(Color.FromArgb(16, 14, 255));
-
+            */
             ColorPalette palette = testMap.Palette;
-            int hoodColor = 0;
 
             foreach (Neighborhood neighborhood in neighborhoods)
             {
@@ -54,7 +54,7 @@ namespace Upland.InformationProcessor
 
                 for (int i = 0; i < testMap.Palette.Entries.Length; i++)
                 {
-                    if (testMap.Palette.Entries[i] == hoodColors[hoodColor])
+                    if (testMap.Palette.Entries[i] == Color.FromArgb(neighborhood.RGB[0], neighborhood.RGB[1], neighborhood.RGB[2]))
                     {
                         if (percentMinted >= 0 && percentMinted < 10)
                         {
@@ -102,8 +102,6 @@ namespace Upland.InformationProcessor
                         }
                     }
                 }
-
-                hoodColor++;
             }
 
             testMap.Palette = palette;
