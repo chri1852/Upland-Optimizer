@@ -22,12 +22,12 @@ namespace Upland.InformationProcessor
             BuildColorBlindKey();
         }
 
-        public void TEST_NASHVILLE_SELLOUT_COLOR()
+        public void CreateSoldOutMap(int cityId)
         {
-            Bitmap testMap = LoadBlankMapByCityId(10016);
+            Bitmap testMap = LoadBlankMapByCityId(cityId);
 
             List<CollatedStatsObject> neighborhoodStats = _localDataManager.GetNeighborhoodStats();
-            List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods().Where(n => n.CityId == 16).OrderBy(n => n.Id).ToList();
+            List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods().Where(n => n.CityId == cityId).OrderBy(n => n.Id).ToList();
 
             ColorPalette palette = testMap.Palette;
 

@@ -13,4 +13,8 @@
     <ProjectReference Include="..\Upland.Infrastructure.LocalData\Upland.Infrastructure.LocalData.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="CityMaps\" />
+  </ItemGroup>
+
 </Project>
