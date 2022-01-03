@@ -3,23 +3,24 @@ AS
 BEGIN
 	BEGIN TRY		
 		SELECT 
-			NeighborhoodId AS 'Id',
-			FSA,
-			[Status],
-			COUNT(*) AS 'PropCount'
+			N.Id,
+			ISNULL(P.FSA, 0) AS 'FSA',
+			ISNULL(P.[Status], 'Owned') AS 'Status',
+			CASE WHEN P.[Status] IS NULL THEN 0 ELSE COUNT(*) END AS 'PropCount'
 		FROM 
-			UPL.Property (NOLOCK)
+			UPL.Neighborhood N (NOLOCK)
+				LEFT JOIN UPL.Property P (NOLOCK)
+					ON N.Id = P.NeighborhoodId
 		WHERE 
-			NeighborhoodId IS NOT NULL
-			AND [Status] IS NOT NULL
+			N.Id IS NOT NULL
 		GROUP BY 
-			NeighborhoodId, 
-			FSA, 
-			[Status]
+			N.Id, 
+			P.FSA, 
+			P.[Status]
 		ORDER BY 
-			NeighborhoodId, 
-			[STATUS], 
-			FSA
+			N.Id, 
+			P.[STATUS], 
+			P.FSA
 	END TRY
 
 	BEGIN CATCH
@@ -34,4 +35,3 @@ BEGIN
 		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
 	END CATCH
 END
-GO
