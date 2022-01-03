@@ -38,7 +38,7 @@ class Program
     private ProfileAppraiser _profileAppraiser;
     private ResyncProcessor _resyncProcessor;
 
-    /*
+    
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
@@ -51,8 +51,9 @@ class Program
         BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder(localDataManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
-        ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
+        //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
+        MappingProcessor mappingProcessor = new MappingProcessor(localDataManager);
 
         string username;
         string qualityLevel;
@@ -121,12 +122,13 @@ class Program
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
         //await resyncProcessor.ResyncPropsList("CityUnmintedFullResync", "1");
         //await blockchainSendFinder.RunBlockChainUpdate();
+        mappingProcessor.CreateSoldOutMap(14, false, true);
     }
-    */
     
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    
+    */
 
     public async Task RunBotAsync()
     {

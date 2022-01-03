@@ -22,74 +22,91 @@ namespace Upland.InformationProcessor
             BuildColorBlindKey();
         }
 
-        public void CreateSoldOutMap(int cityId)
+        public void CreateSoldOutMap(int cityId, bool colorBlind, bool nonFSAOnly)
         {
             Bitmap testMap = LoadBlankMapByCityId(cityId);
 
-            List<CollatedStatsObject> neighborhoodStats = _localDataManager.GetNeighborhoodStats();
-            List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods().Where(n => n.CityId == cityId).OrderBy(n => n.Id).ToList();
+            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
 
-            ColorPalette palette = testMap.Palette;
+            Dictionary<int, CollatedStatsObject> neighborhoodStats = _localDataManager.GetNeighborhoodStats()
+                .ToDictionary(n => n.Id, n => n);
 
-            foreach (Neighborhood neighborhood in neighborhoods)
+            Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
+                .Where(n => n.CityId == cityId)
+                .ToDictionary(n => Color.FromArgb(n.RGB[0], n.RGB[1], n.RGB[2]), n => n);
+
+            Bitmap newBitmap = new Bitmap(testMap.Width, testMap.Height);
+
+            Color actualColor;
+            double percentMinted;
+
+            for (int i = 0; i < testMap.Width; i++)
             {
-                double percentMinted = neighborhoodStats.First(n => n.Id == neighborhood.Id).PercentMinted;
-
-                for (int i = 0; i < testMap.Palette.Entries.Length; i++)
+                for (int j = 0; j < testMap.Height; j++)
                 {
-                    if (testMap.Palette.Entries[i] == Color.FromArgb(neighborhood.RGB[0], neighborhood.RGB[1], neighborhood.RGB[2]))
+                    //get the pixel from the scrBitmap image
+                    actualColor = testMap.GetPixel(i, j);
+
+                    if (colorDictionary.ContainsKey(actualColor))
                     {
+                        percentMinted = nonFSAOnly 
+                            ? neighborhoodStats[colorDictionary[actualColor].Id].PercentNonFSAMinted
+                            : neighborhoodStats[colorDictionary[actualColor].Id].PercentMinted;
+
                         if (percentMinted >= 0 && percentMinted < 10)
                         {
-                            palette.Entries[i] = _standardKey[0];
+                            newBitmap.SetPixel(i, j, colorKeys[0]);
                         }
                         else if (percentMinted >= 10 && percentMinted < 20)
                         {
-                            palette.Entries[i] = _standardKey[1];
+                            newBitmap.SetPixel(i, j, colorKeys[1]);
                         }
                         else if (percentMinted >= 20 && percentMinted < 30)
                         {
-                            palette.Entries[i] = _standardKey[2];
+                            newBitmap.SetPixel(i, j, colorKeys[2]);
                         }
                         else if (percentMinted >= 30 && percentMinted < 40)
                         {
-                            palette.Entries[i] = _standardKey[3];
+                            newBitmap.SetPixel(i, j, colorKeys[3]);
                         }
                         else if (percentMinted >= 40 && percentMinted < 50)
                         {
-                            palette.Entries[i] = _standardKey[4];
+                            newBitmap.SetPixel(i, j, colorKeys[4]);
                         }
                         else if (percentMinted >= 50 && percentMinted < 60)
                         {
-                            palette.Entries[i] = _standardKey[5];
+                            newBitmap.SetPixel(i, j, colorKeys[5]);
                         }
                         else if (percentMinted >= 60 && percentMinted < 70)
                         {
-                            palette.Entries[i] = _standardKey[6];
+                            newBitmap.SetPixel(i, j, colorKeys[6]);
                         }
                         else if (percentMinted >= 70 && percentMinted < 80)
                         {
-                            palette.Entries[i] = _standardKey[7];
+                            newBitmap.SetPixel(i, j, colorKeys[7]);
                         }
                         else if (percentMinted >= 80 && percentMinted < 90)
                         {
-                            palette.Entries[i] = _standardKey[8];
+                            newBitmap.SetPixel(i, j, colorKeys[8]); ;
                         }
                         else if (percentMinted >= 90 && percentMinted < 100)
                         {
-                            palette.Entries[i] = _standardKey[9];
+                            newBitmap.SetPixel(i, j, colorKeys[9]);
                         }
                         else
                         {
-                            palette.Entries[i] = _standardKey[10];
+                            newBitmap.SetPixel(i, j, colorKeys[10]);
                         }
+                    }
+                    else
+                    {
+                        newBitmap.SetPixel(i, j, actualColor);
                     }
                 }
             }
 
-            testMap.Palette = palette;
-
-            SaveMap(testMap, "test123");
+            // TODO THIS SHOULD RETURN A BITMAP
+            SaveMap(newBitmap, "test123");
         }
 
         private Bitmap LoadBlankMapByCityId(int cityId)
