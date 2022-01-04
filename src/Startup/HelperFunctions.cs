@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Upland.Types;
-using Upland.Types.Types;
 
 namespace Startup
 {
@@ -167,6 +164,21 @@ namespace Startup
                     helpOutput.Add(string.Format("!CreateMap"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will create a map of the specified type for the specified city."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CreateMap 1 Sold");
+                    helpOutput.Add("The above command creates a map with the Sold Out percentage of each neighborhood in San Francisco.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CreateMap 1 SOLDNONFSA");
+                    helpOutput.Add("The above command creates a map with the Non-FSA Sold Out percentage of each neighborhood in San Francisco.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CreateMap 10 Floor");
+                    helpOutput.Add("The above command creates a map displaying the upx floor price range of each neighborhood in Chicago.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CreateMap 3 FloorUSD");
+                    helpOutput.Add("The above command creates a map displaying the usd floor price range of each neighborhood in Manhattan.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CreateMap 16 PERUP2 colorBlind");
+                    helpOutput.Add("The above command creates a map using a colorbind safe scale displaying the average upx per up2 price range of each neighborhood in Nashville base on the last 4 weeks of sales data.");
                     helpOutput.Add("");
                     break;
                 case "4":

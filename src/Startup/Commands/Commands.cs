@@ -1,8 +1,8 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -358,17 +358,20 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("You are already a supporter {0}. Thanks for helping out!", HelperFunctions.GetRandomName(_random)));
             }
 
+            int upxToSupporter = Consts.SendUpxSupporterThreshold - registeredUser.SentUPX;
+
             List<string> supportMeString = new List<string>();
 
-            supportMeString.Add(string.Format("Hey {0}, Sounds like you really like this tool! For the low price of $5 you will get perpetual access to run this when ever you like, access to additional features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs..{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
+            supportMeString.Add(string.Format("Hey {0}, Sounds like you really like this tool! For the low price of ${2:N2} you will get perpetual access to run this when ever you like, access to additional features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs..{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine, upxToSupporter / 100.0));
             supportMeString.Add("");
-            supportMeString.Add("You can pay by sending at least $5 bucks to Grombrindal through the below methods. Always be sure to DM Grombrindal when you do!");
-            supportMeString.Add("   1. USD - Paypal - chri1852@umn.edu");
-            supportMeString.Add("   2. USD - Venmo  - Alex-Christensen-9");
-            supportMeString.Add("   3. UPX - Offer 6K or more UPX on  9843 S Exchange Ave in Chicago, and DM Grombrindal with your upland username. I'll accpet and buy it back for 1k UPX.");
-            supportMeString.Add("   4. WAX - Send to 5otpy.wam, with your upland username in the memo.");
-            supportMeString.Add("   5. Crypto - Send it to Grombrindal via the Tipbot in the channel.");
-            supportMeString.Add("   6. Anything Else - DM Grombindal and we'll work something out.");
+            supportMeString.Add(string.Format("You can pay by sending at least ${0:N2} bucks to Grombrindal through the below methods. Always be sure to DM Grombrindal when you do!", upxToSupporter / 100.0));
+            supportMeString.Add(string.Format("   1. UPX - Offer {0} or more UPX on 9843 S Exchange Ave in Chicago, and DM Grombrindal with your upland username. I'll accept and buy it back for 1k UPX.", upxToSupporter));
+            supportMeString.Add(string.Format("   2. UPX - Keep Sending to the properties in #locations until you have sent {0} more UPX, and the bot will automatically set you as a supporter", upxToSupporter));
+            supportMeString.Add("   3. USD - Paypal - chri1852@umn.edu");
+            supportMeString.Add("   4. USD - Venmo  - Alex-Christensen-9");
+            supportMeString.Add("   5. WAX - Send to 5otpy.wam, with your upland username in the memo.");
+            supportMeString.Add("   6. Crypto - Send it to Grombrindal via the Tipbot in the channel.");
+            supportMeString.Add("   7. Anything Else - DM Grombindal and we'll work something out.");
 
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, supportMeString)));
         }
@@ -1049,13 +1052,14 @@ namespace Startup.Commands
             }
 
             // They are registered now, display help
-            if (!registeredUser.Paid)
+            if (registeredUser.Paid || registeredUser.SentUPX >= Consts.SendUpxSupporterThreshold)
             {
-                await ReplyAsync(string.Format("Hello {0}! Everyone gets {1} free runs of the optimizer, you've used {2} of them. To learn how to support this tool try my !SupportMe command.{3}{3}", HelperFunctions.GetRandomName(_random), Consts.FreeRuns, registeredUser.RunCount, Environment.NewLine));
+                await ReplyAsync(string.Format("Hey there {0}! Thanks for being a supporter!{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
             }
             else
             {
-                await ReplyAsync(string.Format("Hey there {0}! Thanks for being a supporter!{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
+                int runsAvailable = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
+                await ReplyAsync(string.Format("Hello {0}! You have currenty used {1}/{2} of your runs. To get more vist the locations in #locations, or run my !SupportMe command.{3}{3}", HelperFunctions.GetRandomName(_random), registeredUser.RunCount, runsAvailable, Environment.NewLine));
             }
 
             List<string> helpMenu = new List<string>();
@@ -1149,21 +1153,28 @@ namespace Startup.Commands
 
         public async Task<bool> EnsureRunsAvailable(RegisteredUser registeredUser)
         {
-            if (registeredUser.Paid)
+            if (!registeredUser.Paid && registeredUser.SentUPX >= Consts.SendUpxSupporterThreshold)
+            {
+                await (Context.User as IGuildUser).AddRoleAsync(Consts.DiscordSupporterRoleId);
+                _localDataManager.SetRegisteredUserPaid(registeredUser.UplandUsername);
+                await ReplyAsync(string.Format("Congrats and Thank You {0}! You have sent enough times to be considered a Supporter! Don't worry about runs anymore, you've done enough. You are no longer limited by runs, and have access to the Supporter Commands!", HelperFunctions.GetRandomName(_random)));
+            }
+
+            if (registeredUser.Paid || registeredUser.SentUPX >= Consts.SendUpxSupporterThreshold)
             {
                 return true;
             }
 
-            int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
+            int runsAvailable = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
             int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
 
-            if (registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < freeRuns)
+            if (registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < runsAvailable)
             {
-                await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} UPX away from your next free run, and {4} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, runsAvailable, HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
             }
-            else if (registeredUser.RunCount >= freeRuns)
+            else if (registeredUser.RunCount >= runsAvailable)
             {
-                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} UPX away from your next free run, and {4} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
                 return false;
             }
 
