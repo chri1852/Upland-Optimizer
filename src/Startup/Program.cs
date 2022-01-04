@@ -160,8 +160,6 @@ class Program
             .AddSingleton(_commands)
             .BuildServiceProvider();
 
-        string token = System.IO.File.ReadAllText(@"auth.txt");
-
         _client.Log += clientLog;
 
         InitializeRefreshTimer();
