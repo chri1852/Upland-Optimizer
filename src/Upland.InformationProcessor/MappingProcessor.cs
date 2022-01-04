@@ -73,7 +73,7 @@ namespace Upland.InformationProcessor
             return string.Format(".\\GeneratedMaps\\{0}.bmp", fileName);
         }
 
-        public Bitmap CreateMap(int cityId, string type, bool colorBlind)
+        public string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind)
         {
             string typeString;
             Bitmap map;
@@ -186,7 +186,11 @@ namespace Upland.InformationProcessor
                 g.Flush();
             }
 
-            return combinedMap;
+            string filename = string.Format("{0}_{1}_{2}", Consts.Cities[cityId], type.ToUpper(), registeredUserId);
+
+            SaveMap(combinedMap, filename);
+
+            return filename;
         }
 
         private Bitmap CreateFloorMap(int cityId, Dictionary<int, double> lowestHoodPrice, bool colorBlind)

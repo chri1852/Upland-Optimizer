@@ -2,7 +2,6 @@
 using Discord.Commands;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -958,7 +957,7 @@ namespace Startup.Commands
         public async Task CreateMap(int cityId, string type, string colorBlind = "NOT")
         {
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
-            Bitmap map;
+            string fileName = "";
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -989,7 +988,7 @@ namespace Startup.Commands
             try
             {
                 await ReplyAsync(string.Format("Creating the map now!"));
-                map = _mappingProcessor.CreateMap(cityId, type, colorBlind != "NOT");
+                fileName = _mappingProcessor.CreateMap(cityId, type, registeredUser.Id, colorBlind != "NOT");
             }
             catch (Exception ex)
             {
@@ -999,17 +998,7 @@ namespace Startup.Commands
             }
 
             // Save and Send the Map
-            string fileName = string.Format("{0}_{1}_{2}", Consts.Cities[cityId], type.ToUpper(), registeredUser.Id);
-            try
-            {
-                _mappingProcessor.SaveMap(map, fileName);
-            }
-            catch (Exception ex)
-            {
-                _localDataManager.CreateErrorLog("Commands - CreateMap - Save Map", ex.Message);
-                await ReplyAsync(string.Format("Sorry, {0}. I Couldn't Figure out how to save that map.", HelperFunctions.GetRandomName(_random)));
-                return;
-            }
+            fileName = string.Format("{0}_{1}_{2}", Consts.Cities[cityId], type.ToUpper(), registeredUser.Id);
 
             await Context.Channel.SendFileAsync(_mappingProcessor.GetMapLocaiton(fileName));
 
@@ -1020,7 +1009,6 @@ namespace Startup.Commands
             catch (Exception ex)
             {
                 _localDataManager.CreateErrorLog("Commands - CreateMap - Delete Map", ex.Message);
-                return;
             }
 
             _localDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
