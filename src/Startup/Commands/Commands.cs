@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -958,6 +959,11 @@ namespace Startup.Commands
         {
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             string fileName = "";
+
+            // DEBUG
+            await ReplyAsync("This Function is down while I until I can get cross platform BMP manipulation to play nice.");
+            return;
+            // END DEBUG
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {

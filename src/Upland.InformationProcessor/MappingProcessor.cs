@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.Drawing.Text;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Upland.Infrastructure.LocalData;
 using Upland.Types;
 using Upland.Types.Types;
@@ -55,22 +53,22 @@ namespace Upland.InformationProcessor
 
         public void SaveMap(Bitmap map, string fileName)
         {
-            if (!Directory.Exists(".\\GeneratedMaps"))
+            if (!Directory.Exists(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps")))
             {
-                Directory.CreateDirectory(".\\GeneratedMaps");
+                Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps"));
             }
 
-            map.Save(string.Format(".\\GeneratedMaps\\{0}.bmp", fileName));
+            map.Save(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.bmp", fileName)));
         }
 
         public void DeleteSavedMap(string fileName)
         {
-            File.Delete(string.Format(".\\GeneratedMaps\\{0}.bmp", fileName));
+            File.Delete(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.bmp", fileName)));
         }
 
         public string GetMapLocaiton(string fileName)
         {
-            return string.Format(".\\GeneratedMaps\\{0}.bmp", fileName);
+            return Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.bmp", fileName));
         }
 
         public string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind)
@@ -653,8 +651,8 @@ namespace Upland.InformationProcessor
 
         private Bitmap LoadBlankMapByCityId(int cityId)
         {
-            Bitmap cityMap = new Bitmap(string.Format(".\\CityMaps\\{0}.bmp", cityId));
-
+            string filePath = string.Format("{1}{0}CityMaps{0}{2}.bmp", Path.DirectorySeparatorChar, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), cityId);
+            Bitmap cityMap = new Bitmap(filePath);
             return cityMap;
         }
 
