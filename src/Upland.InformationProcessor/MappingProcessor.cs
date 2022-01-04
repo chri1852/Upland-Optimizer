@@ -4,10 +4,12 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
+using System.IO;
 using System.Linq;
 using Upland.Infrastructure.LocalData;
 using Upland.Types;
 using Upland.Types.Types;
+using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
 {
@@ -18,12 +20,55 @@ namespace Upland.InformationProcessor
         private List<Color> _standardKey;
         private List<Color> _colorBlindKey;
 
+        private readonly List<string> _validTypes;
+
         public MappingProcessor(LocalDataManager localDataManager)
         {
             _localDataManager = localDataManager;
 
             BuildStandardKey();
             BuildColorBlindKey();
+
+            _validTypes = new List<string>();
+            _validTypes.Add("SOLD");
+            _validTypes.Add("SOLDNONFSA");
+            _validTypes.Add("FLOOR");
+            _validTypes.Add("FLOORUSD");
+            _validTypes.Add("MARKUP");
+        }
+
+        public bool IsValidType(string type)
+        {
+            if(_validTypes.Contains(type.ToUpper()))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public List<string> GetValidTypes()
+        {
+            return _validTypes;
+        }
+
+        public void SaveMap(Bitmap map, string fileName)
+        {
+            if (!Directory.Exists(".\\GeneratedMaps"))
+            {
+                Directory.CreateDirectory(".\\GeneratedMaps");
+            }
+
+            map.Save(string.Format(".\\GeneratedMaps\\{0}.bmp", fileName));
+        }
+
+        public void DeleteSavedMap(string fileName)
+        {
+            File.Delete(string.Format(".\\GeneratedMaps\\{0}.bmp", fileName));
+        }
+
+        public string GetMapLocaiton(string fileName)
+        {
+            return string.Format(".\\GeneratedMaps\\{0}.bmp", fileName);
         }
 
         public Bitmap CreateMap(int cityId, string type, bool colorBlind)
@@ -43,6 +88,50 @@ namespace Upland.InformationProcessor
                 typeString = "Sold Out Non FSA";
                 map = CreateSoldOutMap(cityId, colorBlind, true);
                 key = BuildStandardKey(colorBlind);
+            }
+            else if (type.ToUpper() == "FLOOR" || type.ToUpper() == "FLOORUSD")
+            {
+                string currency = type.ToUpper() == "FLOOR" ? "UPX" : "USD";
+
+                typeString = type.ToUpper() == "FLOOR" ? "UPX Floor" : "USD Floor";
+
+                List<UplandForSaleProp> forSaleProps = _localDataManager
+                    .GetPropertiesForSale_City(cityId, false)
+                    .Where(p => p.Currency == currency).ToList();
+
+                Dictionary<long, Property> propertyDictionary = _localDataManager
+                    .GetProperties(forSaleProps.GroupBy(p => p.Prop_Id).Select(g => g.First().Prop_Id).ToList())
+                    .ToDictionary(p => p.Id, p => p);
+
+                Dictionary<int, double> lowestHoodPrice = _localDataManager.GetNeighborhoods().Where(n => n.CityId == cityId).ToDictionary(n => n.Id, n => double.MaxValue);
+
+                foreach (UplandForSaleProp prop in forSaleProps)
+                {
+                    if (propertyDictionary[prop.Prop_Id].NeighborhoodId == null)
+                    {
+                        continue;
+                    }
+
+                    int neighborhoodId = propertyDictionary[prop.Prop_Id].NeighborhoodId.Value;
+
+                    if (lowestHoodPrice.ContainsKey(neighborhoodId))
+                    {
+                        if (lowestHoodPrice[neighborhoodId] > prop.Price)
+                        {
+                            lowestHoodPrice[neighborhoodId] = prop.Price;
+                        }
+                    }
+                }
+
+                key = BuildFloorKey(lowestHoodPrice, colorBlind); ;
+                map = CreateFloorMap(cityId, lowestHoodPrice, colorBlind);
+            }
+            else if (type.ToUpper() == "MARKUP")
+            {
+                typeString = "Median Markup From Past 4 Weeks";
+
+                // TODO USE THE PROFILE APPRAISER TO LESSEN DB LOAD
+                return null;
             }
             else
             {
@@ -68,6 +157,93 @@ namespace Upland.InformationProcessor
             }
 
             return combinedMap;
+        }
+
+        private Bitmap CreateFloorMap(int cityId, Dictionary<int, double> lowestHoodPrice, bool colorBlind)
+        {
+            Bitmap testMap = LoadBlankMapByCityId(cityId);
+
+            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+
+            Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
+                .Where(n => n.CityId == cityId)
+                .ToDictionary(n => Color.FromArgb(n.RGB[0], n.RGB[1], n.RGB[2]), n => n);
+
+            Bitmap newBitmap = new Bitmap(testMap.Width, testMap.Height);
+
+            List<double> formattedOrderedPrices = lowestHoodPrice.Select(d => d.Value).OrderBy(p => p).ToList();
+            double numberInbetween = formattedOrderedPrices.Where(m => m != double.MaxValue).ToList().Count / 10.0;
+            double max = formattedOrderedPrices.Where(m => m != double.MaxValue).Max();
+
+            Color actualColor;
+            int neigborhoodId;
+            double price;
+
+            for (int i = 0; i < testMap.Width; i++)
+            {
+                for (int j = 0; j < testMap.Height; j++)
+                {
+                    //get the pixel from the scrBitmap image
+                    actualColor = testMap.GetPixel(i, j);
+
+                    if (colorDictionary.ContainsKey(actualColor))
+                    {
+                        neigborhoodId = colorDictionary[actualColor].Id;
+                        price = lowestHoodPrice[neigborhoodId];
+
+                        if (price == double.MaxValue)
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[10]);
+                        }
+                        else if (price >= max)
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[9]);
+                        }
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)])
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[8]);
+                        }
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)])
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[7]);
+                        }
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)])
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[6]);
+                        }
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)])
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[5]);
+                        }
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 5)])
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[4]);
+                        }
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 4)])
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[3]);
+                        }
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)])
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[2]);
+                        }
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)])
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[1]);
+                        }
+                        else
+                        {
+                            newBitmap.SetPixel(i, j, colorKeys[0]);
+                        }
+                    }
+                    else
+                    {
+                        newBitmap.SetPixel(i, j, actualColor);
+                    }
+                }
+            }
+
+            return newBitmap;
         }
 
         private Bitmap CreateSoldOutMap(int cityId, bool colorBlind, bool nonFSAOnly)
@@ -156,10 +332,32 @@ namespace Upland.InformationProcessor
             return newBitmap;
         }
 
+        private Bitmap BuildFloorKey(Dictionary<int, double> lowestHoodPrice, bool colorBlind)
+        {
+            List<string> formattedOrderedPrices = lowestHoodPrice.Where(l => l.Value != double.MaxValue).Select(d => d.Value).OrderBy(p => p).ToList().Select(p => string.Format("{0:N2}", p)).ToList();
+            int maxPriceLength = formattedOrderedPrices.Select(p => string.Format("{0:N2}", p)).Max(v => v.Length);
+            double numberInbetween = formattedOrderedPrices.Count / 10.0;
+
+            List<string> keyTextStrings = new List<string>();
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*2)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*3)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*4)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*5)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*6)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*7)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*8)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*9)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[formattedOrderedPrices.Count-1]).PadLeft(maxPriceLength));
+            keyTextStrings.Add("No Floor");
+
+            return BuildKey(colorBlind, keyTextStrings);
+        }
+
         private Bitmap BuildStandardKey(bool colorBlind)
         {
             List<string> keyTextStrings = new List<string>();
-            keyTextStrings.Add("     > 10%");
+            keyTextStrings.Add("     < 10%");
             keyTextStrings.Add("10% -- 20%");
             keyTextStrings.Add("20% -- 30%");
             keyTextStrings.Add("30% -- 40%");
@@ -278,11 +476,6 @@ namespace Upland.InformationProcessor
             Bitmap cityMap = new Bitmap(string.Format(".\\CityMaps\\{0}.bmp", cityId));
 
             return cityMap;
-        }
-
-        private void SaveMap(Bitmap map, string fileName)
-        {
-            map.Save(string.Format("C:\\Users\\chri1\\Desktop\\{0}.bmp", fileName));
         }
 
         private void BuildStandardKey()

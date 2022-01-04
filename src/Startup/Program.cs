@@ -122,7 +122,8 @@ class Program
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
         //await resyncProcessor.ResyncPropsList("CityUnmintedFullResync", "1");
         //await blockchainSendFinder.RunBlockChainUpdate();
-        mappingProcessor.CreateSoldOutMap(14, false, true);
+
+        mappingProcessor.SaveMap(mappingProcessor.CreateMap(10, "FLOOR", false), "test123");
     }
     
     /*

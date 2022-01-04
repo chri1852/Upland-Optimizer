@@ -1,6 +1,8 @@
 ﻿using Discord.Commands;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -22,14 +24,16 @@ namespace Startup.Commands
         private readonly LocalDataManager _localDataManager;
         private readonly ProfileAppraiser _profileAppraiser;
         private readonly ForSaleProcessor _forSaleProcessor;
+        private readonly MappingProcessor _mappingProcessor;
 
-        public Commands(InformationProcessor informationProcessor, LocalDataManager localDataManager, ProfileAppraiser profileAppraiser, ForSaleProcessor forSaleProcessor)
+        public Commands(InformationProcessor informationProcessor, LocalDataManager localDataManager, ProfileAppraiser profileAppraiser, ForSaleProcessor forSaleProcessor, MappingProcessor mappingProcessor)
         {
             _random = new Random();
             _informationProcessor = informationProcessor;
             _localDataManager = localDataManager;
             _profileAppraiser = profileAppraiser;
             _forSaleProcessor = forSaleProcessor;
+            _mappingProcessor = mappingProcessor;
         }
 
         [Command("Ping")]
@@ -231,21 +235,7 @@ namespace Startup.Commands
                 return;
             }
 
-            int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
-            int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
-
-            if (registeredUser.RunCount < freeRuns)
-            {
-                await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
-                return;
-            }
-            else if (registeredUser.RunCount >= freeRuns)
-            {
-
-                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
-
-                return;
-            }
+            await EnsureRunsAvailable(registeredUser);
         }
 
         [Command("OptimizerRun")]
@@ -257,30 +247,8 @@ namespace Startup.Commands
                 return;
             }
 
-            int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
-            int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
-
-            if (!registeredUser.Paid && registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < freeRuns)
+            if (!await EnsureRunsAvailable(registeredUser))
             {
-                if (upxToNextFreeRun != 0)
-                {
-                    await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
-                }
-                else
-                {
-                    await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random)));
-                }
-            }
-            else if (!registeredUser.Paid && registeredUser.RunCount >= freeRuns)
-            {
-                if (upxToNextFreeRun != 0)
-                {
-                    await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
-                }
-                else
-                {
-                    await ReplyAsync(string.Format("You've used all of your runs {0}. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random)));
-                }
                 return;
             }
 
@@ -389,27 +357,20 @@ namespace Startup.Commands
             {
                 await ReplyAsync(string.Format("You are already a supporter {0}. Thanks for helping out!", HelperFunctions.GetRandomName(_random)));
             }
-            else
-            {
-                int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
 
-                if (registeredUser.RunCount >= freeRuns - 2)
-                {
-                    string response = "Looks like you are ";
-                    if (registeredUser.RunCount >= freeRuns)
-                    {
-                        response += "all ";
-                    }
-                    else
-                    {
-                        response += "almost all ";
-                    }
-                    await ReplyAsync(string.Format("{0}out of Optimizer Runs. You can earn new runs by sending the properties listed in the Locations channel. Once you send 500 UPX worth you will earn an additional Optimizer Run, or you can become a support to get Unlimited Optimizer Runs.", response));
-                }
+            List<string> supportMeString = new List<string>();
 
-                await ReplyAsync(string.Format("Hey {0}, Sounds like you really like this tool, to help support this tool why don't you ping Grombrindal.{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
-                await ReplyAsync(string.Format("For the low price of $5 you will get perpetual access to run this when ever you like, access to additional features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs. USD, UPX, Waxp, Ham Sandwiches, MTG Bulk Rares, and more are all accepted in payment."));
-            }
+            supportMeString.Add(string.Format("Hey {0}, Sounds like you really like this tool! For the low price of $5 you will get perpetual access to run this when ever you like, access to additional features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs..{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
+            supportMeString.Add("");
+            supportMeString.Add("You can pay by sending at least $5 bucks to Grombrindal through the below methods. Always be sure to DM Grombrindal when you do!");
+            supportMeString.Add("   1. USD - Paypal - chri1852@umn.edu");
+            supportMeString.Add("   2. USD - Venmo  - Alex-Christensen-9");
+            supportMeString.Add("   3. UPX - Offer 6K or more UPX on  9843 S Exchange Ave in Chicago, and DM Grombrindal with your upland username. I'll accpet and buy it back for 1k UPX.");
+            supportMeString.Add("   4. WAX - Send to 5otpy.wam, with your upland username in the memo.");
+            supportMeString.Add("   5. Crypto - Send it to Grombrindal via the Tipbot in the channel.");
+            supportMeString.Add("   6. Anything Else - DM Grombindal and we'll work something out.");
+
+            await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, supportMeString)));
         }
 
         [Command("CollectionInfo")]
@@ -956,30 +917,8 @@ namespace Startup.Commands
                 return;
             }
 
-            int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
-            int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
-
-            if (!registeredUser.Paid && registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < freeRuns)
+            if (!await EnsureRunsAvailable(registeredUser))
             {
-                if (upxToNextFreeRun != 0)
-                {
-                    await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
-                }
-                else
-                {
-                    await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random)));
-                }
-            }
-            else if (!registeredUser.Paid && registeredUser.RunCount >= freeRuns)
-            {
-                if (upxToNextFreeRun != 0)
-                {
-                    await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
-                }
-                else
-                {
-                    await ReplyAsync(string.Format("You've used all of your runs {0}. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random)));
-                }
                 return;
             }
 
@@ -1007,6 +946,78 @@ namespace Startup.Commands
                 stream.Write(resultBytes, 0, resultBytes.Length);
                 stream.Seek(0, SeekOrigin.Begin);
                 await Context.Channel.SendFileAsync(stream, string.Format("{0}_Appraisal.{1}", registeredUser.UplandUsername, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
+            }
+
+            _localDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
+        }
+
+        [Command("CreateMap")]
+        public async Task CreateMap(int cityId, string type, string colorBlind = "NOT")
+        {
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+            Bitmap map;
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            if (!await EnsureRunsAvailable(registeredUser))
+            {
+                return;
+            }
+
+            if (!Consts.NON_BULLSHIT_CITY_IDS.Contains(cityId))
+            {
+                await ReplyAsync(string.Format("That City ID, {0} looks invalid, {1}!", cityId, HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            if (!_mappingProcessor.IsValidType(type))
+            {
+                await ReplyAsync(string.Format("{0} is not a valid map type {1}! Try any of {2}.", 
+                    cityId, 
+                    HelperFunctions.GetRandomName(_random), 
+                    string.Join(", ", _mappingProcessor.GetValidTypes())));
+
+                return;
+            }
+
+            try
+            {
+                await ReplyAsync(string.Format("Creating the map now!"));
+                map = _mappingProcessor.CreateMap(cityId, type, colorBlind != "NOT");
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("Commands - CreateMap - Build Map", ex.Message);
+                await ReplyAsync(string.Format("Sorry, {0}. The Map blew up!", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            // Save and Send the Map
+            string fileName = string.Format("{0}_{1}_{2}", Consts.Cities[cityId], type.ToUpper(), registeredUser.Id);
+            try
+            {
+                _mappingProcessor.SaveMap(map, fileName);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("Commands - CreateMap - Save Map", ex.Message);
+                await ReplyAsync(string.Format("Sorry, {0}. I Couldn't Figure out how to save that map.", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+
+            await Context.Channel.SendFileAsync(_mappingProcessor.GetMapLocaiton(fileName));
+
+            try
+            {
+                _mappingProcessor.DeleteSavedMap(fileName);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("Commands - CreateMap - Delete Map", ex.Message);
+                return;
             }
 
             _localDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
@@ -1051,37 +1062,40 @@ namespace Startup.Commands
 
             helpMenu.Add("Below are the functions you can run use my !Help command and specify the number of the command you want more information on, like !Help 2.");
             helpMenu.Add("");
-            helpMenu.Add("Standard Commands");
+            helpMenu.Add("Run Limited Commands");
             helpMenu.Add("   1.  !OptimizerRun");
-            helpMenu.Add("   2.  !OptimizerStatus");
-            helpMenu.Add("   3.  !OptimizerResults");
-            helpMenu.Add("   4.  !CollectionInfo");
-            helpMenu.Add("   5.  !PropertyInfo");
-            helpMenu.Add("   6.  !NeighborhoodInfo");
-            helpMenu.Add("   7.  !CityInfo");
-            helpMenu.Add("   8.  !StreetInfo");
-            helpMenu.Add("   9.  !SupportMe");
-            helpMenu.Add("   10. !CollectionsForSale");
-            helpMenu.Add("   11. !NeighborhoodsForSale");
-            helpMenu.Add("   12. !CitysForSale");
-            helpMenu.Add("   13. !BuildingsForSale");
-            helpMenu.Add("   14. !StreetsForSale");
-            helpMenu.Add("   15. !UsernameForSale");
-            helpMenu.Add("   16. !UnmintedProperties");
-            helpMenu.Add("   17. !AllProperties");
-            helpMenu.Add("   18. !SearchStreets");
-            helpMenu.Add("   19. !SearchProperties");
-            helpMenu.Add("   20. !SearchNeighborhoods");
-            helpMenu.Add("   21. !SearchCollections");
-            helpMenu.Add("   22. !GetAssets");
-            helpMenu.Add("   23. !GetSalesHistory");
-            helpMenu.Add("   24. !Appraisal");
-            helpMenu.Add("   25. !HowManyRuns");
+            helpMenu.Add("   2.  !Appraisal");
+            helpMenu.Add("   3.  !CreateMap");
+            helpMenu.Add("");
+            helpMenu.Add("Free Commands");
+            helpMenu.Add("   4.  !OptimizerStatus");
+            helpMenu.Add("   5.  !OptimizerResults");
+            helpMenu.Add("   6.  !CollectionInfo");
+            helpMenu.Add("   7.  !PropertyInfo");
+            helpMenu.Add("   8.  !NeighborhoodInfo");
+            helpMenu.Add("   9.  !CityInfo");
+            helpMenu.Add("   10. !StreetInfo");
+            helpMenu.Add("   11. !SupportMe");
+            helpMenu.Add("   12. !CollectionsForSale");
+            helpMenu.Add("   13. !NeighborhoodsForSale");
+            helpMenu.Add("   14. !CitysForSale");
+            helpMenu.Add("   15. !BuildingsForSale");
+            helpMenu.Add("   16. !StreetsForSale");
+            helpMenu.Add("   17. !UsernameForSale");
+            helpMenu.Add("   18. !UnmintedProperties");
+            helpMenu.Add("   19. !AllProperties");
+            helpMenu.Add("   20. !SearchStreets");
+            helpMenu.Add("   21. !SearchProperties");
+            helpMenu.Add("   22. !SearchNeighborhoods");
+            helpMenu.Add("   23. !SearchCollections");
+            helpMenu.Add("   24. !GetAssets");
+            helpMenu.Add("   25. !GetSalesHistory");
+            helpMenu.Add("   26. !HowManyRuns");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   26. !OptimizerLevelRun");
-            helpMenu.Add("   27. !OptimizerWhatIfRun");
-            helpMenu.Add("   28. !OptimizerExcludeRun");
+            helpMenu.Add("   27. !OptimizerLevelRun");
+            helpMenu.Add("   28. !OptimizerWhatIfRun");
+            helpMenu.Add("   29. !OptimizerExcludeRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
@@ -1127,6 +1141,29 @@ namespace Startup.Commands
             if (!registeredUser.Verified)
             {
                 await ReplyAsync(string.Format("Looks like you are not verified {0}. Try Again with my !VerifyMe command.", HelperFunctions.GetRandomName(_random)));
+                return false;
+            }
+
+            return true;
+        }
+
+        public async Task<bool> EnsureRunsAvailable(RegisteredUser registeredUser)
+        {
+            if (registeredUser.Paid)
+            {
+                return true;
+            }
+
+            int freeRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
+            int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
+
+            if (registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < freeRuns)
+            {
+                await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, freeRuns, HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
+            }
+            else if (registeredUser.RunCount >= freeRuns)
+            {
+                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} upx away from your next free run. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun));
                 return false;
             }
 
