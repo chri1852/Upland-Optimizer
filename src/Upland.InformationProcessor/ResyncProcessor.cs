@@ -71,6 +71,10 @@ namespace Upland.InformationProcessor
             {
                 await Process_CityUnmintedResync();
             }
+            else if (action == "EnclaveFix")
+            {
+                Process_EnclaveFix();
+            }
         }
 
         private async Task Process_SetOwner(List<Property> localProperties)
@@ -531,6 +535,23 @@ namespace Upland.InformationProcessor
                     {
                         break;
                     }
+                }
+            }
+        }
+
+        private void Process_EnclaveFix()
+        {
+            Neighborhood boystown = _localDataManager.GetNeighborhoods().Where(n => n.Id == 817).First();
+            Neighborhood lincolnPark = _localDataManager.GetNeighborhoods().Where(n => n.Id == 853).First();
+
+            List<Property> lincolnParkProperties = _localDataManager.GetPropertiesByCityId(10).Where(p => p.NeighborhoodId == lincolnPark.Id).ToList();
+
+            foreach (Property prop in lincolnParkProperties)
+            {
+                if (_localDataManager.IsPropertyInNeighborhood(boystown, prop))
+                {
+                    prop.NeighborhoodId = boystown.Id;
+                    _localDataManager.UpsertProperty(prop);
                 }
             }
         }

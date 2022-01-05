@@ -124,7 +124,8 @@ class Program
         //await resyncProcessor.ResyncPropsList("CityUnmintedFullResync", "1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
-        mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
+        //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
+        mappingProcessor.CreateMap(10, "FLOOR", 1, false);
     }
     */
     

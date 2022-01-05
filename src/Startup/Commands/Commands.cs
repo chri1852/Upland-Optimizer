@@ -960,11 +960,6 @@ namespace Startup.Commands
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             string fileName = "";
 
-            // DEBUG
-            await ReplyAsync("This Function is down while I until I can get cross platform BMP manipulation to play nice.");
-            return;
-            // END DEBUG
-
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
                 return;
@@ -1002,9 +997,6 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("Sorry, {0}. The Map blew up!", HelperFunctions.GetRandomName(_random)));
                 return;
             }
-
-            // Save and Send the Map
-            fileName = string.Format("{0}_{1}_{2}", Consts.Cities[cityId], type.ToUpper(), registeredUser.Id);
 
             await Context.Channel.SendFileAsync(_mappingProcessor.GetMapLocaiton(fileName));
 

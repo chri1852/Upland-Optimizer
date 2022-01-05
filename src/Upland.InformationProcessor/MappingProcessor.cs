@@ -1,6 +1,10 @@
-﻿using System;
+﻿using SixLabors.Fonts;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -21,6 +25,9 @@ namespace Upland.InformationProcessor
 
         private readonly List<string> _validTypes;
 
+        private readonly Font _smallFont;
+        private readonly Font _largeFont;
+
         public MappingProcessor(LocalDataManager localDataManager, ProfileAppraiser profileAppraiser)
         {
             _localDataManager = localDataManager;
@@ -35,6 +42,9 @@ namespace Upland.InformationProcessor
             _validTypes.Add("FLOOR");
             _validTypes.Add("FLOORUSD");
             _validTypes.Add("PERUP2");
+
+            _smallFont = new Font(SystemFonts.Find("DejaVu Sans Mono"), 20);
+            _largeFont = new Font(SystemFonts.Find("DejaVu Sans Mono"), 30);
         }
 
         public bool IsValidType(string type)
@@ -51,31 +61,30 @@ namespace Upland.InformationProcessor
             return _validTypes;
         }
 
-        public void SaveMap(Bitmap map, string fileName)
+        public void SaveMap(Image<Rgba32> map, string fileName)
         {
             if (!Directory.Exists(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps")))
             {
                 Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps"));
             }
-
-            map.Save(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.bmp", fileName)));
+            map.SaveAsPng(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.png", fileName)));
         }
 
         public void DeleteSavedMap(string fileName)
         {
-            File.Delete(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.bmp", fileName)));
+            File.Delete(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.png", fileName)));
         }
 
         public string GetMapLocaiton(string fileName)
         {
-            return Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.bmp", fileName));
+            return Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.png", fileName));
         }
 
         public string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind)
         {
             string typeString;
-            Bitmap map;
-            Bitmap key;
+            Image<Rgba32> map;
+            Image<Rgba32> key;
 
             if (type.ToUpper() == "SOLD")
             {
@@ -155,53 +164,44 @@ namespace Upland.InformationProcessor
                 throw new Exception("Invalid Map Type Selected");
             }
 
+            Image<Rgba32> header = CreateHeader(cityId, typeString);
+            Image<Rgba32> footer = CreateFooter();
 
-            Bitmap header = CreateHeader(cityId, typeString);
-            Bitmap footer = CreateFooter();
+            Image<Rgba32> combinedMap = new Image<Rgba32>(Math.Max(map.Width + key.Width, header.Width), map.Height + 85);
 
-            Bitmap combinedMap = new Bitmap(Math.Max(map.Width + key.Width, header.Width), map.Height + 85);
+            combinedMap.Mutate(x => x.BackgroundColor(Color.White));
+            combinedMap.Mutate(x => x.DrawImage(map, new Point(0, header.Height + 1), 1));
+            combinedMap.Mutate(x => x.DrawImage(key, new Point(map.Width + 1, header.Height + 1), 1));
 
-            using (Graphics g = Graphics.FromImage(combinedMap))
+            if (combinedMap.Width > header.Width)
             {
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(255, 255, 255)))
-                {
-                    g.FillRectangle(brush, 0, 0, combinedMap.Width, combinedMap.Height);
-                }
-
-                g.DrawImage(map, 0, header.Height + 1);
-                g.DrawImage(key, map.Width+1, header.Height + 1);
-
-                if (combinedMap.Width > header.Width)
-                {
-                    g.DrawImage(header, (combinedMap.Width - header.Width) / 2, 0);
-                    g.DrawImage(footer, (combinedMap.Width - footer.Width) / 2, combinedMap.Height + -25);
-                }
-                else
-                {
-                    g.DrawImage(header, 0, 0);
-                    g.DrawImage(footer, 0, combinedMap.Height + -25);
-                }
-                g.Flush();
+                combinedMap.Mutate(x => x.DrawImage(header, new Point((combinedMap.Width - header.Width) / 2, 0), 1));
+                combinedMap.Mutate(x => x.DrawImage(footer, new Point((combinedMap.Width - footer.Width) / 2, combinedMap.Height + -25), 1));
+            }
+            else
+            {
+                combinedMap.Mutate(x => x.DrawImage(header, new Point(0, 0), 1));
+                combinedMap.Mutate(x => x.DrawImage(footer, new Point(0, combinedMap.Height + -25), 1));
             }
 
-            string filename = string.Format("{0}_{1}_{2}", Consts.Cities[cityId], type.ToUpper(), registeredUserId);
+            string filename = string.Format("{0}_{1}_{2}", Consts.Cities[cityId].Replace(" ", ""), type.ToUpper(), registeredUserId);
 
             SaveMap(combinedMap, filename);
 
             return filename;
         }
-
-        private Bitmap CreateFloorMap(int cityId, Dictionary<int, double> lowestHoodPrice, bool colorBlind)
+        
+        private Image<Rgba32> CreateFloorMap(int cityId, Dictionary<int, double> lowestHoodPrice, bool colorBlind)
         {
-            Bitmap testMap = LoadBlankMapByCityId(cityId);
+            Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
 
             List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
 
             Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
                 .Where(n => n.CityId == cityId)
-                .ToDictionary(n => Color.FromArgb(n.RGB[0], n.RGB[1], n.RGB[2]), n => n);
+                .ToDictionary(n => Color.FromRgb((byte)n.RGB[0], (byte)n.RGB[1], (byte)n.RGB[2]), n => n);
 
-            Bitmap newBitmap = new Bitmap(testMap.Width, testMap.Height);
+            Image<Rgba32> newBitmap = new Image<Rgba32>(cityMap.Width, cityMap.Height);
 
             List<double> formattedOrderedPrices = lowestHoodPrice.Select(d => d.Value).OrderBy(p => p).ToList();
             double numberInbetween = formattedOrderedPrices.Where(m => m != double.MaxValue).ToList().Count / 10.0;
@@ -211,12 +211,12 @@ namespace Upland.InformationProcessor
             int neigborhoodId;
             double price;
 
-            for (int i = 0; i < testMap.Width; i++)
+            for (int i = 0; i < cityMap.Width; i++)
             {
-                for (int j = 0; j < testMap.Height; j++)
+                for (int j = 0; j < cityMap.Height; j++)
                 {
                     //get the pixel from the scrBitmap image
-                    actualColor = testMap.GetPixel(i, j);
+                    actualColor = cityMap[i, j];
 
                     if (colorDictionary.ContainsKey(actualColor))
                     {
@@ -225,70 +225,70 @@ namespace Upland.InformationProcessor
 
                         if (price == double.MaxValue)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[10]);
+                            newBitmap[i, j] = colorKeys[10];
                         }
                         else if (price >= max)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[9]);
+                            newBitmap[i, j] = colorKeys[9];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[8]);
+                            newBitmap[i, j] = colorKeys[8];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[7]);
+                            newBitmap[i, j] = colorKeys[7];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[6]);
+                            newBitmap[i, j] = colorKeys[6];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[5]);
+                            newBitmap[i, j] = colorKeys[5];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 5)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[4]);
+                            newBitmap[i, j] = colorKeys[4];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 4)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[3]);
+                            newBitmap[i, j] = colorKeys[3];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[2]);
+                            newBitmap[i, j] = colorKeys[2];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[1]);
+                            newBitmap[i, j] = colorKeys[1];
                         }
                         else
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[0]);
+                            newBitmap[i, j] = colorKeys[0];
                         }
                     }
                     else
                     {
-                        newBitmap.SetPixel(i, j, actualColor);
+                        newBitmap[i, j] = actualColor;
                     }
                 }
             }
 
             return newBitmap;
         }
-
-        private Bitmap CreatePerUP2Map(int cityId, Dictionary<int, double> neighborhoodPerUp2, bool colorBlind)
+        
+        private Image<Rgba32> CreatePerUP2Map(int cityId, Dictionary<int, double> neighborhoodPerUp2, bool colorBlind)
         {
-            Bitmap testMap = LoadBlankMapByCityId(cityId);
+            Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
 
             List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
 
             Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
                 .Where(n => n.CityId == cityId)
-                .ToDictionary(n => Color.FromArgb(n.RGB[0], n.RGB[1], n.RGB[2]), n => n);
+                .ToDictionary(n => Color.FromRgb((byte)n.RGB[0], (byte)n.RGB[1], (byte)n.RGB[2]), n => n);
 
-            Bitmap newBitmap = new Bitmap(testMap.Width, testMap.Height);
+            Image<Rgba32> newBitmap = new Image<Rgba32>(cityMap.Width, cityMap.Height);
 
             List<double> formattedOrderedPrices = neighborhoodPerUp2.Select(d => d.Value).OrderBy(p => p).ToList();
             double numberInbetween = formattedOrderedPrices.Where(m => m != double.MaxValue).ToList().Count / 10.0;
@@ -298,12 +298,12 @@ namespace Upland.InformationProcessor
             int neigborhoodId;
             double price;
 
-            for (int i = 0; i < testMap.Width; i++)
+            for (int i = 0; i < cityMap.Width; i++)
             {
-                for (int j = 0; j < testMap.Height; j++)
+                for (int j = 0; j < cityMap.Height; j++)
                 {
                     //get the pixel from the scrBitmap image
-                    actualColor = testMap.GetPixel(i, j);
+                    actualColor = cityMap[i, j];
 
                     if (colorDictionary.ContainsKey(actualColor))
                     {
@@ -312,62 +312,62 @@ namespace Upland.InformationProcessor
 
                         if (price == double.MaxValue)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[10]);
+                            newBitmap[i, j] = colorKeys[10];
                         }
                         else if (price >= max)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[9]);
+                            newBitmap[i, j] = colorKeys[9];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[8]);
+                            newBitmap[i, j] = colorKeys[8];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[7]);
+                            newBitmap[i, j] = colorKeys[7];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[6]);
+                            newBitmap[i, j] = colorKeys[6];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[5]);
+                            newBitmap[i, j] = colorKeys[5];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 5)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[4]);
+                            newBitmap[i, j] = colorKeys[4];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 4)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[3]);
+                            newBitmap[i, j] = colorKeys[3];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[2]);
+                            newBitmap[i, j] = colorKeys[2];
                         }
                         else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)])
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[1]);
+                            newBitmap[i, j] = colorKeys[1];
                         }
                         else
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[0]);
+                            newBitmap[i, j] = colorKeys[0];
                         }
                     }
                     else
                     {
-                        newBitmap.SetPixel(i, j, actualColor);
+                        newBitmap[i, j] = actualColor;
                     }
                 }
             }
 
             return newBitmap;
         }
-
-        private Bitmap CreateSoldOutMap(int cityId, bool colorBlind, bool nonFSAOnly)
+        
+        private Image<Rgba32> CreateSoldOutMap(int cityId, bool colorBlind, bool nonFSAOnly)
         {
-            Bitmap testMap = LoadBlankMapByCityId(cityId);
+            Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
 
             List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
 
@@ -376,19 +376,19 @@ namespace Upland.InformationProcessor
 
             Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
                 .Where(n => n.CityId == cityId)
-                .ToDictionary(n => Color.FromArgb(n.RGB[0], n.RGB[1], n.RGB[2]), n => n);
+                .ToDictionary(n => Color.FromRgb((byte)n.RGB[0], (byte)n.RGB[1], (byte)n.RGB[2]), n => n);
 
-            Bitmap newBitmap = new Bitmap(testMap.Width, testMap.Height);
+            Image<Rgba32> newBitmap = new Image<Rgba32>(cityMap.Width, cityMap.Height);
 
             Color actualColor;
             double percentMinted;
 
-            for (int i = 0; i < testMap.Width; i++)
+            for (int i = 0; i < cityMap.Width; i++)
             {
-                for (int j = 0; j < testMap.Height; j++)
+                for (int j = 0; j < cityMap.Height; j++)
                 {
                     //get the pixel from the scrBitmap image
-                    actualColor = testMap.GetPixel(i, j);
+                    actualColor = cityMap[i, j]; //.GetPixel(i, j);
 
                     if (colorDictionary.ContainsKey(actualColor))
                     {
@@ -398,60 +398,60 @@ namespace Upland.InformationProcessor
 
                         if (percentMinted == 100)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[10]);
+                            newBitmap[i, j] = colorKeys[10];
                         }
                         else if (percentMinted >= 90)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[9]);
+                            newBitmap[i, j] = colorKeys[9];
                         }
                         else if (percentMinted >= 80)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[8]);
+                            newBitmap[i, j] = colorKeys[8];
                         }
                         else if (percentMinted >= 70)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[7]);
+                            newBitmap[i, j] = colorKeys[7];
                         }
                         else if (percentMinted >= 60)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[6]);
+                            newBitmap[i, j] = colorKeys[6];
                         }
                         else if (percentMinted >= 50)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[5]);
+                            newBitmap[i, j] = colorKeys[5];
                         }
                         else if (percentMinted >= 40)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[4]);
+                            newBitmap[i, j] = colorKeys[4];
                         }
                         else if (percentMinted >= 30)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[3]);
+                            newBitmap[i, j] = colorKeys[3];
                         }
                         else if (percentMinted >= 20)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[2]);
+                            newBitmap[i, j] = colorKeys[2];
                         }
                         else if (percentMinted >= 10)
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[1]);
+                            newBitmap[i, j] = colorKeys[1];
                         }
                         else
                         {
-                            newBitmap.SetPixel(i, j, colorKeys[0]);
+                            newBitmap[i, j] = colorKeys[0];
                         }
                     }
                     else
                     {
-                        newBitmap.SetPixel(i, j, actualColor);
+                        newBitmap[i, j] = actualColor;
                     }
                 }
             }
 
             return newBitmap;
         }
-
-        private Bitmap BuildFloorKey(Dictionary<int, double> lowestHoodPrice, bool colorBlind)
+        
+        private Image<Rgba32> BuildFloorKey(Dictionary<int, double> lowestHoodPrice, bool colorBlind)
         {
             List<string> formattedOrderedPrices = lowestHoodPrice
                 .Where(l => l.Value != double.MaxValue)
@@ -478,7 +478,7 @@ namespace Upland.InformationProcessor
             return BuildKey(colorBlind, keyTextStrings);
         }
 
-        private Bitmap BuildPerUP2Key(Dictionary<int, double> neighborhoodPerUp2, bool colorBlind)
+        private Image<Rgba32> BuildPerUP2Key(Dictionary<int, double> neighborhoodPerUp2, bool colorBlind)
         {
             List<string> formattedOrderedPrices = neighborhoodPerUp2
                 .Where(l => l.Value != double.MaxValue)
@@ -504,8 +504,8 @@ namespace Upland.InformationProcessor
 
             return BuildKey(colorBlind, keyTextStrings);
         }
-
-        private Bitmap BuildStandardKey(bool colorBlind)
+        
+        private Image<Rgba32> BuildStandardKey(bool colorBlind)
         {
             List<string> keyTextStrings = new List<string>();
             keyTextStrings.Add("     < 10%");
@@ -523,26 +523,11 @@ namespace Upland.InformationProcessor
             return BuildKey(colorBlind, keyTextStrings);
         }
 
-        private Bitmap BuildKey(bool colorBlind, List<string> keyTextStrings)
+        private Image<Rgba32> BuildKey(bool colorBlind, List<string> keyTextStrings)
         {
             List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
 
-            Bitmap bmp = new Bitmap((keyTextStrings.Max(t => t.Length) * 14) + 4, 279);
-            Graphics g = Graphics.FromImage(bmp);
-            Font font = new Font("Consolas", 20, GraphicsUnit.Pixel);
-            StringFormat format = new StringFormat()
-            {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center
-            };
-
-            using (SolidBrush brush = new SolidBrush(Color.FromArgb(0, 0, 0)))
-            {
-                g.FillRectangle(brush, 0, 0, bmp.Width, 2);
-                g.FillRectangle(brush, 0, 0, 2, bmp.Height);
-                g.FillRectangle(brush, bmp.Width-2, 0, bmp.Width, bmp.Height);
-                g.FillRectangle(brush, 0, bmp.Height-2, bmp.Width, bmp.Height);
-            }
+            Image<Rgba32> bmp = new Image<Rgba32>((keyTextStrings.Max(t => t.Length) * 14) + 4, 279);
 
             string lastKeyString = keyTextStrings[0];
             int lastHeightchange_i = 0;
@@ -558,13 +543,17 @@ namespace Upland.InformationProcessor
                 }
                 else
                 {
-                    rectf = new RectangleF(2, (lastHeightchange_i * 25) + 2, bmp.Width - 4, 25 * numOfRows);
-                    using (SolidBrush brush = new SolidBrush(colorKeys[i - 1]))
-                    {
-                        g.FillRectangle(brush, rectf);
-                    }
+                    bmp.Mutate(x => x.FillPolygon(colorKeys[i - 1],  new PointF[] {
+                        new PointF(2, (lastHeightchange_i * 25) + 2), new PointF(bmp.Width-2, (lastHeightchange_i * 25) + 2), 
+                        new PointF(bmp.Width - 2, (lastHeightchange_i * 25) + 2 + (25 * numOfRows)), new PointF(2, (lastHeightchange_i * 25) + 2 + (25 * numOfRows))}));
 
-                    g.DrawString(keyTextStrings[lastHeightchange_i], font, i-1 < 7 ? Brushes.Black : Brushes.White, rectf, format);
+                    bmp.Mutate(x => x.DrawText(new DrawingOptions
+                    {
+                        TextOptions = new TextOptions
+                        {
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                        }
+                    }, keyTextStrings[lastHeightchange_i], _smallFont, lastHeightchange_i < 7 ? Color.Black : Color.White, new PointF(bmp.Width / 2, 4 + lastHeightchange_i * 25)));
 
                     lastHeightchange_i = i;
                     numOfRows = 1;
@@ -573,119 +562,111 @@ namespace Upland.InformationProcessor
             }
 
             // Draw the last row
-            rectf = new RectangleF(2, (lastHeightchange_i * 25) + 2, bmp.Width - 4, 25 * numOfRows);
-            using (SolidBrush brush = new SolidBrush(colorKeys[lastHeightchange_i]))
+            bmp.Mutate(x => x.FillPolygon(colorKeys[lastHeightchange_i], new PointF[] {
+                new PointF(2, (lastHeightchange_i * 25) + 2), new PointF(bmp.Width-2, (lastHeightchange_i * 25) + 2),
+                new PointF(bmp.Width - 2, (lastHeightchange_i * 25) + 2 + (25 * numOfRows)), new PointF(2, (lastHeightchange_i * 25) + 2 + (25 * numOfRows))}));
+
+            bmp.Mutate(x => x.DrawText(new DrawingOptions
             {
-                g.FillRectangle(brush, rectf);
-            }
-
-            g.DrawString(keyTextStrings[lastHeightchange_i], font, lastHeightchange_i < 7 ? Brushes.Black : Brushes.White, rectf, format);
-
-            g.Flush();
-
+                TextOptions = new TextOptions
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                }
+            }, keyTextStrings[lastHeightchange_i], _smallFont, lastHeightchange_i < 7 ? Color.Black : Color.White, new PointF(bmp.Width / 2, 4+ lastHeightchange_i * 25)));
+            
+            // Draw the border
+            bmp.Mutate(x => x.FillPolygon(Color.Black, new PointF[] {
+                new PointF(0,0), new PointF(bmp.Width, 0), new PointF(bmp.Width,2), new PointF(0, 2)}));
+            bmp.Mutate(x => x.FillPolygon(Color.Black, new PointF[] {
+                new PointF(0,0), new PointF(2, 0), new PointF(2, bmp.Height), new PointF(0, bmp.Height)}));
+            bmp.Mutate(x => x.FillPolygon(Color.Black, new PointF[] {
+                new PointF(bmp.Width-2, 0), new PointF(bmp.Width, 0), new PointF(bmp.Width, bmp.Height), new PointF(bmp.Width-2, bmp.Height)}));
+            bmp.Mutate(x => x.FillPolygon(Color.Black, new PointF[] {
+                new PointF(0,bmp.Height-2), new PointF(bmp.Width, bmp.Height-2), new PointF(bmp.Width,bmp.Height), new PointF(0, bmp.Height)}));
+            
             return bmp;
         }
-
-        private Bitmap CreateHeader(int cityId, string type)
+        
+        private Image<Rgba32> CreateHeader(int cityId, string type)
         {
             string headerStringOne = string.Format("{0} - {1}", Consts.Cities[cityId], type);
             string headerStringTwo = string.Format("{0:MM/dd/yyyy HH:mm:ss zzz}", DateTime.UtcNow);
 
-            Bitmap bmp = new Bitmap(Math.Max(headerStringOne.Length, headerStringTwo.Length) * 18, 60);
+            Image<Rgba32> bmp = new Image<Rgba32>(Math.Max(headerStringOne.Length, headerStringTwo.Length) * 18, 60);
 
-            RectangleF rectf;
-
-            // Create graphic object that will draw onto the bitmap
-            Graphics g = Graphics.FromImage(bmp);
-
-            StringFormat format = new StringFormat()
+            bmp.Mutate(x => x.BackgroundColor(Color.White));
+            bmp.Mutate(x => x.DrawText(new DrawingOptions
             {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center
-            };
-
-            using (SolidBrush brush = new SolidBrush(Color.FromArgb(255, 255, 255)))
+                TextOptions = new TextOptions
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                }
+            }, headerStringOne, _largeFont, Color.Black, new PointF(bmp.Width/2, 0)));
+            bmp.Mutate(x => x.DrawText(new DrawingOptions
             {
-                g.FillRectangle(brush, 0, 0, bmp.Width, bmp.Height);
-            }
-
-            rectf = new RectangleF(0, 0, bmp.Width, 35);
-            g.DrawString(headerStringOne, new Font("Consolas", 30, GraphicsUnit.Pixel), Brushes.Black, rectf, format);
-
-            rectf = new RectangleF(0, 36, bmp.Width, 25);
-            g.DrawString(headerStringTwo, new Font("Consolas", 20, GraphicsUnit.Pixel), Brushes.Black, rectf, format);
-
-            g.Flush();
+                TextOptions = new TextOptions
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                }
+            }, headerStringTwo, _smallFont, Color.Black, new PointF(bmp.Width / 2, 36)));
 
             return bmp;
         }
 
-        private Bitmap CreateFooter()
+        private Image<Rgba32> CreateFooter()
         {
             string footerString = "Generated by the Upland Optimizer Bot - https://discord.gg/hsrxQb7UQb";
 
-            Bitmap bmp = new Bitmap(footerString.Length * 12, 25);
-
-            RectangleF rectf = new RectangleF(0, 0, bmp.Width, bmp.Height);
-
-            // Create graphic object that will draw onto the bitmap
-            Graphics g = Graphics.FromImage(bmp);
-
-            StringFormat format = new StringFormat()
+            Image<Rgba32> bmp = new Image<Rgba32>(footerString.Length * 12, 24);
+            bmp.Mutate(x => x. BackgroundColor(Color.White));
+            bmp.Mutate(x => x.DrawText(new DrawingOptions
             {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center
-            };
-
-            using (SolidBrush brush = new SolidBrush(Color.FromArgb(255, 255, 255)))
-            {
-                g.FillRectangle(brush, 0, 0, bmp.Width, bmp.Height);
-            }
-
-            g.DrawString(footerString, new Font("Consolas", 20, GraphicsUnit.Pixel), Brushes.Black, rectf, format);
-
-            g.Flush();
+                TextOptions = new TextOptions
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                }
+            }, footerString, _smallFont, Color.Black, new PointF(bmp.Width/2, 2)));
 
             return bmp;
         }
 
-        private Bitmap LoadBlankMapByCityId(int cityId)
+        private Image<Rgba32> LoadBlankMapByCityId(int cityId)
         {
             string filePath = string.Format("{1}{0}CityMaps{0}{2}.bmp", Path.DirectorySeparatorChar, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), cityId);
-            Bitmap cityMap = new Bitmap(filePath);
+            Image<Rgba32> cityMap = (Image<Rgba32>)Image.Load(filePath);
             return cityMap;
         }
 
         private void BuildStandardKey()
         {
             _standardKey = new List<Color>();
-            _standardKey.Add(Color.FromArgb(237, 28, 37));
-            _standardKey.Add(Color.FromArgb(242, 101, 33));
-            _standardKey.Add(Color.FromArgb(247, 148, 30));
-            _standardKey.Add(Color.FromArgb(255, 194, 15));
-            _standardKey.Add(Color.FromArgb(255, 242, 0));
-            _standardKey.Add(Color.FromArgb(141, 198, 63));
-            _standardKey.Add(Color.FromArgb(0, 166, 82));
-            _standardKey.Add(Color.FromArgb(0, 170, 157));
-            _standardKey.Add(Color.FromArgb(0, 114, 187));
-            _standardKey.Add(Color.FromArgb(46, 49, 146));
-            _standardKey.Add(Color.FromArgb(148, 44, 97));
+            _standardKey.Add(Color.FromRgb(237, 28, 37));
+            _standardKey.Add(Color.FromRgb(242, 101, 33));
+            _standardKey.Add(Color.FromRgb(247, 148, 30));
+            _standardKey.Add(Color.FromRgb(255, 194, 15));
+            _standardKey.Add(Color.FromRgb(255, 242, 0));
+            _standardKey.Add(Color.FromRgb(141, 198, 63));
+            _standardKey.Add(Color.FromRgb(0, 166, 82));
+            _standardKey.Add(Color.FromRgb(0, 170, 157));
+            _standardKey.Add(Color.FromRgb(0, 114, 187));
+            _standardKey.Add(Color.FromRgb(46, 49, 146));
+            _standardKey.Add(Color.FromRgb(148, 44, 97));
         }
 
         private void BuildColorBlindKey()
         {
             _colorBlindKey = new List<Color>();
-            _colorBlindKey.Add(Color.FromArgb(255, 184, 0));
-            _colorBlindKey.Add(Color.FromArgb(255, 152, 20));
-            _colorBlindKey.Add(Color.FromArgb(253, 120, 39));
-            _colorBlindKey.Add(Color.FromArgb(243, 88, 54));
-            _colorBlindKey.Add(Color.FromArgb(228, 54, 67));
-            _colorBlindKey.Add(Color.FromArgb(207, 7, 79));
-            _colorBlindKey.Add(Color.FromArgb(182, 0, 88));
-            _colorBlindKey.Add(Color.FromArgb(152, 0, 95));
-            _colorBlindKey.Add(Color.FromArgb(118, 0, 99));
-            _colorBlindKey.Add(Color.FromArgb(79, 0, 98));
-            _colorBlindKey.Add(Color.FromArgb(28, 0, 94));
+            _colorBlindKey.Add(Color.FromRgb(255, 184, 0));
+            _colorBlindKey.Add(Color.FromRgb(255, 152, 20));
+            _colorBlindKey.Add(Color.FromRgb(253, 120, 39));
+            _colorBlindKey.Add(Color.FromRgb(243, 88, 54));
+            _colorBlindKey.Add(Color.FromRgb(228, 54, 67));
+            _colorBlindKey.Add(Color.FromRgb(207, 7, 79));
+            _colorBlindKey.Add(Color.FromRgb(182, 0, 88));
+            _colorBlindKey.Add(Color.FromRgb(152, 0, 95));
+            _colorBlindKey.Add(Color.FromRgb(118, 0, 99));
+            _colorBlindKey.Add(Color.FromRgb(79, 0, 98));
+            _colorBlindKey.Add(Color.FromRgb(28, 0, 94));
         }
     }
 }
