@@ -43,7 +43,7 @@ BEGIN
 			AND S.DateTime >= @PreviousSalesData
 			AND PS.StructureType IS NULL
 		GROUP BY P.StreetId
-		HAVING COUNT(*) > 25
+		HAVING COUNT(*) > 20
 
 		INSERT INTO @PreviousSale
 		SELECT 'NEIGHBORHOOD', P.NeighborhoodId, 'UPX', SUM(S.Amount)/ SUM(P.Size), SUM(P.Size)/COUNT(*)
@@ -60,7 +60,7 @@ BEGIN
 			AND PS.StructureType IS NULL
 			AND P.NeighborhoodId IS NOT NULL
 		GROUP BY P.NeighborhoodId
-		HAVING COUNT(*) > 25
+		HAVING COUNT(*) > 20
 
 		INSERT INTO @PreviousSale
 		SELECT 'COLLECTION', CP.CollectionId, 'UPX', SUM(S.Amount)/ SUM(P.Size), SUM(P.Size)/COUNT(*)
@@ -81,7 +81,7 @@ BEGIN
 			AND PS.StructureType IS NULL
 			AND C.Category <= 3
 		GROUP BY CP.CollectionId
-		HAVING COUNT(*) > 25
+		HAVING COUNT(*) > 20
 
 		INSERT INTO @PreviousSale
 		SELECT 'COLLECTION', CP.CollectionId, 'UPX', SUM(S.Amount)/ SUM(P.Size), SUM(P.Size)/COUNT(*)
@@ -102,7 +102,7 @@ BEGIN
 			AND PS.StructureType IS NULL
 			AND C.Category = 4
 		GROUP BY CP.CollectionId
-		HAVING COUNT(*) > 25
+		HAVING COUNT(*) > 20
 
 		INSERT INTO @PreviousSale
 		SELECT 'COLLECTION', CP.CollectionId, 'UPX', SUM(S.Amount)/ SUM(P.Size), SUM(P.Size)/COUNT(*)
@@ -123,7 +123,7 @@ BEGIN
 			AND PS.StructureType IS NULL
 			AND C.Category = 5
 		GROUP BY CP.CollectionId
-		HAVING COUNT(*) > 25
+		HAVING COUNT(*) > 20
 
 		SELECT * FROM @PreviousSale
 	END TRY

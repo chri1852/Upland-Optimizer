@@ -8,6 +8,7 @@ namespace Upland.Types.Types
         public string Name { get; set; }
         public int CityId { get; set; }
         public List<List<List<List<double>>>> Coordinates { get; set; }
+        public List<int> RGB { get; set; }
 
         // For loading from upland
         public int City_Id { get; set; }

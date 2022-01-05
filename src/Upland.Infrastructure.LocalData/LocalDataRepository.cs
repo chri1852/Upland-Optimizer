@@ -1288,7 +1288,8 @@ namespace Upland.Infrastructure.LocalData
                                     Id = (int)reader["Id"],
                                     Name = (string)reader["Name"],
                                     CityId = (int)reader["CityId"],
-                                    Coordinates = Newtonsoft.Json.JsonConvert.DeserializeObject<List<List<List<List<double>>>>>((string)reader["Coordinates"])
+                                    Coordinates = Newtonsoft.Json.JsonConvert.DeserializeObject<List<List<List<List<double>>>>>((string)reader["Coordinates"]),
+                                    RGB = reader["RGB"] == DBNull.Value ? new List<int>() :  Newtonsoft.Json.JsonConvert.DeserializeObject<List<int>>((string)reader["RGB"])
                                 }
                              );
                         }

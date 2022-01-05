@@ -5,12 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+    <ProjectReference Include="..\Upland.Infrastructure.Blockchain\Upland.Infrastructure.Blockchain.csproj" />
+    <ProjectReference Include="..\Upland.Infrastructure.LocalData\Upland.Infrastructure.LocalData.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Upland.Infrastructure.Blockchain\Upland.Infrastructure.Blockchain.csproj" />
-    <ProjectReference Include="..\Upland.Infrastructure.LocalData\Upland.Infrastructure.LocalData.csproj" />
+    <Folder Include="CityMaps\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13" />
   </ItemGroup>
 
 </Project>
