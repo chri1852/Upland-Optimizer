@@ -37,6 +37,7 @@ class Program
     private InformationProcessor _informationProcessor;
     private ProfileAppraiser _profileAppraiser;
     private ResyncProcessor _resyncProcessor;
+    private MappingProcessor _mappingProcessor;
 
     /*
     static async Task Main(string[] args) // DEBUG FUNCTION
@@ -53,6 +54,7 @@ class Program
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
+        MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
 
         string username;
         string qualityLevel;
@@ -121,6 +123,9 @@ class Program
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
         //await resyncProcessor.ResyncPropsList("CityUnmintedFullResync", "1");
         //await blockchainSendFinder.RunBlockChainUpdate();
+
+        //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
+        mappingProcessor.CreateMap(10, "FLOOR", 1, false);
     }
     */
     
@@ -143,6 +148,7 @@ class Program
         _informationProcessor = new InformationProcessor(_localDataManager, _uplandApiManager, _blockchainManager);
         _profileAppraiser = new ProfileAppraiser(_localDataManager, _uplandApiManager);
         _resyncProcessor = new ResyncProcessor(_localDataManager, _uplandApiManager);
+        _mappingProcessor = new MappingProcessor(_localDataManager, _profileAppraiser);
 
         _services = new ServiceCollection()
             .AddSingleton(_localDataManager)
@@ -150,11 +156,10 @@ class Program
             .AddSingleton(_informationProcessor)
             .AddSingleton(_profileAppraiser)
             .AddSingleton(_resyncProcessor)
+            .AddSingleton(_mappingProcessor)
             .AddSingleton(_client)
             .AddSingleton(_commands)
             .BuildServiceProvider();
-
-        string token = System.IO.File.ReadAllText(@"auth.txt");
 
         _client.Log += clientLog;
 

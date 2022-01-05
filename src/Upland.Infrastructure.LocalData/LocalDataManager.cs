@@ -266,7 +266,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        private bool IsPropertyInNeighborhood(Neighborhood neighborhood, Property property)
+        public bool IsPropertyInNeighborhood(Neighborhood neighborhood, Property property)
         {
             if (neighborhood.Coordinates.Count == 0)
             {

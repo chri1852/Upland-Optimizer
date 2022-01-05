@@ -13,14 +13,16 @@ BEGIN
 			[Id],
 			[Name], 
 			[CityId],
-			[Coordinates]
+			[Coordinates],
+			[RGB]
 		)
 		VALUES
 		(
 			@Id,
 			@Name,
 			@CityId,
-			@Coordinates
+			@Coordinates,
+			NULL
 		)
 	END TRY
 

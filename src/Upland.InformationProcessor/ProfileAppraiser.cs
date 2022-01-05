@@ -34,6 +34,13 @@ namespace Upland.InformationProcessor
             RefreshData();
         }
 
+        public Dictionary<int, double> GetNeighborhoodPricePerUP2()
+        {
+            RefreshData();
+
+            return _previousSalesData.Where(i => i.Value.Type == "NEIGHBORHOOD").ToDictionary(i => i.Value.Id, i => (double)i.Value.Value);
+        }
+
         public async Task<List<string>> RunAppraisal(string username, string fileType)
         {
             List<PropertyAppraisal> appraisals = await RunAppraisal(username);
