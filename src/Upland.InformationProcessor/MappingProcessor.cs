@@ -450,18 +450,18 @@ namespace Upland.InformationProcessor
                 .OrderBy(p => p)
                 .ToList().Select(p => string.Format("{0:N2}", p)).ToList();
             int maxPriceLength = formattedOrderedPrices.Select(p => string.Format("{0:N2}", p)).Max(v => v.Length);
-            double numberInbetween = formattedOrderedPrices.Count / 10.0;
+            double numberInbetween = formattedOrderedPrices.Count / 9.0;
 
             List<string> keyTextStrings = new List<string>();
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*2)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*3)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*4)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*5)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*6)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*7)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*8)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*9)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[0].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 1)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 4)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 5)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[formattedOrderedPrices.Count-1]).PadLeft(maxPriceLength));
             keyTextStrings.Add("No Floor");
 
@@ -477,10 +477,11 @@ namespace Upland.InformationProcessor
                 .OrderBy(p => p)
                 .ToList().Select(p => string.Format("{0:N2}", p)).ToList();
             int maxPriceLength = formattedOrderedPrices.Select(p => string.Format("{0:N2}", p)).Max(v => v.Length);
-            double numberInbetween = formattedOrderedPrices.Count / 10.0;
+            double numberInbetween = formattedOrderedPrices.Count / 9.0;
 
             List<string> keyTextStrings = new List<string>();
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[0].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 1)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 4)].PadLeft(maxPriceLength)));
@@ -488,7 +489,6 @@ namespace Upland.InformationProcessor
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[formattedOrderedPrices.Count - 1]).PadLeft(maxPriceLength));
             keyTextStrings.Add("Low Market Data");
 

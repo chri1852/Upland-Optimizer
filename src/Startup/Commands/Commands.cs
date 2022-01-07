@@ -363,7 +363,7 @@ namespace Startup.Commands
 
             List<string> supportMeString = new List<string>();
 
-            supportMeString.Add(string.Format("Hey {0}, Sounds like you really like this tool! For the low price of ${2:N2} you will get perpetual access to run this when ever you like, access to additional features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs..{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine, upxToSupporter / 1000.0));
+            supportMeString.Add(string.Format("Hey {0}, Sounds like you really like this tool! For the low price of ${1:N2} you will get perpetual access to run this when ever you like, access to additional features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs.", HelperFunctions.GetRandomName(_random), upxToSupporter / 1000.0));
             supportMeString.Add("");
             supportMeString.Add(string.Format("You can pay by sending at least ${0:N2} bucks to Grombrindal through the below methods. Always be sure to DM Grombrindal when you do!", upxToSupporter / 1000.0));
             supportMeString.Add(string.Format("   1. UPX - Offer {0} or more UPX on 9843 S Exchange Ave in Chicago, and DM Grombrindal with your upland username. I'll accept and buy it back for 1 UPX.", upxToSupporter));
@@ -1161,7 +1161,7 @@ namespace Startup.Commands
             }
             else if (registeredUser.RunCount >= runsAvailable)
             {
-                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} UPX away from your next free run, and {4} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
+                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} UPX away from your next free run, and {2} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
                 return false;
             }
 
