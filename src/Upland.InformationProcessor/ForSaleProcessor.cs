@@ -79,7 +79,7 @@ namespace Upland.InformationProcessor
                 output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", collection.Name), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
-            return output;
+            return output.Take(Consts.MAX_LINES_TO_RETURN).ToList();
         }
 
         public List<string> GetNeighborhoodPropertiesForSale(int neighborhoodId, string orderBy, string currency, string fileType)
@@ -137,7 +137,7 @@ namespace Upland.InformationProcessor
                 output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", neighborhood.Name), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
-            return output;
+            return output.Take(Consts.MAX_LINES_TO_RETURN).ToList();
         }
 
         public List<string> GetBuildingPropertiesForSale(string type, int Id, string orderBy, string currency, string fileType)
@@ -270,7 +270,7 @@ namespace Upland.InformationProcessor
                 output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report Buildings In {0}Id {1}.", type.ToUpper(), Id), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
-            return output;
+            return output.Take(Consts.MAX_LINES_TO_RETURN).ToList();
         }
 
         public List<string> GetCityPropertiesForSale(int cityId, string orderBy, string currency, string fileType)
@@ -325,7 +325,7 @@ namespace Upland.InformationProcessor
                 output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, propDictionary, propertyStructures, string.Format("For Sale Report For CityId {0}.", cityId), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
-            return output;
+            return output.Take(Consts.MAX_LINES_TO_RETURN).ToList();
         }
 
         public List<string> GetStreetPropertiesForSale(int streetId, string orderBy, string currency, string fileType)
@@ -383,7 +383,7 @@ namespace Upland.InformationProcessor
                 output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", street.Name), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
-            return output;
+            return output.Take(Consts.MAX_LINES_TO_RETURN).ToList();
         }
 
         public List<string> GetUsernamePropertiesForSale(string uplandUsername, string orderBy, string currency, string fileType)
@@ -431,7 +431,7 @@ namespace Upland.InformationProcessor
                 output.AddRange(HelperFunctions.ForSaleTxtString(forSaleProps, properties, propertyStructures, string.Format("For Sale Report for {0}", uplandUsername), string.Format("{0:MM/dd/yyy HH:mm:ss}", DateTime.Now)));
             }
 
-            return output;
+            return output.Take(Consts.MAX_LINES_TO_RETURN).ToList();
         }
     }
 }

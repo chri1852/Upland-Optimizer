@@ -173,16 +173,9 @@ namespace Upland.InformationProcessor
             combinedMap.Mutate(x => x.DrawImage(map, new Point(0, header.Height + 1), 1));
             combinedMap.Mutate(x => x.DrawImage(key, new Point(map.Width + 1, header.Height + 1), 1));
 
-            if (combinedMap.Width > header.Width)
-            {
-                combinedMap.Mutate(x => x.DrawImage(header, new Point((combinedMap.Width - header.Width) / 2, 0), 1));
-                combinedMap.Mutate(x => x.DrawImage(footer, new Point((combinedMap.Width - footer.Width) / 2, combinedMap.Height + -50), 1));
-            }
-            else
-            {
-                combinedMap.Mutate(x => x.DrawImage(header, new Point(0, 0), 1));
-                combinedMap.Mutate(x => x.DrawImage(footer, new Point(0, combinedMap.Height + -50), 1));
-            }
+            combinedMap.Mutate(x => x.DrawImage(header, new Point((combinedMap.Width - header.Width) / 2, 0), 1));
+            combinedMap.Mutate(x => x.DrawImage(footer, new Point((combinedMap.Width - footer.Width) / 2, combinedMap.Height + -50), 1));
+
 
             string filename = string.Format("{0}_{1}_{2}", Consts.Cities[cityId].Replace(" ", ""), type.ToUpper(), registeredUserId);
 
@@ -460,16 +453,16 @@ namespace Upland.InformationProcessor
             double numberInbetween = formattedOrderedPrices.Count / 10.0;
 
             List<string> keyTextStrings = new List<string>();
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*2)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*3)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*4)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*5)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*6)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*7)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*8)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*9)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[formattedOrderedPrices.Count-1]).PadLeft(maxPriceLength));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*2)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*3)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*4)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*5)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*6)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*7)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*8)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween*9)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[formattedOrderedPrices.Count-1]).PadLeft(maxPriceLength));
             keyTextStrings.Add("No Floor");
 
             return BuildKey(colorBlind, keyTextStrings);
@@ -487,16 +480,16 @@ namespace Upland.InformationProcessor
             double numberInbetween = formattedOrderedPrices.Count / 10.0;
 
             List<string> keyTextStrings = new List<string>();
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 4)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 5)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" < {0}", formattedOrderedPrices[formattedOrderedPrices.Count - 1]).PadLeft(maxPriceLength));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 4)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 5)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[formattedOrderedPrices.Count - 1]).PadLeft(maxPriceLength));
             keyTextStrings.Add("Low Market Data");
 
             return BuildKey(colorBlind, keyTextStrings);

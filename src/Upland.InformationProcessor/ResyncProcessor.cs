@@ -509,10 +509,10 @@ namespace Upland.InformationProcessor
 
         private async Task Process_CityUnmintedResync()
         {
-            int okayProps = 0;
-
             foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
             {
+                int okayProps = 0;
+
                 List<Property> properties = _localDataManager
                     .GetPropertiesByCityId(cityId)
                     .Where(p => p.Status == Consts.PROP_STATUS_UNLOCKED)
@@ -541,12 +541,12 @@ namespace Upland.InformationProcessor
 
         private void Process_EnclaveFix()
         {
-            Neighborhood boystown = _localDataManager.GetNeighborhoods().Where(n => n.Id == 817).First();
-            Neighborhood lincolnPark = _localDataManager.GetNeighborhoods().Where(n => n.Id == 853).First();
+            Neighborhood boystown = _localDataManager.GetNeighborhoods().Where(n => n.Id == 295).First();
+            Neighborhood lakeView = _localDataManager.GetNeighborhoods().Where(n => n.Id == 294).First();
 
-            List<Property> lincolnParkProperties = _localDataManager.GetPropertiesByCityId(10).Where(p => p.NeighborhoodId == lincolnPark.Id).ToList();
+            List<Property> lakeViewProperties = _localDataManager.GetPropertiesByCityId(5).Where(p => p.NeighborhoodId == lakeView.Id).ToList();
 
-            foreach (Property prop in lincolnParkProperties)
+            foreach (Property prop in lakeViewProperties)
             {
                 if (_localDataManager.IsPropertyInNeighborhood(boystown, prop))
                 {

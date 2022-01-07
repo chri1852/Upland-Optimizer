@@ -899,7 +899,7 @@ namespace Upland.InformationProcessor
                 }
             }
 
-            return output;
+            return output.Take(Consts.MAX_LINES_TO_RETURN).ToList();
         }
 
         public List<string> GetAllProperties(string type, int Id, string fileType)
@@ -1071,7 +1071,7 @@ namespace Upland.InformationProcessor
                 }
             }
 
-            return output;
+            return output.Take(Consts.MAX_LINES_TO_RETURN).ToList();
         }
 
         public async Task<List<string>> GetAssetsByTypeAndUserName(string type, string userName, string fileType)
@@ -1461,7 +1461,7 @@ namespace Upland.InformationProcessor
                 }
             }
 
-            return output;
+            return output.Take(Consts.MAX_LINES_TO_RETURN).ToList();
         }
 
         public void ClearSalesCache()
