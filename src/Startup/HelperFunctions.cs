@@ -178,7 +178,13 @@ namespace Startup
                     helpOutput.Add("The above command creates a map displaying the usd floor price range of each neighborhood in Manhattan.");
                     helpOutput.Add("");
                     helpOutput.Add("EX: !CreateMap 16 PERUP2 colorBlind");
-                    helpOutput.Add("The above command creates a map using a colorbind safe scale displaying the average upx per up2 price range of each neighborhood in Nashville base on the last 4 weeks of sales data.");
+                    helpOutput.Add("The above command creates a map using a colorbind safe scale displaying the average upx per up2 price range of each neighborhood in Nashville based on the last 4 weeks of sales data.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CreateMap 10 Buildings");
+                    helpOutput.Add("The above command creates a map displaying the number of completed buildings in each neighborhood in Chicago.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CreateMap 12 PercentBuild colorBlind");
+                    helpOutput.Add("The above command creates a map using a colorbind safe scale displaying the percent of properties in each neighborhood in Santa Clara with a building built on them.");
                     helpOutput.Add("");
                     break;
                 case "4":

@@ -53,8 +53,8 @@ class Program
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
-        // resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
-        //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
+        ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
+        MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
 
         string username;
         string qualityLevel;
@@ -68,8 +68,8 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
-        await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
+        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -125,7 +125,7 @@ class Program
         //await blockchainSendFinder.RunBlockChainUpdate();
 
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
-       // mappingProcessor.CreateMap(10, "FLOOR", 1, false);
+        mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
     */
     

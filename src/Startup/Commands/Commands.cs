@@ -1157,11 +1157,11 @@ namespace Startup.Commands
 
             if (registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < runsAvailable)
             {
-                await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} UPX away from your next free run, and {4} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, runsAvailable, HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
+                await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} UPX away from your next run, and {4} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, runsAvailable, HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
             }
             else if (registeredUser.RunCount >= runsAvailable)
             {
-                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} UPX away from your next free run, and {2} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
+                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} UPX away from your next run, and {2} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
                 return false;
             }
 

@@ -42,6 +42,8 @@ namespace Upland.InformationProcessor
             _validTypes.Add("FLOOR");
             _validTypes.Add("FLOORUSD");
             _validTypes.Add("PERUP2");
+            _validTypes.Add("BUILDINGS");
+            _validTypes.Add("PERCENTBUILT");
 
             _smallFont = new Font(SystemFonts.Find("DejaVu Sans Mono"), 20);
             _largeFont = new Font(SystemFonts.Find("DejaVu Sans Mono"), 30);
@@ -159,6 +161,57 @@ namespace Upland.InformationProcessor
                 key = BuildPerUP2Key(neighborhoodPerUp2, colorBlind);
                 map = CreatePerUP2Map(cityId, neighborhoodPerUp2, colorBlind);
             }
+            else if (type.ToUpper() == "BUILDINGS")
+            {
+                Dictionary<long, string> propertyStructures = _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+                List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods().Where(n => n.CityId == cityId).ToList();
+                Dictionary<int, int> neighborhoodStructureCount = _localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .Where(p => propertyStructures.ContainsKey(p.Id))
+                    .GroupBy(p => p.NeighborhoodId)
+                    .ToDictionary(g => g.First().NeighborhoodId.Value, g => g.Count());
+
+                foreach (Neighborhood neighborhood in neighborhoods)
+                {
+                    // Add a zero entry if no structures
+                    if (!neighborhoodStructureCount.ContainsKey(neighborhood.Id))
+                    {
+                        neighborhoodStructureCount.Add(neighborhood.Id, 0);
+                    }
+                }
+
+                typeString = "Completed Buildings";
+                map = CreateBuildingCountMap(cityId, colorBlind, neighborhoodStructureCount);
+                key = BuildBuildingCountKey(neighborhoodStructureCount, colorBlind);
+            }
+            else if (type.ToUpper() == "PERCENTBUILT")
+            {
+                Dictionary<long, string> propertyStructures = _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+                List<Property> cityProperties = _localDataManager.GetPropertiesByCityId(cityId);
+                Dictionary<int, int> neighborhoodPropertyCounts = cityProperties
+                    .Where(p => p.NeighborhoodId.HasValue)
+                    .GroupBy(p => p.NeighborhoodId)
+                    .ToDictionary(g => g.First().NeighborhoodId.Value, g => g.Count());
+
+                List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods().Where(n => n.CityId == cityId).ToList();
+                Dictionary<int, double> neighborhoodStructurePercent = cityProperties
+                    .Where(p => propertyStructures.ContainsKey(p.Id))
+                    .GroupBy(p => p.NeighborhoodId)
+                    .ToDictionary(g => g.First().NeighborhoodId.Value, g => g.Count()*100.0/neighborhoodPropertyCounts[g.First().NeighborhoodId.Value]);
+
+                foreach (Neighborhood neighborhood in neighborhoods)
+                {
+                    // Add a zero entry if no structures
+                    if (!neighborhoodStructurePercent.ContainsKey(neighborhood.Id))
+                    {
+                        neighborhoodStructurePercent.Add(neighborhood.Id, 0);
+                    }
+                }
+
+                typeString = "Percent Built";
+                map = CreateBuildingPercentMap(cityId, colorBlind, neighborhoodStructurePercent);
+                key = BuildBuildingPercentKey(neighborhoodStructurePercent, colorBlind);
+            }
             else
             {
                 throw new Exception("Invalid Map Type Selected");
@@ -196,8 +249,8 @@ namespace Upland.InformationProcessor
 
             Image<Rgba32> newBitmap = new Image<Rgba32>(cityMap.Width, cityMap.Height);
 
-            List<double> formattedOrderedPrices = lowestHoodPrice.Select(d => d.Value).OrderBy(p => p).ToList();
-            double numberInbetween = formattedOrderedPrices.Where(m => m != double.MaxValue).ToList().Count / 10.0;
+            List<double> formattedOrderedPrices = lowestHoodPrice.GroupBy(l => l.Value).Select(d => d.First().Value).OrderBy(p => p).ToList();
+            double numberInbetween = (formattedOrderedPrices.Where(m => m != double.MaxValue).ToList().Count-1) / 9.0;
             double max = formattedOrderedPrices.Where(m => m != double.MaxValue).Max();
 
             Color actualColor;
@@ -219,39 +272,39 @@ namespace Upland.InformationProcessor
                         {
                             newBitmap[i, j] = colorKeys[10];
                         }
-                        else if (price >= max)
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)])
                         {
                             newBitmap[i, j] = colorKeys[9];
                         }
-                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)])
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)])
                         {
                             newBitmap[i, j] = colorKeys[8];
                         }
-                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)])
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)])
                         {
                             newBitmap[i, j] = colorKeys[7];
                         }
-                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)])
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)])
                         {
                             newBitmap[i, j] = colorKeys[6];
                         }
-                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)])
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 5)])
                         {
                             newBitmap[i, j] = colorKeys[5];
                         }
-                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 5)])
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 4)])
                         {
                             newBitmap[i, j] = colorKeys[4];
                         }
-                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 4)])
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)])
                         {
                             newBitmap[i, j] = colorKeys[3];
                         }
-                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)])
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)])
                         {
                             newBitmap[i, j] = colorKeys[2];
                         }
-                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)])
+                        else if (price >= formattedOrderedPrices[(int)Math.Floor(numberInbetween * 1)])
                         {
                             newBitmap[i, j] = colorKeys[1];
                         }
@@ -282,7 +335,7 @@ namespace Upland.InformationProcessor
 
             Image<Rgba32> newBitmap = new Image<Rgba32>(cityMap.Width, cityMap.Height);
 
-            List<double> formattedOrderedPrices = neighborhoodPerUp2.Select(d => d.Value).OrderBy(p => p).ToList();
+            List<double> formattedOrderedPrices = neighborhoodPerUp2.GroupBy(l => l.Value).Select(d => d.First().Value).OrderBy(p => p).ToList();
             double numberInbetween = formattedOrderedPrices.Where(m => m != double.MaxValue).ToList().Count / 10.0;
             double max = formattedOrderedPrices.Where(m => m != double.MaxValue).Max();
 
@@ -440,7 +493,179 @@ namespace Upland.InformationProcessor
 
             return newBitmap;
         }
-        
+
+        private Image<Rgba32> CreateBuildingCountMap(int cityId, bool colorBlind, Dictionary<int, int> neighborhoodStructureCount)
+        {
+            Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
+
+            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+
+            Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
+                .Where(n => n.CityId == cityId)
+                .ToDictionary(n => Color.FromRgb((byte)n.RGB[0], (byte)n.RGB[1], (byte)n.RGB[2]), n => n);
+
+            Image<Rgba32> newBitmap = new Image<Rgba32>(cityMap.Width, cityMap.Height);
+
+            List<int> formattedOrderedList = neighborhoodStructureCount.GroupBy(l => l.Value).Select(d => d.First().Value).OrderBy(p => p).ToList();
+            double numberInbetween = (formattedOrderedList.Count - 1) / 10.0;
+            double max = formattedOrderedList.Max();
+
+            Color actualColor;
+            int neigborhoodId;
+            int buildingCount;
+
+            for (int i = 0; i < cityMap.Width; i++)
+            {
+                for (int j = 0; j < cityMap.Height; j++)
+                {
+                    actualColor = cityMap[i, j];
+
+                    if (colorDictionary.ContainsKey(actualColor))
+                    {
+                        neigborhoodId = colorDictionary[actualColor].Id;
+                        buildingCount = neighborhoodStructureCount[neigborhoodId];
+
+                        if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 10)])
+                        {
+                            newBitmap[i, j] = colorKeys[10];
+                        }
+                        else if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 9)])
+                        {
+                            newBitmap[i, j] = colorKeys[9];
+                        }
+                        else if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 8)])
+                        {
+                            newBitmap[i, j] = colorKeys[8];
+                        }
+                        else if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 7)])
+                        {
+                            newBitmap[i, j] = colorKeys[7];
+                        }
+                        else if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 6)])
+                        {
+                            newBitmap[i, j] = colorKeys[6];
+                        }
+                        else if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 5)])
+                        {
+                            newBitmap[i, j] = colorKeys[5];
+                        }
+                        else if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 4)])
+                        {
+                            newBitmap[i, j] = colorKeys[4];
+                        }
+                        else if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 3)])
+                        {
+                            newBitmap[i, j] = colorKeys[3];
+                        }
+                        else if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 2)])
+                        {
+                            newBitmap[i, j] = colorKeys[2];
+                        }
+                        else if (buildingCount >= formattedOrderedList[(int)Math.Floor(numberInbetween * 1)])
+                        {
+                            newBitmap[i, j] = colorKeys[1];
+                        }
+                        else
+                        {
+                            newBitmap[i, j] = colorKeys[0];
+                        }
+                    }
+                    else
+                    {
+                        newBitmap[i, j] = actualColor;
+                    }
+                }
+            }
+
+            return newBitmap;
+        }
+
+        private Image<Rgba32> CreateBuildingPercentMap(int cityId, bool colorBlind, Dictionary<int, double> neighborhoodStructurePercent)
+        {
+            Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
+
+            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+
+            Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
+                .Where(n => n.CityId == cityId)
+                .ToDictionary(n => Color.FromRgb((byte)n.RGB[0], (byte)n.RGB[1], (byte)n.RGB[2]), n => n);
+
+            Image<Rgba32> newBitmap = new Image<Rgba32>(cityMap.Width, cityMap.Height);
+
+            List<double> formattedOrderedList = neighborhoodStructurePercent.GroupBy(l => l.Value).Select(d => d.First().Value).OrderBy(p => p).ToList();
+            double numberInbetween = (formattedOrderedList.Count - 1) / 10.0;
+            double max = formattedOrderedList.Max();
+
+            Color actualColor;
+            int neigborhoodId;
+            double buildingPercent;
+
+            for (int i = 0; i < cityMap.Width; i++)
+            {
+                for (int j = 0; j < cityMap.Height; j++)
+                {
+                    actualColor = cityMap[i, j];
+
+                    if (colorDictionary.ContainsKey(actualColor))
+                    {
+                        neigborhoodId = colorDictionary[actualColor].Id;
+                        buildingPercent = neighborhoodStructurePercent[neigborhoodId];
+
+                        if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 10)])
+                        {
+                            newBitmap[i, j] = colorKeys[10];
+                        }
+                        else if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 9)])
+                        {
+                            newBitmap[i, j] = colorKeys[9];
+                        }
+                        else if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 8)])
+                        {
+                            newBitmap[i, j] = colorKeys[8];
+                        }
+                        else if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 7)])
+                        {
+                            newBitmap[i, j] = colorKeys[7];
+                        }
+                        else if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 6)])
+                        {
+                            newBitmap[i, j] = colorKeys[6];
+                        }
+                        else if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 5)])
+                        {
+                            newBitmap[i, j] = colorKeys[5];
+                        }
+                        else if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 4)])
+                        {
+                            newBitmap[i, j] = colorKeys[4];
+                        }
+                        else if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 3)])
+                        {
+                            newBitmap[i, j] = colorKeys[3];
+                        }
+                        else if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 2)])
+                        {
+                            newBitmap[i, j] = colorKeys[2];
+                        }
+                        else if (buildingPercent >= formattedOrderedList[(int)Math.Floor(numberInbetween * 1)])
+                        {
+                            newBitmap[i, j] = colorKeys[1];
+                        }
+                        else
+                        {
+                            newBitmap[i, j] = colorKeys[0];
+                        }
+                    }
+                    else
+                    {
+                        newBitmap[i, j] = actualColor;
+                    }
+                }
+            }
+
+            return newBitmap;
+        }
+
         private Image<Rgba32> BuildFloorKey(Dictionary<int, double> lowestHoodPrice, bool colorBlind)
         {
             List<string> formattedOrderedPrices = lowestHoodPrice
@@ -450,10 +675,10 @@ namespace Upland.InformationProcessor
                 .OrderBy(p => p)
                 .ToList().Select(p => string.Format("{0:N2}", p)).ToList();
             int maxPriceLength = formattedOrderedPrices.Select(p => string.Format("{0:N2}", p)).Max(v => v.Length);
-            double numberInbetween = formattedOrderedPrices.Count / 9.0;
+            double numberInbetween = (formattedOrderedPrices.Count-1) / 9.0;
 
             List<string> keyTextStrings = new List<string>();
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[0].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 0)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 1)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)].PadLeft(maxPriceLength)));
@@ -462,7 +687,7 @@ namespace Upland.InformationProcessor
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[formattedOrderedPrices.Count-1]).PadLeft(maxPriceLength));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxPriceLength)));
             keyTextStrings.Add("No Floor");
 
             return BuildKey(colorBlind, keyTextStrings);
@@ -477,10 +702,10 @@ namespace Upland.InformationProcessor
                 .OrderBy(p => p)
                 .ToList().Select(p => string.Format("{0:N2}", p)).ToList();
             int maxPriceLength = formattedOrderedPrices.Select(p => string.Format("{0:N2}", p)).Max(v => v.Length);
-            double numberInbetween = formattedOrderedPrices.Count / 9.0;
+            double numberInbetween = (formattedOrderedPrices.Count - 1) / 9.0;
 
             List<string> keyTextStrings = new List<string>();
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[0].PadLeft(maxPriceLength)));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 0)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 1)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 2)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 3)].PadLeft(maxPriceLength)));
@@ -489,12 +714,65 @@ namespace Upland.InformationProcessor
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 6)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 7)].PadLeft(maxPriceLength)));
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 8)].PadLeft(maxPriceLength)));
-            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[formattedOrderedPrices.Count - 1]).PadLeft(maxPriceLength));
+            keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxPriceLength)));
             keyTextStrings.Add("Low Market Data");
 
             return BuildKey(colorBlind, keyTextStrings);
         }
-        
+
+        private Image<Rgba32> BuildBuildingCountKey(Dictionary<int, int> neighborhoodStructureCount, bool colorBlind)
+        {
+            List<string> formattedOrderedList= neighborhoodStructureCount
+                .GroupBy(l => l.Value)
+                .Select(d => d.First().Value)
+                .OrderBy(p => p)
+                .ToList().Select(p => string.Format("{0:N0}", p)).ToList();
+            int maxLength = formattedOrderedList.Select(p => string.Format("{0:N0}", p)).Max(v => v.Length);
+            double numberInbetween = (formattedOrderedList.Count - 1) / 10.0;
+
+            List<string> keyTextStrings = new List<string>();
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 0)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 1)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 2)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 3)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 4)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 5)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 6)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 7)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 8)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 10)].PadLeft(maxLength)));
+
+            return BuildKey(colorBlind, keyTextStrings);
+        }
+
+        private Image<Rgba32> BuildBuildingPercentKey(Dictionary<int, double> neighborhoodStructurePercent, bool colorBlind)
+        {
+            List<string> formattedOrderedList = neighborhoodStructurePercent
+                .GroupBy(l => l.Value)
+                .Select(d => d.First().Value)
+                .OrderBy(p => p)
+                .ToList().Select(p => string.Format("{0:N2}", p)).ToList();
+            int maxLength = formattedOrderedList.Select(p => string.Format("{0:N2}", p)).Max(v => v.Length);
+            double numberInbetween = (formattedOrderedList.Count - 1) / 10.0;
+
+            List<string> keyTextStrings = new List<string>();
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 0)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 1)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 2)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 3)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 4)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 5)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 6)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 7)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 8)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxLength)));
+            keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 10)].PadLeft(maxLength)));
+
+            return BuildKey(colorBlind, keyTextStrings);
+        }
+
+
         private Image<Rgba32> BuildStandardKey(bool colorBlind)
         {
             List<string> keyTextStrings = new List<string>();
