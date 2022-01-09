@@ -582,7 +582,7 @@ namespace Upland.InformationProcessor
                         Process_Single_FullResync(localProperty, uplandProperty);
                     }
 
-                    if (okayProps == 1000)
+                    if (okayProps == 2500)
                     {
                         break;
                     }
