@@ -274,9 +274,13 @@ class Program
                         case "The server responded with error 40005: Request entity too large":
                             await context.Channel.SendMessageAsync(string.Format("ERROR: That file exceeds the size limit set discord unfortunaley. Try requesting it as a CSV instead."));
                             break;
+                        case "Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.":
+                            await context.Channel.SendMessageAsync(string.Format("ERROR: This command timed out for some reason. The hampster running the server probably just got tuckered out. Try again later."));
+                            _localDataManager.CreateErrorLog("Program.cs - HandleCommandAsync - Timeout", result.ErrorReason);
+                            break;
                         default:
                             await context.Channel.SendMessageAsync(string.Format("ERROR: Contact Grombrindal."));
-                            _localDataManager.CreateErrorLog("Program.cs - HandleCommandAsync", result.ErrorReason);
+                            _localDataManager.CreateErrorLog("Program.cs - HandleCommandAsync - Default", result.ErrorReason);
                             break;
                     }
                 }
