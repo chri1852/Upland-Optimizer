@@ -222,7 +222,9 @@ namespace Startup.Commands
 
             try
             {
-                _localDataManager.SetRegisteredUserPaid(uplandUsername);
+                RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUsername);
+                registeredUser.Paid = true;
+                _localDataManager.UpdateRegisteredUser(registeredUser);
                 await ReplyAsync(string.Format("{0} is now a Supporter.", uplandUsername));
             }
             catch (Exception ex)

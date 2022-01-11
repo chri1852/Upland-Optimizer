@@ -93,7 +93,9 @@ namespace Upland.CollectionOptimizer
                     Status = Consts.RunStatusCompleted,
                     Results = Encoding.UTF8.GetBytes(results)
                 });
-            LocalDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
+
+            registeredUser.RunCount++;
+            LocalDataManager.UpdateRegisteredUser(registeredUser);
         }
 
         private async Task RunDebugOptimization(OptimizerRunRequest runRequest)

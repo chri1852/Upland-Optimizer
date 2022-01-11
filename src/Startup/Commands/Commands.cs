@@ -78,7 +78,7 @@ namespace Startup.Commands
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
             {
-                if (registeredUser.Verified)
+                if (registeredUser.DiscordVerified)
                 {
                     await ReplyAsync(string.Format("Looks like you already registered and verified {0}.", registeredUser.UplandUsername));
                 }
@@ -145,7 +145,7 @@ namespace Startup.Commands
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
             {
-                if (registeredUser.Verified)
+                if (registeredUser.DiscordVerified)
                 {
                     await ReplyAsync(string.Format("Looks like you are already verified {0}. Try contacting Grombrindal.", HelperFunctions.GetRandomName(_random)));
                 }
@@ -153,7 +153,7 @@ namespace Startup.Commands
                 {
                     try
                     {
-                        _localDataManager.DeleteRegisteredUser(Context.User.Id);
+                        _localDataManager.DeleteRegisteredUser(registeredUser.Id);
                         await ReplyAsync(string.Format("I got you {0}. I have cleared your registration. Try again with my !RegisterMe command with your Upland username", HelperFunctions.GetRandomName(_random)));
                     }
                     catch (Exception ex)
@@ -179,7 +179,7 @@ namespace Startup.Commands
                 return;
             }
 
-            if (registeredUser.Verified)
+            if (registeredUser.DiscordVerified)
             {
                 await ReplyAsync(string.Format("Looks like you are already verified {0}.", HelperFunctions.GetRandomName(_random)));
             }
@@ -199,7 +199,8 @@ namespace Startup.Commands
                 }
                 else
                 {
-                    _localDataManager.SetRegisteredUserVerified(registeredUser.DiscordUserId);
+                    registeredUser.DiscordVerified = true;
+                    _localDataManager.UpdateRegisteredUser(registeredUser);
 
                     // Add the EOS Account if we dont have it
                     Tuple<string, string> currentUser = _localDataManager.GetUplandUsernameByEOSAccount(property.owner);
@@ -949,7 +950,8 @@ namespace Startup.Commands
                 await Context.Channel.SendFileAsync(stream, string.Format("{0}_Appraisal.{1}", registeredUser.UplandUsername, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
             }
 
-            _localDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
+            registeredUser.RunCount++;
+            _localDataManager.UpdateRegisteredUser(registeredUser);
         }
 
         [Command("CreateMap")]
@@ -1007,7 +1009,8 @@ namespace Startup.Commands
                 _localDataManager.CreateErrorLog("Commands - CreateMap - Delete Map", ex.Message);
             }
 
-            _localDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
+            registeredUser.RunCount++;
+            _localDataManager.UpdateRegisteredUser(registeredUser);
         }
 
         [Command("Help")]
@@ -1024,7 +1027,7 @@ namespace Startup.Commands
 
             if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
             {
-                if (!registeredUser.Verified)
+                if (!registeredUser.DiscordVerified)
                 {
                     properties = await _uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
                     await ReplyAsync(string.Format("Looks like you have registered, but not verified yet {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
@@ -1101,7 +1104,7 @@ namespace Startup.Commands
 
             if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
             {
-                if (!registeredUser.Verified)
+                if (!registeredUser.DiscordVerified)
                 {
                     properties = await _uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
                     await ReplyAsync(string.Format("Looks like you have registered, but not verified yet {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
@@ -1124,7 +1127,7 @@ namespace Startup.Commands
                 return false;
             }
 
-            if (!registeredUser.Verified)
+            if (!registeredUser.DiscordVerified)
             {
                 await ReplyAsync(string.Format("Looks like you are not verified {0}. Try Again with my !VerifyMe command.", HelperFunctions.GetRandomName(_random)));
                 return false;
@@ -1138,7 +1141,8 @@ namespace Startup.Commands
             if (!registeredUser.Paid && registeredUser.SentUPX >= Consts.SendUpxSupporterThreshold)
             {
                 await (Context.User as IGuildUser).AddRoleAsync(Consts.DiscordSupporterRoleId);
-                _localDataManager.SetRegisteredUserPaid(registeredUser.UplandUsername);
+                registeredUser.Paid = true;
+                _localDataManager.UpdateRegisteredUser(registeredUser);
                 await ReplyAsync(string.Format("Congrats and Thank You {0}! You have sent enough times to be considered a Supporter! Don't worry about runs anymore, you've done enough. You are no longer limited by runs, and have access to the Supporter Commands!", HelperFunctions.GetRandomName(_random)));
             }
 

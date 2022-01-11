@@ -1,13 +1,13 @@
 ﻿CREATE PROCEDURE [UPL].[DeleteRegisteredUser]
 (
-	@DiscordUserId  DECIMAL(20,0)
+	@Id INT
 )
 AS
 BEGIN
 	BEGIN TRY		
 		DELETE 
 		FROM [UPL].[RegisteredUser]
-		WHERE DiscordUserId = @DiscordUserId
+		WHERE Id = @Id
 	END TRY
 
 	BEGIN CATCH

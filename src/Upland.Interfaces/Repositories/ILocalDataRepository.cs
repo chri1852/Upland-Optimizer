@@ -49,11 +49,9 @@ namespace Upland.Interfaces.Repositories
         void SetOptimizationRunStatus(OptimizationRun optimizationRun);
         OptimizationRun GetLatestOptimizationRun(decimal discordUserId);
         void CreateRegisteredUser(RegisteredUser registeredUser);
-        void SetRegisteredUserPaid(string uplandUsername);
-        void SetRegisteredUserVerified(decimal discordUserId);
-        void IncreaseRegisteredUserRunCount(decimal discordUserId);
-        void AddRegisteredUserSendUPX(decimal discordUserId, int sendUPX);
+        void UpdateRegisteredUser(RegisteredUser registeredUser);
         RegisteredUser GetRegisteredUser(decimal discordUserId);
+        RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername);
         Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount);
         List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts();
         List<SaleHistoryQueryEntry> GetSaleHistoryByCityId(int cityId);
@@ -63,7 +61,8 @@ namespace Upland.Interfaces.Repositories
         List<SaleHistoryQueryEntry> GetSaleHistoryByPropertyId(long propertyId);
         List<SaleHistoryQueryEntry> GetSaleHistoryByBuyerUsername(string buyerUsername);
         List<SaleHistoryQueryEntry> GetSaleHistoryBySellerUsername(string sellerUsername);
-        void DeleteRegisteredUser(decimal discordUserId); void DeleteOptimizerRuns(decimal discordUserId);
+        void DeleteRegisteredUser(int Id); 
+        void DeleteOptimizerRuns(decimal discordUserId);
         void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS);
         void DeleteSaleHistoryById(int id);
         void DeleteEOSUser(string eosAccount);

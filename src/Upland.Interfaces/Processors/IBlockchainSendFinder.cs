@@ -9,6 +9,6 @@ namespace Upland.Interfaces.Processors
     {
         Task RunBlockChainUpdate();
         Task SearchSendsFromDate(DateTime startDate);
-        void ProcessActions(List<HistoryAction> actions);
+        void ProcessActions(List<HistoryAction> actions, List<Tuple<decimal, string, string>> registeredUserEOSAccounts);
     }
 }

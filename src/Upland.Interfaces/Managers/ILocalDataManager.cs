@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Upland.Types;
 using Upland.Types.Types;
@@ -48,6 +47,7 @@ namespace Upland.Interfaces.Managers
         void SetOptimizationRunStatus(OptimizationRun optimizationRun);
         OptimizationRun GetLatestOptimizationRun(decimal discordUserId);
         RegisteredUser GetRegisteredUser(decimal discordUserId);
+        RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername);
         List<SaleHistoryEntry> GetRawSaleHistoryByPropertyId(long propertyId);
         List<SaleHistoryQueryEntry> GetSaleHistoryByCityId(int cityId);
         List<SaleHistoryQueryEntry> GetSaleHistoryByNeighborhoodId(int neighborhoodId);
@@ -70,15 +70,12 @@ namespace Upland.Interfaces.Managers
         void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS);
         void DeleteSaleHistoryByBuyerEOSAccount(string eosAccount);
         void CreateRegisteredUser(RegisteredUser registeredUser);
-        void IncreaseRegisteredUserRunCount(decimal discordUserId);
-        void AddRegisteredUserSendUPX(decimal discordUserId, int sendUPX);
-        void DeleteRegisteredUser(decimal discordUserId);
+        void UpdateRegisteredUser(RegisteredUser registeredUser);
+        void DeleteRegisteredUser(int id);
         void DeleteEOSUser(string eosAccount);
         void DeleteSaleHistoryById(int id);
         void DeleteSaleHistoryByPropertyId(long propertyId);
         void DeleteOptimizerRuns(decimal discordUserId);
-        void SetRegisteredUserVerified(decimal discordUserId);
-        void SetRegisteredUserPaid(string uplandUsername);
         void TruncatePropertyStructure();
         void CreatePropertyStructure(PropertyStructure propertyStructure);
         List<PropertyStructure> GetPropertyStructures();
@@ -86,6 +83,5 @@ namespace Upland.Interfaces.Managers
         void UpsertSaleHistory(SaleHistoryEntry saleHistory);
         void UpsertConfigurationValue(string name, string value);
         void UpsertProperty(Property property);
-
     }
 }

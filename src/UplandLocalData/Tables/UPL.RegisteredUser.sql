@@ -1,15 +1,19 @@
 ﻿CREATE TABLE [UPL].[RegisteredUser]
 (
 	[Id]                INT IDENTITY(1,1) NOT NULL,
-	[DiscordUserId]     DECIMAL(20,0)     NOT NULL,
-	[DiscordUsername]   VARCHAR(200)      NOT NULL,
-	[UplandUsername]    VARCHAR(200)              ,
+	[DiscordUserId]     DECIMAL(20,0)             ,
+	[DiscordUsername]   VARCHAR(200)              ,
+	[UplandUsername]    VARCHAR(200)      NOT NULL,
 	[RunCount]          INT               NOT NULL,
 	[Paid]              BIT               NOT NULL,
-	[PropertyId]        BIGINT            NOT NULL,
-	[Price]             INT               NOT NULL,
+	[PropertyId]        BIGINT                    ,
+	[Price]             INT                       ,
 	[Verified]          BIT               NOT NULL,
 	[SendUPX]           INT               NOT NULL,
+	[PasswordSalt]      VARCHAR(64)               ,
+	[PasswordHash]      VARCHAR(64)               ,
+	[DiscordVerified]   BIT               NOT NULL,
+	[WebVerified]       BIT               NOT NULL,
 
 	CONSTRAINT pk_RegisteredUserId PRIMARY KEY(Id)
 )

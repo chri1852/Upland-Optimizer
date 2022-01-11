@@ -90,7 +90,7 @@ namespace Upland.Infrastructure.LocalData
                         catch
                         {
                             retryIds.Add(prop.Prop_Id);
-                        }    
+                        }
                     }
                 }
             }
@@ -674,6 +674,11 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetRegisteredUsersEOSAccounts();
         }
 
+        public RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername)
+        {
+            return _localDataRepository.GetRegisteredUserByUplandUsername(uplandUsername);
+        }
+
         public DateTime GetLastHistoricalCityStatusDate()
         {
             return _localDataRepository.GetLastHistoricalCityStatusDate();
@@ -699,19 +704,14 @@ namespace Upland.Infrastructure.LocalData
             _localDataRepository.CreateRegisteredUser(registeredUser);
         }
 
-        public void IncreaseRegisteredUserRunCount(decimal discordUserId)
+        public void UpdateRegisteredUser(RegisteredUser registeredUser)
         {
-            _localDataRepository.IncreaseRegisteredUserRunCount(discordUserId);
+            _localDataRepository.UpdateRegisteredUser(registeredUser);
         }
 
-        public void AddRegisteredUserSendUPX(decimal discordUserId, int sendUPX)
+        public void DeleteRegisteredUser(int id)
         {
-            _localDataRepository.AddRegisteredUserSendUPX(discordUserId, sendUPX);
-        }
-
-        public void DeleteRegisteredUser(decimal discordUserId)
-        {
-            _localDataRepository.DeleteRegisteredUser(discordUserId);
+            _localDataRepository.DeleteRegisteredUser(id);
         }
 
         public void DeleteEOSUser(string eosAccount)
@@ -732,16 +732,6 @@ namespace Upland.Infrastructure.LocalData
         public void DeleteOptimizerRuns(decimal discordUserId)
         {
             _localDataRepository.DeleteOptimizerRuns(discordUserId);
-        }
-
-        public void SetRegisteredUserVerified(decimal discordUserId)
-        {
-            _localDataRepository.SetRegisteredUserVerified(discordUserId);
-        }
-
-        public void SetRegisteredUserPaid(string uplandUsername)
-        {
-            _localDataRepository.SetRegisteredUserPaid(uplandUsername);
         }
 
         public void TruncatePropertyStructure()

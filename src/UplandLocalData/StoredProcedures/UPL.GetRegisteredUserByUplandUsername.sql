@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[SetRegisteredUserVerified]
+﻿CREATE PROCEDURE [UPL].[GetRegisteredUserByUplandUsername]
 (
-	@DiscordUserId DECIMAL(20,0)
+	@UplandUsername VARCHAR(200)
 )
 AS
 BEGIN
 	BEGIN TRY		
-		UPDATE [UPL].[RegisteredUser]
-		SET Verified = 1
-		WHERE DiscordUserId = @DiscordUserId
+		SELECT TOP(1) * 
+		FROM [UPL].[RegisteredUser] (NOLOCK)
+		WHERE UplandUsername = @UplandUsername
 	END TRY
 
 	BEGIN CATCH

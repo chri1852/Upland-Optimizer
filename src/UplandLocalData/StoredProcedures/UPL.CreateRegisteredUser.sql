@@ -18,8 +18,11 @@ BEGIN
 			[Paid],
 			[PropertyId],
 			[Price],
-			[Verified],
-			[SendUPX]
+			[SendUPX],
+			[PasswordSalt],
+			[PasswordHash],
+			[DiscordVerified],
+			[WebVerified]
 		)
 		VALUES
 		(
@@ -30,6 +33,9 @@ BEGIN
 			0,
 			@PropertyId,
 			@Price,
+			0,
+			NULL,
+			NULL,
 			0,
 			0
 		)

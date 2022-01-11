@@ -26,7 +26,7 @@ namespace Upland.Infrastructure.UplandApi
             this.authHttpClient = new HttpClient();
             this.authHttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             this.authHttpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
-            this.authHttpClient.DefaultRequestHeaders.Add("Authorization", _configuration["AppSettings:UplandAuthToken"]);
+            this.authHttpClient.DefaultRequestHeaders.Add("Authorization", _configuration.GetSection("AppSettings")["UplandAuthToken"]);
         }
 
         public async Task<List<UplandCollection>> GetCollections()

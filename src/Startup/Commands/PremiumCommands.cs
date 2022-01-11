@@ -183,7 +183,7 @@ namespace Startup.Commands
                 return false;
             }
 
-            if (!registeredUser.Verified)
+            if (!registeredUser.DiscordVerified)
             {
                 await ReplyAsync(string.Format("Looks like you are not verified {0}. Try Again with my !VerifyMe command.", HelperFunctions.GetRandomName(_random)));
                 return false;

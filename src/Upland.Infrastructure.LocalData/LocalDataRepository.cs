@@ -1688,7 +1688,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public void SetRegisteredUserPaid(string uplandUsername)
+        public void UpdateRegisteredUser(RegisteredUser registeredUser)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1701,96 +1701,20 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[SetRegisteredUserPaid]";
-                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
-
-                    sqlCmd.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    sqlConnection.Close();
-                }
-            }
-        }
-
-        public void SetRegisteredUserVerified(decimal discordUserId)
-        {
-            SqlConnection sqlConnection = GetSQLConnector();
-
-            using (sqlConnection)
-            {
-                sqlConnection.Open();
-
-                try
-                {
-                    SqlCommand sqlCmd = new SqlCommand();
-                    sqlCmd.Connection = sqlConnection;
-                    sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[SetRegisteredUserVerified]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
-
-                    sqlCmd.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    sqlConnection.Close();
-                }
-            }
-        }
-
-        public void IncreaseRegisteredUserRunCount(decimal discordUserId)
-        {
-            SqlConnection sqlConnection = GetSQLConnector();
-
-            using (sqlConnection)
-            {
-                sqlConnection.Open();
-
-                try
-                {
-                    SqlCommand sqlCmd = new SqlCommand();
-                    sqlCmd.Connection = sqlConnection;
-                    sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[IncreaseRegisteredUserRunCount]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
-
-                    sqlCmd.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    sqlConnection.Close();
-                }
-            }
-        }
-
-        public void AddRegisteredUserSendUPX(decimal discordUserId, int sendUPX)
-        {
-            SqlConnection sqlConnection = GetSQLConnector();
-
-            using (sqlConnection)
-            {
-                sqlConnection.Open();
-
-                try
-                {
-                    SqlCommand sqlCmd = new SqlCommand();
-                    sqlCmd.Connection = sqlConnection;
-                    sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[AddRegisteredUserSendUPX]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
-                    sqlCmd.Parameters.Add(new SqlParameter("SendUPX", sendUPX));
+                    sqlCmd.CommandText = "[UPL].[UpdateRegisteredUser]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", registeredUser.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", registeredUser.DiscordUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", registeredUser.DiscordUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", registeredUser.UplandUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("RunCount", registeredUser.RunCount));
+                    sqlCmd.Parameters.Add(new SqlParameter("Paid", registeredUser.Paid));
+                    sqlCmd.Parameters.Add(new SqlParameter("PropertyId", registeredUser.PropertyId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.Price));
+                    sqlCmd.Parameters.Add(new SqlParameter("SendUpx", registeredUser.SentUPX));
+                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.PasswordSalt));
+                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.PasswordHash));
+                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.DiscordVerified));
+                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.WebVerified));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -1835,7 +1759,11 @@ namespace Upland.Infrastructure.LocalData
                                 Paid = (bool)reader["Paid"],
                                 PropertyId = (long)reader["PropertyId"],
                                 Price = (int)reader["Price"],
-                                Verified = (bool)reader["Verified"],
+                                SentUPX = (int)reader["SendUpx"],
+                                PasswordSalt = (string)reader["PasswordSalt"],
+                                PasswordHash = (string)reader["PasswordHash"],
+                                DiscordVerified = (bool)reader["DiscordVerified"],
+                                WebVerified = (bool)reader["WebVerified"]
                             };
                         }
                         reader.Close();
@@ -1853,6 +1781,60 @@ namespace Upland.Infrastructure.LocalData
                 return registeredUser;
             }
         }
+
+        public RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername)
+        {
+            RegisteredUser registeredUser = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetRegisteredUserByUplandUsername]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@UplandUsername", uplandUsername));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            registeredUser = new RegisteredUser
+                            {
+                                Id = (int)reader["Id"],
+                                DiscordUserId = (decimal)reader["DiscordUserId"],
+                                DiscordUsername = (string)reader["DiscordUsername"],
+                                UplandUsername = (string)reader["UplandUsername"],
+                                RunCount = (int)reader["RunCount"],
+                                Paid = (bool)reader["Paid"],
+                                PropertyId = (long)reader["PropertyId"],
+                                Price = (int)reader["Price"],
+                                SentUPX = (int)reader["SendUpx"],
+                                PasswordSalt = (string)reader["PasswordSalt"],
+                                PasswordHash = (string)reader["PasswordHash"],
+                                DiscordVerified = (bool)reader["DiscordVerified"],
+                                WebVerified = (bool)reader["WebVerified"]
+                            };
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return registeredUser;
+            }
+        }
+
 
         public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
         {
@@ -2251,7 +2233,7 @@ namespace Upland.Infrastructure.LocalData
             };
         }
 
-        public void DeleteRegisteredUser(decimal discordUserId)
+        public void DeleteRegisteredUser(int id)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -2265,7 +2247,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[DeleteRegisteredUser]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", id));
 
                     sqlCmd.ExecuteNonQuery();
                 }
