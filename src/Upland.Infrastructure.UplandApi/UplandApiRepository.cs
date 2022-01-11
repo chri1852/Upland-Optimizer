@@ -1,20 +1,24 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Upland.Interfaces.Repositories;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.Infrastructure.UplandApi
 {
-    public class UplandApiRepository
+    public class UplandApiRepository : IUplandApiRepository
     {
-        HttpClient httpClient;
-        HttpClient authHttpClient;
+        private HttpClient httpClient;
+        private HttpClient authHttpClient;
+        private readonly IConfiguration _configuration;
 
-        public UplandApiRepository()
+        public UplandApiRepository(IConfiguration configuration)
         {
+            _configuration = configuration;
             this.httpClient = new HttpClient();
             this.httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             this.httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
@@ -22,7 +26,7 @@ namespace Upland.Infrastructure.UplandApi
             this.authHttpClient = new HttpClient();
             this.authHttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             this.authHttpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
-            this.authHttpClient.DefaultRequestHeaders.Add("Authorization", JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["UplandAuthToken"]);
+            this.authHttpClient.DefaultRequestHeaders.Add("Authorization", _configuration["AppSettings:UplandAuthToken"]);
         }
 
         public async Task<List<UplandCollection>> GetCollections()

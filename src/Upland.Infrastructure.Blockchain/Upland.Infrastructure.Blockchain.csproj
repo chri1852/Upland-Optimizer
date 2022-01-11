@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Upland.Interfaces\Upland.Interfaces.csproj" />
     <ProjectReference Include="..\Upland.Types\Upland.Types.csproj" />
   </ItemGroup>
 

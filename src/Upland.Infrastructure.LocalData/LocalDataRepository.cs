@@ -1,22 +1,26 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text.Json;
+using Upland.Interfaces.Repositories;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.Infrastructure.LocalData
 {
-    public class LocalDataRepository
+    public class LocalDataRepository : ILocalDataRepository
     {
+        private readonly IConfiguration _configuration;
         private readonly string DbConnectionString;
 
-        public LocalDataRepository()
+        public LocalDataRepository(IConfiguration configuration)
         {
-            DbConnectionString = JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["DatabaseConnectionString"];
+            _configuration = configuration;
+            DbConnectionString = _configuration["AppSettings:DatabaseConnectionString"];
         }
 
         public void CreateCollection(Collection collection)

@@ -1,0 +1,91 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using Upland.Types;
+using Upland.Types.Types;
+using Upland.Types.UplandApiTypes;
+
+namespace Upland.Interfaces.Managers
+{
+    public interface ILocalDataManager
+    {
+        Task PopulateAllPropertiesInArea(double north, double south, double east, double west, int cityId);
+        int GetNeighborhoodIdForProp(List<Neighborhood> neighborhoods, Property property);
+        Task PopulateIndividualPropertyById(long propertyId, List<Neighborhood> neighborhoods);
+        Task PopulateNeighborhoods();
+        Task PopulateStreets();
+        Task PopulateDatabaseCollectionInfo();
+        void DetermineNeighborhoodIdsForCity(int cityId);
+        bool IsPropertyInNeighborhood(Neighborhood neighborhood, Property property);
+        Property GetProperty(long id);
+        List<Property> GetProperties(List<long> ids);
+        List<long> GetPropertyIdsByCollectionId(int collectionId);
+        List<Property> GetPropertiesByUplandUsername(string uplandUsername);
+        List<Property> GetPropertiesByCityId(int cityId);
+        Property GetPropertyByCityIdAndAddress(int cityId, string address);
+        List<Property> GetPropertiesByCollectionId(int collectionId);
+        List<Collection> GetCollections();
+        Task<List<Property>> GetPropertysByUsername(string username);
+        List<Street> SearchStreets(string name);
+        List<Neighborhood> SearchNeighborhoods(string name);
+        List<Collection> SearchCollections(string name);
+        List<PropertySearchEntry> SearchProperties(int cityId, string address);
+        void SetHistoricalCityStats(DateTime timeStamp);
+        List<CollatedStatsObject> GetCityStats();
+        List<CollatedStatsObject> GetNeighborhoodStats();
+        List<CollatedStatsObject> GetStreetStats();
+        List<CollatedStatsObject> GetCollectionStats();
+        List<PropertyAppraisalData> GetPreviousSalesAppraisalData();
+        List<PropertyAppraisalData> GetCurrentFloorAppraisalData();
+        List<Tuple<string, double>> GetBuildingAppraisalData();
+        void CreateOptimizationRun(OptimizationRun optimizationRun);
+        void CreateNeighborhood(Neighborhood neighborhood);
+        void CreateStreet(Street street);
+        void CreateErrorLog(string location, string message);
+        List<Neighborhood> GetNeighborhoods();
+        List<Street> GetStreets();
+        void SetOptimizationRunStatus(OptimizationRun optimizationRun);
+        OptimizationRun GetLatestOptimizationRun(decimal discordUserId);
+        RegisteredUser GetRegisteredUser(decimal discordUserId);
+        List<SaleHistoryEntry> GetRawSaleHistoryByPropertyId(long propertyId);
+        List<SaleHistoryQueryEntry> GetSaleHistoryByCityId(int cityId);
+        List<SaleHistoryQueryEntry> GetSaleHistoryByNeighborhoodId(int neighborhoodId);
+        List<SaleHistoryQueryEntry> GetSaleHistoryByCollectionId(int collectionId);
+        List<SaleHistoryQueryEntry> GetSaleHistoryByStreetId(int streetId);
+        List<SaleHistoryQueryEntry> GetSaleHistoryByPropertyId(long propertyId);
+        List<SaleHistoryQueryEntry> GetSaleHistoryByBuyerUsername(string buyerUsername);
+        List<SaleHistoryQueryEntry> GetSaleHistoryBySellerUsername(string sellerUsername);
+        List<CollatedStatsObject> GetHistoricalCityStatsByCityId(int cityId);
+        List<UplandForSaleProp> GetPropertiesForSale_City(int cityId, bool onlyBuildings);
+        List<UplandForSaleProp> GetPropertiesForSale_Neighborhood(int neighborhoodId, bool onlyBuildings);
+        List<UplandForSaleProp> GetPropertiesForSale_Street(int streetId, bool onlyBuildings);
+        List<UplandForSaleProp> GetPropertiesForSale_Collection(int collectionId, bool onlyBuildings);
+        List<UplandForSaleProp> GetPropertiesForSale_Seller(string uplandUsername, bool onlyBuildings);
+        string GetConfigurationValue(string name);
+        Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount);
+        List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts();
+        DateTime GetLastHistoricalCityStatusDate();
+        DateTime GetLastSaleHistoryDateTime();
+        void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS);
+        void DeleteSaleHistoryByBuyerEOSAccount(string eosAccount);
+        void CreateRegisteredUser(RegisteredUser registeredUser);
+        void IncreaseRegisteredUserRunCount(decimal discordUserId);
+        void AddRegisteredUserSendUPX(decimal discordUserId, int sendUPX);
+        void DeleteRegisteredUser(decimal discordUserId);
+        void DeleteEOSUser(string eosAccount);
+        void DeleteSaleHistoryById(int id);
+        void DeleteSaleHistoryByPropertyId(long propertyId);
+        void DeleteOptimizerRuns(decimal discordUserId);
+        void SetRegisteredUserVerified(decimal discordUserId);
+        void SetRegisteredUserPaid(string uplandUsername);
+        void TruncatePropertyStructure();
+        void CreatePropertyStructure(PropertyStructure propertyStructure);
+        List<PropertyStructure> GetPropertyStructures();
+        void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined);
+        void UpsertSaleHistory(SaleHistoryEntry saleHistory);
+        void UpsertConfigurationValue(string name, string value);
+        void UpsertProperty(Property property);
+
+    }
+}

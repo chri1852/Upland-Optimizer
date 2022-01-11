@@ -3,23 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Upland.Infrastructure.Blockchain;
-using Upland.Infrastructure.LocalData;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.BlockchainTypes;
 
 namespace Upland.InformationProcessor
 {
-    public class BlockchainSendFinder
+    public class BlockchainSendFinder : IBlockchainSendFinder
     {
-        private readonly LocalDataManager _localDataManager;
-        private readonly BlockchainManager _blockchainManager;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IBlockchainManager _blockchainManager;
 
         private List<Tuple<decimal, string, string>> registeredUserEOSAccounts;
         private List<string> propertyIdsToWatch;
         private bool isProcessing;
 
-        public BlockchainSendFinder(LocalDataManager localDataManager, BlockchainManager blockchainManager)
+        public BlockchainSendFinder(ILocalDataManager localDataManager, IBlockchainManager blockchainManager)
         {
             _localDataManager = localDataManager;
             _blockchainManager = blockchainManager;

@@ -2,22 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Upland.Infrastructure.Blockchain;
-using Upland.Infrastructure.LocalData;
-using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
 {
-    public class InformationProcessor
+    public class InformationProcessor : IInformationProcessor
     {
-        private readonly LocalDataManager _localDataManager;
-        private readonly UplandApiManager _uplandApiManager;
-        private readonly BlockchainManager _blockchainManager;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IUplandApiManager _uplandApiManager;
+        private readonly IBlockchainManager _blockchainManager;
 
-        public InformationProcessor(LocalDataManager localDataManager, UplandApiManager uplandApiManager, BlockchainManager blockchainManager)
+        public InformationProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;

@@ -2,21 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Upland.Interfaces.Repositories;
+using Upland.Interfaces.Managers;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.Infrastructure.UplandApi
 {
-    public class UplandApiManager
+    public class UplandApiManager : IUplandApiManager
     {
         private Dictionary<int, Tuple<DateTime, List<UplandForSaleProp>>> _saleCache;
-        private UplandApiRepository _uplandApiRepository;
+        private IUplandApiRepository _uplandApiRepository;
         private readonly int cacheTime = 15;
 
-        public UplandApiManager()
+        public UplandApiManager(IUplandApiRepository uplandApiRepository)
         {
             _saleCache = new Dictionary<int, Tuple<DateTime, List<UplandForSaleProp>>>();
-            _uplandApiRepository = new UplandApiRepository();
+            _uplandApiRepository = uplandApiRepository;
         }
 
         public async Task<List<UplandForSaleProp>> GetForSalePropsByCityId(int cityId)

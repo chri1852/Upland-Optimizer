@@ -9,16 +9,18 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Upland.Infrastructure.LocalData;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
 {
-    public class MappingProcessor
+    public class MappingProcessor : IMappingProcessor
     {
-        private LocalDataManager _localDataManager;
-        private ProfileAppraiser _profileAppraiser;
+        private ILocalDataManager _localDataManager;
+        private IProfileAppraiser _profileAppraiser;
 
         private List<Color> _standardKey;
         private List<Color> _colorBlindKey;
@@ -28,7 +30,7 @@ namespace Upland.InformationProcessor
         private readonly Font _smallFont;
         private readonly Font _largeFont;
 
-        public MappingProcessor(LocalDataManager localDataManager, ProfileAppraiser profileAppraiser)
+        public MappingProcessor(ILocalDataManager localDataManager, IProfileAppraiser profileAppraiser)
         {
             _localDataManager = localDataManager;
             _profileAppraiser = profileAppraiser;

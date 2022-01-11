@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Upland.Infrastructure.LocalData;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
 {
-    public class ForSaleProcessor
+    public class ForSaleProcessor : IForSaleProcessor
     {
-        private readonly LocalDataManager _localDataManager;
+        private readonly ILocalDataManager _localDataManager;
 
-        public ForSaleProcessor(LocalDataManager localDataManager)
+        public ForSaleProcessor(ILocalDataManager localDataManager)
         {
             _localDataManager = localDataManager;
         }

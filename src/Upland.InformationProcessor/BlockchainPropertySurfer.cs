@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Upland.Infrastructure.Blockchain;
-using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
@@ -14,16 +14,16 @@ using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
 {
-    public class BlockchainPropertySurfer
+    public class BlockchainPropertySurfer : IBlockchainPropertySurfer
     {
-        private readonly LocalDataManager _localDataManager;
-        private readonly BlockchainManager _blockchainManager;
-        private readonly UplandApiManager _uplandApiManager;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IBlockchainManager _blockchainManager;
+        private readonly IUplandApiManager _uplandApiManager;
 
         private List<Neighborhood> neighborhoods;
         private bool isProcessing;
 
-        public BlockchainPropertySurfer(LocalDataManager localDataManager, UplandApiManager uplandApiManager, BlockchainManager blockchainManager)
+        public BlockchainPropertySurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;

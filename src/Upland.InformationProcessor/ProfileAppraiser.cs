@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Upland.Infrastructure.LocalData;
-using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
 {
-    public class ProfileAppraiser
+    public class ProfileAppraiser : IProfileAppraiser
     {
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _previousSalesData;
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _currentFloorData;
@@ -19,12 +19,12 @@ namespace Upland.InformationProcessor
 
         private DateTime _expirationDate;
 
-        private LocalDataManager _localDataManager;
-        private UplandApiManager _uplandApiManager;
+        private ILocalDataManager _localDataManager;
+        private IUplandApiManager _uplandApiManager;
 
         private List<Collection> _collections;
 
-        public ProfileAppraiser(LocalDataManager localDataManager, UplandApiManager uplandApiManager)
+        public ProfileAppraiser(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;

@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Upland.CollectionOptimizer;
-using Upland.InformationProcessor;
-using Upland.Infrastructure.LocalData;
+using Upland.Interfaces.Repositories;
+using Upland.Interfaces.Managers;
 using Upland.Types;
 using Upland.Types.Types;
 
@@ -13,28 +13,26 @@ namespace Startup.Commands
     public class PremiumCommands : ModuleBase<SocketCommandContext>
     {
         private readonly Random _random;
-        private readonly InformationProcessor _informationProcessor;
-        private readonly LocalDataManager _localDataManager;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IUplandApiRepository _uplandApiRepository;
 
-        public PremiumCommands(InformationProcessor informationProcessor, LocalDataManager localDataManager)
+        public PremiumCommands(ILocalDataManager localDataManager, IUplandApiRepository uplandApiRepository)
         {
-            _informationProcessor = informationProcessor;
             _localDataManager = localDataManager;
+            _uplandApiRepository = uplandApiRepository;
             _random = new Random();
         }
 
         [Command("OptimizerLevelRun")]
         public async Task OptimizerLevelRun(int qualityLevel)
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (!await EnsureRegisteredVerifiedAndPaid(registeredUser))
             {
                 return;
             }
 
-            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
@@ -55,12 +53,12 @@ namespace Startup.Commands
 
             if (currentRun != null)
             {
-                localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
+                _localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
             }
 
             try
             {
-                CollectionOptimizer optimizer = new CollectionOptimizer();
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
                 await ReplyAsync(string.Format("Got it {0}! I have started your level {1} optimization run.", HelperFunctions.GetRandomName(_random), qualityLevel));
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower(), qualityLevel);
                 await optimizer.RunAutoOptimization(registeredUser, runRequest);
@@ -77,15 +75,13 @@ namespace Startup.Commands
         [Command("OptimizerWhatIfRun")]
         public async Task OptimizerWhatIfRun(int collectionId, int numberOfProps, double averageMonthlyUpx)
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (!await EnsureRegisteredVerifiedAndPaid(registeredUser))
             {
                 return;
             }
 
-            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
@@ -100,12 +96,12 @@ namespace Startup.Commands
 
             if (currentRun != null)
             {
-                localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
+                _localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
             }
 
             try
             {
-                CollectionOptimizer optimizer = new CollectionOptimizer();
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
                 await ReplyAsync(string.Format("Bingo {0}! I have started your What If optimization run.", HelperFunctions.GetRandomName(_random)));
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower(), collectionId, numberOfProps, averageMonthlyUpx);
                 await optimizer.RunAutoOptimization(registeredUser, runRequest);
@@ -123,15 +119,13 @@ namespace Startup.Commands
         [Command("OptimizerExcludeRun")]
         public async Task OptimizerExcludeRun(string collectionIds)
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (!await EnsureRegisteredVerifiedAndPaid(registeredUser))
             {
                 return;
             }
 
-            OptimizationRun currentRun = localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
@@ -161,12 +155,12 @@ namespace Startup.Commands
 
             if (currentRun != null)
             {
-                localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
+                _localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
             }
 
             try
             {
-                CollectionOptimizer optimizer = new CollectionOptimizer();
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
                 await ReplyAsync(string.Format("Bingo {0}! I have started your exclude optimization run.", HelperFunctions.GetRandomName(_random)));
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower(), excludeCollectionIds);
                 await optimizer.RunAutoOptimization(registeredUser, runRequest);

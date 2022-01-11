@@ -1,38 +1,43 @@
 ﻿using Discord.Commands;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Upland.CollectionOptimizer;
-using Upland.InformationProcessor;
-using Upland.Infrastructure.LocalData;
+using Upland.Interfaces.Repositories;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
+using Upland.Interfaces.Managers;
 
 namespace Startup.Commands
 {
     public class AdminCommands : ModuleBase<SocketCommandContext>
     {
+        private readonly IConfiguration _configuration;
         private readonly Random _random;
-        private readonly InformationProcessor _informationProcessor;
-        private readonly ResyncProcessor _resyncProcessor;
-        private readonly LocalDataManager _localDataManager;
-        private readonly ProfileAppraiser _profileAppraiser;
+        private readonly IInformationProcessor _informationProcessor;
+        private readonly IResyncProcessor _resyncProcessor;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IProfileAppraiser _profileAppraiser;
+        private readonly IUplandApiRepository _uplandApiRepository;
 
-        public AdminCommands(InformationProcessor informationProcessor, ResyncProcessor resyncProcessor, LocalDataManager localDataManager, ProfileAppraiser profileAppraiser)
+        public AdminCommands(IInformationProcessor informationProcessor, IResyncProcessor resyncProcessor, ILocalDataManager localDataManager, IProfileAppraiser profileAppraiser, IConfiguration configuration, IUplandApiRepository uplandApiRepository)
         {
+            _configuration = configuration;
             _random = new Random();
             _informationProcessor = informationProcessor;
             _resyncProcessor = resyncProcessor;
             _localDataManager = localDataManager;
             _profileAppraiser = profileAppraiser;
+            _uplandApiRepository = uplandApiRepository;
         }
 
         private async Task<bool> checkIfAdmin(ulong discordUserId)
         {
-            ulong adminId = ulong.Parse(JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["AdminDiscordId"]);
+            ulong adminId = ulong.Parse(this._configuration["AppSettings:AdminDiscordId"]);
 
             if (discordUserId != adminId)
             {
@@ -66,7 +71,7 @@ namespace Startup.Commands
             {
                 await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername.ToUpper()));
 
-                CollectionOptimizer optimizer = new CollectionOptimizer();
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(uplandUsername.ToLower(), qualityLevel);
                 await optimizer.RunAutoOptimization(new RegisteredUser
                 {

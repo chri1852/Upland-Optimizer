@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Commands;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Upland.CollectionOptimizer;
-using Upland.InformationProcessor;
-using Upland.Infrastructure.LocalData;
-using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.Repositories;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
@@ -20,13 +19,14 @@ namespace Startup.Commands
     public class Commands : ModuleBase<SocketCommandContext>
     {
         private readonly Random _random;
-        private readonly InformationProcessor _informationProcessor;
-        private readonly LocalDataManager _localDataManager;
-        private readonly ProfileAppraiser _profileAppraiser;
-        private readonly ForSaleProcessor _forSaleProcessor;
-        private readonly MappingProcessor _mappingProcessor;
+        private readonly IInformationProcessor _informationProcessor;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IProfileAppraiser _profileAppraiser;
+        private readonly IForSaleProcessor _forSaleProcessor;
+        private readonly IMappingProcessor _mappingProcessor;
+        private readonly IUplandApiRepository _uplandApiRepository;
 
-        public Commands(InformationProcessor informationProcessor, LocalDataManager localDataManager, ProfileAppraiser profileAppraiser, ForSaleProcessor forSaleProcessor, MappingProcessor mappingProcessor)
+        public Commands(IInformationProcessor informationProcessor, ILocalDataManager localDataManager, IProfileAppraiser profileAppraiser, IForSaleProcessor forSaleProcessor, IMappingProcessor mappingProcessor, IUplandApiRepository uplandApiRepository)
         {
             _random = new Random();
             _informationProcessor = informationProcessor;
@@ -34,6 +34,7 @@ namespace Startup.Commands
             _profileAppraiser = profileAppraiser;
             _forSaleProcessor = forSaleProcessor;
             _mappingProcessor = mappingProcessor;
+            _uplandApiRepository = uplandApiRepository;
         }
 
         [Command("Ping")]
@@ -72,7 +73,6 @@ namespace Startup.Commands
         [Command("RegisterMe")]
         public async Task RegisterMe(string uplandUserName)
         {
-            UplandApiRepository uplandApiRepository = new UplandApiRepository();
             List<UplandAuthProperty> properties;
 
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
@@ -84,7 +84,7 @@ namespace Startup.Commands
                 }
                 else
                 {
-                    properties = await uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
+                    properties = await _uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
                     await ReplyAsync(string.Format("Looks like you already registered {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
                     await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:N2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
                     await ReplyAsync(string.Format("2. Run my !ClearMe command to clear your unverified registration, and register again with !RegisterMe."));
@@ -92,7 +92,7 @@ namespace Startup.Commands
                 return;
             }
 
-            properties = await uplandApiRepository.GetPropertysByUsername(uplandUserName.ToLower());
+            properties = await _uplandApiRepository.GetPropertysByUsername(uplandUserName.ToLower());
             if (properties == null || properties.Count == 0)
             {
                 await ReplyAsync(string.Format("Looks like {0} is not a player {1}.", uplandUserName, HelperFunctions.GetRandomName(_random)));
@@ -172,8 +172,6 @@ namespace Startup.Commands
         [Command("VerifyMe")]
         public async Task VerifyMe()
         {
-            UplandApiRepository uplandApiRepository = new UplandApiRepository();
-
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
             {
@@ -187,7 +185,7 @@ namespace Startup.Commands
             }
             else
             {
-                UplandProperty property = await uplandApiRepository.GetPropertyById(registeredUser.PropertyId);
+                UplandProperty property = await _uplandApiRepository.GetPropertyById(registeredUser.PropertyId);
                 if (property.on_market == null)
                 {
                     await ReplyAsync(string.Format("Doesn't look like {0} is on sale for {1:N2}.", property.Full_Address, registeredUser.Price));
@@ -266,7 +264,7 @@ namespace Startup.Commands
 
             try
             {
-                CollectionOptimizer optimizer = new CollectionOptimizer();
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
                 await ReplyAsync(string.Format("Got it {0}! I have started your optimization run.", HelperFunctions.GetRandomName(_random)));
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower());
                 await optimizer.RunAutoOptimization(registeredUser, runRequest);
@@ -852,8 +850,7 @@ namespace Startup.Commands
         [Command("GetAssets")]
         public async Task GetAssets(string userName, string type, string fileType = "TXT")
         {
-            LocalDataManager localDataManager = new LocalDataManager();
-            RegisteredUser registeredUser = localDataManager.GetRegisteredUser(Context.User.Id);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -1017,7 +1014,6 @@ namespace Startup.Commands
         public async Task Help()
         {
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
-            UplandApiRepository uplandApiRepository = new UplandApiRepository();
             List<UplandAuthProperty> properties;
 
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
@@ -1030,7 +1026,7 @@ namespace Startup.Commands
             {
                 if (!registeredUser.Verified)
                 {
-                    properties = await uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
+                    properties = await _uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
                     await ReplyAsync(string.Format("Looks like you have registered, but not verified yet {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
                     await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:N2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
                     await ReplyAsync(string.Format("2. Run my !ClearMe command to clear your unverified registration, and register again with !RegisterMe."));
@@ -1095,7 +1091,6 @@ namespace Startup.Commands
         public async Task Help(string command)
         {
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
-            UplandApiRepository uplandApiRepository = new UplandApiRepository();
             List<UplandAuthProperty> properties;
 
             if (registeredUser == null || registeredUser.DiscordUsername == null || registeredUser.DiscordUsername == "")
@@ -1108,7 +1103,7 @@ namespace Startup.Commands
             {
                 if (!registeredUser.Verified)
                 {
-                    properties = await uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
+                    properties = await _uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
                     await ReplyAsync(string.Format("Looks like you have registered, but not verified yet {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
                     await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:N2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
                     await ReplyAsync(string.Format("2. Run my !ClearMe command to clear your unverified registration, and register again with !RegisterMe."));
