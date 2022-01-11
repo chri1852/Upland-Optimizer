@@ -546,18 +546,7 @@ namespace Upland.InformationProcessor
 
         private async Task Process_CityUnmintedResync(string cityIds)
         {
-            List<int> ids = new List<int>();
-            if (cityIds != "0")
-            {
-                foreach (string id in cityIds.Split(","))
-                {
-                    ids.Add(int.Parse(id));
-                }
-            }
-            else
-            {
-                ids = Consts.NON_BULLSHIT_CITY_IDS;
-            }
+            List<int> ids = Consts.NON_BULLSHIT_CITY_IDS;
 
             foreach (int cityId in ids)
             {
@@ -568,6 +557,11 @@ namespace Upland.InformationProcessor
                     .Where(p => p.Status == Consts.PROP_STATUS_UNLOCKED)
                     .OrderBy(p => p.Mint)
                     .ToList();
+
+                if (cityIds == "-1")
+                {
+                    properties = properties.Where(p => !p.FSA).ToList();
+                }
 
                 foreach (Property localProperty in properties)
                 {
@@ -600,7 +594,7 @@ namespace Upland.InformationProcessor
                 neighborhoods = _localDataManager.GetNeighborhoods()
                     .Where(n => neighborhoodIds.Split(",").Select(s => int.Parse(s)).ToList().Contains(n.Id))
                     .ToList();
-                maxOkay = 10000;
+                maxOkay = 1000;
             }
             else
             {
@@ -616,6 +610,11 @@ namespace Upland.InformationProcessor
                         .Where(p => p.NeighborhoodId == neighborhood.Id && p.Status == Consts.PROP_STATUS_UNLOCKED)
                         .OrderBy(p => p.Mint)
                         .ToList();
+
+                if (neighborhoodIds == "-1")
+                {
+                    properties = properties.Where(p => !p.FSA).ToList();
+                }
 
                 foreach (Property localProperty in properties)
                 {

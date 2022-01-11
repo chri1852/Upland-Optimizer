@@ -121,17 +121,17 @@ class Program
         //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
-        //await resyncProcessor.ResyncPropsList("EnclaveFix", "1,1");
+        await resyncProcessor.ResyncPropsList("CityUnmintedResync", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
-        mappingProcessor.CreateMap(12, "Buildings", 1, false);
+        //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
     */
-    
+    ///*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    
+    //*/
 
     public async Task RunBotAsync()
     {
