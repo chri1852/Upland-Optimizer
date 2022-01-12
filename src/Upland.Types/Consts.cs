@@ -43,7 +43,7 @@ namespace Upland.Types
             { 11   , "Cleveland"      },
             { 12   , "Santa Clara"    },
             { 13   , "Rutherford"     },
-            { 14   , "Kansas"         },
+            { 14   , "Kansas City"    },
             { 15   , "New Orleans"    },
             { 16   , "Nashville"      },
             { 29   , "Bronx"          },

@@ -261,7 +261,7 @@ namespace Upland.InformationProcessor
                 return returnName;
             }
 
-            throw new Exception("Unknow City Detected");
+            throw new Exception("Unknown City Detected");
         }
 
         public static int GetCityIdByName(string cityName)
@@ -270,14 +270,10 @@ namespace Upland.InformationProcessor
             {
                 return 13;
             }
-            else if (Regex.Match(cityName.ToUpper(), "KANSAS CITY").Success)
-            {
-                return 14;
-            }
             // Since the sub cities get wrapped up to the main city we need to do some finagaling
             if (Consts.Cities.Where(c => c.Value.ToUpper() == cityName.ToUpper()).ToList().Count == 0)
             {
-                throw new Exception("Unknow City Detected");
+                throw new Exception("Unknown City Detected");
             }
 
             int cityId = Consts.Cities.Where(c => c.Value.ToUpper() == cityName.ToUpper()).First().Key;
