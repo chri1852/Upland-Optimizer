@@ -65,21 +65,21 @@ namespace Upland.InformationProcessor
 
         public void SaveMap(Image<Rgba32> map, string fileName)
         {
-            if (!Directory.Exists(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps")))
+            if (!Directory.Exists(Path.Combine("root", "OptimizerBot", "GeneratedMaps")))
             {
-                Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps"));
+                Directory.CreateDirectory(Path.Combine("root", "OptimizerBot", "GeneratedMaps"));
             }
-            map.SaveAsPng(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.png", fileName)));
+            map.SaveAsPng(Path.Combine("root", "OptimizerBot", "GeneratedMaps", string.Format("{0}.png", fileName)));
         }
 
         public void DeleteSavedMap(string fileName)
         {
-            File.Delete(Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.png", fileName)));
+            File.Delete(Path.Combine("root", "OptimizerBot", "GeneratedMaps", string.Format("{0}.png", fileName)));
         }
 
         public string GetMapLocaiton(string fileName)
         {
-            return Path.Combine(Environment.CurrentDirectory, "GeneratedMaps", string.Format("{0}.png", fileName));
+            return Path.Combine("root", "OptimizerBot", "GeneratedMaps", string.Format("{0}.png", fileName));
         }
 
         public string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind)
@@ -911,7 +911,7 @@ namespace Upland.InformationProcessor
 
         private Image<Rgba32> LoadBlankMapByCityId(int cityId)
         {
-            string filePath = string.Format("{1}{0}CityMaps{0}{2}.bmp", Path.DirectorySeparatorChar, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), cityId);
+            string filePath = string.Format("{0}root{0}OptimizerBot{0}CityMaps{0}{1}.bmp", Path.DirectorySeparatorChar, cityId);
             Image<Rgba32> cityMap = (Image<Rgba32>)Image.Load(filePath);
             return cityMap;
         }
