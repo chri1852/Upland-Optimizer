@@ -1,13 +1,13 @@
 ﻿CREATE PROCEDURE [UPL].[DeleteOptimizerRuns]
 (
-	@DiscordUserId DECIMAL(20,0)
+	@RegisteredUserId INT
 )
 AS
 BEGIN
 	BEGIN TRY		
 		DELETE 
 		FROM [UPL].[OptimizationRun]
-		WHERE DiscordUserId = @DiscordUserId
+		WHERE RegisteredUserId = @RegisteredUserId
 	END TRY
 
 	BEGIN CATCH

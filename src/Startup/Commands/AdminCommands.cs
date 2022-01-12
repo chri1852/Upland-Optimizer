@@ -55,7 +55,7 @@ namespace Startup.Commands
                 return;
             }
 
-            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserDiscordId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserId);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("Test User Run is in Progress, Please Wait."));
@@ -64,7 +64,7 @@ namespace Startup.Commands
 
             if (currentRun != null)
             {
-                _localDataManager.DeleteOptimizerRuns(Consts.TestUserDiscordId);
+                _localDataManager.DeleteOptimizerRuns(Consts.TestUserId);
             }
 
             try
@@ -75,7 +75,7 @@ namespace Startup.Commands
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(uplandUsername.ToLower(), qualityLevel);
                 await optimizer.RunAutoOptimization(new RegisteredUser
                 {
-                    DiscordUserId = Consts.TestUserDiscordId,
+                    Id = Consts.TestUserId,
                     DiscordUsername = "TEST_USER_NAME",
                     UplandUsername = uplandUsername.ToLower()
                 },
@@ -99,7 +99,7 @@ namespace Startup.Commands
                 return;
             }
 
-            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserDiscordId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserId);
 
             if (currentRun.Status == Consts.RunStatusCompleted)
             {

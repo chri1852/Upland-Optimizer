@@ -564,9 +564,9 @@ namespace Upland.Infrastructure.LocalData
             _localDataRepository.SetOptimizationRunStatus(optimizationRun);
         }
 
-        public OptimizationRun GetLatestOptimizationRun(decimal discordUserId)
+        public OptimizationRun GetLatestOptimizationRun(int id)
         {
-            return _localDataRepository.GetLatestOptimizationRun(discordUserId);
+            return _localDataRepository.GetLatestOptimizationRun(id);
         }
 
         public RegisteredUser GetRegisteredUser(decimal discordUserId)
@@ -729,9 +729,9 @@ namespace Upland.Infrastructure.LocalData
             _localDataRepository.DeleteSaleHistoryByPropertyId(propertyId);
         }
 
-        public void DeleteOptimizerRuns(decimal discordUserId)
+        public void DeleteOptimizerRuns(int id)
         {
-            _localDataRepository.DeleteOptimizerRuns(discordUserId);
+            _localDataRepository.DeleteOptimizerRuns(id);
         }
 
         public void TruncatePropertyStructure()

@@ -64,9 +64,9 @@ namespace Upland.CollectionOptimizer
             LocalDataManager.CreateOptimizationRun(
                 new OptimizationRun
                 {
-                    DiscordUserId = registeredUser.DiscordUserId
+                    RegisteredUserId = registeredUser.Id
                 });
-            OptimizationRun optimizationRun = LocalDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun optimizationRun = LocalDataManager.GetLatestOptimizationRun(registeredUser.Id);
 
             try
             {

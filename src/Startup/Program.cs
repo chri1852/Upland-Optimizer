@@ -51,9 +51,9 @@ class Program
         BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder(localDataManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
-        ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
+        //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
-        MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
+        //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
 
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager, uplandApiRepository);
 
@@ -69,8 +69,9 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
-        await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
+        //await collectionOptimizer.RunAutoOptimization(registeredUser, runRequest);
+
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();

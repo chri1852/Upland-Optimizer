@@ -47,7 +47,7 @@ namespace Upland.Interfaces.Repositories
         DateTime GetLastSaleHistoryDateTime();
         List<SaleHistoryEntry> GetRawSaleHistoryByPropertyId(long propertyId);
         void SetOptimizationRunStatus(OptimizationRun optimizationRun);
-        OptimizationRun GetLatestOptimizationRun(decimal discordUserId);
+        OptimizationRun GetLatestOptimizationRun(int id);
         void CreateRegisteredUser(RegisteredUser registeredUser);
         void UpdateRegisteredUser(RegisteredUser registeredUser);
         RegisteredUser GetRegisteredUser(decimal discordUserId);
@@ -61,8 +61,8 @@ namespace Upland.Interfaces.Repositories
         List<SaleHistoryQueryEntry> GetSaleHistoryByPropertyId(long propertyId);
         List<SaleHistoryQueryEntry> GetSaleHistoryByBuyerUsername(string buyerUsername);
         List<SaleHistoryQueryEntry> GetSaleHistoryBySellerUsername(string sellerUsername);
-        void DeleteRegisteredUser(int Id); 
-        void DeleteOptimizerRuns(decimal discordUserId);
+        void DeleteRegisteredUser(int id); 
+        void DeleteOptimizerRuns(int id);
         void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS);
         void DeleteSaleHistoryById(int id);
         void DeleteEOSUser(string eosAccount);

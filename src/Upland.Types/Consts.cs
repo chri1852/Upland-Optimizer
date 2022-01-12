@@ -76,7 +76,7 @@ namespace Upland.Types
         public static readonly string RunStatusInProgress = "In Progress";
         public static readonly string RunStatusCompleted = "Completed";
         public static readonly string RunStatusFailed = "Failed";
-        public static readonly ulong TestUserDiscordId = 1;
+        public static readonly int TestUserId = 33;
         public static readonly int UPXPricePerRun = 200;
         public static readonly int SendUpxSupporterThreshold = 8000;
         public static readonly ulong DiscordSupporterRoleId = 910751643857997824;

@@ -45,7 +45,7 @@ namespace Upland.Interfaces.Managers
         List<Neighborhood> GetNeighborhoods();
         List<Street> GetStreets();
         void SetOptimizationRunStatus(OptimizationRun optimizationRun);
-        OptimizationRun GetLatestOptimizationRun(decimal discordUserId);
+        OptimizationRun GetLatestOptimizationRun(int id);
         RegisteredUser GetRegisteredUser(decimal discordUserId);
         RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername);
         List<SaleHistoryEntry> GetRawSaleHistoryByPropertyId(long propertyId);
@@ -75,7 +75,7 @@ namespace Upland.Interfaces.Managers
         void DeleteEOSUser(string eosAccount);
         void DeleteSaleHistoryById(int id);
         void DeleteSaleHistoryByPropertyId(long propertyId);
-        void DeleteOptimizerRuns(decimal discordUserId);
+        void DeleteOptimizerRuns(int id);
         void TruncatePropertyStructure();
         void CreatePropertyStructure(PropertyStructure propertyStructure);
         List<PropertyStructure> GetPropertyStructures();

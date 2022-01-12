@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetLatestOptimizationRunForDiscordUserId]
+﻿CREATE PROCEDURE [UPL].[GetLatestOptimizationRun]
 (
-	@DiscordUserId DECIMAL(20,0)
+	@RegisteredUserId INT
 )
 AS
 BEGIN
 	BEGIN TRY		
 		SELECT TOP(1) * 
 		FROM [UPL].[OptimizationRun] (NOLOCK)
-		WHERE DiscordUserId = @DiscordUserId
+		WHERE RegisteredUserId = @RegisteredUserId
 		ORDER BY RequestedDateTime DESC
 	END TRY
 

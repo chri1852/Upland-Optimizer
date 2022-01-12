@@ -1149,7 +1149,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[CreateOptimizationRun]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", optimizationRun.DiscordUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", optimizationRun.Id));
                     sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.Now));
 
                     sqlCmd.ExecuteNonQuery();
@@ -1610,7 +1610,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public OptimizationRun GetLatestOptimizationRun(decimal discordUserId)
+        public OptimizationRun GetLatestOptimizationRun(int id)
         {
             OptimizationRun optimizationRun = null;
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1624,8 +1624,8 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[GetLatestOptimizationRunForDiscordUserId]";
-                    sqlCmd.Parameters.Add(new SqlParameter("@DiscordUserId", discordUserId));
+                    sqlCmd.CommandText = "[UPL].[GetLatestOptimizationRun]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@RegisteredUserId", id));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -1633,7 +1633,7 @@ namespace Upland.Infrastructure.LocalData
                             optimizationRun = new OptimizationRun
                             {
                                 Id = (int)reader["Id"],
-                                DiscordUserId = (decimal)reader["DiscordUserId"],
+                                RegisteredUserId = (int)reader["RegisteredUserId"],
                                 RequestedDateTime = (DateTime)reader["RequestedDateTime"],
                                 Results = reader["Results"] == DBNull.Value ? null : (byte[])reader["Results"],
                                 Status = (string)reader["Status"],
@@ -1704,17 +1704,38 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandText = "[UPL].[UpdateRegisteredUser]";
                     sqlCmd.Parameters.Add(new SqlParameter("Id", registeredUser.Id));
                     sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", registeredUser.DiscordUserId));
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", registeredUser.DiscordUsername));
+                    if (registeredUser.DiscordUsername == null)
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", DBNull.Value));
+                    }
+                    else
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", registeredUser.DiscordUsername));
+                    }
                     sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", registeredUser.UplandUsername));
                     sqlCmd.Parameters.Add(new SqlParameter("RunCount", registeredUser.RunCount));
                     sqlCmd.Parameters.Add(new SqlParameter("Paid", registeredUser.Paid));
                     sqlCmd.Parameters.Add(new SqlParameter("PropertyId", registeredUser.PropertyId));
                     sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.Price));
                     sqlCmd.Parameters.Add(new SqlParameter("SendUpx", registeredUser.SentUPX));
-                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.PasswordSalt));
-                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.PasswordHash));
-                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.DiscordVerified));
-                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.WebVerified));
+                    if (registeredUser.PasswordSalt == null)
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("PasswordSalt", DBNull.Value));
+                    }
+                    else
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("PasswordSalt", registeredUser.PasswordSalt));
+                    }
+                    if (registeredUser.PasswordHash == null)
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("PasswordHash", DBNull.Value));
+                    }
+                    else
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("PasswordHash", registeredUser.PasswordHash));
+                    }
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordVerified", registeredUser.DiscordVerified));
+                    sqlCmd.Parameters.Add(new SqlParameter("WebVerified", registeredUser.WebVerified));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -1806,15 +1827,15 @@ namespace Upland.Infrastructure.LocalData
                             {
                                 Id = (int)reader["Id"],
                                 DiscordUserId = (decimal)reader["DiscordUserId"],
-                                DiscordUsername = (string)reader["DiscordUsername"],
+                                DiscordUsername = reader["DiscordUsername"] != DBNull.Value ? (string)reader["DiscordUsername"] : null,
                                 UplandUsername = (string)reader["UplandUsername"],
                                 RunCount = (int)reader["RunCount"],
                                 Paid = (bool)reader["Paid"],
                                 PropertyId = (long)reader["PropertyId"],
                                 Price = (int)reader["Price"],
                                 SentUPX = (int)reader["SendUpx"],
-                                PasswordSalt = (string)reader["PasswordSalt"],
-                                PasswordHash = (string)reader["PasswordHash"],
+                                PasswordSalt = reader["PasswordSalt"] != DBNull.Value ? (string)reader["PasswordSalt"] : null,
+                                PasswordHash = reader["PasswordHash"] != DBNull.Value ? (string)reader["PasswordHash"] : null,
                                 DiscordVerified = (bool)reader["DiscordVerified"],
                                 WebVerified = (bool)reader["WebVerified"]
                             };
@@ -2262,7 +2283,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public void DeleteOptimizerRuns(decimal discordUserId)
+        public void DeleteOptimizerRuns(int id)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -2276,7 +2297,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[DeleteOptimizerRuns]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", id));
 
                     sqlCmd.ExecuteNonQuery();
                 }

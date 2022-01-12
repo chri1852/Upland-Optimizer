@@ -32,7 +32,7 @@ namespace Startup.Commands
                 return;
             }
 
-            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.Id);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
@@ -53,7 +53,7 @@ namespace Startup.Commands
 
             if (currentRun != null)
             {
-                _localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
+                _localDataManager.DeleteOptimizerRuns(registeredUser.Id);
             }
 
             try
@@ -81,7 +81,7 @@ namespace Startup.Commands
                 return;
             }
 
-            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.Id);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
@@ -96,7 +96,7 @@ namespace Startup.Commands
 
             if (currentRun != null)
             {
-                _localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
+                _localDataManager.DeleteOptimizerRuns(registeredUser.Id);
             }
 
             try
@@ -125,7 +125,7 @@ namespace Startup.Commands
                 return;
             }
 
-            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(registeredUser.Id);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("You alread have a run in progress {0}. Try using my !OptimizerStatus command to track its progress.", HelperFunctions.GetRandomName(_random)));
@@ -155,7 +155,7 @@ namespace Startup.Commands
 
             if (currentRun != null)
             {
-                _localDataManager.DeleteOptimizerRuns(registeredUser.DiscordUserId);
+                _localDataManager.DeleteOptimizerRuns(registeredUser.Id);
             }
 
             try
