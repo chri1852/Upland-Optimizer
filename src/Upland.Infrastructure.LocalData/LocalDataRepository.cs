@@ -1786,7 +1786,14 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[UpdateRegisteredUser]";
                     sqlCmd.Parameters.Add(new SqlParameter("Id", registeredUser.Id));
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", registeredUser.DiscordUserId));
+                    if (registeredUser.DiscordUserId == null)
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", DBNull.Value));
+                    }
+                    else
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", registeredUser.DiscordUserId));
+                    }
                     if (registeredUser.DiscordUsername == null)
                     {
                         sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", DBNull.Value));
@@ -1865,7 +1872,6 @@ namespace Upland.Infrastructure.LocalData
                             registeredUser = new RegisteredUser
                             {
                                 Id = (int)reader["Id"],
-                                DiscordUserId = (decimal)reader["DiscordUserId"],
                                 DiscordUsername = reader["DiscordUsername"] != DBNull.Value ? (string)reader["DiscordUsername"] : null,
                                 UplandUsername = (string)reader["UplandUsername"],
                                 RunCount = (int)reader["RunCount"],
@@ -1880,6 +1886,15 @@ namespace Upland.Infrastructure.LocalData
                                 VerifyType = reader["VerifyType"] != DBNull.Value ? (string)reader["VerifyType"] : null,
                                 VerifyExpirationDateTime = (DateTime)reader["VerifyExpirationDateTime"]
                             };
+
+                            if (reader["DiscordUserId"] != DBNull.Value)
+                            {
+                                registeredUser.DiscordUserId = (decimal)reader["DiscordUserId"];
+                            }
+                            else
+                            {
+                                registeredUser.DiscordUserId = null;
+                            }
                         }
                         reader.Close();
                     }
@@ -1920,7 +1935,6 @@ namespace Upland.Infrastructure.LocalData
                             registeredUser = new RegisteredUser
                             {
                                 Id = (int)reader["Id"],
-                                DiscordUserId = (decimal)reader["DiscordUserId"],
                                 DiscordUsername = reader["DiscordUsername"] != DBNull.Value ? (string)reader["DiscordUsername"] : null,
                                 UplandUsername = (string)reader["UplandUsername"],
                                 RunCount = (int)reader["RunCount"],
@@ -1935,6 +1949,15 @@ namespace Upland.Infrastructure.LocalData
                                 VerifyType = reader["VerifyType"] != DBNull.Value ? (string)reader["VerifyType"] : null,
                                 VerifyExpirationDateTime = (DateTime)reader["VerifyExpirationDateTime"]
                             };
+
+                            if(reader["DiscordUserId"] != DBNull.Value)
+                            {
+                                registeredUser.DiscordUserId = (decimal)reader["DiscordUserId"];
+                            }
+                            else
+                            {
+                                registeredUser.DiscordUserId = null;
+                            }    
                         }
                         reader.Close();
                     }

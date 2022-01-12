@@ -116,7 +116,7 @@ namespace Startup.Commands
                         else
                         {
                             // They exist and match, but havent Verified, and the verification has not expired
-                            if (registeredUser.VerifyExpirationDateTime < DateTime.UtcNow)
+                            if (registeredUser.VerifyExpirationDateTime > DateTime.UtcNow)
                             {
                                 properties = await _uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
                                 await ReplyAsync(string.Format("Looks like you already registered {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
@@ -151,6 +151,8 @@ namespace Startup.Commands
                     }
                 }
 
+                registeredUser.DiscordUserId = Context.User.Id;
+                registeredUser.DiscordUsername = Context.User.Username;
                 registeredUser.VerifyType = Consts.VERIFYTYPE_DISCORD;
                 registeredUser.VerifyExpirationDateTime = DateTime.UtcNow.AddMinutes(30);
                 registeredUser.Price = verifyPrice;
@@ -194,7 +196,7 @@ namespace Startup.Commands
                 {
                     await ReplyAsync(string.Format("Looks like you are already verified {0}.", HelperFunctions.GetRandomName(_random)));
                 }
-                else
+                else if (registeredUser.VerifyType == null || registeredUser.VerifyType == Consts.VERIFYTYPE_DISCORD)
                 {
                     try
                     {
@@ -266,10 +268,6 @@ namespace Startup.Commands
                     if (currentUser == null)
                     {
                         _localDataManager.UpsertEOSUser(property.owner, registeredUser.UplandUsername, DateTime.UtcNow);
-                    }
-                    else
-                    {
-                        _localDataManager.CreateErrorLog("Commands - VerifyMe", string.Format("Could Not Find EOS User with Username {0}", registeredUser.UplandUsername));
                     }
 
                     await ReplyAsync(string.Format("You are now Verified {0}! You can remove the property from sale, or don't. I'm not your dad.", HelperFunctions.GetRandomName(_random)));
