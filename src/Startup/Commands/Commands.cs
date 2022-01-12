@@ -74,28 +74,12 @@ namespace Startup.Commands
         public async Task RegisterMe(string uplandUserName)
         {
             List<UplandAuthProperty> properties;
-
-            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
-            if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
-            {
-                if (registeredUser.DiscordVerified)
-                {
-                    await ReplyAsync(string.Format("Looks like you already registered and verified {0}.", registeredUser.UplandUsername));
-                }
-                else
-                {
-                    properties = await _uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
-                    await ReplyAsync(string.Format("Looks like you already registered {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
-                    await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:N2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
-                    await ReplyAsync(string.Format("2. Run my !ClearMe command to clear your unverified registration, and register again with !RegisterMe."));
-                }
-                return;
-            }
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUserName);
 
             properties = await _uplandApiRepository.GetPropertysByUsername(uplandUserName.ToLower());
             if (properties == null || properties.Count == 0)
             {
-                await ReplyAsync(string.Format("Looks like {0} is not a player {1}.", uplandUserName, HelperFunctions.GetRandomName(_random)));
+                await ReplyAsync(string.Format("Looks like {0} is not a player or has no properties {1}.", uplandUserName, HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
@@ -115,45 +99,111 @@ namespace Startup.Commands
                 verifyPrice = _random.Next(80000000, 90000000);
             }
 
-            RegisteredUser newUser = new RegisteredUser()
+            // A registered user exists for this username, lets see if it is a web or discord or both
+            if (registeredUser != null)
             {
-                DiscordUserId = Context.User.Id,
-                DiscordUsername = Context.User.Username,
-                UplandUsername = uplandUserName.ToLower(),
-                PropertyId = verifyProperty.Id,
-                Price = verifyPrice
-            };
+                // A discord entry appears to already exist
+                if (registeredUser.DiscordUserId != null)
+                {
+                    // The registered User exists, and matches the discord userId
+                    if (registeredUser.DiscordUserId == Context.User.Id)
+                    {
+                        if (registeredUser.DiscordVerified)
+                        {
+                            await ReplyAsync(string.Format("Looks like you already registered and verified {0}.", registeredUser.UplandUsername));
+                            return;
+                        }
+                        else
+                        {
+                            // They exist and match, but havent Verified, and the verification has not expired
+                            if (registeredUser.VerifyExpirationDateTime < DateTime.UtcNow)
+                            {
+                                properties = await _uplandApiRepository.GetPropertysByUsername(registeredUser.UplandUsername);
+                                await ReplyAsync(string.Format("Looks like you already registered {0}. The way I see it you have two choices.", registeredUser.UplandUsername));
+                                await ReplyAsync(string.Format("1. Place the property at {0}, for sale for {1:N2}UPX, and then use my !VerifyMe command. Or...", properties.Where(p => p.Prop_Id == registeredUser.PropertyId).First().Full_Address, registeredUser.Price));
+                                await ReplyAsync(string.Format("2. Run my !ClearMe command to clear your unverified registration, and register again with !RegisterMe."));
+                                return;
+                            }
+                        }
+                    }
+                    // They do not match the discordId, curious
+                    else
+                    {
+                        if (registeredUser.DiscordVerified || (registeredUser.VerifyType == Consts.VERIFYTYPE_DISCORD && registeredUser.VerifyExpirationDateTime < DateTime.UtcNow))
+                        {
+                            await ReplyAsync(string.Format("Not sure what you are tying to pull here {0}. {1} is already registered under a different person.", HelperFunctions.GetRandomName(_random), registeredUser.UplandUsername));
+                            return;
+                        }
+                        else
+                        {
+                            await ReplyAsync(string.Format("Strange, someone else claimed that username but never verified. I guess I'll give you a chance {0}", HelperFunctions.GetRandomName(_random)));
+                        }
+                    }
+                }
+                // This must be a web account
+                else
+                {
+                    // They have not web verified, but are in the process
+                    if (!registeredUser.WebVerified && registeredUser.VerifyType == Consts.VERIFYTYPE_WEB && registeredUser.VerifyExpirationDateTime < DateTime.UtcNow)
+                    {
+                        await ReplyAsync("Looks like someone is in the process of verifying this username on the web, better finish that first.");
+                        return;
+                    }
+                }
 
-            try
-            {
-                _localDataManager.CreateRegisteredUser(newUser);
+                registeredUser.VerifyType = Consts.VERIFYTYPE_DISCORD;
+                registeredUser.VerifyExpirationDateTime = DateTime.UtcNow.AddMinutes(30);
+                registeredUser.Price = verifyPrice;
+                registeredUser.PropertyId = verifyProperty.Id;
+                _localDataManager.UpdateRegisteredUser(registeredUser);
             }
-            catch (Exception ex)
+            // The registered user is null
+            else
             {
-                _localDataManager.CreateErrorLog("Commands - RegisterMe", ex.Message);
-                await ReplyAsync(string.Format("Sorry, {0}. Looks like I goofed!", HelperFunctions.GetRandomName(_random)));
-                return;
+                _localDataManager.CreateRegisteredUser(new RegisteredUser()
+                {
+                    DiscordUserId = Context.User.Id,
+                    DiscordUsername = Context.User.Username,
+                    UplandUsername = uplandUserName.ToLower(),
+                    PropertyId = verifyProperty.Id,
+                    Price = verifyPrice,
+                    VerifyType = Consts.VERIFYTYPE_DISCORD,
+                    VerifyExpirationDateTime = DateTime.UtcNow.AddMinutes(30)
+                });
             }
 
             await ReplyAsync(string.Format("Good News {0}! I have registered you as a user!", HelperFunctions.GetRandomName(_random)));
-            await ReplyAsync(string.Format("To continue place, {0}, {1}, up for sale for {2:N2} UPX, and then use my !VerifyMe command. If you can't place the propery for sale run my !ClearMe command.", verifyProperty.Address, Consts.Cities[verifyProperty.CityId], verifyPrice));
+            await ReplyAsync(string.Format("To continue place, {0}, {1}, up for sale for {2:N2} UPX, and then use my !VerifyMe command in the next 30 minutes. If you can't place the propery for sale run my !ClearMe command.", verifyProperty.Address, Consts.Cities[verifyProperty.CityId], verifyPrice));
         }
 
         [Command("ClearMe")]
         public async Task ClearMe()
         {
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+
+            // They have not web verified, but are in the process
+            if (!registeredUser.WebVerified && registeredUser.VerifyType == Consts.VERIFYTYPE_WEB && registeredUser.VerifyExpirationDateTime < DateTime.UtcNow)
+            {
+                await ReplyAsync("Looks like someone is in the process of verifying this username on the web, better finish that first.");
+                return;
+            }
+
             if (registeredUser != null && registeredUser.DiscordUsername != null && registeredUser.DiscordUsername != "")
             {
                 if (registeredUser.DiscordVerified)
                 {
-                    await ReplyAsync(string.Format("Looks like you are already verified {0}. Try contacting Grombrindal.", HelperFunctions.GetRandomName(_random)));
+                    await ReplyAsync(string.Format("Looks like you are already verified {0}.", HelperFunctions.GetRandomName(_random)));
                 }
                 else
                 {
                     try
                     {
-                        _localDataManager.DeleteRegisteredUser(registeredUser.Id);
+                        registeredUser.Price = 0;
+                        registeredUser.PropertyId = 0;
+                        registeredUser.VerifyType = null;
+                        registeredUser.DiscordUserId = null;
+                        registeredUser.DiscordUsername = null;
+                        _localDataManager.UpdateRegisteredUser(registeredUser);
                         await ReplyAsync(string.Format("I got you {0}. I have cleared your registration. Try again with my !RegisterMe command with your Upland username", HelperFunctions.GetRandomName(_random)));
                     }
                     catch (Exception ex)
@@ -183,6 +233,14 @@ namespace Startup.Commands
             {
                 await ReplyAsync(string.Format("Looks like you are already verified {0}.", HelperFunctions.GetRandomName(_random)));
             }
+            else if (registeredUser.VerifyType != Consts.VERIFYTYPE_DISCORD)
+            {
+                await ReplyAsync(string.Format("Finish your web verification first, {0}.", HelperFunctions.GetRandomName(_random)));
+            }
+            else if (registeredUser.VerifyExpirationDateTime < DateTime.UtcNow && registeredUser.VerifyType == Consts.VERIFYTYPE_DISCORD)
+            {
+                await ReplyAsync(string.Format("Your verification expired. Run !ClearMe and the !RegisterMe again, and try to register with 30 minutes, {0}.", HelperFunctions.GetRandomName(_random)));
+            }
             else
             {
                 UplandProperty property = await _uplandApiRepository.GetPropertyById(registeredUser.PropertyId);
@@ -200,6 +258,7 @@ namespace Startup.Commands
                 else
                 {
                     registeredUser.DiscordVerified = true;
+                    registeredUser.VerifyType = null;
                     _localDataManager.UpdateRegisteredUser(registeredUser);
 
                     // Add the EOS Account if we dont have it

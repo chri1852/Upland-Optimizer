@@ -33,7 +33,7 @@ class Program
     private Timer _blockchainUpdateTimer;
     private Timer _sendTimer;
 
-    ///*
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -126,11 +126,11 @@ class Program
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
-    //*/
-    /*
+    */
+    ///*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    //*/
 
     public async Task RunBotAsync()
     {
@@ -209,7 +209,7 @@ class Program
         }
 
         int argPos = 0;
-        if (message.HasStringPrefix("!", ref argPos))
+        if (message.HasStringPrefix("^", ref argPos))
         {
             if (context.Channel.Name == "general" || context.Channel.Name == "tech-issues")
             {
@@ -313,7 +313,7 @@ class Program
         {
             Task child = Task.Factory.StartNew(async () =>
             {
-                await ((BlockchainPropertySurfer)_services.GetService(typeof(BlockchainPropertySurfer))).RunBlockChainUpdate();
+                await _services.GetService<IBlockchainPropertySurfer>().RunBlockChainUpdate();
             });
         };
         _blockchainUpdateTimer.Interval = 30000; // Every 30 Seconds
@@ -327,7 +327,7 @@ class Program
         {
             Task child = Task.Factory.StartNew(async () =>
             {
-                await ((BlockchainSendFinder)_services.GetService(typeof(BlockchainSendFinder))).RunBlockChainUpdate();
+                await _services.GetService<IBlockchainSendFinder>().RunBlockChainUpdate();
             });
         };
         _sendTimer.Interval = 300000; // Every 5 Minutes
