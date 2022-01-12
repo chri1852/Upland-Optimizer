@@ -1155,7 +1155,7 @@ namespace Startup.Commands
             int runsAvailable = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
             int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
 
-            if (registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < runsAvailable)
+            if (registeredUser.RunCount < runsAvailable)
             {
                 await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} UPX away from your next run, and {4} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, runsAvailable, HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
             }
