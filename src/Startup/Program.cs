@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Startup.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,7 +33,7 @@ class Program
     private Timer _blockchainUpdateTimer;
     private Timer _sendTimer;
 
-    /*
+    ///*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -51,15 +52,11 @@ class Program
         BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder(localDataManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
-        //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
+        ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
-        //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
+        MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
 
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager, uplandApiRepository);
-
-        string username;
-        string qualityLevel;
-        List<string> output = new List<string>();
 
         // Populate City
         //List<double> cityCoordinates = Upland.InformationProcessor.HelperFunctions.GetCityAreaCoordinates(16);
@@ -129,11 +126,11 @@ class Program
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
-    */
-    ///*
+    //*/
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    //*/
+    */
 
     public async Task RunBotAsync()
     {

@@ -358,7 +358,7 @@ namespace Startup.Commands
                 return;
             }
 
-            int upxToSupporter = Consts.SendUpxSupporterThreshold - registeredUser.SentUPX;
+            int upxToSupporter = Consts.SendUpxSupporterThreshold - registeredUser.SendUPX;
 
             List<string> supportMeString = new List<string>();
 
@@ -1065,13 +1065,13 @@ namespace Startup.Commands
             }
 
             // They are registered now, display help
-            if (registeredUser.Paid || registeredUser.SentUPX >= Consts.SendUpxSupporterThreshold)
+            if (registeredUser.Paid || registeredUser.SendUPX >= Consts.SendUpxSupporterThreshold)
             {
                 await ReplyAsync(string.Format("Hey there {0}! Thanks for being a supporter!{1}{1}", HelperFunctions.GetRandomName(_random), Environment.NewLine));
             }
             else
             {
-                int runsAvailable = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
+                int runsAvailable = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SendUPX / Consts.UPXPricePerRun)));
                 await ReplyAsync(string.Format("Hello {0}! You have currenty used {1}/{2} of your runs. To get more vist the locations in #locations, or run my !SupportMe command.{3}{3}", HelperFunctions.GetRandomName(_random), registeredUser.RunCount, runsAvailable, Environment.NewLine));
             }
 
@@ -1166,7 +1166,7 @@ namespace Startup.Commands
 
         public async Task<bool> EnsureRunsAvailable(RegisteredUser registeredUser)
         {
-            if (!registeredUser.Paid && registeredUser.SentUPX >= Consts.SendUpxSupporterThreshold)
+            if (!registeredUser.Paid && registeredUser.SendUPX >= Consts.SendUpxSupporterThreshold)
             {
                 await (Context.User as IGuildUser).AddRoleAsync(Consts.DiscordSupporterRoleId);
                 registeredUser.Paid = true;
@@ -1174,21 +1174,21 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("Congrats and Thank You {0}! You have sent enough times to be considered a Supporter! Don't worry about runs anymore, you've done enough. You are no longer limited by runs, and have access to the Supporter Commands!", HelperFunctions.GetRandomName(_random)));
             }
 
-            if (registeredUser.Paid || registeredUser.SentUPX >= Consts.SendUpxSupporterThreshold)
+            if (registeredUser.Paid || registeredUser.SendUPX >= Consts.SendUpxSupporterThreshold)
             {
                 return true;
             }
 
-            int runsAvailable = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SentUPX / Consts.UPXPricePerRun)));
-            int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SentUPX % Consts.UPXPricePerRun;
+            int runsAvailable = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SendUPX / Consts.UPXPricePerRun)));
+            int upxToNextFreeRun = Consts.UPXPricePerRun - registeredUser.SendUPX % Consts.UPXPricePerRun;
 
             if (registeredUser.RunCount > Consts.WarningRuns && registeredUser.RunCount < runsAvailable)
             {
-                await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} UPX away from your next run, and {4} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, runsAvailable, HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
+                await ReplyAsync(string.Format("You've used {0} out of {1} of your runs {2}. You are {3} UPX away from your next run, and {4} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", registeredUser.RunCount, runsAvailable, HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SendUPX));
             }
             else if (registeredUser.RunCount >= runsAvailable)
             {
-                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} UPX away from your next run, and {2} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SentUPX));
+                await ReplyAsync(string.Format("You've used all of your runs {0}. You are {1} UPX away from your next run, and {2} UPX from becoming a supporter. To put more UPX towards a free run visit the properties list in the locations channel. To learn how to support this tool try my !SupportMe command.", HelperFunctions.GetRandomName(_random), upxToNextFreeRun, Consts.SendUpxSupporterThreshold - registeredUser.SendUPX));
                 return false;
             }
 

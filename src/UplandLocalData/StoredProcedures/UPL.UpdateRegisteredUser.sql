@@ -1,18 +1,20 @@
 ﻿CREATE PROCEDURE [UPL].[UpdateRegisteredUser]
 (
-	@Id              INT,
-	@DiscordUserId   DECIMAL(20,0),
-	@DiscordUsername VARCHAR(200),
-	@UplandUsername  VARCHAR(200),
-	@RunCount        INT,
-	@Paid            BIT,
-	@PropertyId      BIGINT,
-	@Price           INT,
-	@SendUpx         INT,
-	@PasswordSalt    VARCHAR(64),
-	@PasswordHash    VARCHAR(64),
-	@DiscordVerified BIT,
-	@WebVerified     BIT
+	@Id                       INT,
+	@DiscordUserId            DECIMAL(20,0),
+	@DiscordUsername          VARCHAR(200),
+	@UplandUsername           VARCHAR(200),
+	@RunCount                 INT,
+	@Paid                     BIT,
+	@PropertyId               BIGINT,
+	@Price                    INT,
+	@SendUpx                  INT,
+	@PasswordSalt             VARCHAR(64),
+	@PasswordHash             VARCHAR(64),
+	@DiscordVerified          BIT,
+	@WebVerified              BIT,
+	@VerifyType               VARCHAR(3),
+	@VerifyExpirationDateTime DATETIME  
 )
 AS
 BEGIN
@@ -29,7 +31,9 @@ BEGIN
 			[PasswordSalt] = @PasswordSalt,
 			[PasswordHash] = @PasswordHash,
 			[DiscordVerified] = @DiscordVerified,
-			[WebVerified] = @WebVerified
+			[WebVerified] = @WebVerified,
+			[VerifyType] = @VerifyType,
+			[VerifyExpirationDateTime] = @VerifyExpirationDateTime
 		WHERE [Id] = @Id
 	END TRY
 

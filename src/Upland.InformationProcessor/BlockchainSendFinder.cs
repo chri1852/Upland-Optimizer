@@ -132,7 +132,7 @@ namespace Upland.InformationProcessor
                         try
                         {
                             RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(action.act.data.p51);
-                            registeredUser.SentUPX += int.Parse(action.act.data.p54.Split(".00 UP")[0]);
+                            registeredUser.SendUPX += int.Parse(action.act.data.p54.Split(".00 UP")[0]);
                             _localDataManager.UpdateRegisteredUser(registeredUser);
                         }
                         catch (Exception ex)

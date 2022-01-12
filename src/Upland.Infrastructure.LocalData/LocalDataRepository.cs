@@ -1748,6 +1748,15 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", registeredUser.UplandUsername));
                     sqlCmd.Parameters.Add(new SqlParameter("PropertyId", registeredUser.PropertyId));
                     sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.Price));
+                    if (registeredUser.VerifyType == null)
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("VerifyType", DBNull.Value));
+                    }
+                    else
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("VerifyType", registeredUser.VerifyType));
+                    }
+                    sqlCmd.Parameters.Add(new SqlParameter("VerifyExpirationDateTime", registeredUser.VerifyExpirationDateTime));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -1791,7 +1800,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("Paid", registeredUser.Paid));
                     sqlCmd.Parameters.Add(new SqlParameter("PropertyId", registeredUser.PropertyId));
                     sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.Price));
-                    sqlCmd.Parameters.Add(new SqlParameter("SendUpx", registeredUser.SentUPX));
+                    sqlCmd.Parameters.Add(new SqlParameter("SendUpx", registeredUser.SendUPX));
                     if (registeredUser.PasswordSalt == null)
                     {
                         sqlCmd.Parameters.Add(new SqlParameter("PasswordSalt", DBNull.Value));
@@ -1810,6 +1819,15 @@ namespace Upland.Infrastructure.LocalData
                     }
                     sqlCmd.Parameters.Add(new SqlParameter("DiscordVerified", registeredUser.DiscordVerified));
                     sqlCmd.Parameters.Add(new SqlParameter("WebVerified", registeredUser.WebVerified));
+                    if (registeredUser.VerifyType == null)
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("VerifyType", DBNull.Value));
+                    }
+                    else
+                    {
+                        sqlCmd.Parameters.Add(new SqlParameter("VerifyType", registeredUser.VerifyType));
+                    }
+                    sqlCmd.Parameters.Add(new SqlParameter("VerifyExpirationDateTime", registeredUser.VerifyExpirationDateTime));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -1848,17 +1866,19 @@ namespace Upland.Infrastructure.LocalData
                             {
                                 Id = (int)reader["Id"],
                                 DiscordUserId = (decimal)reader["DiscordUserId"],
-                                DiscordUsername = (string)reader["DiscordUsername"],
+                                DiscordUsername = reader["DiscordUsername"] != DBNull.Value ? (string)reader["DiscordUsername"] : null,
                                 UplandUsername = (string)reader["UplandUsername"],
                                 RunCount = (int)reader["RunCount"],
                                 Paid = (bool)reader["Paid"],
                                 PropertyId = (long)reader["PropertyId"],
                                 Price = (int)reader["Price"],
-                                SentUPX = (int)reader["SendUpx"],
-                                PasswordSalt = (string)reader["PasswordSalt"],
-                                PasswordHash = (string)reader["PasswordHash"],
+                                SendUPX = (int)reader["SendUpx"],
+                                PasswordSalt = reader["PasswordSalt"] != DBNull.Value ? (string)reader["PasswordSalt"] : null,
+                                PasswordHash = reader["PasswordHash"] != DBNull.Value ? (string)reader["PasswordHash"] : null,
                                 DiscordVerified = (bool)reader["DiscordVerified"],
-                                WebVerified = (bool)reader["WebVerified"]
+                                WebVerified = (bool)reader["WebVerified"],
+                                VerifyType = reader["VerifyType"] != DBNull.Value ? (string)reader["VerifyType"] : null,
+                                VerifyExpirationDateTime = (DateTime)reader["VerifyExpirationDateTime"]
                             };
                         }
                         reader.Close();
@@ -1907,11 +1927,13 @@ namespace Upland.Infrastructure.LocalData
                                 Paid = (bool)reader["Paid"],
                                 PropertyId = (long)reader["PropertyId"],
                                 Price = (int)reader["Price"],
-                                SentUPX = (int)reader["SendUpx"],
+                                SendUPX = (int)reader["SendUpx"],
                                 PasswordSalt = reader["PasswordSalt"] != DBNull.Value ? (string)reader["PasswordSalt"] : null,
                                 PasswordHash = reader["PasswordHash"] != DBNull.Value ? (string)reader["PasswordHash"] : null,
                                 DiscordVerified = (bool)reader["DiscordVerified"],
-                                WebVerified = (bool)reader["WebVerified"]
+                                WebVerified = (bool)reader["WebVerified"],
+                                VerifyType = reader["VerifyType"] != DBNull.Value ? (string)reader["VerifyType"] : null,
+                                VerifyExpirationDateTime = (DateTime)reader["VerifyExpirationDateTime"]
                             };
                         }
                         reader.Close();
