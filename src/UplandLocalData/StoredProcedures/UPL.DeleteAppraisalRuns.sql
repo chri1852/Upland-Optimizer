@@ -1,23 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[CreateOptimizationRun]
+﻿CREATE PROCEDURE [UPL].[DeleteAppraisalRuns]
 (
-	@RegisteredUserId  INT,
-	@RequestedDateTime DATETIME
+	@RegisteredUserId INT
 )
 AS
 BEGIN
 	BEGIN TRY		
-		INSERT INTO [UPL].[OptimizationRun]
-		(
-			[RegisteredUserId],
-			[RequestedDateTime],
-			[Status]
-		)
-		Values
-		(
-			@RegisteredUserId,
-			@RequestedDateTime,
-			'In Progress'
-		)
+		DELETE 
+		FROM [UPL].[AppraisalRun]
+		WHERE RegisteredUserId = @RegisteredUserId
 	END TRY
 
 	BEGIN CATCH

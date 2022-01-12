@@ -125,7 +125,12 @@ namespace Startup.Commands
 
             try
             {
-                appraiserOutput = await _profileAppraiser.RunAppraisal(uplandUsername.ToLower(), "TXT");
+                appraiserOutput = await _profileAppraiser.RunAppraisal(new RegisteredUser
+                {
+                    Id = Consts.TestUserId,
+                    DiscordUsername = "TEST_USER_NAME",
+                    UplandUsername = uplandUsername.ToLower()
+                }, "TXT");
             }
             catch (Exception ex)
             {

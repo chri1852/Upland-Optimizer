@@ -926,7 +926,7 @@ namespace Startup.Commands
 
             try
             {
-                appraiserOutput = await _profileAppraiser.RunAppraisal(registeredUser.UplandUsername.ToLower(), fileType);
+                appraiserOutput = await _profileAppraiser.RunAppraisal(registeredUser, fileType);
             }
             catch (Exception ex)
             {
@@ -952,6 +952,33 @@ namespace Startup.Commands
 
             registeredUser.RunCount++;
             _localDataManager.UpdateRegisteredUser(registeredUser);
+        }
+
+        [Command("LastAppraisal")]
+        public async Task LastAppraisal()
+        {
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            AppraisalRun currentRun = _localDataManager.GetLatestAppraisalRun(registeredUser.Id);
+            if (currentRun == null)
+            {
+                await ReplyAsync(string.Format("I don't see any appraisals for you {0}. Try using my !Appraisal command to run one.", HelperFunctions.GetRandomName(_random)));
+                return;
+            }
+            else
+            {
+                byte[] resultBytes = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(currentRun.Results));
+                using (Stream stream = new MemoryStream())
+                {
+                    stream.Write(resultBytes, 0, resultBytes.Length);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await Context.Channel.SendFileAsync(stream, string.Format("{0}_Appraisal.txt", registeredUser.UplandUsername));
+                }
+            }
         }
 
         [Command("CreateMap")]
@@ -1060,32 +1087,33 @@ namespace Startup.Commands
             helpMenu.Add("Free Commands");
             helpMenu.Add("   4.  !OptimizerStatus");
             helpMenu.Add("   5.  !OptimizerResults");
-            helpMenu.Add("   6.  !CollectionInfo");
-            helpMenu.Add("   7.  !PropertyInfo");
-            helpMenu.Add("   8.  !NeighborhoodInfo");
-            helpMenu.Add("   9.  !CityInfo");
-            helpMenu.Add("   10. !StreetInfo");
-            helpMenu.Add("   11. !SupportMe");
-            helpMenu.Add("   12. !CollectionsForSale");
-            helpMenu.Add("   13. !NeighborhoodsForSale");
-            helpMenu.Add("   14. !CitysForSale");
-            helpMenu.Add("   15. !BuildingsForSale");
-            helpMenu.Add("   16. !StreetsForSale");
-            helpMenu.Add("   17. !UsernameForSale");
-            helpMenu.Add("   18. !UnmintedProperties");
-            helpMenu.Add("   19. !AllProperties");
-            helpMenu.Add("   20. !SearchStreets");
-            helpMenu.Add("   21. !SearchProperties");
-            helpMenu.Add("   22. !SearchNeighborhoods");
-            helpMenu.Add("   23. !SearchCollections");
-            helpMenu.Add("   24. !GetAssets");
-            helpMenu.Add("   25. !GetSalesHistory");
-            helpMenu.Add("   26. !HowManyRuns");
+            helpMenu.Add("   6.  !LastAppraisal");
+            helpMenu.Add("   7.  !CollectionInfo");
+            helpMenu.Add("   8.  !PropertyInfo");
+            helpMenu.Add("   9.  !NeighborhoodInfo");
+            helpMenu.Add("   10.  !CityInfo");
+            helpMenu.Add("   11. !StreetInfo");
+            helpMenu.Add("   12. !SupportMe");
+            helpMenu.Add("   13. !CollectionsForSale");
+            helpMenu.Add("   14. !NeighborhoodsForSale");
+            helpMenu.Add("   15. !CitysForSale");
+            helpMenu.Add("   16. !BuildingsForSale");
+            helpMenu.Add("   17. !StreetsForSale");
+            helpMenu.Add("   18. !UsernameForSale");
+            helpMenu.Add("   19. !UnmintedProperties");
+            helpMenu.Add("   20. !AllProperties");
+            helpMenu.Add("   21. !SearchStreets");
+            helpMenu.Add("   22. !SearchProperties");
+            helpMenu.Add("   23. !SearchNeighborhoods");
+            helpMenu.Add("   24. !SearchCollections");
+            helpMenu.Add("   25. !GetAssets");
+            helpMenu.Add("   26. !GetSalesHistory");
+            helpMenu.Add("   27. !HowManyRuns");
             helpMenu.Add("");
             helpMenu.Add("Supporter Commands");
-            helpMenu.Add("   27. !OptimizerLevelRun");
+            helpMenu.Add("   28. !OptimizerLevelRun");
             helpMenu.Add("   28. !OptimizerWhatIfRun");
-            helpMenu.Add("   29. !OptimizerExcludeRun");
+            helpMenu.Add("   30. !OptimizerExcludeRun");
             helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }

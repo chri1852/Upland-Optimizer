@@ -143,5 +143,9 @@
     <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Seller.sql" />
     <Build Include="StoredProcedures\UPL.GetRegisteredUserByUplandUsername.sql" />
     <Build Include="StoredProcedures\UPL.UpdateRegisteredUser.sql" />
+    <Build Include="Tables\UPL.AppraisalRun.sql" />
+    <Build Include="StoredProcedures\UPL.CreateAppraisalRun.sql" />
+    <Build Include="StoredProcedures\UPL.GetLatestAppraisalRun.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteAppraisalRuns.sql" />
   </ItemGroup>
 </Project>

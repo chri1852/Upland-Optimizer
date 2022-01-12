@@ -1150,8 +1150,38 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[CreateOptimizationRun]";
                     sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", optimizationRun.Id));
-                    sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.Now));
+                    sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.UtcNow));
 
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void CreateAppraisalRun(AppraisalRun appraisalRun)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CreateOptimizationRun]";
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", appraisalRun.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.UtcNow));
+                    sqlCmd.Parameters.Add(new SqlParameter("Results", appraisalRun.Results));
                     sqlCmd.ExecuteNonQuery();
                 }
                 catch
@@ -1652,6 +1682,50 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return optimizationRun;
+            }
+        }
+
+        public AppraisalRun GetLatestAppraisalRun(int id)
+        {
+            AppraisalRun appraisalRun = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetLatestAppraisalRun]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@RegisteredUserId", id));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            appraisalRun = new AppraisalRun
+                            {
+                                Id = (int)reader["Id"],
+                                RegisteredUserId = (int)reader["RegisteredUserId"],
+                                RequestedDateTime = (DateTime)reader["RequestedDateTime"],
+                                Results = reader["Results"] == DBNull.Value ? null : (byte[])reader["Results"]
+                            };
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return appraisalRun;
             }
         }
 
@@ -2297,6 +2371,35 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[DeleteOptimizerRuns]";
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", id));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void DeleteAppraisalRuns(int id)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[DeleteAppraisalRuns]";
                     sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", id));
 
                     sqlCmd.ExecuteNonQuery();

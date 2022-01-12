@@ -1,23 +1,14 @@
-﻿CREATE PROCEDURE [UPL].[CreateOptimizationRun]
+﻿CREATE PROCEDURE [UPL].[GetLatestAppraisalRun]
 (
-	@RegisteredUserId  INT,
-	@RequestedDateTime DATETIME
+	@RegisteredUserId INT
 )
 AS
 BEGIN
 	BEGIN TRY		
-		INSERT INTO [UPL].[OptimizationRun]
-		(
-			[RegisteredUserId],
-			[RequestedDateTime],
-			[Status]
-		)
-		Values
-		(
-			@RegisteredUserId,
-			@RequestedDateTime,
-			'In Progress'
-		)
+		SELECT TOP(1) * 
+		FROM [UPL].[AppraisalRun] (NOLOCK)
+		WHERE RegisteredUserId = @RegisteredUserId
+		ORDER BY RequestedDateTime DESC
 	END TRY
 
 	BEGIN CATCH

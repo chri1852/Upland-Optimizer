@@ -39,6 +39,7 @@ namespace Upland.Interfaces.Managers
         List<PropertyAppraisalData> GetCurrentFloorAppraisalData();
         List<Tuple<string, double>> GetBuildingAppraisalData();
         void CreateOptimizationRun(OptimizationRun optimizationRun);
+        void CreateAppraisalRun(AppraisalRun appraisalRun);
         void CreateNeighborhood(Neighborhood neighborhood);
         void CreateStreet(Street street);
         void CreateErrorLog(string location, string message);
@@ -46,6 +47,7 @@ namespace Upland.Interfaces.Managers
         List<Street> GetStreets();
         void SetOptimizationRunStatus(OptimizationRun optimizationRun);
         OptimizationRun GetLatestOptimizationRun(int id);
+        AppraisalRun GetLatestAppraisalRun(int id);
         RegisteredUser GetRegisteredUser(decimal discordUserId);
         RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername);
         List<SaleHistoryEntry> GetRawSaleHistoryByPropertyId(long propertyId);
@@ -76,6 +78,7 @@ namespace Upland.Interfaces.Managers
         void DeleteSaleHistoryById(int id);
         void DeleteSaleHistoryByPropertyId(long propertyId);
         void DeleteOptimizerRuns(int id);
+        void DeleteAppraisalRuns(int id);
         void TruncatePropertyStructure();
         void CreatePropertyStructure(PropertyStructure propertyStructure);
         List<PropertyStructure> GetPropertyStructures();

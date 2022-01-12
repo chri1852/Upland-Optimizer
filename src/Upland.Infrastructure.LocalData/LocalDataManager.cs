@@ -534,6 +534,11 @@ namespace Upland.Infrastructure.LocalData
             _localDataRepository.CreateOptimizationRun(optimizationRun);
         }
 
+        public void CreateAppraisalRun(AppraisalRun appraisalRun)
+        {
+            _localDataRepository.CreateAppraisalRun(appraisalRun);
+        }
+
         public void CreateNeighborhood(Neighborhood neighborhood)
         {
             _localDataRepository.CreateNeighborhood(neighborhood);
@@ -567,6 +572,11 @@ namespace Upland.Infrastructure.LocalData
         public OptimizationRun GetLatestOptimizationRun(int id)
         {
             return _localDataRepository.GetLatestOptimizationRun(id);
+        }
+
+        public AppraisalRun GetLatestAppraisalRun(int id)
+        {
+            return _localDataRepository.GetLatestAppraisalRun(id);
         }
 
         public RegisteredUser GetRegisteredUser(decimal discordUserId)
@@ -732,6 +742,11 @@ namespace Upland.Infrastructure.LocalData
         public void DeleteOptimizerRuns(int id)
         {
             _localDataRepository.DeleteOptimizerRuns(id);
+        }
+
+        public void DeleteAppraisalRuns(int id)
+        {
+            _localDataRepository.DeleteAppraisalRuns(id);
         }
 
         public void TruncatePropertyStructure()

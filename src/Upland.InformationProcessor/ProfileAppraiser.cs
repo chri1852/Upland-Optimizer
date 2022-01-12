@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
@@ -41,18 +42,28 @@ namespace Upland.InformationProcessor
             return _previousSalesData.Where(i => i.Value.Type == "NEIGHBORHOOD").ToDictionary(i => i.Value.Id, i => (double)i.Value.Value);
         }
 
-        public async Task<List<string>> RunAppraisal(string username, string fileType)
+        public async Task<List<string>> RunAppraisal(RegisteredUser registeredUser, string fileType)
         {
-            List<PropertyAppraisal> appraisals = await RunAppraisal(username);
-
+            List<PropertyAppraisal> appraisals = await RunAppraisal(registeredUser.UplandUsername.ToLower());
+            List<string> returnStrings = new List<string>();
             if (fileType.ToUpper() == "TXT")
             {
-                return BuildAppraisalTxtStrings(appraisals, username);
+                returnStrings = BuildAppraisalTxtStrings(appraisals, registeredUser.UplandUsername);
             }
             else
             {
-                return BuildAppraisalCsvStrings(appraisals, username);
+                returnStrings = BuildAppraisalCsvStrings(appraisals, registeredUser.UplandUsername);
             }
+
+            _localDataManager.DeleteAppraisalRuns(registeredUser.Id);
+            _localDataManager.CreateAppraisalRun(new AppraisalRun
+                {
+                    RegisteredUserId = registeredUser.Id,
+                    Results = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, BuildAppraisalTxtStrings(appraisals, registeredUser.UplandUsername)))
+                }
+            );
+
+            return returnStrings;
         }
 
         private async Task<List<PropertyAppraisal>> RunAppraisal(string username)

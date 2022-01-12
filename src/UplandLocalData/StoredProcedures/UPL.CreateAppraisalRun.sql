@@ -1,22 +1,23 @@
-﻿CREATE PROCEDURE [UPL].[CreateOptimizationRun]
+﻿CREATE PROCEDURE [UPL].[CreateAppraisalRun]
 (
 	@RegisteredUserId  INT,
-	@RequestedDateTime DATETIME
+	@RequestedDateTime DATETIME,
+	@Results VARBINARY(MAX) 
 )
 AS
 BEGIN
-	BEGIN TRY		
-		INSERT INTO [UPL].[OptimizationRun]
+	BEGIN TRY
+		INSERT INTO [UPL].[AppraisalRun]
 		(
 			[RegisteredUserId],
 			[RequestedDateTime],
-			[Status]
+			[Results]
 		)
 		Values
 		(
 			@RegisteredUserId,
 			@RequestedDateTime,
-			'In Progress'
+			@Results
 		)
 	END TRY
 

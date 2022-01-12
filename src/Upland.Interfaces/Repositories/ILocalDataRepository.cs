@@ -36,6 +36,7 @@ namespace Upland.Interfaces.Repositories
         Property GetPropertyByCityIdAndAddress(int cityId, string address);
         List<PropertySearchEntry> SearchProperties(int cityId, string address);
         void CreateOptimizationRun(OptimizationRun optimizationRun);
+        void CreateAppraisalRun(AppraisalRun appraisalRun);
         void CreateNeighborhood(Neighborhood neighborhood);
         void CreateHistoricalCityStatus(CollatedStatsObject statsObject);
         void CreateStreet(Street street);
@@ -48,6 +49,7 @@ namespace Upland.Interfaces.Repositories
         List<SaleHistoryEntry> GetRawSaleHistoryByPropertyId(long propertyId);
         void SetOptimizationRunStatus(OptimizationRun optimizationRun);
         OptimizationRun GetLatestOptimizationRun(int id);
+        AppraisalRun GetLatestAppraisalRun(int id);
         void CreateRegisteredUser(RegisteredUser registeredUser);
         void UpdateRegisteredUser(RegisteredUser registeredUser);
         RegisteredUser GetRegisteredUser(decimal discordUserId);
@@ -63,6 +65,7 @@ namespace Upland.Interfaces.Repositories
         List<SaleHistoryQueryEntry> GetSaleHistoryBySellerUsername(string sellerUsername);
         void DeleteRegisteredUser(int id); 
         void DeleteOptimizerRuns(int id);
+        void DeleteAppraisalRuns(int id);
         void UpdateSaleHistoryVistorToUplander(string oldEOS, string newEOS);
         void DeleteSaleHistoryById(int id);
         void DeleteEOSUser(string eosAccount);
