@@ -1832,6 +1832,7 @@ namespace Upland.Infrastructure.LocalData
                                 PropertyId = (long)reader["PropertyId"],
                                 Price = (int)reader["Price"],
                                 Verified = (bool)reader["Verified"],
+                                SentUPX = (int)reader["SendUpx"]
                             };
                         }
                         reader.Close();
