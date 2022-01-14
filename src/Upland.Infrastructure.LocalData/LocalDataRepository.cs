@@ -191,7 +191,7 @@ namespace Upland.Infrastructure.LocalData
                                     EligablePropertyIds = new List<long>(),
                                     Description = (string)reader["Description"],
                                     Reward = (int)reader["Reward"],
-                                    CityId = (reader.IsDBNull("CityId") ? -1 : (int)reader["CityId"]),
+                                    CityId = reader.IsDBNull("CityId") ? -1 : (int)reader["CityId"],
                                     IsCityCollection = (bool)reader["IsCityCollection"]
                                 }
                              );
@@ -1743,19 +1743,13 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[CreateRegisteredUser]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", registeredUser.DiscordUserId));
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", registeredUser.DiscordUsername));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<decimal?>("DiscordUserId", registeredUser.DiscordUserId));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("DiscordUsername", registeredUser.DiscordUsername));
                     sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", registeredUser.UplandUsername));
                     sqlCmd.Parameters.Add(new SqlParameter("PropertyId", registeredUser.PropertyId));
                     sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.Price));
-                    if (registeredUser.VerifyType == null)
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("VerifyType", DBNull.Value));
-                    }
-                    else
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("VerifyType", registeredUser.VerifyType));
-                    }
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("VerifyType", registeredUser.VerifyType));
+
                     sqlCmd.Parameters.Add(new SqlParameter("VerifyExpirationDateTime", registeredUser.VerifyExpirationDateTime));
 
                     sqlCmd.ExecuteNonQuery();
@@ -1786,54 +1780,19 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[UpdateRegisteredUser]";
                     sqlCmd.Parameters.Add(new SqlParameter("Id", registeredUser.Id));
-                    if (registeredUser.DiscordUserId == null)
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", DBNull.Value));
-                    }
-                    else
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", registeredUser.DiscordUserId));
-                    }
-                    if (registeredUser.DiscordUsername == null)
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", DBNull.Value));
-                    }
-                    else
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", registeredUser.DiscordUsername));
-                    }
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<decimal?>("DiscordUserId", registeredUser.DiscordUserId));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("DiscordUsername", registeredUser.DiscordUsername));
                     sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", registeredUser.UplandUsername));
                     sqlCmd.Parameters.Add(new SqlParameter("RunCount", registeredUser.RunCount));
                     sqlCmd.Parameters.Add(new SqlParameter("Paid", registeredUser.Paid));
                     sqlCmd.Parameters.Add(new SqlParameter("PropertyId", registeredUser.PropertyId));
                     sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.Price));
                     sqlCmd.Parameters.Add(new SqlParameter("SendUpx", registeredUser.SendUPX));
-                    if (registeredUser.PasswordSalt == null)
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("PasswordSalt", DBNull.Value));
-                    }
-                    else
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("PasswordSalt", registeredUser.PasswordSalt));
-                    }
-                    if (registeredUser.PasswordHash == null)
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("PasswordHash", DBNull.Value));
-                    }
-                    else
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("PasswordHash", registeredUser.PasswordHash));
-                    }
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("PasswordSalt", registeredUser.PasswordSalt));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("PasswordHash", registeredUser.PasswordHash));
                     sqlCmd.Parameters.Add(new SqlParameter("DiscordVerified", registeredUser.DiscordVerified));
                     sqlCmd.Parameters.Add(new SqlParameter("WebVerified", registeredUser.WebVerified));
-                    if (registeredUser.VerifyType == null)
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("VerifyType", DBNull.Value));
-                    }
-                    else
-                    {
-                        sqlCmd.Parameters.Add(new SqlParameter("VerifyType", registeredUser.VerifyType));
-                    }
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("VerifyType", registeredUser.VerifyType));
                     sqlCmd.Parameters.Add(new SqlParameter("VerifyExpirationDateTime", registeredUser.VerifyExpirationDateTime));
 
                     sqlCmd.ExecuteNonQuery();
@@ -2734,6 +2693,18 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return propertyStructures;
+            }
+        }
+
+        private SqlParameter AddNullParmaterSafe<T>(string parameterName, T value)
+        {
+            if (value == null)
+            {
+                return new SqlParameter(parameterName, DBNull.Value);
+            }
+            else
+            {
+                return new SqlParameter(parameterName, value);
             }
         }
 
