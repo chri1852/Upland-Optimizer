@@ -92,11 +92,35 @@ namespace Upland.Infrastructure.UplandApi
             legit.TeamName = asset.Metadata.TeamName;
             legit.Category = asset.Category;
 
-            legit.PlayerName = asset.Metadata.PlayerFullNameUppercase;
-            legit.Position = asset.Metadata.PlayerPosition;
-            legit.LegitType = asset.Metadata.ModelType;
-            legit.Year = asset.Metadata.Season;
-            legit.FanPoints = asset.Metadata.FanPoints;
+            if (asset.Metadata.PlayerFullNameUppercase == null)
+            {
+                if (asset.Metadata.DisplayName.Contains(" ESSENTIAL "))
+                {
+                    legit.PlayerName = asset.Metadata.DisplayName.Substring(5, asset.Metadata.DisplayName.Length - 5).Split(" ESSENTIAL ")[0];
+                    legit.LegitType = asset.Metadata.DisplayName.Split(" ")[asset.Metadata.DisplayName.Split(" ").Length - 1].ToLower();
+                    legit.Year = asset.Metadata.DisplayName.Split(" ")[0];
+                }
+                else if (asset.Metadata.DisplayName.Contains(" MEMENTO "))
+                {
+                    legit.PlayerName = asset.Metadata.DisplayName.Substring(5, asset.Metadata.DisplayName.Length - 5).Split(" MEMENTO ")[0];
+                    legit.LegitType = asset.Metadata.DisplayName.Split(" ")[asset.Metadata.DisplayName.Split(" ").Length - 1].ToLower();
+                    legit.Year = asset.Metadata.DisplayName.Split(" ")[0];
+                }
+                else if (asset.Metadata.DisplayName.Contains(" REPLICA "))
+                {
+                    legit.PlayerName = asset.Metadata.DisplayName.Substring(5, asset.Metadata.DisplayName.Length - 5).Split(" REPLICA ")[0];
+                    legit.LegitType = asset.Metadata.DisplayName.Split(" ")[asset.Metadata.DisplayName.Split(" ").Length - 1].ToLower();
+                    legit.Year = asset.Metadata.DisplayName.Split(" ")[0];
+                }
+            }
+            else
+            {
+                legit.PlayerName = asset.Metadata.PlayerFullNameUppercase;
+                legit.Position = asset.Metadata.PlayerPosition;
+                legit.LegitType = asset.Metadata.ModelType;
+                legit.Year = asset.Metadata.Season;
+                legit.FanPoints = asset.Metadata.FanPoints;
+            }
 
             legit.DGoodId = asset.DGoodId;
             legit.DisplayName = asset.Metadata.DisplayName;

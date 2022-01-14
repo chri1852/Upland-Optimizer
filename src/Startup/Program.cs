@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
@@ -98,7 +99,7 @@ class Program
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
-        //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
+        List<NFLPALegit> nflpaLegits = await uplandApiManager.GetNFLPALegitsByUsername("teeem");
 
         // Populate CityProps And Neighborhoods
         //await localDataManager.PopulateAllPropertiesInArea(40.921864, 40.782411, -73.763343, -73.942215, 29, true);
@@ -123,6 +124,7 @@ class Program
         //await resyncProcessor.ResyncPropsList("CityUnmintedResync", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
+        //await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" }, "txt");
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }

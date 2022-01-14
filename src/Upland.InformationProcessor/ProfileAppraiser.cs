@@ -18,7 +18,12 @@ namespace Upland.InformationProcessor
         private Dictionary<string, double> _buildingData;
         private Dictionary<long, string> _propertyStructures;
 
-        private DateTime _expirationDate;
+        private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _newPreviousSalesData;
+        private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _newCurrentFloorData;
+        private Dictionary<string, double> _newBuildingData;
+        private Dictionary<long, string> _newPropertyStructures;
+
+        private DateTime? _expirationDate;
 
         private ILocalDataManager _localDataManager;
         private IUplandApiManager _uplandApiManager;
@@ -304,16 +309,36 @@ namespace Upland.InformationProcessor
 
         private void RefreshData()
         {
-            if (_expirationDate == null || _expirationDate < DateTime.Now)
+            if (_expirationDate == null)
             {
                 _previousSalesData = _localDataManager.GetPreviousSalesAppraisalData()
-                    .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
+                        .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                 _currentFloorData = _localDataManager.GetCurrentFloorAppraisalData()
                     .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                 _buildingData = _localDataManager.GetBuildingAppraisalData()
                     .ToDictionary(d => d.Item1, d => d.Item2);
                 _propertyStructures = _localDataManager.GetPropertyStructures()
                     .ToDictionary(d => d.PropertyId, d => d.StructureType);
+            }
+
+            if (_expirationDate < DateTime.Now)
+            {
+                Task child = Task.Factory.StartNew(() =>
+                {
+                    _newPreviousSalesData = _localDataManager.GetPreviousSalesAppraisalData()
+                        .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
+                    _newCurrentFloorData = _localDataManager.GetCurrentFloorAppraisalData()
+                        .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
+                    _newBuildingData = _localDataManager.GetBuildingAppraisalData()
+                        .ToDictionary(d => d.Item1, d => d.Item2);
+                    _newPropertyStructures = _localDataManager.GetPropertyStructures()
+                        .ToDictionary(d => d.PropertyId, d => d.StructureType);
+
+                    _previousSalesData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newPreviousSalesData);
+                    _currentFloorData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newCurrentFloorData);
+                    _buildingData = new Dictionary<string, double>(_newBuildingData);
+                    _newPropertyStructures = new Dictionary<long, string>(_propertyStructures);
+                });
 
                 _expirationDate = DateTime.Now.AddHours(24);
             }

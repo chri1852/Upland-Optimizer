@@ -423,7 +423,7 @@ namespace Startup.Commands
             supportMeString.Add("");
             supportMeString.Add(string.Format("You can pay by sending at least ${0:N2} bucks to Grombrindal through the below methods. Always be sure to DM Grombrindal when you do!", upxToSupporter / 1000.0));
             supportMeString.Add(string.Format("   1. UPX - Offer {0} or more UPX on 9843 S Exchange Ave in Chicago, and DM Grombrindal with your upland username. I'll accept and buy it back for 1 UPX.", upxToSupporter));
-            supportMeString.Add(string.Format("   2. UPX - Keep Sending to the properties in #locations until you have sent {0} more UPX, and the bot will automatically set you as a supporter", upxToSupporter));
+            supportMeString.Add(string.Format("   2. UPX - Keep Sending to the properties in #locations. For each 200 UPX in sends to those locations you will earn another run. Once you have sent {0} UPX total, and the bot will automatically set you as a supporter", Consts.SendUpxSupporterThreshold));
             supportMeString.Add("   3. USD - Paypal - chri1852@umn.edu");
             supportMeString.Add("   4. USD - Venmo  - Alex-Christensen-9");
             supportMeString.Add("   5. WAX - Send to 5otpy.wam, with your upland username in the memo.");

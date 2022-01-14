@@ -406,7 +406,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandTimeout = 240;
+                    sqlCmd.CommandTimeout = 600;
                     sqlCmd.CommandText = "[UPL].[GetPreviousSalesAppraisalData]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -453,7 +453,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandTimeout = 240;
+                    sqlCmd.CommandTimeout = 600;
                     sqlCmd.CommandText = "[UPL].[GetCurrentFloorAppraisalData]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -499,7 +499,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandTimeout = 240;
+                    sqlCmd.CommandTimeout = 600;
                     sqlCmd.CommandText = "[UPL].[GetBuildingApprasialData]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -1178,8 +1178,8 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[CreateOptimizationRun]";
-                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", appraisalRun.Id));
+                    sqlCmd.CommandText = "[UPL].[CreateAppraisalRun]";
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", appraisalRun.RegisteredUserId));
                     sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.UtcNow));
                     sqlCmd.Parameters.Add(new SqlParameter("Results", appraisalRun.Results));
                     sqlCmd.ExecuteNonQuery();
