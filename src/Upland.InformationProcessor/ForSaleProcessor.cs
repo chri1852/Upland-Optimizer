@@ -148,6 +148,9 @@ namespace Upland.InformationProcessor
             Dictionary<long, Property> properties = new Dictionary<long, Property>();
             int cityId = 0;
 
+            // Lets grab the Structures
+            Dictionary<long, string> propertyStructures = _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
+
             if (type.ToUpper() == "CITY")
             {
                 cityId = Id;
@@ -161,14 +164,14 @@ namespace Upland.InformationProcessor
                 {
                     foreach (int cId in Consts.Cities.Keys)
                     {
-                        forSaleProps.AddRange(_localDataManager.GetPropertiesForSale_City(cId, true));
+                        forSaleProps.AddRange(_localDataManager.GetPropertiesForSale_City(cId, true).Where(p => propertyStructures.ContainsKey(p.Prop_Id)));
                     }
 
                     properties = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(g => g.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
                 }
                 else
                 {
-                    forSaleProps = _localDataManager.GetPropertiesForSale_City(cityId, true);
+                    forSaleProps = _localDataManager.GetPropertiesForSale_City(cityId, true).Where(p => propertyStructures.ContainsKey(p.Prop_Id)).ToList();
                     properties = _localDataManager.GetProperties(forSaleProps.GroupBy(f => f.Prop_Id).Select(g => g.First().Prop_Id).ToList()).ToDictionary(p => p.Id, p => p);
                 }
 
@@ -240,9 +243,6 @@ namespace Upland.InformationProcessor
             {
                 forSaleProps = forSaleProps.Where(p => p.Currency == "UPX").ToList();
             }
-
-            // Lets grab the Structures
-            Dictionary<long, string> propertyStructures = _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType);
 
             forSaleProps = forSaleProps.Where(p => propertyStructures.ContainsKey(p.Prop_Id)).ToList();
 

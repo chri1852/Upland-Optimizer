@@ -82,6 +82,7 @@ namespace Upland.Types
         public static readonly ulong DiscordSupporterRoleId = 910751643857997824;
         public static readonly string VERIFYTYPE_DISCORD = "DIS";
         public static readonly string VERIFYTYPE_WEB = "WEB";
+        public static readonly string VERIFYTYPE_RESET = "WRS";
 
         public static readonly int MAX_LINES_TO_RETURN = 25000;
         public static readonly double RateOfReturn = 0.1728;

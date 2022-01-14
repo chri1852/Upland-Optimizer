@@ -1149,7 +1149,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[CreateOptimizationRun]";
-                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", optimizationRun.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", optimizationRun.RegisteredUserId));
                     sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.UtcNow));
 
                     sqlCmd.ExecuteNonQuery();
@@ -1906,7 +1906,7 @@ namespace Upland.Infrastructure.LocalData
                                 DiscordVerified = (bool)reader["DiscordVerified"],
                                 WebVerified = (bool)reader["WebVerified"],
                                 VerifyType = reader["VerifyType"] != DBNull.Value ? (string)reader["VerifyType"] : null,
-                                VerifyExpirationDateTime = (DateTime)reader["VerifyExpirationDateTime"]
+                                VerifyExpirationDateTime = (DateTime)reader["VerifyExpirationDateTime"],
                             };
 
                             if(reader["DiscordUserId"] != DBNull.Value)

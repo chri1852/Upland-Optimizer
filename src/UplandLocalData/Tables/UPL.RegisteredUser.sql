@@ -8,7 +8,6 @@
 	[Paid]                     BIT               NOT NULL,
 	[PropertyId]               BIGINT                    ,
 	[Price]                    INT                       ,
-	[Verified]                 BIT               NOT NULL,
 	[SendUPX]                  INT               NOT NULL,
 	[PasswordSalt]             VARCHAR(64)               ,
 	[PasswordHash]             VARCHAR(64)               ,

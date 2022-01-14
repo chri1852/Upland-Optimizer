@@ -312,17 +312,20 @@ namespace Upland.InformationProcessor
             if (_expirationDate == null)
             {
                 _previousSalesData = _localDataManager.GetPreviousSalesAppraisalData()
-                        .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
+                    .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                 _currentFloorData = _localDataManager.GetCurrentFloorAppraisalData()
                     .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                 _buildingData = _localDataManager.GetBuildingAppraisalData()
                     .ToDictionary(d => d.Item1, d => d.Item2);
                 _propertyStructures = _localDataManager.GetPropertyStructures()
                     .ToDictionary(d => d.PropertyId, d => d.StructureType);
+
+                _expirationDate = DateTime.Now.AddHours(24);
             }
 
             if (_expirationDate < DateTime.Now)
             {
+                _expirationDate = DateTime.Now.AddHours(24);
                 Task child = Task.Factory.StartNew(() =>
                 {
                     _newPreviousSalesData = _localDataManager.GetPreviousSalesAppraisalData()
@@ -339,8 +342,6 @@ namespace Upland.InformationProcessor
                     _buildingData = new Dictionary<string, double>(_newBuildingData);
                     _newPropertyStructures = new Dictionary<long, string>(_propertyStructures);
                 });
-
-                _expirationDate = DateTime.Now.AddHours(24);
             }
         }
     }
