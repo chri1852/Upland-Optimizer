@@ -1,13 +1,24 @@
-﻿CREATE PROCEDURE [UPL].[SetRegisteredUserPaid]
+﻿CREATE PROCEDURE [UPL].[CreateAppraisalRun]
 (
-	@UplandUsername VARCHAR(200)
+	@RegisteredUserId  INT,
+	@RequestedDateTime DATETIME,
+	@Results VARBINARY(MAX) 
 )
 AS
 BEGIN
-	BEGIN TRY		
-		UPDATE [UPL].[RegisteredUser]
-		SET Paid = 1
-		WHERE UplandUsername = @UplandUsername
+	BEGIN TRY
+		INSERT INTO [UPL].[AppraisalRun]
+		(
+			[RegisteredUserId],
+			[RequestedDateTime],
+			[Results]
+		)
+		Values
+		(
+			@RegisteredUserId,
+			@RequestedDateTime,
+			@Results
+		)
 	END TRY
 
 	BEGIN CATCH

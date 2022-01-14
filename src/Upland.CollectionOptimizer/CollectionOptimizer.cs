@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Upland.Infrastructure.LocalData;
+using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Repositories;
 using Upland.Types;
 using Upland.Types.Types;
 
@@ -21,15 +24,16 @@ namespace Upland.CollectionOptimizer
         private List<StandardCollectionBuilder> KingOfTheStreetCollections;
         private Dictionary<int, Collection> UnoptimizedCollections;
         private Dictionary<int, Collection> MissingCollections;
-        private LocalDataManager LocalDataManager;
+        private ILocalDataManager LocalDataManager;
         private bool DebugMode;
+        private IUplandApiRepository UplandApiRepository;
 
         private const string CityPro = "City Pro";
         private const string KingOfTheStreet = "King of the Street";
         private const int CityProId = 21;
         private const int KingOfTheStreetId = 1;
 
-        public CollectionOptimizer()
+        public CollectionOptimizer(ILocalDataManager localDataManager, IUplandApiRepository uplandApiRepository)
         {
             this.Properties = new Dictionary<long, Property>();
             this.Collections = new Dictionary<int, Collection>();
@@ -43,7 +47,8 @@ namespace Upland.CollectionOptimizer
             this.UnoptimizedCollections = new Dictionary<int, Collection>();
             this.MissingCollections = new Dictionary<int, Collection>();
 
-            this.LocalDataManager = new LocalDataManager();
+            this.LocalDataManager = localDataManager;
+            this.UplandApiRepository = uplandApiRepository;
             this.DebugMode = false;
         }
 
@@ -59,9 +64,9 @@ namespace Upland.CollectionOptimizer
             LocalDataManager.CreateOptimizationRun(
                 new OptimizationRun
                 {
-                    DiscordUserId = registeredUser.DiscordUserId
+                    RegisteredUserId = registeredUser.Id
                 });
-            OptimizationRun optimizationRun = LocalDataManager.GetLatestOptimizationRun(registeredUser.DiscordUserId);
+            OptimizationRun optimizationRun = LocalDataManager.GetLatestOptimizationRun(registeredUser.Id);
 
             try
             {
@@ -88,7 +93,9 @@ namespace Upland.CollectionOptimizer
                     Status = Consts.RunStatusCompleted,
                     Results = Encoding.UTF8.GetBytes(results)
                 });
-            LocalDataManager.IncreaseRegisteredUserRunCount(registeredUser.DiscordUserId);
+
+            registeredUser.RunCount++;
+            LocalDataManager.UpdateRegisteredUser(registeredUser);
         }
 
         private async Task RunDebugOptimization(OptimizerRunRequest runRequest)
@@ -351,8 +358,7 @@ namespace Upland.CollectionOptimizer
         {
             this.Collections = new Dictionary<int, Collection>();
 
-            LocalDataManager dataManager = new LocalDataManager();
-            List<Collection> collections = dataManager.GetCollections();
+            List<Collection> collections = LocalDataManager.GetCollections();
 
             foreach (Collection collection in collections)
             {

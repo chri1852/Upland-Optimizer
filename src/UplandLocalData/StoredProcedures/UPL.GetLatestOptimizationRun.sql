@@ -1,14 +1,14 @@
-﻿CREATE PROCEDURE [UPL].[AddRegisteredUserSendUPX]
+﻿CREATE PROCEDURE [UPL].[GetLatestOptimizationRun]
 (
-	@DiscordUserId DECIMAL(20,0),
-	@SendUPX INT
+	@RegisteredUserId INT
 )
 AS
 BEGIN
 	BEGIN TRY		
-		UPDATE [UPL].[RegisteredUser]
-		SET SendUpx += @SendUPX
-		WHERE DiscordUserId = @DiscordUserId
+		SELECT TOP(1) * 
+		FROM [UPL].[OptimizationRun] (NOLOCK)
+		WHERE RegisteredUserId = @RegisteredUserId
+		ORDER BY RequestedDateTime DESC
 	END TRY
 
 	BEGIN CATCH

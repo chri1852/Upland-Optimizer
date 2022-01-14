@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [UPL].[CreateOptimizationRun]
 (
-	@DiscordUserId     DECIMAL(20,0),
+	@RegisteredUserId  INT,
 	@RequestedDateTime DATETIME
 )
 AS
@@ -8,13 +8,13 @@ BEGIN
 	BEGIN TRY		
 		INSERT INTO [UPL].[OptimizationRun]
 		(
-			[DiscordUserId],
+			[RegisteredUserId],
 			[RequestedDateTime],
 			[Status]
 		)
 		Values
 		(
-			@DiscordUserId,
+			@RegisteredUserId,
 			@RequestedDateTime,
 			'In Progress'
 		)

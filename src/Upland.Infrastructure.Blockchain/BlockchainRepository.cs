@@ -7,11 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Upland.Interfaces.Repositories;
 using Upland.Types.BlockchainTypes;
 
 namespace Upland.Infrastructure.Blockchain
 {
-    public class BlockchainRepository
+    public class BlockchainRepository : IBlockChainRepository
     {
         HttpClient httpClient;
         Eos eos;

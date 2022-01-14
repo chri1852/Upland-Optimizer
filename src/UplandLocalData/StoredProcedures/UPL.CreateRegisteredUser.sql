@@ -1,10 +1,12 @@
 ﻿CREATE PROCEDURE [UPL].[CreateRegisteredUser]
 (
-	@DiscordUserId   DECIMAL(20,0),
-	@DiscordUsername VARCHAR(200),
-	@UplandUsername  VARCHAR(200),
-	@PropertyId      BIGINT,
-	@Price           INT
+	@DiscordUserId             DECIMAL(20,0),
+	@DiscordUsername           VARCHAR(200),
+	@UplandUsername            VARCHAR(200),
+	@PropertyId                BIGINT,
+	@Price                     INT,
+	@VerifyType                VARCHAR(3),
+	@VerifyExpirationDateTime  DATETIME
 )
 AS
 BEGIN
@@ -18,8 +20,13 @@ BEGIN
 			[Paid],
 			[PropertyId],
 			[Price],
-			[Verified],
-			[SendUPX]
+			[SendUPX],
+			[PasswordSalt],
+			[PasswordHash],
+			[DiscordVerified],
+			[WebVerified],
+			[VerifyType],
+			[VerifyExpirationDateTime]
 		)
 		VALUES
 		(
@@ -31,7 +38,12 @@ BEGIN
 			@PropertyId,
 			@Price,
 			0,
-			0
+			NULL,
+			NULL,
+			0,
+			0,
+			@VerifyType,
+			@VerifyExpirationDateTime
 		)
 	END TRY
 

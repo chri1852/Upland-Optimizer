@@ -3,27 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Upland.Infrastructure.Blockchain;
-using Upland.Infrastructure.LocalData;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.BlockchainTypes;
+using Upland.Types.Types;
 
 namespace Upland.InformationProcessor
 {
-    public class BlockchainSendFinder
+    public class BlockchainSendFinder : IBlockchainSendFinder
     {
-        private readonly LocalDataManager _localDataManager;
-        private readonly BlockchainManager _blockchainManager;
-
-        private List<Tuple<decimal, string, string>> registeredUserEOSAccounts;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IBlockchainManager _blockchainManager;
         private List<string> propertyIdsToWatch;
         private bool isProcessing;
 
-        public BlockchainSendFinder(LocalDataManager localDataManager, BlockchainManager blockchainManager)
+        public BlockchainSendFinder(ILocalDataManager localDataManager, IBlockchainManager blockchainManager)
         {
             _localDataManager = localDataManager;
             _blockchainManager = blockchainManager;
-            registeredUserEOSAccounts = localDataManager.GetRegisteredUsersEOSAccounts();
             propertyIdsToWatch = localDataManager.GetConfigurationValue(Consts.CONFIG_PROPIDSTOMONITORFORSENDS).Split(",").ToList();
             isProcessing = false;
         }
@@ -51,6 +49,8 @@ namespace Upland.InformationProcessor
             {
                 return;
             }
+
+            List<Tuple<decimal, string, string>> registeredUserEOSAccounts = _localDataManager.GetRegisteredUsersEOSAccounts();
 
             this.isProcessing = true;
 
@@ -92,7 +92,7 @@ namespace Upland.InformationProcessor
                 else
                 {
                     actions = actions.OrderBy(a => a.timestamp).ToList();
-                    ProcessActions(actions);
+                    ProcessActions(actions, registeredUserEOSAccounts);
 
                     if (actions.Count < 1000)
                     {
@@ -113,7 +113,7 @@ namespace Upland.InformationProcessor
             this.isProcessing = false;
         }
 
-        public void ProcessActions(List<HistoryAction> actions)
+        public void ProcessActions(List<HistoryAction> actions, List<Tuple<decimal, string, string>> registeredUserEOSAccounts)
         {
             DateTime maxTimestampProcessed = DateTime.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXSENDTIMESTAMPPROCESSED));
 
@@ -131,7 +131,9 @@ namespace Upland.InformationProcessor
                     {
                         try
                         {
-                            _localDataManager.AddRegisteredUserSendUPX(registeredUserEOSAccounts.Where(e => e.Item3 == action.act.data.p51).First().Item1, int.Parse(action.act.data.p54.Split(".00 UP")[0]));
+                            RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(action.act.data.p51);
+                            registeredUser.SendUPX += int.Parse(action.act.data.p54.Split(".00 UP")[0]);
+                            _localDataManager.UpdateRegisteredUser(registeredUser);
                         }
                         catch (Exception ex)
                         {

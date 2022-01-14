@@ -1,38 +1,43 @@
 ﻿using Discord.Commands;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Upland.CollectionOptimizer;
-using Upland.InformationProcessor;
-using Upland.Infrastructure.LocalData;
+using Upland.Interfaces.Repositories;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
+using Upland.Interfaces.Managers;
 
 namespace Startup.Commands
 {
     public class AdminCommands : ModuleBase<SocketCommandContext>
     {
+        private readonly IConfiguration _configuration;
         private readonly Random _random;
-        private readonly InformationProcessor _informationProcessor;
-        private readonly ResyncProcessor _resyncProcessor;
-        private readonly LocalDataManager _localDataManager;
-        private readonly ProfileAppraiser _profileAppraiser;
+        private readonly IInformationProcessor _informationProcessor;
+        private readonly IResyncProcessor _resyncProcessor;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IProfileAppraiser _profileAppraiser;
+        private readonly IUplandApiRepository _uplandApiRepository;
 
-        public AdminCommands(InformationProcessor informationProcessor, ResyncProcessor resyncProcessor, LocalDataManager localDataManager, ProfileAppraiser profileAppraiser)
+        public AdminCommands(IInformationProcessor informationProcessor, IResyncProcessor resyncProcessor, ILocalDataManager localDataManager, IProfileAppraiser profileAppraiser, IConfiguration configuration, IUplandApiRepository uplandApiRepository)
         {
+            _configuration = configuration;
             _random = new Random();
             _informationProcessor = informationProcessor;
             _resyncProcessor = resyncProcessor;
             _localDataManager = localDataManager;
             _profileAppraiser = profileAppraiser;
+            _uplandApiRepository = uplandApiRepository;
         }
 
         private async Task<bool> checkIfAdmin(ulong discordUserId)
         {
-            ulong adminId = ulong.Parse(JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["AdminDiscordId"]);
+            ulong adminId = ulong.Parse(this._configuration["AppSettings:AdminDiscordId"]);
 
             if (discordUserId != adminId)
             {
@@ -50,7 +55,7 @@ namespace Startup.Commands
                 return;
             }
 
-            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserDiscordId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserId);
             if (currentRun != null && currentRun.Status == Consts.RunStatusInProgress)
             {
                 await ReplyAsync(string.Format("Test User Run is in Progress, Please Wait."));
@@ -59,18 +64,18 @@ namespace Startup.Commands
 
             if (currentRun != null)
             {
-                _localDataManager.DeleteOptimizerRuns(Consts.TestUserDiscordId);
+                _localDataManager.DeleteOptimizerRuns(Consts.TestUserId);
             }
 
             try
             {
                 await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername.ToUpper()));
 
-                CollectionOptimizer optimizer = new CollectionOptimizer();
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(uplandUsername.ToLower(), qualityLevel);
                 await optimizer.RunAutoOptimization(new RegisteredUser
                 {
-                    DiscordUserId = Consts.TestUserDiscordId,
+                    Id = Consts.TestUserId,
                     DiscordUsername = "TEST_USER_NAME",
                     UplandUsername = uplandUsername.ToLower()
                 },
@@ -94,7 +99,7 @@ namespace Startup.Commands
                 return;
             }
 
-            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserDiscordId);
+            OptimizationRun currentRun = _localDataManager.GetLatestOptimizationRun(Consts.TestUserId);
 
             if (currentRun.Status == Consts.RunStatusCompleted)
             {
@@ -120,7 +125,12 @@ namespace Startup.Commands
 
             try
             {
-                appraiserOutput = await _profileAppraiser.RunAppraisal(uplandUsername.ToLower(), "TXT");
+                appraiserOutput = await _profileAppraiser.RunAppraisal(new RegisteredUser
+                {
+                    Id = Consts.TestUserId,
+                    DiscordUsername = "TEST_USER_NAME",
+                    UplandUsername = uplandUsername.ToLower()
+                }, "TXT");
             }
             catch (Exception ex)
             {
@@ -217,7 +227,9 @@ namespace Startup.Commands
 
             try
             {
-                _localDataManager.SetRegisteredUserPaid(uplandUsername);
+                RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUsername);
+                registeredUser.Paid = true;
+                _localDataManager.UpdateRegisteredUser(registeredUser);
                 await ReplyAsync(string.Format("{0} is now a Supporter.", uplandUsername));
             }
             catch (Exception ex)

@@ -3,12 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Upland.Interfaces.Managers;
 using Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
 
 namespace Upland.Infrastructure.Blockchain
 {
-    public class BlockchainManager
+    public class BlockchainManager : IBlockchainManager
     {
         private BlockchainRepository blockchainRepository;
 

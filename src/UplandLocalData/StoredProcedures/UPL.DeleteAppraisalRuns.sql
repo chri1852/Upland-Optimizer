@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[IncreaseRegisteredUserRunCount]
+﻿CREATE PROCEDURE [UPL].[DeleteAppraisalRuns]
 (
-	@DiscordUserId DECIMAL(20,0)
+	@RegisteredUserId INT
 )
 AS
 BEGIN
 	BEGIN TRY		
-		UPDATE [UPL].[RegisteredUser]
-		SET RunCount += 1
-		WHERE DiscordUserId = @DiscordUserId
+		DELETE 
+		FROM [UPL].[AppraisalRun]
+		WHERE RegisteredUserId = @RegisteredUserId
 	END TRY
 
 	BEGIN CATCH

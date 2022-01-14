@@ -1,11 +1,10 @@
-﻿CREATE TABLE [UPL].[OptimizationRun]
+﻿CREATE TABLE [UPL].[AppraisalRun]
 (
 	[Id]                INT IDENTITY(1,1) NOT NULL,
 	[RegisteredUserId]  INT               NOT NULL,
 	[RequestedDateTime] DATETIME          NOT NULL,
 	[Results]           VARBINARY(MAX)            ,
-	[Status]            VARCHAR(20)       NOT NULL,
 
-	CONSTRAINT pk_OptimizationRunId PRIMARY KEY(Id)
+	CONSTRAINT pk_AppraisalRunId PRIMARY KEY(Id)
 )
 GO

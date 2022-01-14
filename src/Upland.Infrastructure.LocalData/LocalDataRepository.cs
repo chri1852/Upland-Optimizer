@@ -1,22 +1,26 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text.Json;
+using Upland.Interfaces.Repositories;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.Infrastructure.LocalData
 {
-    public class LocalDataRepository
+    public class LocalDataRepository : ILocalDataRepository
     {
+        private readonly IConfiguration _configuration;
         private readonly string DbConnectionString;
 
-        public LocalDataRepository()
+        public LocalDataRepository(IConfiguration configuration)
         {
-            DbConnectionString = JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["DatabaseConnectionString"];
+            _configuration = configuration;
+            DbConnectionString = _configuration["AppSettings:DatabaseConnectionString"];
         }
 
         public void CreateCollection(Collection collection)
@@ -187,7 +191,7 @@ namespace Upland.Infrastructure.LocalData
                                     EligablePropertyIds = new List<long>(),
                                     Description = (string)reader["Description"],
                                     Reward = (int)reader["Reward"],
-                                    CityId = (reader.IsDBNull("CityId") ? -1 : (int)reader["CityId"]),
+                                    CityId = reader.IsDBNull("CityId") ? -1 : (int)reader["CityId"],
                                     IsCityCollection = (bool)reader["IsCityCollection"]
                                 }
                              );
@@ -402,7 +406,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandTimeout = 240;
+                    sqlCmd.CommandTimeout = 600;
                     sqlCmd.CommandText = "[UPL].[GetPreviousSalesAppraisalData]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -449,7 +453,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandTimeout = 240;
+                    sqlCmd.CommandTimeout = 600;
                     sqlCmd.CommandText = "[UPL].[GetCurrentFloorAppraisalData]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -495,7 +499,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandTimeout = 240;
+                    sqlCmd.CommandTimeout = 600;
                     sqlCmd.CommandText = "[UPL].[GetBuildingApprasialData]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -1145,9 +1149,39 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[CreateOptimizationRun]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", optimizationRun.DiscordUserId));
-                    sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.Now));
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", optimizationRun.RegisteredUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.UtcNow));
 
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void CreateAppraisalRun(AppraisalRun appraisalRun)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CreateAppraisalRun]";
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", appraisalRun.RegisteredUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("RequestedDateTime", DateTime.UtcNow));
+                    sqlCmd.Parameters.Add(new SqlParameter("Results", appraisalRun.Results));
                     sqlCmd.ExecuteNonQuery();
                 }
                 catch
@@ -1606,7 +1640,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public OptimizationRun GetLatestOptimizationRun(decimal discordUserId)
+        public OptimizationRun GetLatestOptimizationRun(int id)
         {
             OptimizationRun optimizationRun = null;
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1620,8 +1654,8 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[GetLatestOptimizationRunForDiscordUserId]";
-                    sqlCmd.Parameters.Add(new SqlParameter("@DiscordUserId", discordUserId));
+                    sqlCmd.CommandText = "[UPL].[GetLatestOptimizationRun]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@RegisteredUserId", id));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -1629,7 +1663,7 @@ namespace Upland.Infrastructure.LocalData
                             optimizationRun = new OptimizationRun
                             {
                                 Id = (int)reader["Id"],
-                                DiscordUserId = (decimal)reader["DiscordUserId"],
+                                RegisteredUserId = (int)reader["RegisteredUserId"],
                                 RequestedDateTime = (DateTime)reader["RequestedDateTime"],
                                 Results = reader["Results"] == DBNull.Value ? null : (byte[])reader["Results"],
                                 Status = (string)reader["Status"],
@@ -1651,6 +1685,50 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public AppraisalRun GetLatestAppraisalRun(int id)
+        {
+            AppraisalRun appraisalRun = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetLatestAppraisalRun]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@RegisteredUserId", id));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            appraisalRun = new AppraisalRun
+                            {
+                                Id = (int)reader["Id"],
+                                RegisteredUserId = (int)reader["RegisteredUserId"],
+                                RequestedDateTime = (DateTime)reader["RequestedDateTime"],
+                                Results = reader["Results"] == DBNull.Value ? null : (byte[])reader["Results"]
+                            };
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return appraisalRun;
+            }
+        }
+
         public void CreateRegisteredUser(RegisteredUser registeredUser)
         {
             SqlConnection sqlConnection = GetSQLConnector();
@@ -1665,11 +1743,14 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[CreateRegisteredUser]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", registeredUser.DiscordUserId));
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUsername", registeredUser.DiscordUsername));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<decimal?>("DiscordUserId", registeredUser.DiscordUserId));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("DiscordUsername", registeredUser.DiscordUsername));
                     sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", registeredUser.UplandUsername));
                     sqlCmd.Parameters.Add(new SqlParameter("PropertyId", registeredUser.PropertyId));
                     sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.Price));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("VerifyType", registeredUser.VerifyType));
+
+                    sqlCmd.Parameters.Add(new SqlParameter("VerifyExpirationDateTime", registeredUser.VerifyExpirationDateTime));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -1684,7 +1765,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public void SetRegisteredUserPaid(string uplandUsername)
+        public void UpdateRegisteredUser(RegisteredUser registeredUser)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -1697,96 +1778,22 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[SetRegisteredUserPaid]";
-                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
-
-                    sqlCmd.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    sqlConnection.Close();
-                }
-            }
-        }
-
-        public void SetRegisteredUserVerified(decimal discordUserId)
-        {
-            SqlConnection sqlConnection = GetSQLConnector();
-
-            using (sqlConnection)
-            {
-                sqlConnection.Open();
-
-                try
-                {
-                    SqlCommand sqlCmd = new SqlCommand();
-                    sqlCmd.Connection = sqlConnection;
-                    sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[SetRegisteredUserVerified]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
-
-                    sqlCmd.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    sqlConnection.Close();
-                }
-            }
-        }
-
-        public void IncreaseRegisteredUserRunCount(decimal discordUserId)
-        {
-            SqlConnection sqlConnection = GetSQLConnector();
-
-            using (sqlConnection)
-            {
-                sqlConnection.Open();
-
-                try
-                {
-                    SqlCommand sqlCmd = new SqlCommand();
-                    sqlCmd.Connection = sqlConnection;
-                    sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[IncreaseRegisteredUserRunCount]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
-
-                    sqlCmd.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    sqlConnection.Close();
-                }
-            }
-        }
-
-        public void AddRegisteredUserSendUPX(decimal discordUserId, int sendUPX)
-        {
-            SqlConnection sqlConnection = GetSQLConnector();
-
-            using (sqlConnection)
-            {
-                sqlConnection.Open();
-
-                try
-                {
-                    SqlCommand sqlCmd = new SqlCommand();
-                    sqlCmd.Connection = sqlConnection;
-                    sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[AddRegisteredUserSendUPX]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
-                    sqlCmd.Parameters.Add(new SqlParameter("SendUPX", sendUPX));
+                    sqlCmd.CommandText = "[UPL].[UpdateRegisteredUser]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", registeredUser.Id));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<decimal?>("DiscordUserId", registeredUser.DiscordUserId));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("DiscordUsername", registeredUser.DiscordUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", registeredUser.UplandUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("RunCount", registeredUser.RunCount));
+                    sqlCmd.Parameters.Add(new SqlParameter("Paid", registeredUser.Paid));
+                    sqlCmd.Parameters.Add(new SqlParameter("PropertyId", registeredUser.PropertyId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Price", registeredUser.Price));
+                    sqlCmd.Parameters.Add(new SqlParameter("SendUpx", registeredUser.SendUPX));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("PasswordSalt", registeredUser.PasswordSalt));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("PasswordHash", registeredUser.PasswordHash));
+                    sqlCmd.Parameters.Add(new SqlParameter("DiscordVerified", registeredUser.DiscordVerified));
+                    sqlCmd.Parameters.Add(new SqlParameter("WebVerified", registeredUser.WebVerified));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("VerifyType", registeredUser.VerifyType));
+                    sqlCmd.Parameters.Add(new SqlParameter("VerifyExpirationDateTime", registeredUser.VerifyExpirationDateTime));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -1824,16 +1831,29 @@ namespace Upland.Infrastructure.LocalData
                             registeredUser = new RegisteredUser
                             {
                                 Id = (int)reader["Id"],
-                                DiscordUserId = (decimal)reader["DiscordUserId"],
-                                DiscordUsername = (string)reader["DiscordUsername"],
+                                DiscordUsername = reader["DiscordUsername"] != DBNull.Value ? (string)reader["DiscordUsername"] : null,
                                 UplandUsername = (string)reader["UplandUsername"],
                                 RunCount = (int)reader["RunCount"],
                                 Paid = (bool)reader["Paid"],
                                 PropertyId = (long)reader["PropertyId"],
                                 Price = (int)reader["Price"],
-                                Verified = (bool)reader["Verified"],
-                                SentUPX = (int)reader["SendUpx"]
+                                SendUPX = (int)reader["SendUpx"],
+                                PasswordSalt = reader["PasswordSalt"] != DBNull.Value ? (string)reader["PasswordSalt"] : null,
+                                PasswordHash = reader["PasswordHash"] != DBNull.Value ? (string)reader["PasswordHash"] : null,
+                                DiscordVerified = (bool)reader["DiscordVerified"],
+                                WebVerified = (bool)reader["WebVerified"],
+                                VerifyType = reader["VerifyType"] != DBNull.Value ? (string)reader["VerifyType"] : null,
+                                VerifyExpirationDateTime = (DateTime)reader["VerifyExpirationDateTime"]
                             };
+
+                            if (reader["DiscordUserId"] != DBNull.Value)
+                            {
+                                registeredUser.DiscordUserId = (decimal)reader["DiscordUserId"];
+                            }
+                            else
+                            {
+                                registeredUser.DiscordUserId = null;
+                            }
                         }
                         reader.Close();
                     }
@@ -1850,6 +1870,70 @@ namespace Upland.Infrastructure.LocalData
                 return registeredUser;
             }
         }
+
+        public RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername)
+        {
+            RegisteredUser registeredUser = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetRegisteredUserByUplandUsername]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@UplandUsername", uplandUsername));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            registeredUser = new RegisteredUser
+                            {
+                                Id = (int)reader["Id"],
+                                DiscordUsername = reader["DiscordUsername"] != DBNull.Value ? (string)reader["DiscordUsername"] : null,
+                                UplandUsername = (string)reader["UplandUsername"],
+                                RunCount = (int)reader["RunCount"],
+                                Paid = (bool)reader["Paid"],
+                                PropertyId = (long)reader["PropertyId"],
+                                Price = (int)reader["Price"],
+                                SendUPX = (int)reader["SendUpx"],
+                                PasswordSalt = reader["PasswordSalt"] != DBNull.Value ? (string)reader["PasswordSalt"] : null,
+                                PasswordHash = reader["PasswordHash"] != DBNull.Value ? (string)reader["PasswordHash"] : null,
+                                DiscordVerified = (bool)reader["DiscordVerified"],
+                                WebVerified = (bool)reader["WebVerified"],
+                                VerifyType = reader["VerifyType"] != DBNull.Value ? (string)reader["VerifyType"] : null,
+                                VerifyExpirationDateTime = (DateTime)reader["VerifyExpirationDateTime"],
+                            };
+
+                            if(reader["DiscordUserId"] != DBNull.Value)
+                            {
+                                registeredUser.DiscordUserId = (decimal)reader["DiscordUserId"];
+                            }
+                            else
+                            {
+                                registeredUser.DiscordUserId = null;
+                            }    
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return registeredUser;
+            }
+        }
+
 
         public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
         {
@@ -2248,7 +2332,7 @@ namespace Upland.Infrastructure.LocalData
             };
         }
 
-        public void DeleteRegisteredUser(decimal discordUserId)
+        public void DeleteRegisteredUser(int id)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -2262,7 +2346,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[DeleteRegisteredUser]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", id));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -2277,7 +2361,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public void DeleteOptimizerRuns(decimal discordUserId)
+        public void DeleteOptimizerRuns(int id)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -2291,7 +2375,36 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[DeleteOptimizerRuns]";
-                    sqlCmd.Parameters.Add(new SqlParameter("DiscordUserId", discordUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", id));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void DeleteAppraisalRuns(int id)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[DeleteAppraisalRuns]";
+                    sqlCmd.Parameters.Add(new SqlParameter("RegisteredUserId", id));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -2580,6 +2693,18 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return propertyStructures;
+            }
+        }
+
+        private SqlParameter AddNullParmaterSafe<T>(string parameterName, T value)
+        {
+            if (value == null)
+            {
+                return new SqlParameter(parameterName, DBNull.Value);
+            }
+            else
+            {
+                return new SqlParameter(parameterName, value);
             }
         }
 

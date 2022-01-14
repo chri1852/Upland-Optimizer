@@ -1,19 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Alex Christensen</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>1.0.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="eos-sharp" Version="2.2.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Upland.Interfaces\Upland.Interfaces.csproj" />
     <ProjectReference Include="..\Upland.Types\Upland.Types.csproj" />
   </ItemGroup>
 

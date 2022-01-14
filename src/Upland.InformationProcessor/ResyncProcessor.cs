@@ -2,20 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Upland.Infrastructure.LocalData;
-using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
 {
-    public class ResyncProcessor
+    public class ResyncProcessor : IResyncProcessor
     {
-        private readonly LocalDataManager _localDataManager;
-        private readonly UplandApiManager _uplandApiManager;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IUplandApiManager _uplandApiManager;
 
-        public ResyncProcessor(LocalDataManager localDataManager, UplandApiManager uplandApiManager)
+        public ResyncProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;

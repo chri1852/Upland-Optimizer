@@ -77,12 +77,9 @@
     <Build Include="Tables\UPL.OptimizationRun.sql" />
     <Build Include="StoredProcedures\UPL.CreateOptimizationRun.sql" />
     <Build Include="StoredProcedures\UPL.SetOptimizationRunStatus.sql" />
-    <Build Include="StoredProcedures\UPL.GetLatestOptimizationRunForDiscordUserId.sql" />
+    <Build Include="StoredProcedures\UPL.GetLatestOptimizationRun.sql" />
     <Build Include="Tables\UPL.RegisteredUser.sql" />
     <Build Include="StoredProcedures\UPL.CreateRegisteredUser.sql" />
-    <Build Include="StoredProcedures\UPL.SetRegisteredUserPaid.sql" />
-    <Build Include="StoredProcedures\UPL.SetRegisteredUserVerified.sql" />
-    <Build Include="StoredProcedures\UPL.IncreaseRegisteredUserRunCount.sql" />
     <Build Include="StoredProcedures\UPL.GetRegisteredUser.sql" />
     <Build Include="StoredProcedures\UPL.DeleteRegisteredUser.sql" />
     <Build Include="StoredProcedures\UPL.DeleteOptimizerRuns.sql" />
@@ -135,7 +132,6 @@
     <Build Include="Tables\UPL.ErrorLog.sql" />
     <Build Include="StoredProcedures\UPL.CreateErrorLog.sql" />
     <Build Include="StoredProcedures\UPL.SearchPropertyByCityIdAndAddress.sql" />
-    <Build Include="StoredProcedures\UPL.AddRegisteredUserSendUPX.sql" />
     <Build Include="StoredProcedures\UPL.GetRegisteredUsersEOSAccounts.sql" />
     <Build Include="StoredProcedures\UPL.GetPreviousSalesAppraisalData.sql" />
     <Build Include="StoredProcedures\UPL.GetCurrentFloorAppraisalData.sql" />
@@ -145,5 +141,11 @@
     <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Street.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Collection.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertiesForSale_Seller.sql" />
+    <Build Include="StoredProcedures\UPL.GetRegisteredUserByUplandUsername.sql" />
+    <Build Include="StoredProcedures\UPL.UpdateRegisteredUser.sql" />
+    <Build Include="Tables\UPL.AppraisalRun.sql" />
+    <Build Include="StoredProcedures\UPL.CreateAppraisalRun.sql" />
+    <Build Include="StoredProcedures\UPL.GetLatestAppraisalRun.sql" />
+    <Build Include="StoredProcedures\UPL.DeleteAppraisalRuns.sql" />
   </ItemGroup>
 </Project>

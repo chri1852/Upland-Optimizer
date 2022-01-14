@@ -1,13 +1,14 @@
-﻿CREATE PROCEDURE [UPL].[SetRegisteredUserVerified]
+﻿CREATE PROCEDURE [UPL].[GetLatestAppraisalRun]
 (
-	@DiscordUserId DECIMAL(20,0)
+	@RegisteredUserId INT
 )
 AS
 BEGIN
 	BEGIN TRY		
-		UPDATE [UPL].[RegisteredUser]
-		SET Verified = 1
-		WHERE DiscordUserId = @DiscordUserId
+		SELECT TOP(1) * 
+		FROM [UPL].[AppraisalRun] (NOLOCK)
+		WHERE RegisteredUserId = @RegisteredUserId
+		ORDER BY RequestedDateTime DESC
 	END TRY
 
 	BEGIN CATCH

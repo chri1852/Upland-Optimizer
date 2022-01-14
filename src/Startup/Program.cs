@@ -1,11 +1,14 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Startup.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
@@ -14,6 +17,9 @@ using Upland.InformationProcessor;
 using Upland.Infrastructure.Blockchain;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
+using Upland.Interfaces.Repositories;
 using Upland.Types;
 using Upland.Types.Types;
 
@@ -22,30 +28,25 @@ class Program
     private DiscordSocketClient _client;
     private CommandService _commands;
     private IServiceProvider _services;
+    private IConfiguration _configuration;
 
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
     private Timer _sendTimer;
 
-    private LocalDataManager _localDataManager;
-    private UplandApiManager _uplandApiManager;
-    private BlockchainManager _blockchainManager;
-
-    private BlockchainPropertySurfer _blockchainPropertySurfer;
-    private BlockchainSendFinder _blockchainSendFinder;
-    private ForSaleProcessor _forSaleProcessor;
-    private InformationProcessor _informationProcessor;
-    private ProfileAppraiser _profileAppraiser;
-    private ResyncProcessor _resyncProcessor;
-    private MappingProcessor _mappingProcessor;
-
     /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
-        CollectionOptimizer collectionOptimizer = new CollectionOptimizer();
+        IConfiguration configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
 
-        LocalDataManager localDataManager = new LocalDataManager();
-        UplandApiManager uplandApiManager = new UplandApiManager();
+        LocalDataRepository localDataRepository = new LocalDataRepository(configuration);
+        UplandApiRepository uplandApiRepository = new UplandApiRepository(configuration);
+
+        LocalDataManager localDataManager = new LocalDataManager(uplandApiRepository, localDataRepository);
+        UplandApiManager uplandApiManager = new UplandApiManager(uplandApiRepository);
         BlockchainManager blockchainManager = new BlockchainManager();
 
         BlockchainPropertySurfer blockchainPropertySurfer = new BlockchainPropertySurfer(localDataManager, uplandApiManager, blockchainManager);
@@ -56,9 +57,7 @@ class Program
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
         MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
 
-        string username;
-        string qualityLevel;
-        List<string> output = new List<string>();
+        CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager, uplandApiRepository);
 
         // Populate City
         //List<double> cityCoordinates = Upland.InformationProcessor.HelperFunctions.GetCityAreaCoordinates(16);
@@ -69,7 +68,8 @@ class Program
 
         /// Test Optimizer
         //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
-        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        //await collectionOptimizer.RunAutoOptimization(registeredUser, runRequest);
+
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -99,7 +99,7 @@ class Program
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
-        //List<Decoration> nflpaLegits = await uplandApiManager.GetDecorationsByUsername("atomicpop");
+        List<NFLPALegit> nflpaLegits = await uplandApiManager.GetNFLPALegitsByUsername("teeem");
 
         // Populate CityProps And Neighborhoods
         //await localDataManager.PopulateAllPropertiesInArea(40.921864, 40.782411, -73.763343, -73.942215, 29, true);
@@ -121,9 +121,10 @@ class Program
         //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
-        await resyncProcessor.ResyncPropsList("CityUnmintedResync", "-1");
+        //await resyncProcessor.ResyncPropsList("CityUnmintedResync", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
+        //await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" }, "txt");
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
@@ -135,30 +136,31 @@ class Program
 
     public async Task RunBotAsync()
     {
+        _configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+
         _client = new DiscordSocketClient();
         _commands = new CommandService();
 
-        _localDataManager = new LocalDataManager();
-        _uplandApiManager = new UplandApiManager();
-        _blockchainManager = new BlockchainManager();
-
-        _blockchainPropertySurfer = new BlockchainPropertySurfer(_localDataManager, _uplandApiManager, _blockchainManager);
-        _blockchainSendFinder = new BlockchainSendFinder(_localDataManager, _blockchainManager);
-        _forSaleProcessor = new ForSaleProcessor(_localDataManager);
-        _informationProcessor = new InformationProcessor(_localDataManager, _uplandApiManager, _blockchainManager);
-        _profileAppraiser = new ProfileAppraiser(_localDataManager, _uplandApiManager);
-        _resyncProcessor = new ResyncProcessor(_localDataManager, _uplandApiManager);
-        _mappingProcessor = new MappingProcessor(_localDataManager, _profileAppraiser);
-
         _services = new ServiceCollection()
-            .AddSingleton(_localDataManager)
-            .AddSingleton(_forSaleProcessor)
-            .AddSingleton(_informationProcessor)
-            .AddSingleton(_profileAppraiser)
-            .AddSingleton(_resyncProcessor)
-            .AddSingleton(_mappingProcessor)
+            .AddSingleton<IUplandApiRepository, UplandApiRepository>()
+            .AddSingleton<IUplandApiManager, UplandApiManager>()
+            .AddSingleton<ILocalDataRepository, LocalDataRepository>()
+            .AddSingleton<ILocalDataManager, LocalDataManager>()
+            .AddSingleton<IBlockChainRepository, BlockchainRepository>()
+            .AddSingleton<IBlockchainManager, BlockchainManager>()
+            .AddSingleton<IProfileAppraiser, ProfileAppraiser>()
+            .AddSingleton<IMappingProcessor, MappingProcessor>()
+            .AddSingleton<IInformationProcessor, InformationProcessor>()
+            .AddSingleton<IForSaleProcessor, ForSaleProcessor>()
+            .AddSingleton<IBlockchainSendFinder, BlockchainSendFinder>()
+            .AddSingleton<IBlockchainPropertySurfer, BlockchainPropertySurfer>()
+            .AddSingleton<IResyncProcessor, ResyncProcessor>()
             .AddSingleton(_client)
             .AddSingleton(_commands)
+            .AddSingleton(_configuration)
             .BuildServiceProvider();
 
         _client.Log += clientLog;
@@ -169,7 +171,7 @@ class Program
 
         await RegisterCommandsAsync();
 
-        await _client.LoginAsync(TokenType.Bot, JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(@"appsettings.json"))["DiscordBotToken"]);
+        await _client.LoginAsync(TokenType.Bot, _configuration["AppSettings:DiscordBotToken"]);
 
         await _client.StartAsync();
 
@@ -269,18 +271,18 @@ class Program
                         case "Object reference not set to an instance of an object.":
                         case "The server responded with error 503: ServiceUnavailable":
                             await context.Channel.SendMessageAsync(string.Format("ERROR: Upland may be in Maintenance right now, try again later. If not something has gone horribly wrong, please contact Grombrindal."));
-                            _localDataManager.CreateErrorLog("Program.cs - HandleCommandAsync", result.ErrorReason);
+                            ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - HandleCommandAsync", result.ErrorReason);
                             break;
                         case "The server responded with error 40005: Request entity too large":
                             await context.Channel.SendMessageAsync(string.Format("ERROR: That file exceeds the size limit set discord unfortunaley. Try requesting it as a CSV instead."));
                             break;
                         case "Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.":
                             await context.Channel.SendMessageAsync(string.Format("ERROR: This command timed out for some reason. The hampster running the server probably just got tuckered out. Try again later."));
-                            _localDataManager.CreateErrorLog("Program.cs - HandleCommandAsync - Timeout", result.ErrorReason);
+                            ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - HandleCommandAsync - Timeout", result.ErrorReason);
                             break;
                         default:
                             await context.Channel.SendMessageAsync(string.Format("ERROR: Contact Grombrindal."));
-                            _localDataManager.CreateErrorLog("Program.cs - HandleCommandAsync - Default", result.ErrorReason);
+                            ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - HandleCommandAsync - Default", result.ErrorReason);
                             break;
                     }
                 }
@@ -313,7 +315,7 @@ class Program
         {
             Task child = Task.Factory.StartNew(async () =>
             {
-                await _blockchainPropertySurfer.RunBlockChainUpdate();
+                await _services.GetService<IBlockchainPropertySurfer>().RunBlockChainUpdate();
             });
         };
         _blockchainUpdateTimer.Interval = 30000; // Every 30 Seconds
@@ -327,7 +329,7 @@ class Program
         {
             Task child = Task.Factory.StartNew(async () =>
             {
-                await _blockchainSendFinder.RunBlockChainUpdate();
+                await _services.GetService<IBlockchainSendFinder>().RunBlockChainUpdate();
             });
         };
         _sendTimer.Interval = 300000; // Every 5 Minutes
@@ -343,12 +345,12 @@ class Program
             try
             {
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                await _informationProcessor.RebuildPropertyStructures();
+                await ((InformationProcessor)_services.GetService(typeof(InformationProcessor))).RebuildPropertyStructures();
                 Console.WriteLine(string.Format("{0}: Rebuilding Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
             }
             catch (Exception ex)
             {
-                _localDataManager.CreateErrorLog("Program.cs - RunRefreshActions - Rebuild Structures", ex.Message);
+                ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - RunRefreshActions - Rebuild Structures", ex.Message);
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
             }
         }

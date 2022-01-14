@@ -2,22 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Upland.Infrastructure.Blockchain;
-using Upland.Infrastructure.LocalData;
-using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.Managers;
+using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
 namespace Upland.InformationProcessor
 {
-    public class InformationProcessor
+    public class InformationProcessor : IInformationProcessor
     {
-        private readonly LocalDataManager _localDataManager;
-        private readonly UplandApiManager _uplandApiManager;
-        private readonly BlockchainManager _blockchainManager;
+        private readonly ILocalDataManager _localDataManager;
+        private readonly IUplandApiManager _uplandApiManager;
+        private readonly IBlockchainManager _blockchainManager;
 
-        public InformationProcessor(LocalDataManager localDataManager, UplandApiManager uplandApiManager, BlockchainManager blockchainManager)
+        public InformationProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;
@@ -1213,10 +1212,10 @@ namespace Upland.InformationProcessor
                 {
                     case "NFLPA":
                         slotOnePad = assets.Max(a => ((NFLPALegit)a).TeamName.Length);
-                        slotTwoPad = assets.Max(a => ((NFLPALegit)a).PlayerName.Length);
-                        slotThreePad = assets.Max(a => ((NFLPALegit)a).Position.Length);
+                        slotTwoPad = assets.Max(a => ((NFLPALegit)a).PlayerName == null ? 0 : ((NFLPALegit)a).PlayerName.Length);
+                        slotThreePad = assets.Max(a => ((NFLPALegit)a).Position == null ? 0 : ((NFLPALegit)a).Position.Length);
                         slotFourPad = assets.Max(a => ((NFLPALegit)a).Category.Length);
-                        slotFivePad = assets.Max(a => ((NFLPALegit)a).LegitType.Length);
+                        slotFivePad = assets.Max(a => ((NFLPALegit)a).LegitType == null ? 0 : ((NFLPALegit)a).LegitType.Length);
                         slotSixPad = 6;
                         slotSevenPad = 10;
 
@@ -1277,11 +1276,11 @@ namespace Upland.InformationProcessor
                         case "NFLPA":
                             output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9} - {10}"
                                 , ((NFLPALegit)asset).TeamName.PadLeft(slotOnePad)
-                                , ((NFLPALegit)asset).PlayerName.PadLeft(slotTwoPad)
-                                , ((NFLPALegit)asset).Position.PadLeft(slotThreePad)
+                                , ((NFLPALegit)asset).PlayerName == null ? "".PadLeft(slotTwoPad) : ((NFLPALegit)asset).PlayerName.PadLeft(slotTwoPad)
+                                , ((NFLPALegit)asset).Position == null ? "".PadLeft(slotThreePad) : ((NFLPALegit)asset).Position.PadLeft(slotThreePad)
                                 , ((NFLPALegit)asset).Category.ToUpper().PadLeft(slotFourPad)
-                                , ((NFLPALegit)asset).LegitType.ToUpper().PadLeft(slotFivePad)
-                                , ((NFLPALegit)asset).Year.PadLeft(slotSixPad)
+                                , ((NFLPALegit)asset).LegitType == null ? "".PadLeft(slotFivePad) : ((NFLPALegit)asset).LegitType.PadLeft(slotFivePad)
+                                , ((NFLPALegit)asset).Year == null ? "".PadLeft(slotSixPad) : ((NFLPALegit)asset).Year.PadLeft(slotSixPad)
                                 , ((NFLPALegit)asset).FanPoints.ToString().PadLeft(slotSevenPad)
                                 , string.Format("{0:N0}", asset.Mint).PadLeft(mintPad)
                                 , string.Format("{0:N0}", asset.CurrentSupply).PadLeft(currentPad)
