@@ -74,7 +74,7 @@ namespace Startup.Commands
         public async Task RegisterMe(string uplandUserName)
         {
             List<UplandAuthProperty> properties;
-            RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUserName);
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUserName.ToLower());
 
             properties = await _uplandApiRepository.GetPropertysByUsername(uplandUserName.ToLower());
             if (properties == null || properties.Count == 0)
