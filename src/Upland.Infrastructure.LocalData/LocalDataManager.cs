@@ -679,6 +679,11 @@ namespace Upland.Infrastructure.LocalData
             return returnTuple;
         }
 
+        public string GetEOSAccountByUplandUsername(string uplandUsername)
+        {
+            return _localDataRepository.GetEOSAccountByUplandUsername(uplandUsername);
+        }
+
         public List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts()
         {
             return _localDataRepository.GetRegisteredUsersEOSAccounts();

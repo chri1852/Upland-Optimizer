@@ -53,10 +53,10 @@ class Program
         BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder(localDataManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
-        ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
+        //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
-        MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
-
+        //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
+        WebProcessor webProcessor = new WebProcessor(localDataManager, uplandApiManager);
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager, uplandApiRepository);
 
         // Populate City
@@ -99,7 +99,8 @@ class Program
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
-        List<NFLPALegit> nflpaLegits = await uplandApiManager.GetNFLPALegitsByUsername("teeem");
+        //List<NFLPALegit> nflpaLegits = await uplandApiManager.GetNFLPALegitsByUsername("teeem");
+        //UserProfile profile = await webProcessor.GetWebUIProfile("koraseph");
 
         // Populate CityProps And Neighborhoods
         //await localDataManager.PopulateAllPropertiesInArea(40.921864, 40.782411, -73.763343, -73.942215, 29, true);

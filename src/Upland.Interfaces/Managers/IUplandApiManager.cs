@@ -15,6 +15,7 @@ namespace Upland.Interfaces.Managers
         Task<List<Decoration>> GetDecorationsByUsername(string userName);
         Task<List<BlockExplorer>> GetBlockExplorersByUserName(string userName);
         Task<UplandUserProfile> GetUplandUserProfile(string userName);
+        Task<UserProfile> GetUserProfile(string userName);
         Task<UplandProperty> GetUplandPropertyById(long Id);
     }
 }

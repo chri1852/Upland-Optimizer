@@ -66,6 +66,7 @@ namespace Upland.Interfaces.Managers
         List<UplandForSaleProp> GetPropertiesForSale_Seller(string uplandUsername, bool onlyBuildings);
         string GetConfigurationValue(string name);
         Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount);
+        string GetEOSAccountByUplandUsername(string uplandUsername);
         List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts();
         DateTime GetLastHistoricalCityStatusDate();
         DateTime GetLastSaleHistoryDateTime();

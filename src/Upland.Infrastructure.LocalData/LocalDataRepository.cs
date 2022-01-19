@@ -1973,6 +1973,44 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public string GetEOSAccountByUplandUsername(string uplandUsername)
+        {
+            string EOSAccount = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetEOSAccountByUplandUserName]";
+                    sqlCmd.Parameters.Add(new SqlParameter("@UplandUsername", uplandUsername));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            EOSAccount = (string)reader["EOSAccount"];
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return EOSAccount;
+            }
+        }
+
         public List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts()
         {
             List<Tuple<decimal, string, string>> EOSAccounts = new List<Tuple<decimal, string, string>>();

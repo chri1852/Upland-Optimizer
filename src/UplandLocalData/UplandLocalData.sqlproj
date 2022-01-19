@@ -147,5 +147,6 @@
     <Build Include="StoredProcedures\UPL.CreateAppraisalRun.sql" />
     <Build Include="StoredProcedures\UPL.GetLatestAppraisalRun.sql" />
     <Build Include="StoredProcedures\UPL.DeleteAppraisalRuns.sql" />
+    <Build Include="StoredProcedures\UPL.GetEOSAccountByUplandUserName.sql" />
   </ItemGroup>
 </Project>

@@ -78,9 +78,14 @@ namespace Upland.Infrastructure.UplandApi
             UplandUserProfile profile = await _uplandApiRepository.GetProfileByUsername(userName);
 
             profile.username = userName;
-            profile.propertyList = profile.properties.Select(p => p.property_id).ToList();
+            profile.propertyList = profile.properties.Select(p => p.Property_Id).ToList();
 
             return profile;
+        }
+
+        public async Task<UserProfile> GetUserProfile(string userName)
+        {
+            return UplandMapper.Map(await GetUplandUserProfile(userName));
         }
 
         public async Task<UplandProperty> GetUplandPropertyById(long Id)

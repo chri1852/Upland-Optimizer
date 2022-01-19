@@ -73,6 +73,66 @@ namespace Upland.Infrastructure.UplandApi
             return property;
         }
 
+        public static List<UserProfile> Map(List<UplandUserProfile> uplandUserProfiles)
+        {
+            List<UserProfile> profiles = new List<UserProfile>();
+
+            foreach (UplandUserProfile profile in uplandUserProfiles)
+            {
+                profiles.Add(Map(profile));
+            }
+
+            return profiles;
+        }
+
+        public static UserProfile Map(UplandUserProfile uplandUserProfile)
+        {
+            UserProfile profile = new UserProfile();
+
+            profile.Username = uplandUserProfile.username;
+            profile.EOSAccount = null;
+            profile.AvatarLink = uplandUserProfile.avatar.Image;
+            profile.AvatarColor = uplandUserProfile.color.Color;
+            profile.Rank = uplandUserProfile.lvl.ToString();
+            profile.Networth = uplandUserProfile.networth;
+            profile.Jailed = uplandUserProfile.is_in_jail;
+
+            profile.Collections = new List<UserProfileCollection>();
+            profile.Badges = new List<UserProfileBadge>();
+            profile.Properties = new List<UserProfileProperty>();
+
+            foreach (UplandUserProfileCollection collection in uplandUserProfile.collections)
+            {
+                profile.Collections.Add(new UserProfileCollection
+                {
+                    Id = collection.Id,
+                    Name = collection.Name,
+                    Image = collection.Image_Thumbnail,
+                    CityId = collection.City_Id
+                });
+            }
+
+            foreach (UplandUserProfileBadge badge in uplandUserProfile.badges)
+            {
+                profile.Badges.Add(new UserProfileBadge
+                {
+                    Id = badge.Id,
+                    Name = badge.Name,
+                    Image = badge.Image
+                });
+            }
+
+            foreach (UplandUserProfileProperty property in uplandUserProfile.properties)
+            {
+                profile.Properties.Add(new UserProfileProperty
+                {
+                    PropertyId = property.Property_Id
+                });
+            }
+
+            return profile;
+        }
+
         public static List<NFLPALegit> MapNFLPALegits(List<UplandAsset> assets)
         {
             List<NFLPALegit> legits = new List<NFLPALegit>();

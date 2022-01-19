@@ -55,6 +55,7 @@ namespace Upland.Interfaces.Repositories
         RegisteredUser GetRegisteredUser(decimal discordUserId);
         RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername);
         Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount);
+        string GetEOSAccountByUplandUsername(string uplandUsername);
         List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts();
         List<SaleHistoryQueryEntry> GetSaleHistoryByCityId(int cityId);
         List<SaleHistoryQueryEntry> GetSaleHistoryByNeighborhoodId(int neighborhoodId);
