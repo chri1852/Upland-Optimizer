@@ -73,13 +73,10 @@ namespace Startup.Commands
 
                 CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(uplandUsername.ToLower(), qualityLevel);
-                await optimizer.RunAutoOptimization(new RegisteredUser
-                {
-                    Id = Consts.TestUserId,
-                    DiscordUsername = "TEST_USER_NAME",
-                    UplandUsername = uplandUsername.ToLower()
-                },
-                runRequest);
+                RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(1);
+                registeredUser.UplandUsername = uplandUsername.ToLower();
+                runRequest.AdminRun = true;
+                await optimizer.RunAutoOptimization(registeredUser, runRequest);
 
                 return;
             }
@@ -121,7 +118,7 @@ namespace Startup.Commands
                 return;
             }
 
-            List<string> appraiserOutput = new List<string>();
+            AppraisalResults appraiserOutput = new AppraisalResults();
 
             try
             {
@@ -130,7 +127,7 @@ namespace Startup.Commands
                     Id = Consts.TestUserId,
                     DiscordUsername = "TEST_USER_NAME",
                     UplandUsername = uplandUsername.ToLower()
-                }, "TXT");
+                });
             }
             catch (Exception ex)
             {
@@ -139,14 +136,9 @@ namespace Startup.Commands
                 return;
             }
 
-            if (appraiserOutput.Count == 1)
-            {
-                // An Error Occured
-                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), appraiserOutput[0]));
-                return;
-            }
+            string appraisalString = string.Join(Environment.NewLine, _profileAppraiser.BuildAppraisalTxtStrings(appraiserOutput));
 
-            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, appraiserOutput));
+            byte[] resultBytes = Encoding.UTF8.GetBytes(appraisalString);
             using (Stream stream = new MemoryStream())
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);

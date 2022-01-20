@@ -15,6 +15,7 @@ namespace Upland.Types.Types
         public bool WhatIfRun { get; set; }
         public bool ExcludeRun { get; set; }
         public bool DebugRun { get; set; }
+        public bool AdminRun { get; set; }
 
         public OptimizerRunRequest(string username, int level = 7, bool debugRun = false) : this(username, level, -1, 0, 0, null, true, false, false, debugRun) { }
         public OptimizerRunRequest(string username, int whatIfCollectionId, int whatIfNumProperties, double whatIfAverageMintUpx, int level = 7, bool debugRun = false) : this(username, level, whatIfCollectionId, whatIfNumProperties, whatIfAverageMintUpx, null, false, true, false, debugRun) { }
@@ -43,6 +44,7 @@ namespace Upland.Types.Types
             WhatIfRun = whatIfRun;
             ExcludeRun = exclueRun;
             DebugRun = debugRun;
+            AdminRun = false;
         }
     }
 }

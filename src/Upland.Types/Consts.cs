@@ -71,6 +71,15 @@ namespace Upland.Types
             { 28   , "Whites Creek"   },
         };
 
+        public static readonly Dictionary<int, string> CollectionCategories = new Dictionary<int, string>
+        {
+            { 1 , "Standard"   },
+            { 2 , "Limited"    },
+            { 3 , "Exclusive"  },
+            { 4 , "Rare"       },
+            { 5 , "Ultra Rare" }
+        };
+
         public static readonly int WarningRuns = 1;
         public static readonly int FreeRuns = 6;
         public static readonly string RunStatusInProgress = "In Progress";
