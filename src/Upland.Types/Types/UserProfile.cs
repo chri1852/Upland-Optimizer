@@ -23,7 +23,7 @@ namespace Upland.Types.Types
         // Only for registeredUsers
         public bool RegisteredUser { get; set; }
         public bool Supporter { get; set; }
-        public int RegisterUserId { get; set; }
+        public int RegisteredUserId { get; set; }
         public int RunCount { get; set; }
         public int MaxRuns { get; set; }
         public int UPXToSupporter { get; set; }
