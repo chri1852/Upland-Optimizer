@@ -43,6 +43,7 @@ namespace Upland.InformationProcessor
             if (registeredUser != null)
             {
                 profile.RegisteredUser = true;
+                profile.RegisterUserId = registeredUser.Id;
                 profile.RunCount = registeredUser.RunCount;
                 profile.MaxRuns = Consts.FreeRuns + Convert.ToInt32(Math.Floor((double)(registeredUser.SendUPX / Consts.UPXPricePerRun)));
                 profile.UPXToSupporter = Consts.SendUpxSupporterThreshold - registeredUser.SendUPX;
