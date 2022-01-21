@@ -20,6 +20,7 @@ namespace Upland.Types.Types
 
     public class OptimizerCollectionResult
     {
+        public bool IsStandardCollection { get; set; }
         public string City { get; set; }
         public string Name { get; set; }
         public string Category { get; set; }

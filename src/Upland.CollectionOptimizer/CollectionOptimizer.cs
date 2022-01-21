@@ -139,14 +139,8 @@ namespace Upland.CollectionOptimizer
             foreach (Collection collection in collections)
             {
                 OptimizerCollectionResult collectionResult = new OptimizerCollectionResult();
-                if (!Consts.StandardCollectionIds.Contains(collection.Id))
-                {
-                    collectionResult.City = Consts.Cities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
-                }
-                else
-                {
-                    collectionResult.City = "Standard";
-                }
+                collectionResult.City = Consts.Cities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
+                collectionResult.IsStandardCollection = Consts.StandardCollectionIds.Contains(collection.Id);
 
                 collectionResult.Name = collection.Name;
                 collectionResult.Category = Consts.CollectionCategories[collection.Category];
@@ -172,6 +166,7 @@ namespace Upland.CollectionOptimizer
                 {
                     OptimizerCollectionResult collectionResult = new OptimizerCollectionResult();
 
+                    collectionResult.IsStandardCollection = !entry.Value.CityId.HasValue;
                     collectionResult.City = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
                     collectionResult.Name = entry.Value.Name;
                     collectionResult.Category = Consts.CollectionCategories[entry.Value.Category];
@@ -198,6 +193,7 @@ namespace Upland.CollectionOptimizer
                 {
                     OptimizerCollectionResult collectionResult = new OptimizerCollectionResult();
 
+                    collectionResult.IsStandardCollection = !entry.Value.CityId.HasValue;
                     collectionResult.City = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
                     collectionResult.Name = entry.Value.Name;
                     collectionResult.Category = Consts.CollectionCategories[entry.Value.Category];
@@ -224,6 +220,7 @@ namespace Upland.CollectionOptimizer
                 {
                     OptimizerCollectionResult collectionResult = new OptimizerCollectionResult();
 
+                    collectionResult.IsStandardCollection = !entry.Value.CityId.HasValue;
                     collectionResult.City = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
                     collectionResult.Name = entry.Value.Name;
                     collectionResult.Category = Consts.CollectionCategories[entry.Value.Category];
