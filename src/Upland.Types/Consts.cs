@@ -25,7 +25,7 @@ namespace Upland.Types
 
         public static readonly List<int> NON_BULLSHIT_CITY_IDS = new List<int>
         {
-            1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 29
+            1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 29, 32
         };
 
         public static readonly Dictionary<int, string> Cities = new Dictionary<int, string>
@@ -47,14 +47,15 @@ namespace Upland.Types
             { 15   , "New Orleans"    },
             { 16   , "Nashville"      },
             { 29   , "Bronx"          },
+            { 32   , "Los Angeles"    },
 
-            // NYC Sub Cities
+            // NYC Subcities
             { 17   , "New York"       },
 
-            // Fresno Sub Cities
+            // Fresno Subcities
             { 18   , "Clovis"         },
 
-            // Oakland Sub Cities
+            // Oakland Subcities
             { 19   , "Piedmont"       },
             { 30   , "Alameda"        },
             { 31   , "Berkeley"       },
@@ -69,6 +70,9 @@ namespace Upland.Types
             { 26   , "Antioch"        },
             { 27   , "Nolensville"    },
             { 28   , "Whites Creek"   },
+
+            // Los Angeles Subcities
+            { 33   , "Inglewood"      }
         };
 
         public static readonly Dictionary<int, string> CollectionCategories = new Dictionary<int, string>
