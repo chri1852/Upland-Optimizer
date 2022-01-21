@@ -1232,7 +1232,7 @@ namespace Startup.Commands
         {
             if (!registeredUser.Paid && registeredUser.SendUPX >= Consts.SendUpxSupporterThreshold)
             {
-                await (Context.User as IGuildUser).AddRoleAsync(Consts.DiscordSupporterRoleId);
+                await (Context.User as IGuildUser).AddRoleAsync(Context.Guild.GetRole(Consts.DiscordSupporterRoleId));
                 registeredUser.Paid = true;
                 _localDataManager.UpdateRegisteredUser(registeredUser);
                 await ReplyAsync(string.Format("Congrats and Thank You {0}! You have sent enough times to be considered a Supporter! Don't worry about runs anymore, you've done enough. You are no longer limited by runs, and have access to the Supporter Commands!", HelperFunctions.GetRandomName(_random)));

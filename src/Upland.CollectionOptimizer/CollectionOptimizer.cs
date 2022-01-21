@@ -127,7 +127,7 @@ namespace Upland.CollectionOptimizer
             results.Username = username;
             results.RunDateTime = DateTime.UtcNow;
             results.QualityLevel = qualityLevel;
-            results.TimeToRun = this.timer.Elapsed;
+            results.TimeToRunTicks = this.timer.Elapsed.Ticks;
             results.OptimizedCollections = new List<OptimizerCollectionResult>();
             results.UnfilledCollections = new List<OptimizerCollectionResult>();
             results.UnoptimizedCollections = new List<OptimizerCollectionResult>();
@@ -739,7 +739,7 @@ namespace Upland.CollectionOptimizer
             outputStrings.Add(string.Format("Collection Optimization Report - {0}", results.RunDateTime.ToString("MM-dd-yyyy")));
             outputStrings.Add("-------------------------------------------");
             outputStrings.Add(string.Format("Ran for {0} at Quality Level {1}", results.Username, results.QualityLevel));
-            outputStrings.Add(string.Format("Run Time - {0}", results.TimeToRun));
+            outputStrings.Add(string.Format("Run Time - {0}", new TimeSpan(results.TimeToRunTicks)));
             outputStrings.Add("");
 
             foreach (OptimizerCollectionResult collection in results.OptimizedCollections)

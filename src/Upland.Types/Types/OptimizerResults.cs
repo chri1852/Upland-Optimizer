@@ -7,7 +7,7 @@ namespace Upland.Types.Types
     {
         public string Username { get; set; }
         public DateTime RunDateTime { get; set; }
-        public TimeSpan TimeToRun { get; set; }
+        public long TimeToRunTicks { get; set; }
         public int QualityLevel { get; set; }
         public double BaseTotalIncome { get; set; }
         public double BoostedTotalIncome { get; set; }
