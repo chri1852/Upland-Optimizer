@@ -192,7 +192,7 @@ namespace Upland.CollectionOptimizer
 
                         extraCollectionResult.Properties.Add(property);
                     }
-                    results.ExtraCollections.Add(collectionResult);
+                    results.ExtraCollections.Add(extraCollectionResult);
                 }
             }
 
