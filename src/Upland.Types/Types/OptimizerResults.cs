@@ -15,6 +15,7 @@ namespace Upland.Types.Types
         public List<OptimizerCollectionResult> OptimizedCollections { get; set; }
         public List<OptimizerCollectionResult> UnfilledCollections { get; set; }
         public List<OptimizerCollectionResult> UnoptimizedCollections { get; set; }
+        public List<OptimizerCollectionResult> ExtraCollections { get; set; }
         public List<OptimizerCollectionResult> MissingCollections { get; set; }
     }
 

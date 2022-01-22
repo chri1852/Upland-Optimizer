@@ -67,8 +67,8 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
-        //await collectionOptimizer.RunAutoOptimization(registeredUser, runRequest);
+        OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
+        await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
 
         // Populate initial City Data

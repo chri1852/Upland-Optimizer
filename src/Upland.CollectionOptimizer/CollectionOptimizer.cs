@@ -131,10 +131,21 @@ namespace Upland.CollectionOptimizer
             results.OptimizedCollections = new List<OptimizerCollectionResult>();
             results.UnfilledCollections = new List<OptimizerCollectionResult>();
             results.UnoptimizedCollections = new List<OptimizerCollectionResult>();
+            results.ExtraCollections = new List<OptimizerCollectionResult>();
             results.MissingCollections = new List<OptimizerCollectionResult>();
 
             results.BaseTotalIncome = HelperFunctions.CalculateBaseMonthlyUPX(Properties);
             results.BoostedTotalIncome = HelperFunctions.CalculateMonthlyUpx(FilledCollections, Properties, SlottedPropertyIds);
+
+            // Used for determining Extra Collection Props
+            List<long> allNonCityOrStandardSlottedPropIds = new List<long>();
+            foreach (KeyValuePair<int, Collection> entry in FilledCollections)
+            {
+                if (!entry.Value.IsCityCollection && !Consts.StandardCollectionIds.Contains(entry.Value.Id))
+                {
+                    allNonCityOrStandardSlottedPropIds.AddRange(entry.Value.SlottedPropertyIds);
+                }
+            }
 
             foreach (Collection collection in collections)
             {
@@ -158,6 +169,31 @@ namespace Upland.CollectionOptimizer
                 }
 
                 results.OptimizedCollections.Add(collectionResult);
+
+                // Build the extra list
+                if (!collectionResult.IsStandardCollection 
+                    && !collection.IsCityCollection
+                    && collection.EligablePropertyIds.Where(p => !allNonCityOrStandardSlottedPropIds.Contains(p)).ToList().Count > 0)
+                {
+                    OptimizerCollectionResult extraCollectionResult = new OptimizerCollectionResult();
+                    extraCollectionResult.City = Consts.Cities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
+                    extraCollectionResult.IsStandardCollection = Consts.StandardCollectionIds.Contains(collection.Id);
+
+                    extraCollectionResult.Name = collection.Name;
+                    extraCollectionResult.Category = Consts.CollectionCategories[collection.Category];
+                    extraCollectionResult.Boost = collection.Boost;
+                    extraCollectionResult.MissingProps = collection.EligablePropertyIds.Count - collection.SlottedPropertyIds.Count;
+                    extraCollectionResult.Properties = new List<OptimizerCollectionProperty>();
+                    foreach (long propertyId in collection.EligablePropertyIds.Where(p => !allNonCityOrStandardSlottedPropIds.Contains(p)))
+                    {
+                        OptimizerCollectionProperty property = new OptimizerCollectionProperty();
+                        property.Address = this.Properties[propertyId].Address;
+                        property.BaseIncome = this.Properties[propertyId].Mint * Consts.RateOfReturn / 12.0;
+
+                        extraCollectionResult.Properties.Add(property);
+                    }
+                    results.ExtraCollections.Add(collectionResult);
+                }
             }
 
             if (UnfilledCollections.Count > 0)
@@ -310,11 +346,26 @@ namespace Upland.CollectionOptimizer
             {
                 // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
                 if (!conflictingCollections.ContainsKey(entry.Value.Id)
-                    && conflictingCollections.Count < qualityLevel
+                    //&& conflictingCollections.Count < qualityLevel
                     && !Consts.StandardCollectionIds.Contains(entry.Value.Id)
-                    && !entry.Value.IsCityCollection)
+                    && !entry.Value.IsCityCollection
+                    )
                 {
-                    conflictingCollections.Add(entry.Key, entry.Value.Clone());
+                    if (!conflictingCollections.Any(e => e.Value.IsCityCollection && e.Value.CityId == entry.Value.CityId)
+                        && this.Collections.Any(e => e.Value.IsCityCollection && e.Value.CityId == entry.Value.CityId))
+                    {
+                        if (conflictingCollections.Count < qualityLevel - 1)
+                        {
+                            conflictingCollections.Add(entry.Key, entry.Value.Clone());
+
+                            Collection cityCollection = this.Collections.First(e => e.Value.IsCityCollection && e.Value.CityId == entry.Value.CityId).Value;
+                            conflictingCollections.Add(cityCollection.Id, cityCollection.Clone());
+                        }
+                    }
+                    else if (conflictingCollections.Count < qualityLevel)
+                    {
+                        conflictingCollections.Add(entry.Key, entry.Value.Clone());
+                    }
                 }
             }
 

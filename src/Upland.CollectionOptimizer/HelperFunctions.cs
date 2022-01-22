@@ -151,7 +151,7 @@ namespace Upland.CollectionOptimizer
                         Console.WriteLine(string.Format("     {0} - {1} - Missing Props {2}", collectionCity, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
                     }
                 }
-
+                /*
                 if (MissingCollections.Count > 0)
                 {
                     Console.ForegroundColor = ConsoleColor.White;
@@ -162,6 +162,31 @@ namespace Upland.CollectionOptimizer
                     {
                         string collectionCity = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
                         Console.WriteLine(string.Format("     {0} - {1} - Missing Props {2}", collectionCity, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                    }
+                }
+                */
+
+                List<long> allNonCityOrStandardSlottedPropIds = new List<long>();
+                foreach (KeyValuePair<int, Collection> entry in FilledCollections)
+                {
+                    if (!entry.Value.IsCityCollection && !Consts.StandardCollectionIds.Contains(entry.Value.Id))
+                    {
+                        allNonCityOrStandardSlottedPropIds.AddRange(entry.Value.SlottedPropertyIds);
+                    }
+                }
+
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("");
+                Console.WriteLine("Extra Collections");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                foreach (KeyValuePair<int, Collection> entry in FilledCollections)
+                {
+                    if (!entry.Value.IsCityCollection
+                        && !Consts.StandardCollectionIds.Contains(entry.Value.Id)
+                        && entry.Value.EligablePropertyIds.Where(p => !allNonCityOrStandardSlottedPropIds.Contains(p)).ToList().Count > 0)
+                    {
+                        string collectionCity = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
+                        Console.WriteLine(string.Format("     {0} - {1} - Extra Props {2}", collectionCity, entry.Value.Name, entry.Value.EligablePropertyIds.Where(p => !allNonCityOrStandardSlottedPropIds.Contains(p)).ToList().Count));
                     }
                 }
             }
