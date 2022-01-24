@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
@@ -15,10 +14,28 @@ namespace Upland.InformationProcessor
         private readonly ILocalDataManager _localDataManager;
         private readonly IUplandApiManager _uplandApiManager;
 
+        private readonly List<Tuple<int, HashSet<long>>> _collectionProperties;
+
+        private Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>> _cityForSaleListCache;
+        private Tuple<DateTime, Dictionary<long, string>> _propertyStructureCache;
+
+        private Dictionary<int, bool> _isLoadingCityForSaleListCache;
+        private bool _isLoadingPropertyStructureCache;
+
         public WebProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;
+
+            InitializeCache();
+
+            _collectionProperties = new List<Tuple<int, HashSet<long>>>();
+            List<Tuple<int, long>> collectionProperties = _localDataManager.GetCollectionPropertyTable();
+
+            foreach (int collectionId in collectionProperties.GroupBy(c => c.Item1).Select(g => g.First().Item1))
+            {
+                _collectionProperties.Add(new Tuple<int, HashSet<long>>(collectionId, collectionProperties.Where(c => c.Item1 == collectionId).Select(c => c.Item2).ToHashSet()));
+            }
         }
 
         public async Task<UserProfile> GetWebUIProfile(string uplandUsername)
@@ -32,8 +49,7 @@ namespace Upland.InformationProcessor
                 .GetProperties(profile.Properties.Select(p => p.PropertyId).ToList())
                 .ToDictionary(p => p.Id, p => p);
 
-            Dictionary<long, string> userBuildings = _localDataManager.GetPropertyStructures()
-                .ToDictionary(p => p.PropertyId, p => p.StructureType);
+            Dictionary<long, string> userBuildings = GetPropertyStructuresFromCache();
 
             Dictionary<int, string> neighborhoods = _localDataManager.GetNeighborhoods()
                 .ToDictionary(n => n.Id, n => n.Name);
@@ -81,6 +97,114 @@ namespace Upland.InformationProcessor
             }
 
             return profile;
+        }
+
+        public List<CachedForSaleProperty> GetForSaleProps(WebForSaleFilters filters)
+        {
+            List<CachedForSaleProperty> cityForSaleProps = GetCityForSaleListFromCache(filters.CityId);
+
+            // Apply Filters
+            cityForSaleProps = cityForSaleProps.Where(c =>
+                   ((filters.Address == null || filters.Address.Trim() == "")
+                    || (filters.Address != null && filters.Address.Trim() != "" && c.Address.ToLower().Contains(filters.Address.ToLower())))
+                && ((filters.Owner == null || filters.Owner.Trim() == "")
+                    || (filters.Owner != null && filters.Owner.Trim() != "" && c.Owner.ToLower().Contains(filters.Owner.ToLower())))
+                && (filters.NeighborhoodIds.Count == 0
+                    || filters.NeighborhoodIds.Contains(c.NeighborhoodId))
+                && (filters.CollectionIds.Count == 0
+                    || filters.CollectionIds.Any(i => c.CollectionIds.Contains(i)))
+                && (filters.Buildings.Count == 0
+                    || filters.Buildings.Contains(c.Building))
+                ).ToList();
+
+            // Sort
+            if (filters.Asc)
+            {
+                if (filters.OrderBy == "PRICE")
+                {
+                    cityForSaleProps = cityForSaleProps.OrderBy(p => p.SortValue).ToList();
+                }
+                else
+                {
+                    cityForSaleProps = cityForSaleProps.OrderBy(p => p.Markup).ToList();
+                }
+            }
+            else
+            {
+                if (filters.OrderBy == "PRICE")
+                {
+                    cityForSaleProps = cityForSaleProps.OrderByDescending(p => p.SortValue).ToList();
+                }
+                else
+                {
+                    cityForSaleProps = cityForSaleProps.OrderByDescending(p => p.Markup).ToList();
+                }
+            }
+
+            return cityForSaleProps.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
+        }
+        
+        private void InitializeCache()
+        {
+            _isLoadingPropertyStructureCache = false;
+            _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(DateTime.UtcNow.AddDays(-1), new Dictionary<long, string>());
+
+            _isLoadingCityForSaleListCache = new Dictionary<int, bool>();
+            _cityForSaleListCache = new Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>>();
+            foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
+            {
+                _isLoadingCityForSaleListCache.Add(cityId, false);
+                _cityForSaleListCache.Add(cityId, new Tuple<DateTime, List<CachedForSaleProperty>>(DateTime.UtcNow.AddDays(-1), new List<CachedForSaleProperty>()));
+            }
+        }
+
+        private Dictionary<long, string> GetPropertyStructuresFromCache()
+        {
+            if (!_isLoadingPropertyStructureCache && _propertyStructureCache.Item1 < DateTime.UtcNow)
+            {
+                _isLoadingPropertyStructureCache = true;
+                _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(
+                    DateTime.UtcNow.AddDays(1),
+                    _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType));
+                _isLoadingPropertyStructureCache = false;
+            }
+
+            return _propertyStructureCache.Item2;
+        }
+
+        private List<CachedForSaleProperty> GetCityForSaleListFromCache(int cityId)
+        {
+            if (!_isLoadingCityForSaleListCache[cityId] && _cityForSaleListCache[cityId].Item1 < DateTime.UtcNow)
+            {
+                _isLoadingCityForSaleListCache[cityId] = true;
+                _cityForSaleListCache[cityId] = new Tuple<DateTime, List<CachedForSaleProperty>>(
+                    DateTime.UtcNow.AddMinutes(5),
+                   _localDataManager.GetCachedForSaleProperties(cityId));
+
+                foreach (CachedForSaleProperty prop in _cityForSaleListCache[cityId].Item2)
+                {
+                    prop.CollectionIds = GetCollectionIdListForPropertyId(prop.Id);
+                }
+
+                _isLoadingCityForSaleListCache[cityId] = false;
+            }
+
+            return _cityForSaleListCache[cityId].Item2;
+        }
+
+        private List<int> GetCollectionIdListForPropertyId(long propertyId)
+        {
+            List<int> collectionIds = new List<int>();
+
+            foreach (Tuple<int, HashSet<long>> collectionProps in _collectionProperties)
+            {
+                if (collectionProps.Item2.Contains(propertyId))
+                {
+                    collectionIds.Add(collectionProps.Item1);
+                }
+            }
+
+            return collectionIds;
         }
     }
 }

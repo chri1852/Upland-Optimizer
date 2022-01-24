@@ -311,6 +311,16 @@ namespace Upland.Infrastructure.LocalData
             return oddNodes;
         }
 
+        public List<CachedForSaleProperty> GetCachedForSaleProperties(int cityId)
+        {
+            return _localDataRepository.GetCachedForSaleProperties(cityId);
+        }
+
+        public List<Tuple<int, long>> GetCollectionPropertyTable()
+        {
+            return _localDataRepository.GetCollectionPropertyTable();
+        }
+
         public Property GetProperty(long id)
         {
             return _localDataRepository.GetProperty(id);
@@ -320,7 +330,6 @@ namespace Upland.Infrastructure.LocalData
         {
             return _localDataRepository.GetProperties(ids);
         }
-
 
         public List<long> GetPropertyIdsByCollectionId(int collectionId)
         {

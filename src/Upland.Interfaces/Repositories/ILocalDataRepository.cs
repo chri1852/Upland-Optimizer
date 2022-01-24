@@ -11,6 +11,8 @@ namespace Upland.Interfaces.Repositories
         public void CreateCollection(Collection collection);
         void CreateCollectionProperties(int collectionId, List<long> propertyIds);
         void CreateErrorLog(string location, string message);
+        List<CachedForSaleProperty> GetCachedForSaleProperties(int cityId);
+        List<Tuple<int, long>> GetCollectionPropertyTable();
         List<long> GetCollectionPropertyIds(int collectionId);
         List<Collection> GetCollections();
         List<StatsObject> GetCityStats();

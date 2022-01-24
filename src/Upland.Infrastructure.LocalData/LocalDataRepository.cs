@@ -120,6 +120,104 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<CachedForSaleProperty> GetCachedForSaleProperties(int cityId)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+            List<CachedForSaleProperty> cachedForSaleProperties = new List<CachedForSaleProperty>();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCachedForSalePropertiesByCityId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            cachedForSaleProperties.Add(
+                                new CachedForSaleProperty
+                                {
+                                    Id = (long)reader["Id"],
+                                    Address = (string)reader["Address"],
+                                    CityId = (int)reader["CityId"],
+                                    NeighborhoodId = (int)reader["NeighborhoodId"],
+                                    StreetId = (int)reader["StreetId"],
+                                    Size = (int)reader["Size"],
+                                    FSA = (bool)reader["FSA"],
+                                    Price = decimal.ToDouble((decimal)reader["Price"]),
+                                    Currency = (string)reader["Currency"],
+                                    Owner = (string)reader["Owner"],
+                                    Mint = decimal.ToDouble((decimal)reader["Mint"]),
+                                    Markup = decimal.ToDouble((decimal)reader["Markup"]),
+                                    Building = (string)reader["Building"],
+                                    CollectionIds = new List<int>()
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+
+            return cachedForSaleProperties;
+        }
+
+        public List<Tuple<int, long>> GetCollectionPropertyTable()
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+            List<Tuple<int, long>> collectionProperties = new List<Tuple<int, long>>();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCollectionPropertyTable]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            collectionProperties.Add(
+                                new Tuple<int, long>(
+                                    (int)reader["CollectionId"],
+                                    (long)reader["PropertyId"]
+                                )
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+
+            return collectionProperties;
+        }
+
         public List<long> GetCollectionPropertyIds(int collectionId)
         {
             SqlConnection sqlConnection = GetSQLConnector();

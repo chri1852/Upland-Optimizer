@@ -1155,7 +1155,7 @@ namespace Startup.Commands
             helpMenu.Add("   7.  !CollectionInfo");
             helpMenu.Add("   8.  !PropertyInfo");
             helpMenu.Add("   9.  !NeighborhoodInfo");
-            helpMenu.Add("   10.  !CityInfo");
+            helpMenu.Add("   10. !CityInfo");
             helpMenu.Add("   11. !StreetInfo");
             helpMenu.Add("   12. !SupportMe");
             helpMenu.Add("   13. !CollectionsForSale");

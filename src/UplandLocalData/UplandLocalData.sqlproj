@@ -148,5 +148,7 @@
     <Build Include="StoredProcedures\UPL.GetLatestAppraisalRun.sql" />
     <Build Include="StoredProcedures\UPL.DeleteAppraisalRuns.sql" />
     <Build Include="StoredProcedures\UPL.GetEOSAccountByUplandUserName.sql" />
+    <Build Include="StoredProcedures\UPL.GetCachedForSalePropertiesByCityId.sql" />
+    <Build Include="StoredProcedures\UPL.GetCollectionPropertyTable.sql" />
   </ItemGroup>
 </Project>

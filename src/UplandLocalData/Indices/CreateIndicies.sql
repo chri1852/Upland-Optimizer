@@ -41,3 +41,11 @@ GO
 CREATE NONCLUSTERED INDEX propstruct_propId
 ON [UPL].[PropertyStructure] ([PropertyId])
 GO
+CREATE NONCLUSTERED INDEX [p_web_for_sale_search_index]
+ON [UPL].[Property] ([CityId],[NeighborhoodId],[Mint])
+INCLUDE ([Address],[StreetId],[Size],[FSA])
+GO
+CREATE NONCLUSTERED INDEX [sh_web_for_sale_search_index]
+ON [UPL].[SaleHistory] ([BuyerEOS])
+INCLUDE ([SellerEOS],[PropId],[Amount],[AmountFiat])
+GO
