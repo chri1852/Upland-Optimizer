@@ -14,6 +14,7 @@ namespace Upland.Types.Types
         public List<int> CollectionIds { get; set; }
         public List<string> Buildings { get; set; }
         public bool? FSA { get; set; }
+        public string Currency { get; set; }
 
         public bool Asc { get; set; }
         public string OrderBy { get; set; }

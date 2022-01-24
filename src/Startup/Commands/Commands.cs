@@ -1069,8 +1069,8 @@ namespace Startup.Commands
 
             if (!_mappingProcessor.IsValidType(type))
             {
-                await ReplyAsync(string.Format("{0} is not a valid map type {1}! Try any of {2}.", 
-                    cityId, 
+                await ReplyAsync(string.Format("{0} is not a valid map type {1}! Try any of {2}.",
+                    type, 
                     HelperFunctions.GetRandomName(_random), 
                     string.Join(", ", _mappingProcessor.GetValidTypes())));
 

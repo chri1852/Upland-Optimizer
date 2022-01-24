@@ -518,6 +518,11 @@ namespace Upland.CollectionOptimizer
 
             userProperties = userProperties.OrderByDescending(p => p.Mint).ToList();
 
+            if (userProperties == null || userProperties.Count == 0)
+            {
+                throw new Exception("No Properties Found");
+            }
+
             this.Properties = new Dictionary<long, Property>();
             foreach (Property property in userProperties)
             {
