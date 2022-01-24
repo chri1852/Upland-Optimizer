@@ -114,7 +114,9 @@ namespace Upland.InformationProcessor
                 && (filters.CollectionIds.Count == 0
                     || filters.CollectionIds.Any(i => c.CollectionIds.Contains(i)))
                 && (filters.Buildings.Count == 0
-                    || filters.Buildings.Contains(c.Building))
+                    || filters.Buildings.Contains(c.Building)
+                && ((filters.Currency == null || filters.Currency == "")
+                    || c.Currency == filters.Currency))
                 ).ToList();
 
             // Sort
