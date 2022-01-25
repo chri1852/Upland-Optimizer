@@ -2129,7 +2129,7 @@ namespace Upland.Infrastructure.LocalData
                         while (reader.Read())
                         {
                             EOSAccounts.Add(new Tuple<decimal, string, string>(
-                                (decimal)reader["DiscordUserId"],
+                                reader.IsDBNull("DiscordUserId") ? -1 : (decimal)reader["DiscordUserId"],
                                 (string)reader["UplandUsername"],
                                 (string)reader["EOSAccount"]
                             ));
