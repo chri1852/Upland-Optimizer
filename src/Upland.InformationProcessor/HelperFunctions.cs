@@ -103,7 +103,7 @@ namespace Upland.InformationProcessor
                 case 29:
                     return new List<double> { 40.921864, 40.782411, -73.763343, -73.942215 };
                 case 32:
-                    return new List<double> { 0, 0, 0, 0 };
+                    return new List<double> { 34.341388, 33.699857, -118.153324, -118.670841 };
                 default:
                     return new List<double> { 0, 0, 0, 0 };
             }
