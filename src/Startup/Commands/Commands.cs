@@ -13,6 +13,7 @@ using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
+using System.Text.Json;
 
 namespace Startup.Commands
 {
@@ -389,7 +390,8 @@ namespace Startup.Commands
 
             if (currentRun.Status == Consts.RunStatusCompleted)
             {
-                byte[] resultBytes = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(currentRun.Results));
+                OptimizerResults optimizerResults = JsonSerializer.Deserialize<OptimizerResults>(Encoding.UTF8.GetString(currentRun.Results));
+                byte[] resultBytes = Encoding.UTF8.GetBytes(CollectionOptimizer.BuildTextOutput(optimizerResults));
                 using (Stream stream = new MemoryStream())
                 {
                     stream.Write(resultBytes, 0, resultBytes.Length);
@@ -969,7 +971,7 @@ namespace Startup.Commands
         public async Task Appraisal(string fileType = "TXT")
         {
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
-            List<string> appraiserOutput = new List<string>();
+            AppraisalResults appraiserOutput = new AppraisalResults();
 
             if (!await EnsureRegisteredAndVerified(registeredUser))
             {
@@ -983,7 +985,7 @@ namespace Startup.Commands
 
             try
             {
-                appraiserOutput = await _profileAppraiser.RunAppraisal(registeredUser, fileType);
+                appraiserOutput = await _profileAppraiser.RunAppraisal(registeredUser);
             }
             catch (Exception ex)
             {
@@ -992,14 +994,17 @@ namespace Startup.Commands
                 return;
             }
 
-            if (appraiserOutput.Count == 1)
+            string appraisalString = "";
+
+            if (fileType.ToUpper() == "TXT")
             {
-                // An Error Occured
-                await ReplyAsync(string.Format("Sorry {0}! {1}", HelperFunctions.GetRandomName(_random), appraiserOutput[0]));
-                return;
+                appraisalString = string.Join(Environment.NewLine, _profileAppraiser.BuildAppraisalTxtStrings(appraiserOutput));
+            } else
+            {
+                appraisalString = string.Join(Environment.NewLine, _profileAppraiser.BuildAppraisalCsvStrings(appraiserOutput));
             }
 
-            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, appraiserOutput));
+            byte[] resultBytes = Encoding.UTF8.GetBytes(appraisalString);
             using (Stream stream = new MemoryStream())
             {
                 stream.Write(resultBytes, 0, resultBytes.Length);
@@ -1028,7 +1033,9 @@ namespace Startup.Commands
             }
             else
             {
-                byte[] resultBytes = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(currentRun.Results));
+                AppraisalResults results = JsonSerializer.Deserialize<AppraisalResults>(Encoding.UTF8.GetString(currentRun.Results));
+
+                byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, _profileAppraiser.BuildAppraisalTxtStrings(results)));
                 using (Stream stream = new MemoryStream())
                 {
                     stream.Write(resultBytes, 0, resultBytes.Length);
@@ -1062,8 +1069,8 @@ namespace Startup.Commands
 
             if (!_mappingProcessor.IsValidType(type))
             {
-                await ReplyAsync(string.Format("{0} is not a valid map type {1}! Try any of {2}.", 
-                    cityId, 
+                await ReplyAsync(string.Format("{0} is not a valid map type {1}! Try any of {2}.",
+                    type, 
                     HelperFunctions.GetRandomName(_random), 
                     string.Join(", ", _mappingProcessor.GetValidTypes())));
 
@@ -1148,7 +1155,7 @@ namespace Startup.Commands
             helpMenu.Add("   7.  !CollectionInfo");
             helpMenu.Add("   8.  !PropertyInfo");
             helpMenu.Add("   9.  !NeighborhoodInfo");
-            helpMenu.Add("   10.  !CityInfo");
+            helpMenu.Add("   10. !CityInfo");
             helpMenu.Add("   11. !StreetInfo");
             helpMenu.Add("   12. !SupportMe");
             helpMenu.Add("   13. !CollectionsForSale");
@@ -1225,7 +1232,7 @@ namespace Startup.Commands
         {
             if (!registeredUser.Paid && registeredUser.SendUPX >= Consts.SendUpxSupporterThreshold)
             {
-                await (Context.User as IGuildUser).AddRoleAsync(Consts.DiscordSupporterRoleId);
+                await (Context.User as IGuildUser).AddRoleAsync(Context.Guild.GetRole(Consts.DiscordSupporterRoleId));
                 registeredUser.Paid = true;
                 _localDataManager.UpdateRegisteredUser(registeredUser);
                 await ReplyAsync(string.Format("Congrats and Thank You {0}! You have sent enough times to be considered a Supporter! Don't worry about runs anymore, you've done enough. You are no longer limited by runs, and have access to the Supporter Commands!", HelperFunctions.GetRandomName(_random)));

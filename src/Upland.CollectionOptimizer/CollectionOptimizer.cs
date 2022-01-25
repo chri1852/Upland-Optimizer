@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
@@ -28,6 +29,8 @@ namespace Upland.CollectionOptimizer
         private bool DebugMode;
         private IUplandApiRepository UplandApiRepository;
 
+        private Stopwatch timer;
+
         private const string CityPro = "City Pro";
         private const string KingOfTheStreet = "King of the Street";
         private const int CityProId = 21;
@@ -50,6 +53,8 @@ namespace Upland.CollectionOptimizer
             this.LocalDataManager = localDataManager;
             this.UplandApiRepository = uplandApiRepository;
             this.DebugMode = false;
+
+            this.timer = new Stopwatch();
         }
 
         public async Task RunAutoOptimization(RegisteredUser registeredUser, OptimizerRunRequest runRequest)
@@ -60,7 +65,6 @@ namespace Upland.CollectionOptimizer
                 return;
             }
 
-            string results = "";
             LocalDataManager.CreateOptimizationRun(
                 new OptimizationRun
                 {
@@ -71,7 +75,7 @@ namespace Upland.CollectionOptimizer
             try
             {
                 await SetDataForOptimization(runRequest);
-                results = RunOptimization(registeredUser.UplandUsername, runRequest.Level);
+                RunOptimization(registeredUser.UplandUsername, runRequest.Level);
             }
             catch (Exception ex)
             {
@@ -86,23 +90,185 @@ namespace Upland.CollectionOptimizer
                 return;
             }
 
+            OptimizerResults results = BuildOptimizerResults(registeredUser.UplandUsername, runRequest.Level);
+
             LocalDataManager.SetOptimizationRunStatus(
                 new OptimizationRun
                 {
                     Id = optimizationRun.Id,
                     Status = Consts.RunStatusCompleted,
-                    Results = Encoding.UTF8.GetBytes(results)
-                });
+                    Results = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(results))
+                }); ;
 
-            registeredUser.RunCount++;
-            LocalDataManager.UpdateRegisteredUser(registeredUser);
+            if (!runRequest.AdminRun)
+            {
+                registeredUser.RunCount++;
+                LocalDataManager.UpdateRegisteredUser(registeredUser);
+            }
         }
 
         private async Task RunDebugOptimization(OptimizerRunRequest runRequest)
         {
             this.DebugMode = true;
             await SetDataForOptimization(runRequest);
-            string results = RunOptimization(runRequest.Username, runRequest.Level);
+            RunOptimization(runRequest.Username, runRequest.Level);
+
+            if (this.DebugMode)
+            {
+                HelperFunctions.WriteCollecitonToConsole(this.FilledCollections, this.Properties, this.SlottedPropertyIds, this.UnfilledCollections, this.UnoptimizedCollections, this.MissingCollections);
+            }
+        }
+
+        private OptimizerResults BuildOptimizerResults(string username, int qualityLevel)
+        {
+            List<Collection> collections = this.FilledCollections.OrderByDescending(c => c.Value.TotalMint).Select(c => c.Value).ToList();
+
+            OptimizerResults results = new OptimizerResults();
+            results.Username = username;
+            results.RunDateTime = DateTime.UtcNow;
+            results.QualityLevel = qualityLevel;
+            results.TimeToRunTicks = this.timer.Elapsed.Ticks;
+            results.OptimizedCollections = new List<OptimizerCollectionResult>();
+            results.UnfilledCollections = new List<OptimizerCollectionResult>();
+            results.UnoptimizedCollections = new List<OptimizerCollectionResult>();
+            results.ExtraCollections = new List<OptimizerCollectionResult>();
+            results.MissingCollections = new List<OptimizerCollectionResult>();
+
+            results.BaseTotalIncome = HelperFunctions.CalculateBaseMonthlyUPX(Properties);
+            results.BoostedTotalIncome = HelperFunctions.CalculateMonthlyUpx(FilledCollections, Properties, SlottedPropertyIds);
+
+            // Used for determining Extra Collection Props
+            List<long> allNonCityOrStandardSlottedPropIds = new List<long>();
+            foreach (KeyValuePair<int, Collection> entry in FilledCollections)
+            {
+                if (!entry.Value.IsCityCollection && !Consts.StandardCollectionIds.Contains(entry.Value.Id))
+                {
+                    allNonCityOrStandardSlottedPropIds.AddRange(entry.Value.SlottedPropertyIds);
+                }
+            }
+
+            foreach (Collection collection in collections)
+            {
+                OptimizerCollectionResult collectionResult = new OptimizerCollectionResult();
+                collectionResult.City = Consts.Cities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
+                collectionResult.IsStandardCollection = Consts.StandardCollectionIds.Contains(collection.Id);
+
+                collectionResult.Name = collection.Name;
+                collectionResult.Category = Consts.CollectionCategories[collection.Category];
+                collectionResult.Boost = collection.Boost;
+                collectionResult.MissingProps = 0;
+                collectionResult.Properties = new List<OptimizerCollectionProperty>();
+
+                foreach (long propertyId in collection.SlottedPropertyIds)
+                {
+                    OptimizerCollectionProperty property = new OptimizerCollectionProperty();
+                    property.Address = this.Properties[propertyId].Address;
+                    property.BaseIncome = this.Properties[propertyId].Mint * Consts.RateOfReturn / 12.0;
+
+                    collectionResult.Properties.Add(property);
+                }
+
+                results.OptimizedCollections.Add(collectionResult);
+
+                // Build the extra list
+                if (!collectionResult.IsStandardCollection 
+                    && !collection.IsCityCollection
+                    && collection.EligablePropertyIds.Where(p => !allNonCityOrStandardSlottedPropIds.Contains(p)).ToList().Count > 0)
+                {
+                    OptimizerCollectionResult extraCollectionResult = new OptimizerCollectionResult();
+                    extraCollectionResult.City = Consts.Cities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
+                    extraCollectionResult.IsStandardCollection = Consts.StandardCollectionIds.Contains(collection.Id);
+
+                    extraCollectionResult.Name = collection.Name;
+                    extraCollectionResult.Category = Consts.CollectionCategories[collection.Category];
+                    extraCollectionResult.Boost = collection.Boost;
+                    extraCollectionResult.MissingProps = collection.EligablePropertyIds.Count - collection.SlottedPropertyIds.Count;
+                    extraCollectionResult.Properties = new List<OptimizerCollectionProperty>();
+                    foreach (long propertyId in collection.EligablePropertyIds.Where(p => !allNonCityOrStandardSlottedPropIds.Contains(p)))
+                    {
+                        OptimizerCollectionProperty property = new OptimizerCollectionProperty();
+                        property.Address = this.Properties[propertyId].Address;
+                        property.BaseIncome = this.Properties[propertyId].Mint * Consts.RateOfReturn / 12.0;
+
+                        extraCollectionResult.Properties.Add(property);
+                    }
+                    results.ExtraCollections.Add(extraCollectionResult);
+                }
+            }
+
+            if (UnfilledCollections.Count > 0)
+            {
+                foreach (KeyValuePair<int, Collection> entry in this.UnfilledCollections)
+                {
+                    OptimizerCollectionResult collectionResult = new OptimizerCollectionResult();
+
+                    collectionResult.IsStandardCollection = !entry.Value.CityId.HasValue;
+                    collectionResult.City = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
+                    collectionResult.Name = entry.Value.Name;
+                    collectionResult.Category = Consts.CollectionCategories[entry.Value.Category];
+                    collectionResult.Boost = entry.Value.Boost;
+                    collectionResult.MissingProps = entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count;
+                    collectionResult.Properties = new List<OptimizerCollectionProperty>();
+
+                    foreach (long propertyId in entry.Value.EligablePropertyIds)
+                    {
+                        OptimizerCollectionProperty property = new OptimizerCollectionProperty();
+                        property.Address = this.Properties[propertyId].Address;
+                        property.BaseIncome = this.Properties[propertyId].Mint * Consts.RateOfReturn / 12.0;
+
+                        collectionResult.Properties.Add(property);
+                    }
+
+                    results.UnfilledCollections.Add(collectionResult);
+                }
+            }
+
+            if (UnoptimizedCollections.Count > 0)
+            {
+                foreach (KeyValuePair<int, Collection> entry in this.UnoptimizedCollections)
+                {
+                    OptimizerCollectionResult collectionResult = new OptimizerCollectionResult();
+
+                    collectionResult.IsStandardCollection = !entry.Value.CityId.HasValue;
+                    collectionResult.City = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
+                    collectionResult.Name = entry.Value.Name;
+                    collectionResult.Category = Consts.CollectionCategories[entry.Value.Category];
+                    collectionResult.Boost = entry.Value.Boost;
+                    collectionResult.MissingProps = entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count;
+                    collectionResult.Properties = new List<OptimizerCollectionProperty>();
+
+                    foreach (long propertyId in entry.Value.EligablePropertyIds)
+                    {
+                        OptimizerCollectionProperty property = new OptimizerCollectionProperty();
+                        property.Address = this.Properties[propertyId].Address;
+                        property.BaseIncome = this.Properties[propertyId].Mint * Consts.RateOfReturn / 12.0;
+
+                        collectionResult.Properties.Add(property);
+                    }
+
+                    results.UnoptimizedCollections.Add(collectionResult);
+                }
+            }
+
+            if (MissingCollections.Count > 0)
+            {
+                foreach (KeyValuePair<int, Collection> entry in this.MissingCollections)
+                {
+                    OptimizerCollectionResult collectionResult = new OptimizerCollectionResult();
+
+                    collectionResult.IsStandardCollection = !entry.Value.CityId.HasValue;
+                    collectionResult.City = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
+                    collectionResult.Name = entry.Value.Name;
+                    collectionResult.Category = Consts.CollectionCategories[entry.Value.Category];
+                    collectionResult.Boost = entry.Value.Boost;
+                    collectionResult.MissingProps = entry.Value.NumberOfProperties;
+                    collectionResult.Properties = new List<OptimizerCollectionProperty>();
+
+                    results.MissingCollections.Add(collectionResult);
+                }
+            }
+
+            return results;
         }
 
         private void CreateHypotheicalProperties(OptimizerRunRequest runRequest)
@@ -180,11 +346,26 @@ namespace Upland.CollectionOptimizer
             {
                 // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
                 if (!conflictingCollections.ContainsKey(entry.Value.Id)
-                    && conflictingCollections.Count < qualityLevel
+                    //&& conflictingCollections.Count < qualityLevel
                     && !Consts.StandardCollectionIds.Contains(entry.Value.Id)
-                    && !entry.Value.IsCityCollection)
+                    && !entry.Value.IsCityCollection
+                    )
                 {
-                    conflictingCollections.Add(entry.Key, entry.Value.Clone());
+                    if (!conflictingCollections.Any(e => e.Value.IsCityCollection && e.Value.CityId == entry.Value.CityId)
+                        && this.Collections.Any(e => e.Value.IsCityCollection && e.Value.CityId == entry.Value.CityId))
+                    {
+                        if (conflictingCollections.Count < qualityLevel - 1)
+                        {
+                            conflictingCollections.Add(entry.Key, entry.Value.Clone());
+
+                            Collection cityCollection = this.Collections.First(e => e.Value.IsCityCollection && e.Value.CityId == entry.Value.CityId).Value;
+                            conflictingCollections.Add(cityCollection.Id, cityCollection.Clone());
+                        }
+                    }
+                    else if (conflictingCollections.Count < qualityLevel)
+                    {
+                        conflictingCollections.Add(entry.Key, entry.Value.Clone());
+                    }
                 }
             }
 
@@ -219,10 +400,9 @@ namespace Upland.CollectionOptimizer
             this.Collections = RebuildCollections(this.Collections, new List<long>(), false);
         }
 
-        private string RunOptimization(string username, int qualityLevel)
+        private void RunOptimization(string username, int qualityLevel)
         {
-            Stopwatch timer = new Stopwatch();
-            timer.Start();
+            this.timer.Start();
 
             while (this.Collections.Count > 0)
             {
@@ -238,18 +418,9 @@ namespace Upland.CollectionOptimizer
                 SetFilledCollection(collectionToSlotId);
             }
 
-            timer.Stop();
-
             BuildBestNewbieCoollection();
 
-            List<string> outputStrings = BuildOutput(timer, username, qualityLevel);
-
-            if (this.DebugMode)
-            {
-                HelperFunctions.WriteCollecitonToConsole(this.FilledCollections, this.Properties, this.SlottedPropertyIds, this.UnfilledCollections, this.UnoptimizedCollections, this.MissingCollections);
-            }
-
-            return string.Join(Environment.NewLine, outputStrings);
+            this.timer.Stop();
         }
 
         private int RecursionWrapper(Dictionary<int, Collection> conflictingCollections)
@@ -346,6 +517,11 @@ namespace Upland.CollectionOptimizer
             }
 
             userProperties = userProperties.OrderByDescending(p => p.Mint).ToList();
+
+            if (userProperties == null || userProperties.Count == 0)
+            {
+                throw new Exception("No Properties Found");
+            }
 
             this.Properties = new Dictionary<long, Property>();
             foreach (Property property in userProperties)
@@ -612,86 +788,73 @@ namespace Upland.CollectionOptimizer
             }
         }
 
-        private List<string> BuildOutput(Stopwatch timer, string username, int qualityLevel)
+        public static string BuildTextOutput(OptimizerResults results)
         {
-            int TotalCollectionRewards = 0;
             List<string> outputStrings = new List<string>();
-            List<Collection> collections = this.FilledCollections.OrderByDescending(c => c.Value.TotalMint).Select(c => c.Value).ToList();
 
-            outputStrings.Add(string.Format("Collection Optimization Report - {0}", DateTime.Now.ToString("MM-dd-yyyy")));
+            outputStrings.Add(string.Format("Collection Optimization Report - {0}", results.RunDateTime.ToString("MM-dd-yyyy")));
             outputStrings.Add("-------------------------------------------");
-            outputStrings.Add(string.Format("Ran for {0} at Quality Level {1}", username, qualityLevel));
-            outputStrings.Add(string.Format("Run Time - {0}", timer.Elapsed));
+            outputStrings.Add(string.Format("Ran for {0} at Quality Level {1}", results.Username, results.QualityLevel));
+            outputStrings.Add(string.Format("Run Time - {0}", new TimeSpan(results.TimeToRunTicks)));
             outputStrings.Add("");
 
-            foreach (Collection collection in collections)
+            foreach (OptimizerCollectionResult collection in results.OptimizedCollections)
             {
-                if (!Consts.StandardCollectionIds.Contains(collection.Id))
-                {
-                    string collectionCity = Consts.Cities[this.Properties[collection.SlottedPropertyIds[0]].CityId];
-                    outputStrings.Add(string.Format("{0} - {1} - {2:N2} --> {3:N2}", collectionCity, collection.Name, (collection.TotalMint * (Consts.RateOfReturn / 12)) / collection.Boost, collection.TotalMint * (Consts.RateOfReturn / 12)));
-                    TotalCollectionRewards += collection.Reward;
-                }
-                else
-                {
-                    outputStrings.Add(string.Format("Standard - {0} - {1:N2} --> {2:N2}", collection.Name, (collection.TotalMint * (Consts.RateOfReturn / 12)) / collection.Boost, collection.TotalMint * (Consts.RateOfReturn / 12)));
-                }
+                outputStrings.Add(string.Format("{0} - {1} - {2:N2} --> {3:N2}", collection.City, collection.Name, collection.Properties.Sum(p => p.BaseIncome), collection.Properties.Sum(p => p.BaseIncome) * collection.Boost));
 
-                foreach (long propertyId in collection.SlottedPropertyIds)
+                foreach (OptimizerCollectionProperty property in collection.Properties)
                 {
-                    outputStrings.Add(string.Format("     {0}", this.Properties[propertyId].Address));
+                    outputStrings.Add(string.Format("     {0}", property.Address));
                 }
                 outputStrings.Add("");
             }
 
-            string baseMonthlyUpx = string.Format("{0:N2}", HelperFunctions.CalculateBaseMonthlyUPX(Properties));
-            string totalMonthlyUpx = string.Format("{0:N2}", HelperFunctions.CalculateMonthlyUpx(FilledCollections, Properties, SlottedPropertyIds));
+            string baseMonthlyUpx = string.Format("{0:N2}", results.BaseTotalIncome);
+            string totalMonthlyUpx = string.Format("{0:N2}", results.BoostedTotalIncome);
 
             outputStrings.Add("");
             outputStrings.Add(string.Format("Base Monthly UPX...........: {0}", baseMonthlyUpx));
             outputStrings.Add(string.Format("Total Monthly UPX..........: {0}", totalMonthlyUpx));
 
-            if (UnfilledCollections.Count > 0 || UnoptimizedCollections.Count > 0) // || MissingCollections.Count > 0)
+            if (results.UnfilledCollections.Count > 0 || results.UnoptimizedCollections.Count > 0) // || MissingCollections.Count > 0)
             {
                 outputStrings.Add("");
 
-                if (UnfilledCollections.Count > 0)
+                if (results.UnfilledCollections.Count > 0)
                 {
                     outputStrings.Add("");
                     outputStrings.Add(string.Format("Unfilled Collections"));
-                    foreach (KeyValuePair<int, Collection> entry in this.UnfilledCollections)
+                    foreach (OptimizerCollectionResult collection in results.UnfilledCollections)
                     {
-                        string collectionCity = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
-                        outputStrings.Add(string.Format("     {0} - {1} - Missing Props {2}", collectionCity, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                        outputStrings.Add(string.Format("     {0} - {1} - Missing Props {2}", collection.City, collection.Name, collection.MissingProps));
                     }
                 }
 
-                if (UnoptimizedCollections.Count > 0)
+                if (results.UnoptimizedCollections.Count > 0)
                 {
                     outputStrings.Add("");
                     outputStrings.Add("Unoptimized Collections");
-                    foreach (KeyValuePair<int, Collection> entry in this.UnoptimizedCollections)
+                    foreach (OptimizerCollectionResult collection in results.UnoptimizedCollections)
                     {
-                        string collectionCity = entry.Value.CityId.HasValue ? Consts.Cities[entry.Value.CityId.Value] : "Standard";
-                        outputStrings.Add(string.Format("     {0} - {1} - Missing Props {2}", collectionCity, entry.Value.Name, entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count));
+                        outputStrings.Add(string.Format("     {0} - {1} - Missing Props {2}", collection.City, collection.Name, collection.MissingProps));
                     }
                 }
 
                 // Takes Up too much space on the report, can reenable later
                 /*
-                if (MissingCollections.Count > 0)
+                if (results.MissingCollections.Count > 0)
                 {
                     outputStrings.Add("");
                     outputStrings.Add("Missing Collections");
-                    foreach (KeyValuePair<int, Collection> entry in this.MissingCollections)
+                    foreach ((OptimizerCollectionResult collection in results.MissingCollections)
                     {
-                        outputStrings.Add(string.Format("     {0} - Missing Props {1}", entry.Value.Name, entry.Value.NumberOfProperties));
+                        outputStrings.Add(string.Format("     {0} - {1} - Missing Props {2}", collection.City, collection.Name, collection.MissingProps));
                     }
                 }
                 */
             }
 
-            return outputStrings;
+            return string.Join(Environment.NewLine, outputStrings);
         }
     }
 }

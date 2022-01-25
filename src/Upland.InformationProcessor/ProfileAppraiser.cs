@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
@@ -47,28 +48,21 @@ namespace Upland.InformationProcessor
             return _previousSalesData.Where(i => i.Value.Type == "NEIGHBORHOOD").ToDictionary(i => i.Value.Id, i => (double)i.Value.Value);
         }
 
-        public async Task<List<string>> RunAppraisal(RegisteredUser registeredUser, string fileType)
+        public async Task<AppraisalResults> RunAppraisal(RegisteredUser registeredUser)
         {
             List<PropertyAppraisal> appraisals = await RunAppraisal(registeredUser.UplandUsername.ToLower());
-            List<string> returnStrings = new List<string>();
-            if (fileType.ToUpper() == "TXT")
-            {
-                returnStrings = BuildAppraisalTxtStrings(appraisals, registeredUser.UplandUsername);
-            }
-            else
-            {
-                returnStrings = BuildAppraisalCsvStrings(appraisals, registeredUser.UplandUsername);
-            }
+
+            AppraisalResults results = BuildAppraisalResults(appraisals, registeredUser.UplandUsername);
 
             _localDataManager.DeleteAppraisalRuns(registeredUser.Id);
             _localDataManager.CreateAppraisalRun(new AppraisalRun
                 {
                     RegisteredUserId = registeredUser.Id,
-                    Results = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, BuildAppraisalTxtStrings(appraisals, registeredUser.UplandUsername)))
+                    Results = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(results))
                 }
             );
 
-            return returnStrings;
+            return results;
         }
 
         private async Task<List<PropertyAppraisal>> RunAppraisal(string username)
@@ -220,49 +214,71 @@ namespace Upland.InformationProcessor
             return propertyAppraisals;
         }
 
-        private List<string> BuildAppraisalCsvStrings(List<PropertyAppraisal> propertyAppraisals, string username)
+        public List<string> BuildAppraisalCsvStrings(AppraisalResults results)
         {
             List<string> output = new List<string>();
 
-            output.Add(string.Format("Id,CityId,Address,Size,Mint,Lower UPX Value,Upper UPX Value,Note"));
+            output.Add(string.Format("City,Address,Size,Mint,Lower UPX Value,Upper UPX Value,Note"));
 
-            propertyAppraisals = propertyAppraisals.OrderByDescending(p => p.UPX_Upper).OrderBy(p => p.Property.CityId).ToList();
-
-            foreach (PropertyAppraisal appraisal in propertyAppraisals)
+            foreach (AppraisalProperty property in results.Properties)
             {
-                output.Add(string.Format("{0},{1},{2},{3},{4},{5},{6},{7}"
-                    , appraisal.Property.Id
-                    , appraisal.Property.CityId
-                    , appraisal.Property.Address
-                    , appraisal.Property.Size
-                    , appraisal.Property.Mint
-                    , appraisal.UPX_Lower
-                    , appraisal.UPX_Upper
-                    , string.Join(" ", appraisal.Notes)
+                output.Add(string.Format("{0},{1},{2},{3},{4},{5},{6}"
+                    , property.City
+                    , property.Address
+                    , property.Size
+                    , property.Mint
+                    , property.LowerValue
+                    , property.UpperValue
+                    , string.Join(" ", property.Note)
                 ));
             }
 
             return output;
         }
 
-        private List<string> BuildAppraisalTxtStrings(List<PropertyAppraisal> propertyAppraisals, string username)
+        private AppraisalResults BuildAppraisalResults(List<PropertyAppraisal> propertyAppraisals, string username)
+        {
+            AppraisalResults results = new AppraisalResults();
+
+            results.Username = username;
+            results.RunDateTime = DateTime.UtcNow;
+            results.Properties = new List<AppraisalProperty>();
+
+            propertyAppraisals = propertyAppraisals.OrderByDescending(a => a.UPX_Upper).OrderBy(a => a.Property.CityId).ToList();
+
+            foreach (PropertyAppraisal appraisal in propertyAppraisals)
+            {
+                AppraisalProperty property = new AppraisalProperty();
+
+                property.City = Consts.Cities[appraisal.Property.CityId];
+                property.Address = appraisal.Property.Address;
+                property.Size = appraisal.Property.Size;
+                property.Collections = new List<int>();
+                property.Mint = appraisal.Property.Mint;
+                property.LowerValue = appraisal.UPX_Lower;
+                property.UpperValue = appraisal.UPX_Upper;
+                property.Note = string.Join(", ", appraisal.Notes);
+
+                results.Properties.Add(property);
+            }
+
+            return results;
+        }
+
+        public List<string> BuildAppraisalTxtStrings(AppraisalResults results)
         {
             List<string> output = new List<string>();
 
-            int idPad = 19;
-            int cityIdPad = 6;
-            int addressPad = propertyAppraisals.Max(p => p.Property.Address.Length);
+            int addressPad = results.Properties.Max(p => p.Address.Length);
             int sizePad = 9;
             int mintPad = 15;
             int upperPad = 15;
             int lowerPad = 15;
-            int notePad = propertyAppraisals.Max(p => string.Join(", ", p.Notes).Length) < 4 ? 4 : propertyAppraisals.Max(p => string.Join(", ", p.Notes).Length);
+            int notePad = results.Properties.Max(p => string.Join(", ", p.Note).Length) < 4 ? 4 : results.Properties.Max(p => string.Join(", ", p.Note).Length);
 
-            output.Add(string.Format("Property Appraisal For {0} as of {1:MM/dd/yy H:mm:ss}", username.ToUpper(), DateTime.Now));
+            output.Add(string.Format("Property Appraisal For {0} as of {1:MM/dd/yy H:mm:ss}", results.Username.ToUpper(), results.RunDateTime));
             output.Add("");
-            output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
-                , "Id".PadLeft(idPad)
-                , "CityId".PadLeft(cityIdPad)
+            output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
                 , "Address".PadLeft(addressPad)
                 , "Size".PadLeft(sizePad)
                 , "Mint".PadLeft(mintPad)
@@ -270,38 +286,35 @@ namespace Upland.InformationProcessor
                 , "Upper UPX Value".PadLeft(upperPad)
                 , "Note".PadLeft(notePad)));
 
-            int? cityId = -1;
-            propertyAppraisals = propertyAppraisals.OrderByDescending(p => p.UPX_Upper).OrderBy(p => p.Property.CityId).ToList();
+            string city = "";
 
-            foreach (PropertyAppraisal appraisal in propertyAppraisals)
+            foreach (AppraisalProperty property in results.Properties)
             {
-                if (cityId != appraisal.Property.CityId)
+                if (city != property.City)
                 {
-                    cityId = appraisal.Property.CityId;
+                    city = property.City;
                     output.Add("");
                     output.Add(string.Format("{0} - {1:N2} -> {2:N2}"
-                        , Consts.Cities[cityId.Value]
-                        , propertyAppraisals.Where(p => p.Property.CityId == cityId).Sum(p => p.UPX_Lower)
-                        , propertyAppraisals.Where(p => p.Property.CityId == cityId).Sum(p => p.UPX_Upper)
+                        , city
+                        , results.Properties.Where(p => p.City == city).Sum(p => p.LowerValue)
+                        , results.Properties.Where(p => p.City == city).Sum(p => p.UpperValue)
                         ));
                 }
 
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
-                    , appraisal.Property.Id.ToString().PadLeft(idPad)
-                    , appraisal.Property.CityId.ToString().PadLeft(cityIdPad)
-                    , appraisal.Property.Address.PadLeft(addressPad)
-                    , string.Format("{0:N0}", appraisal.Property.Size).PadLeft(sizePad)
-                    , string.Format("{0:N2}", appraisal.Property.Mint).PadLeft(mintPad)
-                    , string.Format("{0:N}", appraisal.UPX_Lower).PadLeft(lowerPad)
-                    , string.Format("{0:N}", appraisal.UPX_Upper).PadLeft(upperPad)
-                    , string.Join(", ", appraisal.Notes).PadLeft(notePad)
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                    , property.Address.PadLeft(addressPad)
+                    , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
+                    , string.Format("{0:N2}", property.Mint).PadLeft(mintPad)
+                    , string.Format("{0:N}", property.LowerValue).PadLeft(lowerPad)
+                    , string.Format("{0:N}", property.UpperValue).PadLeft(upperPad)
+                    , string.Join(", ", property.Note).PadLeft(notePad)
                 ));
             }
 
             output.Add("");
             output.Add(string.Format("Total - {0:N2} -> {1:N2}"
-                , propertyAppraisals.Sum(p => p.UPX_Lower)
-                , propertyAppraisals.Sum(p => p.UPX_Upper)
+                , results.Properties.Sum(p => p.LowerValue)
+                , results.Properties.Sum(p => p.UpperValue)
                 ));
 
             return output;
@@ -340,7 +353,7 @@ namespace Upland.InformationProcessor
                     _previousSalesData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newPreviousSalesData);
                     _currentFloorData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newCurrentFloorData);
                     _buildingData = new Dictionary<string, double>(_newBuildingData);
-                    _newPropertyStructures = new Dictionary<long, string>(_propertyStructures);
+                    _propertyStructures = new Dictionary<long, string>(_newPropertyStructures);
                 });
             }
         }

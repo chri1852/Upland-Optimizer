@@ -53,10 +53,10 @@ class Program
         BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder(localDataManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
-        ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
+        //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
-        MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
-
+        //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
+        WebProcessor webProcessor = new WebProcessor(localDataManager, uplandApiManager);
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager, uplandApiRepository);
 
         // Populate City
@@ -68,11 +68,24 @@ class Program
 
         /// Test Optimizer
         //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
-        //await collectionOptimizer.RunAutoOptimization(registeredUser, runRequest);
-
-
+        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        
+        List<CachedForSaleProperty> test = webProcessor.GetForSaleProps(new WebForSaleFilters
+        {
+            CityId = 10,
+            Owner = "",
+            Address = null,
+            NeighborhoodIds = new List<int>(),
+            CollectionIds = new List<int>(),
+            FSA = null,
+            Buildings = new List<string>{ "Ranch House" },
+            Asc = true,
+            OrderBy = "PRICE",
+            PageSize = 100,
+            Page = 1
+        }); 
         // Populate initial City Data
-        //await localDataManager.PopulateNeighborhoods();
+        await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
 
@@ -99,7 +112,8 @@ class Program
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
-        List<NFLPALegit> nflpaLegits = await uplandApiManager.GetNFLPALegitsByUsername("teeem");
+        //List<NFLPALegit> nflpaLegits = await uplandApiManager.GetNFLPALegitsByUsername("teeem");
+        //UserProfile profile = await webProcessor.GetWebUIProfile("koraseph");
 
         // Populate CityProps And Neighborhoods
         //await localDataManager.PopulateAllPropertiesInArea(40.921864, 40.782411, -73.763343, -73.942215, 29, true);
@@ -211,7 +225,7 @@ class Program
         }
 
         int argPos = 0;
-        if (message.HasStringPrefix("!", ref argPos))
+        if (message.HasStringPrefix("^", ref argPos))
         {
             if (context.Channel.Name == "general" || context.Channel.Name == "tech-issues")
             {

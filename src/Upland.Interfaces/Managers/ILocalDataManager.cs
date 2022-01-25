@@ -17,6 +17,8 @@ namespace Upland.Interfaces.Managers
         Task PopulateDatabaseCollectionInfo();
         void DetermineNeighborhoodIdsForCity(int cityId);
         bool IsPropertyInNeighborhood(Neighborhood neighborhood, Property property);
+        List<CachedForSaleProperty> GetCachedForSaleProperties(int cityId);
+        List<Tuple<int, long>> GetCollectionPropertyTable();
         Property GetProperty(long id);
         List<Property> GetProperties(List<long> ids);
         List<long> GetPropertyIdsByCollectionId(int collectionId);
@@ -66,6 +68,7 @@ namespace Upland.Interfaces.Managers
         List<UplandForSaleProp> GetPropertiesForSale_Seller(string uplandUsername, bool onlyBuildings);
         string GetConfigurationValue(string name);
         Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount);
+        string GetEOSAccountByUplandUsername(string uplandUsername);
         List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts();
         DateTime GetLastHistoricalCityStatusDate();
         DateTime GetLastSaleHistoryDateTime();

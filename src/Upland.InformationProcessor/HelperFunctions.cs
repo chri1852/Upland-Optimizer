@@ -102,6 +102,8 @@ namespace Upland.InformationProcessor
                     return new List<double> { 36.409888, 35.964879, -86.511996, -87.060626 };
                 case 29:
                     return new List<double> { 40.921864, 40.782411, -73.763343, -73.942215 };
+                case 32:
+                    return new List<double> { 34.341388, 33.699857, -118.153324, -118.670841 };
                 default:
                     return new List<double> { 0, 0, 0, 0 };
             }
@@ -110,7 +112,7 @@ namespace Upland.InformationProcessor
         public static List<string> CreateForSaleCSVString(List<UplandForSaleProp> forSaleProperties, Dictionary<long, Property> propDictionary, Dictionary<long, string> propBuildings)
         {
             List<string> output = new List<string>();
-            output.Add("PropertyId,Price,Currency,Mint,Markup,CityId,Address,Owner,NeighborhoodId,Structure");
+            output.Add("PropertyId,Price,Currency,Mint,Markup,CityId,Address,Size,Owner,NeighborhoodId,Structure");
 
             foreach (UplandForSaleProp prop in forSaleProperties)
             {
@@ -132,6 +134,7 @@ namespace Upland.InformationProcessor
                 propString += string.Format("{0:F2},", 100 * prop.SortValue / (propDictionary[prop.Prop_Id].Mint));
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].CityId);
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].Address);
+                propString += string.Format("{0},", propDictionary[prop.Prop_Id].Size);
                 propString += string.Format("{0},", prop.Owner);
                 propString += string.Format("{0},", propDictionary[prop.Prop_Id].NeighborhoodId.HasValue ? propDictionary[prop.Prop_Id].NeighborhoodId.Value.ToString() : "-1");
                 propString += string.Format("{0}", propBuildings.ContainsKey(prop.Prop_Id) ? propBuildings[prop.Prop_Id] : "None");
