@@ -70,22 +70,8 @@ class Program
         //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
         //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
         
-        List<CachedForSaleProperty> test = webProcessor.GetForSaleProps(new WebForSaleFilters
-        {
-            CityId = 10,
-            Owner = "",
-            Address = null,
-            NeighborhoodIds = new List<int>(),
-            CollectionIds = new List<int>(),
-            FSA = null,
-            Buildings = new List<string>{ "Ranch House" },
-            Asc = true,
-            OrderBy = "PRICE",
-            PageSize = 100,
-            Page = 1
-        }); 
         // Populate initial City Data
-        await localDataManager.PopulateNeighborhoods();
+        //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
 
@@ -135,7 +121,7 @@ class Program
         //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
-        //await resyncProcessor.ResyncPropsList("CityUnmintedResync", "-1");
+        await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
         //await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" }, "txt");
@@ -225,7 +211,7 @@ class Program
         }
 
         int argPos = 0;
-        if (message.HasStringPrefix("^", ref argPos))
+        if (message.HasStringPrefix("!", ref argPos))
         {
             if (context.Channel.Name == "general" || context.Channel.Name == "tech-issues")
             {

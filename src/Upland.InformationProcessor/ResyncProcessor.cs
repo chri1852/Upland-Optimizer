@@ -79,6 +79,10 @@ namespace Upland.InformationProcessor
             {
                 Process_EnclaveFix();
             }
+            else if (action == "ClearDupeForSale")
+            {
+                await Process_ClearDupeForSale();
+            }
         }
 
         private async Task Process_SetOwner(List<Property> localProperties)
@@ -650,6 +654,29 @@ namespace Upland.InformationProcessor
                 {
                     prop.NeighborhoodId = boystown.Id;
                     _localDataManager.UpsertProperty(prop);
+                }
+            }
+        }
+
+        private async Task Process_ClearDupeForSale()
+        {
+            foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
+            {
+                Dictionary<long, Property> properties = _localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .ToDictionary(p => p.Id, p => p);
+
+                List<long> dupeForSaleProps = _localDataManager
+                    .GetPropertiesForSale_City(cityId, false)
+                    .GroupBy(p => p.Prop_Id)
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.First().Prop_Id).ToList();
+
+                foreach (long propId in dupeForSaleProps)
+                {
+                    UplandProperty uplandProperty = await _uplandApiManager.GetUplandPropertyById(propId);
+
+                    Process_Single_SetForSale(properties[propId], uplandProperty);
                 }
             }
         }

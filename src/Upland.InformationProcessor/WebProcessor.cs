@@ -115,31 +115,47 @@ namespace Upland.InformationProcessor
                     || filters.CollectionIds.Any(i => c.CollectionIds.Contains(i)))
                 && (filters.Buildings.Count == 0
                     || filters.Buildings.Contains(c.Building)
-                && ((filters.Currency == null || filters.Currency == "")
+                && ((filters.Currency == null || filters.Currency == "Any")
                     || c.Currency == filters.Currency))
                 ).ToList();
 
             // Sort
             if (filters.Asc)
             {
-                if (filters.OrderBy == "PRICE")
+                if (filters.OrderBy == "Price")
                 {
                     cityForSaleProps = cityForSaleProps.OrderBy(p => p.SortValue).ToList();
                 }
-                else
+                else if (filters.OrderBy == "Markup")
                 {
                     cityForSaleProps = cityForSaleProps.OrderBy(p => p.Markup).ToList();
+                }
+                else if (filters.OrderBy == "Mint")
+                {
+                    cityForSaleProps = cityForSaleProps.OrderBy(p => p.Mint).ToList();
+                }
+                else
+                {
+                    cityForSaleProps = cityForSaleProps.OrderBy(p => p.Size).ToList();
                 }
             }
             else
             {
-                if (filters.OrderBy == "PRICE")
+                if (filters.OrderBy == "Price")
                 {
                     cityForSaleProps = cityForSaleProps.OrderByDescending(p => p.SortValue).ToList();
                 }
-                else
+                else if (filters.OrderBy == "Markup")
                 {
                     cityForSaleProps = cityForSaleProps.OrderByDescending(p => p.Markup).ToList();
+                }
+                else if (filters.OrderBy == "Mint")
+                {
+                    cityForSaleProps = cityForSaleProps.OrderByDescending(p => p.Mint).ToList();
+                }
+                else
+                {
+                    cityForSaleProps = cityForSaleProps.OrderByDescending(p => p.Size).ToList();
                 }
             }
 
