@@ -105,18 +105,21 @@ namespace Upland.InformationProcessor
 
             // Apply Filters
             cityForSaleProps = cityForSaleProps.Where(c =>
-                   ((filters.Address == null || filters.Address.Trim() == "")
+                   (filters.Address == null 
+                    || filters.Address.Trim() == ""
                     || (filters.Address != null && filters.Address.Trim() != "" && c.Address.ToLower().Contains(filters.Address.ToLower())))
-                && ((filters.Owner == null || filters.Owner.Trim() == "")
+                && (filters.Owner == null 
+                    || filters.Owner.Trim() == ""
                     || (filters.Owner != null && filters.Owner.Trim() != "" && c.Owner.ToLower().Contains(filters.Owner.ToLower())))
                 && (filters.NeighborhoodIds.Count == 0
                     || filters.NeighborhoodIds.Contains(c.NeighborhoodId))
                 && (filters.CollectionIds.Count == 0
                     || filters.CollectionIds.Any(i => c.CollectionIds.Contains(i)))
                 && (filters.Buildings.Count == 0
-                    || filters.Buildings.Contains(c.Building)
-                && ((filters.Currency == null || filters.Currency == "Any")
-                    || c.Currency == filters.Currency))
+                    || filters.Buildings.Contains(c.Building))
+                && (filters.Currency == null 
+                    || filters.Currency == "Any"
+                    || c.Currency == filters.Currency)
                 ).ToList();
 
             // Sort
