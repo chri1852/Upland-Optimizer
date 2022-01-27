@@ -73,7 +73,7 @@ class Program
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
-        //await localDataManager.PopulateStreets();
+        await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
