@@ -9,5 +9,7 @@ namespace Upland.Interfaces.Processors
         Task<UserProfile> GetWebUIProfile(string uplandUsername);
 
         List<CachedForSaleProperty> GetForSaleProps(WebForSaleFilters filters);
+
+        List<CachedUnmintedProperty> GetUnmintedProperties(WebForSaleFilters filters);
     }
 }
