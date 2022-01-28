@@ -18,6 +18,7 @@ namespace Upland.Interfaces.Managers
         void DetermineNeighborhoodIdsForCity(int cityId);
         bool IsPropertyInNeighborhood(Neighborhood neighborhood, Property property);
         List<CachedForSaleProperty> GetCachedForSaleProperties(int cityId);
+        List<CachedUnmintedProperty> GetCachedUnmintedProperties(int cityId);
         List<Tuple<int, long>> GetCollectionPropertyTable();
         Property GetProperty(long id);
         List<Property> GetProperties(List<long> ids);

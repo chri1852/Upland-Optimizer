@@ -316,6 +316,32 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetCachedForSaleProperties(cityId);
         }
 
+        public List<CachedUnmintedProperty> GetCachedUnmintedProperties(int cityId)
+        {
+            List<CachedUnmintedProperty> unmintedProperties = new List<CachedUnmintedProperty>();
+            List<Property> cityProperties = _localDataRepository.GetPropertiesByCityId(cityId)
+                .Where(p => p.Status == Consts.PROP_STATUS_UNLOCKED && p.NeighborhoodId.HasValue)
+                .ToList();
+
+            foreach (Property property in cityProperties)
+            {
+                unmintedProperties.Add(new CachedUnmintedProperty
+                {
+                    Id = property.Id,
+                    Address = property.Address,
+                    CityId = property.CityId,
+                    NeighborhoodId = property.NeighborhoodId.Value,
+                    StreetId = property.StreetId,
+                    Size = property.Size,
+                    FSA = property.FSA,
+                    Mint = property.Mint,
+                    CollectionIds = new List<int>()
+                });
+            }
+
+            return unmintedProperties;
+        }
+
         public List<Tuple<int, long>> GetCollectionPropertyTable()
         {
             return _localDataRepository.GetCollectionPropertyTable();

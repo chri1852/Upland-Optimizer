@@ -17,9 +17,11 @@ namespace Upland.InformationProcessor
         private readonly List<Tuple<int, HashSet<long>>> _collectionProperties;
 
         private Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>> _cityForSaleListCache;
+        private Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>> _cityUnmintedCache;
         private Tuple<DateTime, Dictionary<long, string>> _propertyStructureCache;
 
         private Dictionary<int, bool> _isLoadingCityForSaleListCache;
+        private Dictionary<int, bool> _isLoadingCityUnmintedCache;
         private bool _isLoadingPropertyStructureCache;
 
         public WebProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
@@ -164,18 +166,67 @@ namespace Upland.InformationProcessor
 
             return cityForSaleProps.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
         }
-        
+
+        public List<CachedUnmintedProperty> GetUnmintedProperties(WebForSaleFilters filters)
+        {
+            List<CachedUnmintedProperty> cityUnmintedProps = GetCityUnmintedFromCache(filters.CityId);
+
+            // Apply Filters
+            cityUnmintedProps = cityUnmintedProps.Where(c =>
+                   (filters.Address == null
+                    || filters.Address.Trim() == ""
+                    || (filters.Address != null && filters.Address.Trim() != "" && c.Address.ToLower().Contains(filters.Address.ToLower())))
+                && (filters.NeighborhoodIds.Count == 0
+                    || filters.NeighborhoodIds.Contains(c.NeighborhoodId))
+                && (filters.CollectionIds.Count == 0
+                    || filters.CollectionIds.Any(i => c.CollectionIds.Contains(i)))
+                && (filters.FSA == null
+                    || filters.FSA.Value == c.FSA)
+                ).ToList();
+
+            // Sort
+            if (filters.Asc)
+            {
+                if (filters.OrderBy == "Mint")
+                {
+                    cityUnmintedProps = cityUnmintedProps.OrderBy(p => p.Mint).ToList();
+                }
+                else
+                {
+                    cityUnmintedProps = cityUnmintedProps.OrderBy(p => p.Size).ToList();
+                }
+            }
+            else
+            {
+                if (filters.OrderBy == "Mint")
+                {
+                    cityUnmintedProps = cityUnmintedProps.OrderByDescending(p => p.Mint).ToList();
+                }
+                else
+                {
+                    cityUnmintedProps = cityUnmintedProps.OrderByDescending(p => p.Size).ToList();
+                }
+            }
+
+            return cityUnmintedProps.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
+        }
+
         private void InitializeCache()
         {
             _isLoadingPropertyStructureCache = false;
             _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(DateTime.UtcNow.AddDays(-1), new Dictionary<long, string>());
 
             _isLoadingCityForSaleListCache = new Dictionary<int, bool>();
+            _isLoadingCityUnmintedCache = new Dictionary<int, bool>();
             _cityForSaleListCache = new Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>>();
+            _cityUnmintedCache = new Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>>();
+
             foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
             {
                 _isLoadingCityForSaleListCache.Add(cityId, false);
+                _isLoadingCityUnmintedCache.Add(cityId, false);
                 _cityForSaleListCache.Add(cityId, new Tuple<DateTime, List<CachedForSaleProperty>>(DateTime.UtcNow.AddDays(-1), new List<CachedForSaleProperty>()));
+                _cityUnmintedCache.Add(cityId, new Tuple<DateTime, List<CachedUnmintedProperty>>(DateTime.UtcNow.AddDays(-1), new List<CachedUnmintedProperty>()));
             }
         }
 
@@ -211,6 +262,26 @@ namespace Upland.InformationProcessor
             }
 
             return _cityForSaleListCache[cityId].Item2;
+        }
+
+        private List<CachedUnmintedProperty> GetCityUnmintedFromCache(int cityId)
+        {
+            if (!_isLoadingCityUnmintedCache[cityId] && _cityUnmintedCache[cityId].Item1 < DateTime.UtcNow)
+            {
+                _isLoadingCityUnmintedCache[cityId] = true;
+                _cityUnmintedCache[cityId] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
+                    DateTime.UtcNow.AddMinutes(5),
+                   _localDataManager.GetCachedUnmintedProperties(cityId));
+
+                foreach (CachedUnmintedProperty prop in _cityUnmintedCache[cityId].Item2)
+                {
+                    prop.CollectionIds = GetCollectionIdListForPropertyId(prop.Id);
+                }
+
+                _isLoadingCityUnmintedCache[cityId] = false;
+            }
+
+            return _cityUnmintedCache[cityId].Item2;
         }
 
         private List<int> GetCollectionIdListForPropertyId(long propertyId)

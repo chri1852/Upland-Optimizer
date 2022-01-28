@@ -590,10 +590,10 @@ namespace Upland.InformationProcessor
 
         private async Task Process_NeighborhoodUnmintedResync(string neighborhoodIds)
         {
-            int maxOkay = 100;
+            int maxOkay = 10;
 
             List<Neighborhood> neighborhoods = new List<Neighborhood>();
-            if (neighborhoodIds != "0")
+            if (neighborhoodIds != "0" || neighborhoodIds != "-1")
             {
                 neighborhoods = _localDataManager.GetNeighborhoods()
                     .Where(n => neighborhoodIds.Split(",").Select(s => int.Parse(s)).ToList().Contains(n.Id))

@@ -353,6 +353,41 @@ class Program
                 ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - RunRefreshActions - Rebuild Structures", ex.Message);
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
             }
+
+            // Run Some Cleanup actions on the properties
+
+            // Clear Duplicate For Sale Entries
+            await ProcessResyncAction("ClearDupeForSale", "1");
+
+            // Resync Unminted City
+            await ProcessResyncAction("CityUnmintedResync", "0");
+
+            // Resync Unminted City Non FSA
+            await ProcessResyncAction("CityUnmintedResync", "-1");
+
+            // Check Buildings For Sale
+            await ProcessResyncAction("BuildingSaleResync", "-1");
+
+            // Check Neighborhood For Sale
+            await ProcessResyncAction("NeighborhoodSaleResync", "0");
+
+            // Check Collection For Sale
+            await ProcessResyncAction("CollectionSaleResync", "0");
+        }
+    }
+
+    private async Task ProcessResyncAction(string actionType, string list)
+    {
+        try
+        {
+            Console.WriteLine(string.Format("{0}: {1} Resync", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), actionType));
+            await ((ResyncProcessor)_services.GetService(typeof(ResyncProcessor))).ResyncPropsList(actionType, list);
+            Console.WriteLine(string.Format("{0}: [1} Complete", string.Format("{ 0:MM/dd/yy H:mm:ss}", DateTime.Now), actionType));
+        }
+        catch (Exception ex)
+        {
+            ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog(string.Format("Program.cs - {0}", actionType), ex.Message);
+            Console.WriteLine(string.Format("{0}: {1} Resync: {2}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), actionType, ex.Message));
         }
     }
 }
