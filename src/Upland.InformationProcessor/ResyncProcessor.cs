@@ -152,7 +152,7 @@ namespace Upland.InformationProcessor
                 localProperty.Status = Consts.PROP_STATUS_LOCKED;
             }
 
-            localProperty.Mint = uplandProperty.Yield_Per_Hour.HasValue ? uplandProperty.Yield_Per_Hour.Value * 720 : 0;
+            localProperty.Mint = uplandProperty.Yield_Per_Hour.HasValue ? uplandProperty.Yield_Per_Hour.Value * 8640 / Consts.RateOfReturn : 0;
 
             _localDataManager.UpsertProperty(localProperty);
         }
