@@ -99,7 +99,7 @@ namespace Upland.Types
 
         public static readonly int MAX_LINES_TO_RETURN = 25000;
         //public static readonly double RateOfReturn = 0.1728; //Changed 01/27/2022
-        public static readonly double RateOfReturn = 0.14514;
+        public static readonly double RateOfReturn = 0.145152;
         public static readonly int MaxStreetNumber = 50796;
     }
 }
