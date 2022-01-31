@@ -67,21 +67,21 @@ namespace Upland.InformationProcessor
 
         public void SaveMap(Image<Rgba32> map, string fileName)
         {
-            if (!Directory.Exists(Path.Combine("root", "OptimizerBot", "GeneratedMaps")))
+            if (!Directory.Exists(Path.Combine("GeneratedMaps")))
             {
-                Directory.CreateDirectory(Path.Combine("root", "OptimizerBot", "GeneratedMaps"));
+                Directory.CreateDirectory(Path.Combine("GeneratedMaps"));
             }
-            map.SaveAsPng(Path.Combine("root", "OptimizerBot", "GeneratedMaps", string.Format("{0}.png", fileName)));
+            map.SaveAsPng(Path.Combine("GeneratedMaps", string.Format("{0}.png", fileName)));
         }
 
         public void DeleteSavedMap(string fileName)
         {
-            File.Delete(Path.Combine("root", "OptimizerBot", "GeneratedMaps", string.Format("{0}.png", fileName)));
+            File.Delete(Path.Combine("GeneratedMaps", string.Format("{0}.png", fileName)));
         }
 
         public string GetMapLocaiton(string fileName)
         {
-            return Path.Combine("root", "OptimizerBot", "GeneratedMaps", string.Format("{0}.png", fileName));
+            return Path.Combine("GeneratedMaps", string.Format("{0}.png", fileName));
         }
 
         public string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind)

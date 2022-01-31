@@ -15,6 +15,7 @@ namespace Upland.InformationProcessor
         private readonly IUplandApiManager _uplandApiManager;
 
         private readonly List<Tuple<int, HashSet<long>>> _collectionProperties;
+        private readonly Dictionary<int, string> _neighborhoods;
 
         private Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>> _cityForSaleListCache;
         private Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>> _cityUnmintedCache;
@@ -33,6 +34,9 @@ namespace Upland.InformationProcessor
 
             _collectionProperties = new List<Tuple<int, HashSet<long>>>();
             List<Tuple<int, long>> collectionProperties = _localDataManager.GetCollectionPropertyTable();
+
+            _neighborhoods = new Dictionary<int, string>();
+            _neighborhoods = _localDataManager.GetNeighborhoods().ToDictionary(n => n.Id, n => n.Name);
 
             foreach (int collectionId in collectionProperties.GroupBy(c => c.Item1).Select(g => g.First().Item1))
             {
@@ -102,7 +106,7 @@ namespace Upland.InformationProcessor
             return profile;
         }
 
-        public List<CachedForSaleProperty> GetForSaleProps(WebForSaleFilters filters)
+        public List<CachedForSaleProperty> GetForSaleProps(WebForSaleFilters filters, bool noPaging)
         {
             List<CachedForSaleProperty> cityForSaleProps = GetCityForSaleListFromCache(filters.CityId);
 
@@ -165,10 +169,15 @@ namespace Upland.InformationProcessor
                 }
             }
 
+            if (noPaging)
+            {
+                return cityForSaleProps;
+            }
+
             return cityForSaleProps.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
         }
 
-        public List<CachedUnmintedProperty> GetUnmintedProperties(WebForSaleFilters filters)
+        public List<CachedUnmintedProperty> GetUnmintedProperties(WebForSaleFilters filters, bool noPaging)
         {
             List<CachedUnmintedProperty> cityUnmintedProps = GetCityUnmintedFromCache(filters.CityId);
 
@@ -209,8 +218,65 @@ namespace Upland.InformationProcessor
                 }
             }
 
+            if (noPaging)
+            {
+                return cityUnmintedProps;
+            }
+
             return cityUnmintedProps.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
         }
+
+        public List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties)
+        {
+            List<string> csvString = new List<string>();
+
+            csvString.Add("City,Address,Neighborhood,Size,Mint,Price,Currency,Markup,Owner,CollectionIds,Building");
+
+            foreach (CachedForSaleProperty prop in cachedForSaleProperties)
+            {
+                string propString = "";
+                propString += Consts.Cities[prop.CityId] + ",";
+                propString += prop.Address.Replace(",", " ");
+                propString += _neighborhoods[prop.NeighborhoodId].Replace(",", "") + ",";
+                propString += prop.Size + ",";
+                propString += prop.Mint + ",";
+                propString += prop.Price + ",";
+                propString += prop.Currency + ",";
+                propString += prop.Markup + ",";
+                propString += prop.Owner + ",";
+                propString += string.Join(" ", prop.CollectionIds) + ",";
+                propString += prop.Building + ",";
+
+                csvString.Add(propString);
+            }
+
+            return csvString;
+        }
+
+        public List<string> ConvertListCachedUnmintedPropertyToCSV(List<CachedUnmintedProperty> cachedUnmintedProperties)
+        {
+            List<string> csvString = new List<string>();
+
+            csvString.Add("City,Address,Neighborhood,Size,Mint,FSA,CollectionIds");
+
+            foreach (CachedUnmintedProperty prop in cachedUnmintedProperties)
+            {
+                string propString = "";
+                propString += Consts.Cities[prop.CityId] + ",";
+                propString += prop.Address.Replace(",", " ") + ",";
+                propString += _neighborhoods[prop.NeighborhoodId].Replace(",", "") + ",";
+                propString += prop.Size + ",";
+                propString += prop.Mint + ",";
+                propString += prop.FSA + ",";
+                propString += string.Join(" ", prop.CollectionIds) + ",";
+
+                csvString.Add(propString);
+            }
+
+            return csvString;
+        }
+
+        #region Caching
 
         private void InitializeCache()
         {
@@ -285,6 +351,8 @@ namespace Upland.InformationProcessor
             return _cityUnmintedCache[cityId].Item2;
         }
 
+        #endregion Caching
+
         private List<int> GetCollectionIdListForPropertyId(long propertyId)
         {
             List<int> collectionIds = new List<int>();
@@ -299,5 +367,6 @@ namespace Upland.InformationProcessor
 
             return collectionIds;
         }
+
     }
 }

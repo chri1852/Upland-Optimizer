@@ -8,8 +8,12 @@ namespace Upland.Interfaces.Processors
     {
         Task<UserProfile> GetWebUIProfile(string uplandUsername);
 
-        List<CachedForSaleProperty> GetForSaleProps(WebForSaleFilters filters);
+        List<CachedForSaleProperty> GetForSaleProps(WebForSaleFilters filters, bool noPaging);
 
-        List<CachedUnmintedProperty> GetUnmintedProperties(WebForSaleFilters filters);
+        List<CachedUnmintedProperty> GetUnmintedProperties(WebForSaleFilters filters, bool noPaging);
+
+        List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties);
+
+        List<string> ConvertListCachedUnmintedPropertyToCSV(List<CachedUnmintedProperty> cachedUnmintedProperties);
     }
 }
