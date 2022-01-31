@@ -96,6 +96,7 @@ namespace Upland.InformationProcessor
                 {
                     property.Building = userBuildings[property.PropertyId];
                 }
+                property.CollectionIds = GetCollectionIdListForPropertyId(property.PropertyId);
             }
 
             return profile;

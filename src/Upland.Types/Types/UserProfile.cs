@@ -55,5 +55,6 @@ namespace Upland.Types.Types
         public double Mint { get; set; }
         public string Status { get; set; }
         public string Building { get; set; }
+        public List<int> CollectionIds { get; set; }
     }
 }
