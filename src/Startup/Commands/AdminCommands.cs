@@ -11,6 +11,7 @@ using Upland.Interfaces.Processors;
 using Upland.Types;
 using Upland.Types.Types;
 using Upland.Interfaces.Managers;
+using System.Text.Json;
 
 namespace Startup.Commands
 {
@@ -100,7 +101,8 @@ namespace Startup.Commands
 
             if (currentRun.Status == Consts.RunStatusCompleted)
             {
-                byte[] resultBytes = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(currentRun.Results));
+                OptimizerResults optimizerResults = JsonSerializer.Deserialize<OptimizerResults>(Encoding.UTF8.GetString(currentRun.Results));
+                byte[] resultBytes = Encoding.UTF8.GetBytes(CollectionOptimizer.BuildTextOutput(optimizerResults));
                 using (Stream stream = new MemoryStream())
                 {
                     stream.Write(resultBytes, 0, resultBytes.Length);
