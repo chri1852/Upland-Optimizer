@@ -1179,6 +1179,8 @@ namespace Startup.Commands
             helpMenu.Add("   28. !OptimizerWhatIfRun");
             helpMenu.Add("   30. !OptimizerExcludeRun");
             helpMenu.Add("");
+            helpMenu.Add("Try the Website: https://www.uplandoptimizer.com/");
+            helpMenu.Add("");
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, helpMenu)));
         }
 

@@ -1471,7 +1471,6 @@ namespace Upland.InformationProcessor
         public async Task RebuildPropertyStructures()
         {
             List<PropertyStructure> propertyStructures = await _blockchainManager.GetPropertyStructures();
-            List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods();
             List<long> underConstructionProps = await _blockchainManager.GetPropertiesUnderConstruction();
             _localDataManager.TruncatePropertyStructure();
 

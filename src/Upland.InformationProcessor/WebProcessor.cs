@@ -303,7 +303,7 @@ namespace Upland.InformationProcessor
             {
                 _isLoadingPropertyStructureCache = true;
                 _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(
-                    DateTime.UtcNow.AddDays(1),
+                    DateTime.UtcNow.AddMinutes(30),
                     _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType));
                 _isLoadingPropertyStructureCache = false;
             }
@@ -328,6 +328,8 @@ namespace Upland.InformationProcessor
                 _isLoadingCityForSaleListCache[cityId] = false;
             }
 
+            RemoveExpiredSalesEntries();
+
             return _cityForSaleListCache[cityId].Item2;
         }
 
@@ -348,7 +350,47 @@ namespace Upland.InformationProcessor
                 _isLoadingCityUnmintedCache[cityId] = false;
             }
 
+            RemoveExpiredUnmintedEntries();
+
             return _cityUnmintedCache[cityId].Item2;
+        }
+
+        private void RemoveExpiredSalesEntries()
+        {
+            foreach (KeyValuePair<int, Tuple<DateTime, List<CachedForSaleProperty>>> cacheEntry in _cityForSaleListCache)
+            {
+                // Make sure its not loading, and the entry is expired, and that there is actually something to expire
+                if (!_isLoadingCityForSaleListCache[cacheEntry.Key] && cacheEntry.Value.Item1 < DateTime.UtcNow && _cityForSaleListCache[cacheEntry.Key].Item2.Count > 0)
+                {
+                    _isLoadingCityForSaleListCache[cacheEntry.Key] = true;
+
+                    _cityForSaleListCache[cacheEntry.Key] = new Tuple<DateTime, List<CachedForSaleProperty>>(
+                        DateTime.UtcNow.AddDays(-1),
+                       new List<CachedForSaleProperty>());
+
+                    _isLoadingCityForSaleListCache[cacheEntry.Key] = false;
+                }
+
+            }
+        }
+
+        private void RemoveExpiredUnmintedEntries()
+        {
+            foreach (KeyValuePair<int, Tuple<DateTime, List<CachedUnmintedProperty>>> cacheEntry in _cityUnmintedCache)
+            {
+                // Make sure its not loading, and the entry is expired, and that there is actually something to expire
+                if (!_isLoadingCityUnmintedCache[cacheEntry.Key] && cacheEntry.Value.Item1 < DateTime.UtcNow && _cityUnmintedCache[cacheEntry.Key].Item2.Count > 0)
+                {
+                    _isLoadingCityUnmintedCache[cacheEntry.Key] = true;
+
+                    _cityUnmintedCache[cacheEntry.Key] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
+                        DateTime.UtcNow.AddDays(-1),
+                       new List<CachedUnmintedProperty>());
+
+                    _isLoadingCityUnmintedCache[cacheEntry.Key] = false;
+                }
+
+            }
         }
 
         #endregion Caching

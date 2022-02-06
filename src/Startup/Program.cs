@@ -345,7 +345,9 @@ class Program
             try
             {
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
+                ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - RunRefresh - PropStructures", string.Format("{0}: Rebuilding Structures", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
                 await ((InformationProcessor)_services.GetService(typeof(InformationProcessor))).RebuildPropertyStructures();
+                ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - RunRefresh - PropStructures", string.Format("{0}: Rebuilding Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
                 Console.WriteLine(string.Format("{0}: Rebuilding Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
             }
             catch (Exception ex)
