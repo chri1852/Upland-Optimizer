@@ -304,7 +304,7 @@ class Program
                 await RunRefreshActions();
             });
         };
-        _refreshTimer.Interval = 3600000;
+        _refreshTimer.Interval = 3600000; // Every hour
         _refreshTimer.Start();
     }
 

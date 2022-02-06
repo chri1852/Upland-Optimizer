@@ -150,5 +150,7 @@
     <Build Include="StoredProcedures\UPL.GetEOSAccountByUplandUserName.sql" />
     <Build Include="StoredProcedures\UPL.GetCachedForSalePropertiesByCityId.sql" />
     <Build Include="StoredProcedures\UPL.GetCollectionPropertyTable.sql" />
+    <Build Include="StoredProcedures\UPL.GetCachedSaleEntriesByCityId.sql" />
+    <Build Include="StoredProcedures\UPL.GetCachedSaleEntriesSwaps.sql" />
   </ItemGroup>
 </Project>

@@ -12,8 +12,12 @@ namespace Upland.Interfaces.Processors
 
         List<CachedUnmintedProperty> GetUnmintedProperties(WebForSaleFilters filters, bool noPaging);
 
+        List<CachedSaleHistoryEntry> GetSaleHistoryEntries(WebSaleHistoryFilters filters, bool noPaging);
+
         List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties);
 
         List<string> ConvertListCachedUnmintedPropertyToCSV(List<CachedUnmintedProperty> cachedUnmintedProperties);
+
+        List<string> ConvertListCachedSaleHistoryEntriesToCSV(List<CachedSaleHistoryEntry> cachedSaleHistoryEntries);
     }
 }

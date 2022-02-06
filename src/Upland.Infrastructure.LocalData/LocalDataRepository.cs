@@ -176,6 +176,125 @@ namespace Upland.Infrastructure.LocalData
             return cachedForSaleProperties;
         }
 
+        public List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntriesByCityId(int cityId)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+            List<CachedSaleHistoryEntry> cachedSaleHistoryEntries = new List<CachedSaleHistoryEntry>();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCachedSaleEntriesByCityId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            cachedSaleHistoryEntries.Add(new CachedSaleHistoryEntry
+                            {
+                                TransactionDateTime = (DateTime)reader["DateTime"],
+                                Seller = (string)reader["Seller"],
+                                Buyer = (string)reader["Buyer"],
+                                Price = decimal.ToDouble((decimal)reader["Price"]),
+                                Currency = (string)reader["Currency"],
+                                Offer = (bool)reader["Offer"],
+                                Property = new CachedSaleHistoryEntryProperty
+                                {
+                                    Id = (long)reader["Id"],
+                                    Address = (string)reader["Address"],
+                                    CityId = (int)reader["CityId"],
+                                    NeighborhoodId = (int)reader["NeighborhoodId"],
+                                    Mint = decimal.ToDouble((decimal)reader["Mint"]),
+                                    CollectionIds = new List<int>()
+                                },
+                                OfferProperty = null
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+
+            return cachedSaleHistoryEntries;
+        }
+
+        public List<CachedSaleHistoryEntry> GetCachedSaleHistorySwapEntries()
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+            List<CachedSaleHistoryEntry> cachedSaleHistoryEntries = new List<CachedSaleHistoryEntry>();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCachedSaleEntriesSwaps]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            cachedSaleHistoryEntries.Add(new CachedSaleHistoryEntry
+                            {
+                                TransactionDateTime = (DateTime)reader["DateTime"],
+                                Seller = (string)reader["Seller"],
+                                Buyer = (string)reader["Buyer"],
+                                Price = null,
+                                Currency = null,
+                                Offer = true,
+                                Property = new CachedSaleHistoryEntryProperty
+                                {
+                                    Id = (long)reader["Id"],
+                                    Address = (string)reader["Address"],
+                                    CityId = (int)reader["CityId"],
+                                    NeighborhoodId = (int)reader["NeighborhoodId"],
+                                    Mint = decimal.ToDouble((decimal)reader["Mint"]),
+                                    CollectionIds = new List<int>()
+                                },
+                                OfferProperty = new CachedSaleHistoryEntryProperty
+                                {
+                                    Id = (long)reader["OfferProp_Id"],
+                                    Address = (string)reader["OfferProp_Address"],
+                                    CityId = (int)reader["OfferProp_CityId"],
+                                    NeighborhoodId = (int)reader["OfferProp_NeighborhoodId"],
+                                    Mint = decimal.ToDouble((decimal)reader["OfferProp_Mint"]),
+                                    CollectionIds = new List<int>()
+                                }
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+
+            return cachedSaleHistoryEntries;
+        }
+
         public List<Tuple<int, long>> GetCollectionPropertyTable()
         {
             SqlConnection sqlConnection = GetSQLConnector();

@@ -20,10 +20,14 @@ namespace Upland.InformationProcessor
         private Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>> _cityForSaleListCache;
         private Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>> _cityUnmintedCache;
         private Tuple<DateTime, Dictionary<long, string>> _propertyStructureCache;
+        private Dictionary<int, Tuple<DateTime, List<CachedSaleHistoryEntry>>> _citySaleHistoryCache;
+        private Tuple<DateTime, List<CachedSaleHistoryEntry>> _swapSaleHistoryCache;
 
         private Dictionary<int, bool> _isLoadingCityForSaleListCache;
         private Dictionary<int, bool> _isLoadingCityUnmintedCache;
         private bool _isLoadingPropertyStructureCache;
+        private Dictionary<int, bool> _isLoadingCitySaleHistoryCache;
+        private bool _isLoadingSwapSaleHistoryCache;
 
         public WebProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
         {
@@ -226,6 +230,109 @@ namespace Upland.InformationProcessor
             return cityUnmintedProps.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
         }
 
+        public List<CachedSaleHistoryEntry> GetSaleHistoryEntries(WebSaleHistoryFilters filters, bool noPaging)
+        {
+            List<CachedSaleHistoryEntry> saleHistoryEntries = new List<CachedSaleHistoryEntry>();
+
+            if (filters.SearchByType == "City")
+            {
+                if (filters.EntryType.Count == 0 || filters.EntryType.Contains("Swap"))
+                {
+                    saleHistoryEntries.AddRange(GetSwapSaleHistoryFromCache().Where(e => e.Property.CityId == filters.SearchByCityId || e.OfferProperty.CityId == filters.SearchByCityId));
+                }
+
+                saleHistoryEntries.AddRange(GetCitySaleHistoryFromCache(filters.SearchByCityId)
+                    .Where(e => filters.EntryType.Count == 0 
+                        || (e.Offer && e.OfferProperty == null && filters.EntryType.Contains("Offer"))
+                        || (!e.Offer && filters.EntryType.Contains("Sale"))
+                        || (e.Offer && e.OfferProperty != null && filters.EntryType.Contains("Swap"))
+                    ));
+            }
+            else if (filters.SearchByType == "Username")
+            {
+                if (filters.EntryType.Count == 0 || filters.EntryType.Contains("Swap"))
+                {
+                    saleHistoryEntries.AddRange(GetSwapSaleHistoryFromCache().Where(e => e.Seller == filters.SearchByUsername || e.Buyer == filters.SearchByUsername));
+                }
+
+                foreach (KeyValuePair<int, Tuple<DateTime, List<CachedSaleHistoryEntry>>> cacheEntry in _citySaleHistoryCache)
+                {
+                    saleHistoryEntries.AddRange(GetCitySaleHistoryFromCache(cacheEntry.Key)
+                        .Where(e => (e.Seller == filters.SearchByUsername || e.Buyer == filters.SearchByUsername) &&
+                            (filters.EntryType.Count == 0
+                            || (e.Offer && e.OfferProperty == null && filters.EntryType.Contains("Offer"))
+                            || (!e.Offer && filters.EntryType.Contains("Sale"))
+                            || (e.Offer && e.OfferProperty != null && filters.EntryType.Contains("Swap")))
+                    ));
+                }
+            }
+
+            // Apply Filters
+            saleHistoryEntries = saleHistoryEntries.Where(c =>
+                   (filters.Address == null
+                    || filters.Address.Trim() == ""
+                    || (filters.Address != null && filters.Address.Trim() != "" && ( 
+                        c.Property.Address.ToLower().Contains(filters.Address.ToLower())
+                        || (c.OfferProperty != null && c.OfferProperty.Address.ToLower().Contains(filters.Address.ToLower())))))
+                && (filters.NeighborhoodIds.Count == 0
+                    || (filters.NeighborhoodIds.Contains(c.Property.NeighborhoodId)
+                        || (c.OfferProperty != null && filters.NeighborhoodIds.Contains(c.OfferProperty.NeighborhoodId))))
+                && (filters.CollectionIds.Count == 0
+                    || (filters.CollectionIds.Any(i => c.Property.CollectionIds.Contains(i))
+                        || (c.OfferProperty != null && filters.CollectionIds.Any(i => c.OfferProperty.CollectionIds.Contains(i)))))
+                && (filters.Currency == null
+                    || filters.Currency == "Any"
+                    || c.Currency == filters.Currency)
+                ).ToList();
+
+            // Sort
+            if (filters.Asc)
+            {
+                if (filters.OrderBy == "Seller")
+                {
+                    saleHistoryEntries = saleHistoryEntries.OrderBy(p => p.Seller).ToList();
+                }
+                else if(filters.OrderBy == "Buyer")
+                {
+                    saleHistoryEntries = saleHistoryEntries.OrderBy(p => p.Buyer).ToList();
+                }
+                else if (filters.OrderBy == "Price")
+                {
+                    saleHistoryEntries = saleHistoryEntries.OrderBy(p => p.Price).ToList();
+                }
+                else
+                {
+                    saleHistoryEntries = saleHistoryEntries.OrderBy(p => p.TransactionDateTime).ToList();
+                }
+            }
+            else
+            {
+                if (filters.OrderBy == "Seller")
+                {
+                    saleHistoryEntries = saleHistoryEntries.OrderByDescending(p => p.Seller).ToList();
+                }
+                else if (filters.OrderBy == "Buyer")
+                {
+                    saleHistoryEntries = saleHistoryEntries.OrderByDescending(p => p.Buyer).ToList();
+                }
+                else if (filters.OrderBy == "Price")
+                {
+                    saleHistoryEntries = saleHistoryEntries.OrderByDescending(p => p.Price).ToList();
+                }
+                else
+                {
+                    saleHistoryEntries = saleHistoryEntries.OrderByDescending(p => p.TransactionDateTime).ToList();
+                }
+            }
+
+            if (noPaging)
+            {
+                return saleHistoryEntries;
+            }
+
+            return saleHistoryEntries.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
+        }
+
         public List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties)
         {
             List<string> csvString = new List<string>();
@@ -276,6 +383,47 @@ namespace Upland.InformationProcessor
             return csvString;
         }
 
+        public List<string> ConvertListCachedSaleHistoryEntriesToCSV(List<CachedSaleHistoryEntry> cachedSaleHistoryEntries)
+        {
+            List<string> csvString = new List<string>();
+
+            csvString.Add("TransactionDateTime,Seller,Buyer,Price,Currency,Offer,City,Address,Neighborhood,Mint,CollectionIds,OfferPropCity,OfferPropAddress,OfferPropNeighborhood,OfferPropMint,OfferPropCollectionIds");
+
+            foreach (CachedSaleHistoryEntry entry in cachedSaleHistoryEntries)
+            {
+                string entryString = "";
+                entryString += entry.TransactionDateTime.ToString("MM-dd-yyyy HH:mm:ss") + ",";
+                entryString += entry.Seller + ",";
+                entryString += entry.Buyer + ",";
+                entryString += entry.Price == null ? "," : entry.Price + ",";
+                entryString += entry.Currency + ",";
+                entryString += entry.Offer ? "True," : "False,";
+
+                entryString += Consts.Cities[entry.Property.CityId] + ",";
+                entryString += entry.Property.Address.Replace(",", " ") + ",";
+                entryString += _neighborhoods[entry.Property.NeighborhoodId].Replace(",", "") + ",";
+                entryString += entry.Property.Mint + ",";
+                entryString += string.Join(" ", entry.Property.CollectionIds) + ",";
+
+                if (entry.OfferProperty == null)
+                {
+                    entryString += ",,,,,";
+                }
+                else
+                {
+                    entryString += Consts.Cities[entry.OfferProperty.CityId] + ",";
+                    entryString += entry.OfferProperty.Address.Replace(",", " ") + ",";
+                    entryString += _neighborhoods[entry.OfferProperty.NeighborhoodId].Replace(",", "") + ",";
+                    entryString += entry.OfferProperty.Mint + ",";
+                    entryString += string.Join(" ", entry.OfferProperty.CollectionIds) + ",";
+                }
+
+                csvString.Add(entryString);
+            }
+
+            return csvString;
+        }
+
         #region Caching
 
         private void InitializeCache()
@@ -288,12 +436,20 @@ namespace Upland.InformationProcessor
             _cityForSaleListCache = new Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>>();
             _cityUnmintedCache = new Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>>();
 
+            _isLoadingSwapSaleHistoryCache = false;
+            _swapSaleHistoryCache = new Tuple<DateTime, List<CachedSaleHistoryEntry>>(DateTime.UtcNow.AddDays(-1), new List<CachedSaleHistoryEntry>());
+            _isLoadingCitySaleHistoryCache = new Dictionary<int, bool>();
+            _citySaleHistoryCache = new Dictionary<int, Tuple<DateTime, List<CachedSaleHistoryEntry>>>();
+
             foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
             {
                 _isLoadingCityForSaleListCache.Add(cityId, false);
                 _isLoadingCityUnmintedCache.Add(cityId, false);
                 _cityForSaleListCache.Add(cityId, new Tuple<DateTime, List<CachedForSaleProperty>>(DateTime.UtcNow.AddDays(-1), new List<CachedForSaleProperty>()));
                 _cityUnmintedCache.Add(cityId, new Tuple<DateTime, List<CachedUnmintedProperty>>(DateTime.UtcNow.AddDays(-1), new List<CachedUnmintedProperty>()));
+
+                _isLoadingCitySaleHistoryCache.Add(cityId, false);
+                _citySaleHistoryCache.Add(cityId, new Tuple<DateTime, List<CachedSaleHistoryEntry>>(DateTime.UtcNow.AddDays(-1), new List<CachedSaleHistoryEntry>()));
             }
         }
 
@@ -355,6 +511,51 @@ namespace Upland.InformationProcessor
             return _cityUnmintedCache[cityId].Item2;
         }
 
+        private List<CachedSaleHistoryEntry> GetCitySaleHistoryFromCache(int cityId)
+        {
+            if (!_isLoadingCitySaleHistoryCache[cityId] && _citySaleHistoryCache[cityId].Item1 < DateTime.UtcNow)
+            {
+                _isLoadingCitySaleHistoryCache[cityId] = true;
+                _citySaleHistoryCache[cityId] = new Tuple<DateTime, List<CachedSaleHistoryEntry>>(
+                    DateTime.UtcNow.AddMinutes(5),
+                   _localDataManager.GetCachedSaleHistoryEntriesByCityId(cityId));
+
+                foreach (CachedSaleHistoryEntry entry in _citySaleHistoryCache[cityId].Item2)
+                {
+                    entry.Property.CollectionIds = GetCollectionIdListForPropertyId(entry.Property.Id);
+                }
+
+                _isLoadingCitySaleHistoryCache[cityId] = false;
+            }
+
+            RemoveExpiredSaleHistoryEntries();
+
+            return _citySaleHistoryCache[cityId].Item2;
+        }
+
+        private List<CachedSaleHistoryEntry> GetSwapSaleHistoryFromCache()
+        {
+            if (!_isLoadingSwapSaleHistoryCache && _swapSaleHistoryCache.Item1 < DateTime.UtcNow)
+            {
+                _isLoadingSwapSaleHistoryCache = true;
+                _swapSaleHistoryCache = new Tuple<DateTime, List<CachedSaleHistoryEntry>>(
+                    DateTime.UtcNow.AddMinutes(5),
+                    _localDataManager.GetCachedSaleHistorySwapEntries());
+
+                foreach (CachedSaleHistoryEntry entry in _swapSaleHistoryCache.Item2)
+                {
+                    entry.Property.CollectionIds = GetCollectionIdListForPropertyId(entry.Property.Id);
+                    entry.OfferProperty.CollectionIds = GetCollectionIdListForPropertyId(entry.OfferProperty.Id);
+                }
+
+                _isLoadingSwapSaleHistoryCache = false;
+            }
+
+            RemoveExpiredSaleHistoryEntries();
+
+            return _swapSaleHistoryCache.Item2;
+        }
+
         private void RemoveExpiredSalesEntries()
         {
             foreach (KeyValuePair<int, Tuple<DateTime, List<CachedForSaleProperty>>> cacheEntry in _cityForSaleListCache)
@@ -389,7 +590,35 @@ namespace Upland.InformationProcessor
 
                     _isLoadingCityUnmintedCache[cacheEntry.Key] = false;
                 }
+            }
+        }
 
+        private void RemoveExpiredSaleHistoryEntries()
+        {
+            foreach (KeyValuePair<int, Tuple<DateTime, List<CachedSaleHistoryEntry>>> cacheEntry in _citySaleHistoryCache)
+            {
+                // Make sure its not loading, and the entry is expired, and that there is actually something to expire
+                if (!_isLoadingCityForSaleListCache[cacheEntry.Key] && cacheEntry.Value.Item1 < DateTime.UtcNow && _citySaleHistoryCache[cacheEntry.Key].Item2.Count > 0)
+                {
+                    _isLoadingCityForSaleListCache[cacheEntry.Key] = true;
+
+                    _citySaleHistoryCache[cacheEntry.Key] = new Tuple<DateTime, List<CachedSaleHistoryEntry>>(
+                        DateTime.UtcNow.AddDays(-1),
+                       new List<CachedSaleHistoryEntry>());
+
+                    _isLoadingCityForSaleListCache[cacheEntry.Key] = false;
+                }
+            }
+
+            if (!_isLoadingSwapSaleHistoryCache && _swapSaleHistoryCache.Item1 < DateTime.UtcNow && _swapSaleHistoryCache.Item2.Count > 0)
+            {
+                _isLoadingSwapSaleHistoryCache = true;
+
+                _swapSaleHistoryCache = new Tuple<DateTime, List<CachedSaleHistoryEntry>>(
+                    DateTime.UtcNow.AddDays(-1),
+                   new List<CachedSaleHistoryEntry>());
+
+                _isLoadingSwapSaleHistoryCache = false;
             }
         }
 
