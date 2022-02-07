@@ -49,11 +49,7 @@ CREATE NONCLUSTERED INDEX [sh_web_for_sale_search_index]
 ON [UPL].[SaleHistory] ([BuyerEOS])
 INCLUDE ([SellerEOS],[PropId],[Amount],[AmountFiat])
 GO
-CREATE NONCLUSTERED INDEX [sh_web_sh_swap_inded]
-ON [UPL].[SaleHistory] ([Offer],[Accepted],[SellerEOS],[BuyerEOS],[OfferPropId])
-INCLUDE ([DateTime],[PropId])
-GO
-CREATE NONCLUSTERED INDEX [sh_web_sh_sale_only]
+CREATE NONCLUSTERED INDEX [sh_web_sale_history]
 ON [UPL].[SaleHistory] ([SellerEOS],[BuyerEOS])
-INCLUDE ([DateTime],[PropId],[Amount],[AmountFiat],[OfferPropId],[Offer],[Accepted])
+INCLUDE ([DateTime],[PropId],[Amount],[AmountFiat],[OfferPropId],[Offer])
 GO

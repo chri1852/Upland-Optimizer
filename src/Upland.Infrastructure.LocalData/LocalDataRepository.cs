@@ -146,7 +146,7 @@ namespace Upland.Infrastructure.LocalData
                                     Id = (long)reader["Id"],
                                     Address = (string)reader["Address"],
                                     CityId = (int)reader["CityId"],
-                                    NeighborhoodId = (int)reader["NeighborhoodId"],
+                                    NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int)reader["NeighborhoodId"] : -1,
                                     StreetId = (int)reader["StreetId"],
                                     Size = (int)reader["Size"],
                                     FSA = (bool)reader["FSA"],
@@ -176,7 +176,7 @@ namespace Upland.Infrastructure.LocalData
             return cachedForSaleProperties;
         }
 
-        public List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntriesByCityId(int cityId)
+        public List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntries(WebSaleHistoryFilters filters)
         {
             SqlConnection sqlConnection = GetSQLConnector();
             List<CachedSaleHistoryEntry> cachedSaleHistoryEntries = new List<CachedSaleHistoryEntry>();
@@ -190,63 +190,17 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[GetCachedSaleEntriesByCityId]";
-                    sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
-                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            cachedSaleHistoryEntries.Add(new CachedSaleHistoryEntry
-                            {
-                                TransactionDateTime = (DateTime)reader["DateTime"],
-                                Seller = (string)reader["Seller"],
-                                Buyer = (string)reader["Buyer"],
-                                Price = decimal.ToDouble((decimal)reader["Price"]),
-                                Currency = (string)reader["Currency"],
-                                Offer = (bool)reader["Offer"],
-                                Property = new CachedSaleHistoryEntryProperty
-                                {
-                                    Id = (long)reader["Id"],
-                                    Address = (string)reader["Address"],
-                                    CityId = (int)reader["CityId"],
-                                    NeighborhoodId = (int)reader["NeighborhoodId"],
-                                    Mint = decimal.ToDouble((decimal)reader["Mint"]),
-                                    CollectionIds = new List<int>()
-                                },
-                                OfferProperty = null
-                            });
-                        }
-                        reader.Close();
-                    }
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    sqlConnection.Close();
-                }
-            }
+                    sqlCmd.CommandText = "[UPL].[GetCachedSaleEntries]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityIdSearch", filters.CityIdSearch));
+                    sqlCmd.Parameters.Add(new SqlParameter("SearchByCityId", filters.SearchByCityId));
+                    sqlCmd.Parameters.Add(new SqlParameter("SearchByUsername", filters.SearchByUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("NoSales", filters.NoSales));
+                    sqlCmd.Parameters.Add(new SqlParameter("NoSwaps", filters.NoSwaps));
+                    sqlCmd.Parameters.Add(new SqlParameter("NoOffers", filters.NoOffers));
+                    sqlCmd.Parameters.Add(new SqlParameter("Currency", filters.Currency));
+                    sqlCmd.Parameters.Add(new SqlParameter("Address", filters.Address));
+                    sqlCmd.Parameters.Add(new SqlParameter("Username", filters.Username));
 
-            return cachedSaleHistoryEntries;
-        }
-
-        public List<CachedSaleHistoryEntry> GetCachedSaleHistorySwapEntries()
-        {
-            SqlConnection sqlConnection = GetSQLConnector();
-            List<CachedSaleHistoryEntry> cachedSaleHistoryEntries = new List<CachedSaleHistoryEntry>();
-
-            using (sqlConnection)
-            {
-                sqlConnection.Open();
-
-                try
-                {
-                    SqlCommand sqlCmd = new SqlCommand();
-                    sqlCmd.Connection = sqlConnection;
-                    sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[GetCachedSaleEntriesSwaps]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -264,16 +218,16 @@ namespace Upland.Infrastructure.LocalData
                                     Id = (long)reader["Id"],
                                     Address = (string)reader["Address"],
                                     CityId = (int)reader["CityId"],
-                                    NeighborhoodId = (int)reader["NeighborhoodId"],
+                                    NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int)reader["NeighborhoodId"] : -1,
                                     Mint = decimal.ToDouble((decimal)reader["Mint"]),
                                     CollectionIds = new List<int>()
                                 },
-                                OfferProperty = new CachedSaleHistoryEntryProperty
+                                OfferProperty = reader["OfferProp_Id"] == DBNull.Value ? null : new CachedSaleHistoryEntryProperty
                                 {
                                     Id = (long)reader["OfferProp_Id"],
                                     Address = (string)reader["OfferProp_Address"],
                                     CityId = (int)reader["OfferProp_CityId"],
-                                    NeighborhoodId = (int)reader["OfferProp_NeighborhoodId"],
+                                    NeighborhoodId = reader["OfferProp_NeighborhoodId"] != DBNull.Value ? (int)reader["OfferProp_NeighborhoodId"] : -1,
                                     Mint = decimal.ToDouble((decimal)reader["OfferProp_Mint"]),
                                     CollectionIds = new List<int>()
                                 }

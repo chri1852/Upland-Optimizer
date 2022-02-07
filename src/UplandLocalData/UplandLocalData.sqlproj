@@ -9,8 +9,7 @@
     <ProjectGuid>{277fe176-222d-4e7e-80e3-b9f88c76dc4b}</ProjectGuid>
     <DSP>Microsoft.Data.Tools.Schema.Sql.Sql130DatabaseSchemaProvider</DSP>
     <OutputType>Database</OutputType>
-    <RootPath>
-    </RootPath>
+    <RootPath />
     <RootNamespace>UplandLocalData</RootNamespace>
     <AssemblyName>UplandLocalData</AssemblyName>
     <ModelCollation>1033, CI</ModelCollation>
@@ -48,7 +47,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
-    <!-- Default to the v11.0 targets path if the targets file for the current VS version is not found -->
     <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
     <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
   </PropertyGroup>
@@ -150,7 +148,6 @@
     <Build Include="StoredProcedures\UPL.GetEOSAccountByUplandUserName.sql" />
     <Build Include="StoredProcedures\UPL.GetCachedForSalePropertiesByCityId.sql" />
     <Build Include="StoredProcedures\UPL.GetCollectionPropertyTable.sql" />
-    <Build Include="StoredProcedures\UPL.GetCachedSaleEntriesByCityId.sql" />
-    <Build Include="StoredProcedures\UPL.GetCachedSaleEntriesSwaps.sql" />
+    <Build Include="StoredProcedures\UPL.GetCachedSaleEntries.sql" />
   </ItemGroup>
 </Project>

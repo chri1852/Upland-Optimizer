@@ -342,14 +342,9 @@ namespace Upland.Infrastructure.LocalData
             return unmintedProperties;
         }
 
-        public List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntriesByCityId(int cityId)
+        public List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntries(WebSaleHistoryFilters filters)
         {
-            return _localDataRepository.GetCachedSaleHistoryEntriesByCityId(cityId);
-        }
-
-        public List<CachedSaleHistoryEntry> GetCachedSaleHistorySwapEntries()
-        {
-            return _localDataRepository.GetCachedSaleHistorySwapEntries();
+            return _localDataRepository.GetCachedSaleHistoryEntries(filters);
         }
 
         public List<Tuple<int, long>> GetCollectionPropertyTable()
