@@ -757,6 +757,26 @@ namespace Startup.Commands
             }
         }
 
+        [Command("CatchWhales")]
+        public async Task CatchWhales()
+        {
+            RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
+
+            if (!await EnsureRegisteredAndVerified(registeredUser))
+            {
+                return;
+            }
+
+            List<string> whales = _informationProcessor.CatchWhales();
+            byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, whales));
+            using (Stream stream = new MemoryStream())
+            {
+                stream.Write(resultBytes, 0, resultBytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                await Context.Channel.SendFileAsync(stream, string.Format("whales_{0}_{1}_{2}.csv", DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Year));
+            }
+        }
+
         [Command("AllProperties")]
         public async Task AllProperties(string type, int Id, string fileType = "CSV")
         {

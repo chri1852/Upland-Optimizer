@@ -193,13 +193,30 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandText = "[UPL].[GetCachedSaleEntries]";
                     sqlCmd.Parameters.Add(new SqlParameter("CityIdSearch", filters.CityIdSearch));
                     sqlCmd.Parameters.Add(new SqlParameter("SearchByCityId", filters.SearchByCityId));
-                    sqlCmd.Parameters.Add(new SqlParameter("SearchByUsername", filters.SearchByUsername));
+
+                    if (filters.SearchByUsername == null)
+                        sqlCmd.Parameters.Add(new SqlParameter("SearchByUsername", DBNull.Value));
+                    else
+                        sqlCmd.Parameters.Add(new SqlParameter("SearchByUsername", filters.SearchByUsername));
+
                     sqlCmd.Parameters.Add(new SqlParameter("NoSales", filters.NoSales));
                     sqlCmd.Parameters.Add(new SqlParameter("NoSwaps", filters.NoSwaps));
                     sqlCmd.Parameters.Add(new SqlParameter("NoOffers", filters.NoOffers));
-                    sqlCmd.Parameters.Add(new SqlParameter("Currency", filters.Currency));
-                    sqlCmd.Parameters.Add(new SqlParameter("Address", filters.Address));
-                    sqlCmd.Parameters.Add(new SqlParameter("Username", filters.Username));
+
+                    if (filters.Currency == null)
+                        sqlCmd.Parameters.Add(new SqlParameter("Currency", DBNull.Value));
+                    else
+                        sqlCmd.Parameters.Add(new SqlParameter("Currency", filters.Currency));
+
+                    if (filters.Address == null)
+                        sqlCmd.Parameters.Add(new SqlParameter("Address", DBNull.Value));
+                    else
+                        sqlCmd.Parameters.Add(new SqlParameter("Address", filters.Address));
+
+                    if (filters.Username == null)
+                        sqlCmd.Parameters.Add(new SqlParameter("Username", DBNull.Value));
+                    else
+                        sqlCmd.Parameters.Add(new SqlParameter("Username", filters.Username));
 
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -247,6 +264,48 @@ namespace Upland.Infrastructure.LocalData
             }
 
             return cachedSaleHistoryEntries;
+        }
+
+        public List<Tuple<string, double>> CatchWhales()
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+            List<Tuple<string, double>> whales = new List<Tuple<string, double>>();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CatchWhales]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            whales.Add(
+                                new Tuple<string, double>(
+                                    (string)reader["UplandUsername"],
+                                    decimal.ToDouble((decimal)reader["TotalMint"])
+                                )
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+
+            return whales;
         }
 
         public List<Tuple<int, long>> GetCollectionPropertyTable()

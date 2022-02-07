@@ -211,7 +211,7 @@ class Program
         }
 
         int argPos = 0;
-        if (message.HasStringPrefix("!", ref argPos))
+        if (message.HasStringPrefix("^", ref argPos))
         {
             if (context.Channel.Name == "general" || context.Channel.Name == "tech-issues")
             {

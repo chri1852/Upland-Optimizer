@@ -742,6 +742,26 @@ namespace Upland.InformationProcessor
             return output;
         }
 
+        public List<string> CatchWhales()
+        {
+            List<string> output = new List<string>();
+
+            List<Tuple<string, double>> whales = _localDataManager.CatchWhales();
+            
+            output.Add("UplandUsername,TotalMint");
+            foreach (Tuple<string, double> whale in whales)
+            {
+                string whaleString = string.Format("{0},{1}"
+                    , whale.Item1
+                    , whale.Item2
+                );
+
+                output.Add(whaleString);
+            }
+
+            return output;
+        }
+
         public List<string> GetUnmintedProperties(string type, int Id, string propType, string fileType)
         {
             List<string> output = new List<string>();
