@@ -345,14 +345,14 @@ class Program
             try
             {
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - RunRefresh - PropStructures", string.Format("{0}: Rebuilding Structures", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
-                await ((InformationProcessor)_services.GetService(typeof(InformationProcessor))).RebuildPropertyStructures();
-                ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - RunRefresh - PropStructures", string.Format("{0}: Rebuilding Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
+                _services.GetService<ILocalDataManager>().CreateErrorLog("Program.cs - RunRefresh - PropStructures", string.Format("{0}: Rebuilding Structures", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
+                await _services.GetService<IInformationProcessor>().RebuildPropertyStructures();
+                _services.GetService<ILocalDataManager>().CreateErrorLog("Program.cs - RunRefresh - PropStructures", string.Format("{0}: Rebuilding Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
                 Console.WriteLine(string.Format("{0}: Rebuilding Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
             }
             catch (Exception ex)
             {
-                ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog("Program.cs - RunRefreshActions - Rebuild Structures", ex.Message);
+                _services.GetService<ILocalDataManager>().CreateErrorLog("Program.cs - RunRefreshActions - Rebuild Structures", ex.Message);
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures Failed: {1}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), ex.Message));
             }
 
@@ -383,12 +383,14 @@ class Program
         try
         {
             Console.WriteLine(string.Format("{0}: {1} Resync", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), actionType));
-            await ((ResyncProcessor)_services.GetService(typeof(ResyncProcessor))).ResyncPropsList(actionType, list);
+            _services.GetService<ILocalDataManager>().CreateErrorLog(string.Format("Program.cs - {0}", actionType), "Start");
+            await _services.GetService<IResyncProcessor>().ResyncPropsList(actionType, list);
+            _services.GetService<ILocalDataManager>().CreateErrorLog(string.Format("Program.cs - {0}", actionType), "End");
             Console.WriteLine(string.Format("{0}: [1} Complete", string.Format("{ 0:MM/dd/yy H:mm:ss}", DateTime.Now), actionType));
         }
         catch (Exception ex)
         {
-            ((LocalDataManager)_services.GetService(typeof(LocalDataManager))).CreateErrorLog(string.Format("Program.cs - {0}", actionType), ex.Message);
+            _services.GetService<ILocalDataManager>().CreateErrorLog(string.Format("Program.cs - {0}", actionType), ex.Message);
             Console.WriteLine(string.Format("{0}: {1} Resync: {2}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), actionType, ex.Message));
         }
     }
