@@ -142,6 +142,23 @@ namespace Upland.InformationProcessor
                         }
                     }
                 }
+                else if (action.act.name == "n111")
+                {
+                    if (action.act.data.p2 == Consts.HornbrodEOSAccount && registeredUserEOSAccounts.Any(e => e.Item3 == action.act.data.p1))
+                    {
+                        try
+                        {
+                            string uplandUsername = registeredUserEOSAccounts.Where(e => e.Item3 == action.act.data.p1).First().Item2;
+                            RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUsername);
+                            registeredUser.SendUPX += int.Parse(action.act.data.p45.Split(".00 UP")[0]) - (int)Math.Floor(double.Parse(action.act.data.p134.Split("UP")[0]));
+                            _localDataManager.UpdateRegisteredUser(registeredUser);
+                        }
+                        catch (Exception ex)
+                        {
+                            _localDataManager.CreateErrorLog("BlockchainSendFinder - Process Send UPX", string.Format("Failed Adding UPX, p1: {0}, p133: {1}, p134: {2}, p2: {3}, p45: {4}, ex: {5}", action.act.data.p1, action.act.data.p133, action.act.data.p134, action.act.data.p2, action.act.data.p45, ex.Message));
+                        }
+                    }
+                }
             }
 
             if (actions.Max(a => a.timestamp) > maxTimestampProcessed)

@@ -361,7 +361,7 @@ namespace Startup.Commands
         }
 
         [Command("OptimizerResults")]
-        public async Task OptimizerResults()
+        public async Task OptimizerResults(string fileType = "TXT")
         {
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (!await EnsureRegisteredAndVerified(registeredUser))
@@ -391,12 +391,24 @@ namespace Startup.Commands
             if (currentRun.Status == Consts.RunStatusCompleted)
             {
                 OptimizerResults optimizerResults = JsonSerializer.Deserialize<OptimizerResults>(Encoding.UTF8.GetString(currentRun.Results));
-                byte[] resultBytes = Encoding.UTF8.GetBytes(CollectionOptimizer.BuildTextOutput(optimizerResults));
+
+                string optimizerString = "";
+
+                if (fileType.ToUpper() == "TXT")
+                {
+                    optimizerString = string.Join(Environment.NewLine, CollectionOptimizer.BuildTextOutput(optimizerResults));
+                }
+                else
+                {
+                    optimizerString = string.Join(Environment.NewLine, CollectionOptimizer.BuildCsvOutput(optimizerResults));
+                }
+
+                byte[] resultBytes = Encoding.UTF8.GetBytes(optimizerString);
                 using (Stream stream = new MemoryStream())
                 {
                     stream.Write(resultBytes, 0, resultBytes.Length);
                     stream.Seek(0, SeekOrigin.Begin);
-                    await Context.Channel.SendFileAsync(stream, string.Format("{0}_OptimizerResults.txt", registeredUser.UplandUsername));
+                    await Context.Channel.SendFileAsync(stream, string.Format("{0}_OptimizerResults.{1}", registeredUser.UplandUsername, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
                 }
             }
         }
@@ -1037,7 +1049,7 @@ namespace Startup.Commands
         }
 
         [Command("LastAppraisal")]
-        public async Task LastAppraisal()
+        public async Task LastAppraisal(string fileType = "TXT")
         {
             RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(Context.User.Id);
             if (!await EnsureRegisteredAndVerified(registeredUser))
@@ -1055,12 +1067,23 @@ namespace Startup.Commands
             {
                 AppraisalResults results = JsonSerializer.Deserialize<AppraisalResults>(Encoding.UTF8.GetString(currentRun.Results));
 
-                byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, _profileAppraiser.BuildAppraisalTxtStrings(results)));
+                string appraisalString = "";
+
+                if (fileType.ToUpper() == "TXT")
+                {
+                    appraisalString = string.Join(Environment.NewLine, _profileAppraiser.BuildAppraisalTxtStrings(results));
+                }
+                else
+                {
+                    appraisalString = string.Join(Environment.NewLine, _profileAppraiser.BuildAppraisalCsvStrings(results));
+                }
+ 
+                byte[] resultBytes = Encoding.UTF8.GetBytes(appraisalString);
                 using (Stream stream = new MemoryStream())
                 {
                     stream.Write(resultBytes, 0, resultBytes.Length);
                     stream.Seek(0, SeekOrigin.Begin);
-                    await Context.Channel.SendFileAsync(stream, string.Format("{0}_Appraisal.txt", registeredUser.UplandUsername));
+                    await Context.Channel.SendFileAsync(stream, string.Format("{0}_Appraisal.{1}", registeredUser.UplandUsername, fileType.ToUpper() == "TXT" ? "txt" : "csv"));
                 }
             }
         }

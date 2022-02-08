@@ -37,6 +37,8 @@ namespace Upland.Types.BlockchainTypes
         public string memo { get; set; }
         public string a45 { get; set; }
         public string a54 { get; set; }
+        public string p1 { get; set; }
+        public string p2 { get; set; }
         public string p3 { get; set; }
         public string p11 { get; set; }
         public string p14 { get; set; }
@@ -46,9 +48,12 @@ namespace Upland.Types.BlockchainTypes
         public string p24 { get; set; }
         public string p25 { get; set; }
         public string p44 { get; set; }
+        public string p45 { get; set; }
         public string p51 { get; set; }
         public string p52 { get; set; }
         public string p53 { get; set; }
         public string p54 { get; set; }
+        public string p133 { get; set; }
+        public string p134 { get; set; }
     }
 }

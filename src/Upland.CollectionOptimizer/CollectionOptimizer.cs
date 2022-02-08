@@ -856,5 +856,29 @@ namespace Upland.CollectionOptimizer
 
             return string.Join(Environment.NewLine, outputStrings);
         }
+
+        public static string BuildCsvOutput(OptimizerResults results)
+        {
+            List<string> outputStrings = new List<string>();
+
+            outputStrings.Add("City,Collection,Category,Boost,Address,BaseEarnings,BoostedEarnings");
+
+            foreach (OptimizerCollectionResult collection in results.OptimizedCollections)
+            {
+                foreach (OptimizerCollectionProperty property in collection.Properties)
+                {
+                    outputStrings.Add(string.Format("{0},{1},{2},{3},{4},{5},{6}",
+                        collection.City,
+                        collection.Name,
+                        collection.Category,
+                        collection.Boost,
+                        property.Address,
+                        property.BaseIncome,
+                        property.BaseIncome * collection.Boost));
+                }
+            }
+
+            return string.Join(Environment.NewLine, outputStrings);
+        }
     }
 }

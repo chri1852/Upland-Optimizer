@@ -386,7 +386,7 @@ class Program
             _services.GetService<ILocalDataManager>().CreateErrorLog(string.Format("Program.cs - {0}", actionType), "Start");
             await _services.GetService<IResyncProcessor>().ResyncPropsList(actionType, list);
             _services.GetService<ILocalDataManager>().CreateErrorLog(string.Format("Program.cs - {0}", actionType), "End");
-            Console.WriteLine(string.Format("{0}: [1} Complete", string.Format("{ 0:MM/dd/yy H:mm:ss}", DateTime.Now), actionType));
+            Console.WriteLine(string.Format("{0}: {1} Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), actionType));
         }
         catch (Exception ex)
         {

@@ -198,11 +198,23 @@ namespace Startup
                     helpOutput.Add(string.Format("!OptimizerResults"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will return a text file with the results of your optimizer run. It will also list off Unfilled Collections, which you can fill, but the algorithm decided not to, and Unoptimized Collections, which you own at least one property in, but not enough to fill them."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !OptimizerResults");
+                    helpOutput.Add("This command will return a text file.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !OptimizerResults CSV");
+                    helpOutput.Add("This command will return a csv file.");
                     break;
                 case "6":
                     helpOutput.Add(string.Format("!LastAppraisal"));
                     helpOutput.Add("");
                     helpOutput.Add(string.Format("This command will return a text file with the results of your last appraisal."));
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !LastAppraisal");
+                    helpOutput.Add("This command will return a text file.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !LastAppraisal CSV");
+                    helpOutput.Add("This command will return a csv file.");
                     break;
                 case "7":
                     helpOutput.Add(string.Format("!CollectionInfo"));
