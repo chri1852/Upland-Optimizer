@@ -226,6 +226,43 @@ namespace Upland.InformationProcessor
             return cityUnmintedProps.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
         }
 
+        public List<CachedSaleHistoryEntry> GetSaleHistoryEntries(WebSaleHistoryFilters filters, bool noPaging)
+        {
+            List<CachedSaleHistoryEntry> saleHistoryEntries = _localDataManager.GetCachedSaleHistoryEntries(filters)
+                .Where(c => (filters.NeighborhoodIds.Count == 0
+                    || filters.NeighborhoodIds.Contains(c.Property.NeighborhoodId)
+                    || (c.OfferProperty != null && filters.NeighborhoodIds.Contains(c.OfferProperty.NeighborhoodId)))).ToList();
+
+            // Gather the collections
+            foreach (CachedSaleHistoryEntry entry in saleHistoryEntries)
+            {
+                entry.Property.CollectionIds = GetCollectionIdListForPropertyId(entry.Property.Id);
+                if (entry.OfferProperty != null)
+                {
+                    entry.OfferProperty.CollectionIds = GetCollectionIdListForPropertyId(entry.OfferProperty.Id);
+                }
+            }
+
+            // Apply Filters
+            saleHistoryEntries = saleHistoryEntries
+                .Where(c => filters.CollectionIds.Count == 0
+                    || filters.CollectionIds.Any(i => c.Property.CollectionIds.Contains(i))
+                    || (c.OfferProperty != null && filters.CollectionIds.Any(i => c.OfferProperty.CollectionIds.Contains(i)))
+                ).ToList();
+
+            // Sort
+            saleHistoryEntries = saleHistoryEntries.OrderByDescending(p => p.TransactionDateTime).ToList();
+
+            if (noPaging)
+            {
+                return saleHistoryEntries;
+            }
+
+            saleHistoryEntries = saleHistoryEntries.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
+
+            return saleHistoryEntries;
+        }
+
         public List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties)
         {
             List<string> csvString = new List<string>();
@@ -271,6 +308,47 @@ namespace Upland.InformationProcessor
                 propString += string.Join(" ", prop.CollectionIds) + ",";
 
                 csvString.Add(propString);
+            }
+
+            return csvString;
+        }
+
+        public List<string> ConvertListCachedSaleHistoryEntriesToCSV(List<CachedSaleHistoryEntry> cachedSaleHistoryEntries)
+        {
+            List<string> csvString = new List<string>();
+
+            csvString.Add("TransactionDateTime,Seller,Buyer,Price,Currency,Offer,City,Address,Neighborhood,Mint,CollectionIds,OfferPropCity,OfferPropAddress,OfferPropNeighborhood,OfferPropMint,OfferPropCollectionIds");
+
+            foreach (CachedSaleHistoryEntry entry in cachedSaleHistoryEntries)
+            {
+                string entryString = "";
+                entryString += entry.TransactionDateTime.ToString("MM-dd-yyyy HH:mm:ss") + ",";
+                entryString += entry.Seller + ",";
+                entryString += entry.Buyer + ",";
+                entryString += entry.Price == null ? "," : entry.Price + ",";
+                entryString += entry.Currency + ",";
+                entryString += entry.Offer ? "True," : "False,";
+
+                entryString += Consts.Cities[entry.Property.CityId] + ",";
+                entryString += entry.Property.Address.Replace(",", " ") + ",";
+                entryString += _neighborhoods[entry.Property.NeighborhoodId].Replace(",", "") + ",";
+                entryString += entry.Property.Mint + ",";
+                entryString += string.Join(" ", entry.Property.CollectionIds) + ",";
+
+                if (entry.OfferProperty == null)
+                {
+                    entryString += ",,,,,";
+                }
+                else
+                {
+                    entryString += Consts.Cities[entry.OfferProperty.CityId] + ",";
+                    entryString += entry.OfferProperty.Address.Replace(",", " ") + ",";
+                    entryString += _neighborhoods[entry.OfferProperty.NeighborhoodId].Replace(",", "") + ",";
+                    entryString += entry.OfferProperty.Mint + ",";
+                    entryString += string.Join(" ", entry.OfferProperty.CollectionIds) + ",";
+                }
+
+                csvString.Add(entryString);
             }
 
             return csvString;
@@ -357,39 +435,37 @@ namespace Upland.InformationProcessor
 
         private void RemoveExpiredSalesEntries()
         {
-            foreach (KeyValuePair<int, Tuple<DateTime, List<CachedForSaleProperty>>> cacheEntry in _cityForSaleListCache)
+            foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
             {
                 // Make sure its not loading, and the entry is expired, and that there is actually something to expire
-                if (!_isLoadingCityForSaleListCache[cacheEntry.Key] && cacheEntry.Value.Item1 < DateTime.UtcNow && _cityForSaleListCache[cacheEntry.Key].Item2.Count > 0)
+                if (!_isLoadingCityForSaleListCache[cityId] && _cityForSaleListCache[cityId].Item1 < DateTime.UtcNow && _cityForSaleListCache[cityId].Item2.Count > 0)
                 {
-                    _isLoadingCityForSaleListCache[cacheEntry.Key] = true;
+                    _isLoadingCityForSaleListCache[cityId] = true;
 
-                    _cityForSaleListCache[cacheEntry.Key] = new Tuple<DateTime, List<CachedForSaleProperty>>(
+                    _cityForSaleListCache[cityId] = new Tuple<DateTime, List<CachedForSaleProperty>>(
                         DateTime.UtcNow.AddDays(-1),
                        new List<CachedForSaleProperty>());
 
-                    _isLoadingCityForSaleListCache[cacheEntry.Key] = false;
+                    _isLoadingCityForSaleListCache[cityId] = false;
                 }
-
             }
         }
 
         private void RemoveExpiredUnmintedEntries()
         {
-            foreach (KeyValuePair<int, Tuple<DateTime, List<CachedUnmintedProperty>>> cacheEntry in _cityUnmintedCache)
+            foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
             {
                 // Make sure its not loading, and the entry is expired, and that there is actually something to expire
-                if (!_isLoadingCityUnmintedCache[cacheEntry.Key] && cacheEntry.Value.Item1 < DateTime.UtcNow && _cityUnmintedCache[cacheEntry.Key].Item2.Count > 0)
+                if (!_isLoadingCityUnmintedCache[cityId] && _cityUnmintedCache[cityId].Item1 < DateTime.UtcNow && _cityUnmintedCache[cityId].Item2.Count > 0)
                 {
-                    _isLoadingCityUnmintedCache[cacheEntry.Key] = true;
+                    _isLoadingCityUnmintedCache[cityId] = true;
 
-                    _cityUnmintedCache[cacheEntry.Key] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
+                    _cityUnmintedCache[cityId] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
                         DateTime.UtcNow.AddDays(-1),
                        new List<CachedUnmintedProperty>());
 
-                    _isLoadingCityUnmintedCache[cacheEntry.Key] = false;
+                    _isLoadingCityUnmintedCache[cityId] = false;
                 }
-
             }
         }
 

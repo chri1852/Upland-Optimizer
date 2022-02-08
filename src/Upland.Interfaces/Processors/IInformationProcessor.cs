@@ -14,6 +14,7 @@ namespace Upland.Interfaces.Processors
         List<string> SearchNeighborhoods(string name, string fileType);
         List<string> SearchCollections(string name, string fileType);
         List<string> SearchProperties(int cityId, string address, string fileType);
+        public List<string> CatchWhales();
         List<string> GetUnmintedProperties(string type, int Id, string propType, string fileType);
         List<string> GetAllProperties(string type, int Id, string fileType);
         Task<List<string>> GetAssetsByTypeAndUserName(string type, string userName, string fileType);

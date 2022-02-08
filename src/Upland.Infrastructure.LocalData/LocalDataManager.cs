@@ -342,6 +342,16 @@ namespace Upland.Infrastructure.LocalData
             return unmintedProperties;
         }
 
+        public List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntries(WebSaleHistoryFilters filters)
+        {
+            return _localDataRepository.GetCachedSaleHistoryEntries(filters);
+        }
+
+        public List<Tuple<string, double>> CatchWhales()
+        {
+            return _localDataRepository.CatchWhales();
+        }
+
         public List<Tuple<int, long>> GetCollectionPropertyTable()
         {
             return _localDataRepository.GetCollectionPropertyTable();

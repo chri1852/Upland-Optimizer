@@ -146,7 +146,7 @@ namespace Upland.Infrastructure.LocalData
                                     Id = (long)reader["Id"],
                                     Address = (string)reader["Address"],
                                     CityId = (int)reader["CityId"],
-                                    NeighborhoodId = (int)reader["NeighborhoodId"],
+                                    NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int)reader["NeighborhoodId"] : -1,
                                     StreetId = (int)reader["StreetId"],
                                     Size = (int)reader["Size"],
                                     FSA = (bool)reader["FSA"],
@@ -174,6 +174,150 @@ namespace Upland.Infrastructure.LocalData
             }
 
             return cachedForSaleProperties;
+        }
+
+        public List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntries(WebSaleHistoryFilters filters)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+            List<CachedSaleHistoryEntry> cachedSaleHistoryEntries = new List<CachedSaleHistoryEntry>();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCachedSaleEntries]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityIdSearch", filters.CityIdSearch));
+                    sqlCmd.Parameters.Add(new SqlParameter("SearchByCityId", filters.SearchByCityId));
+
+                    if (filters.SearchByUsername == null || filters.SearchByUsername.Trim() == "")
+                        sqlCmd.Parameters.Add(new SqlParameter("SearchByUsername", DBNull.Value));
+                    else
+                        sqlCmd.Parameters.Add(new SqlParameter("SearchByUsername", filters.SearchByUsername.ToLower()));
+
+                    sqlCmd.Parameters.Add(new SqlParameter("NoSales", filters.NoSales));
+                    sqlCmd.Parameters.Add(new SqlParameter("NoSwaps", filters.NoSwaps));
+                    sqlCmd.Parameters.Add(new SqlParameter("NoOffers", filters.NoOffers));
+
+                    if (filters.Currency == null || filters.Currency.Trim() == "" || filters.Currency == "Any")
+                        sqlCmd.Parameters.Add(new SqlParameter("Currency", DBNull.Value));
+                    else
+                        sqlCmd.Parameters.Add(new SqlParameter("Currency", filters.Currency));
+
+                    if (filters.Address == null || filters.Address.Trim() == "")
+                        sqlCmd.Parameters.Add(new SqlParameter("Address", DBNull.Value));
+                    else
+                        sqlCmd.Parameters.Add(new SqlParameter("Address", filters.Address));
+
+                    if (filters.Username == null || filters.Username.Trim() == "")
+                        sqlCmd.Parameters.Add(new SqlParameter("Username", DBNull.Value));
+                    else
+                        sqlCmd.Parameters.Add(new SqlParameter("Username", filters.Username.ToLower()));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            CachedSaleHistoryEntry entry = new CachedSaleHistoryEntry
+                            {
+                                TransactionDateTime = (DateTime)reader["DateTime"],
+                                Seller = (string)reader["Seller"],
+                                Buyer = (string)reader["Buyer"],
+                                Price = null,
+                                Currency = null,
+                                Offer = (bool)reader["Offer"],
+                                Property = new CachedSaleHistoryEntryProperty
+                                {
+                                    Id = (long)reader["Id"],
+                                    Address = (string)reader["Address"],
+                                    CityId = (int)reader["CityId"],
+                                    NeighborhoodId = reader["NeighborhoodId"] != DBNull.Value ? (int)reader["NeighborhoodId"] : -1,
+                                    Mint = decimal.ToDouble((decimal)reader["Mint"]),
+                                    CollectionIds = new List<int>()
+                                },
+                                OfferProperty = reader["OfferProp_Id"] == DBNull.Value ? null : new CachedSaleHistoryEntryProperty
+                                {
+                                    Id = (long)reader["OfferProp_Id"],
+                                    Address = (string)reader["OfferProp_Address"],
+                                    CityId = (int)reader["OfferProp_CityId"],
+                                    NeighborhoodId = reader["OfferProp_NeighborhoodId"] != DBNull.Value ? (int)reader["OfferProp_NeighborhoodId"] : -1,
+                                    Mint = decimal.ToDouble((decimal)reader["OfferProp_Mint"]),
+                                    CollectionIds = new List<int>()
+                                }
+                            };
+
+                            if (reader["Price"] != DBNull.Value)
+                                entry.Price = decimal.ToDouble((decimal)reader["Price"]);
+                            else
+                                entry.Price = null;
+
+                            if (reader["Currency"] != DBNull.Value)
+                                entry.Currency = (string)reader["Currency"];
+                            else
+                                entry.Currency = null;
+
+                            cachedSaleHistoryEntries.Add(entry);
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+
+            return cachedSaleHistoryEntries;
+        }
+
+        public List<Tuple<string, double>> CatchWhales()
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+            List<Tuple<string, double>> whales = new List<Tuple<string, double>>();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[CatchWhales]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            whales.Add(
+                                new Tuple<string, double>(
+                                    (string)reader["UplandUsername"],
+                                    decimal.ToDouble((decimal)reader["TotalMint"])
+                                )
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+
+            return whales;
         }
 
         public List<Tuple<int, long>> GetCollectionPropertyTable()
