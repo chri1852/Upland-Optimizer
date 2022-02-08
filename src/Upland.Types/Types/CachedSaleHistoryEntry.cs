@@ -9,6 +9,7 @@ namespace Upland.Types.Types
         public string Seller { get; set; }
         public string Buyer { get; set; }
         public double? Price { get; set; }
+        public double? Markup { get; set; }
         public string Currency { get; set; }
         public bool Offer { get; set; }
         public CachedSaleHistoryEntryProperty Property { get; set; }

@@ -326,12 +326,13 @@ namespace Upland.InformationProcessor
                 entryString += entry.Seller + ",";
                 entryString += entry.Buyer + ",";
                 entryString += entry.Price == null ? "," : entry.Price + ",";
+                entryString += entry.Markup == null ? "," : entry.Markup + ",";
                 entryString += entry.Currency + ",";
                 entryString += entry.Offer ? "True," : "False,";
 
                 entryString += Consts.Cities[entry.Property.CityId] + ",";
                 entryString += entry.Property.Address.Replace(",", " ") + ",";
-                entryString += _neighborhoods[entry.Property.NeighborhoodId].Replace(",", "") + ",";
+                entryString += _neighborhoods.ContainsKey(entry.Property.NeighborhoodId) ? _neighborhoods[entry.Property.NeighborhoodId].Replace(",", "") + "," : ",";
                 entryString += entry.Property.Mint + ",";
                 entryString += string.Join(" ", entry.Property.CollectionIds) + ",";
 
@@ -343,7 +344,7 @@ namespace Upland.InformationProcessor
                 {
                     entryString += Consts.Cities[entry.OfferProperty.CityId] + ",";
                     entryString += entry.OfferProperty.Address.Replace(",", " ") + ",";
-                    entryString += _neighborhoods[entry.OfferProperty.NeighborhoodId].Replace(",", "") + ",";
+                    entryString += _neighborhoods.ContainsKey(entry.OfferProperty.NeighborhoodId) ? _neighborhoods[entry.OfferProperty.NeighborhoodId].Replace(",", "") + "," : ",";
                     entryString += entry.OfferProperty.Mint + ",";
                     entryString += string.Join(" ", entry.OfferProperty.CollectionIds) + ",";
                 }

@@ -260,6 +260,22 @@ namespace Upland.Infrastructure.LocalData
                             else
                                 entry.Currency = null;
 
+                            if (entry.Price != null)
+                            {
+                                if (entry.Currency == "UPX")
+                                {
+                                    entry.Markup = entry.Price / entry.Property.Mint;
+                                }
+                                else
+                                {
+                                    entry.Markup = (entry.Price * 1000) / entry.Property.Mint;
+                                }
+                            }
+                            else
+                            {
+                                entry.Markup = null;
+                            }
+
                             cachedSaleHistoryEntries.Add(entry);
                         }
                         reader.Close();
