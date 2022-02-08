@@ -194,42 +194,42 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("CityIdSearch", filters.CityIdSearch));
                     sqlCmd.Parameters.Add(new SqlParameter("SearchByCityId", filters.SearchByCityId));
 
-                    if (filters.SearchByUsername == null)
+                    if (filters.SearchByUsername == null || filters.SearchByUsername.Trim() == "")
                         sqlCmd.Parameters.Add(new SqlParameter("SearchByUsername", DBNull.Value));
                     else
-                        sqlCmd.Parameters.Add(new SqlParameter("SearchByUsername", filters.SearchByUsername));
+                        sqlCmd.Parameters.Add(new SqlParameter("SearchByUsername", filters.SearchByUsername.ToLower()));
 
                     sqlCmd.Parameters.Add(new SqlParameter("NoSales", filters.NoSales));
                     sqlCmd.Parameters.Add(new SqlParameter("NoSwaps", filters.NoSwaps));
                     sqlCmd.Parameters.Add(new SqlParameter("NoOffers", filters.NoOffers));
 
-                    if (filters.Currency == null)
+                    if (filters.Currency == null || filters.Currency.Trim() == "" || filters.Currency == "Any")
                         sqlCmd.Parameters.Add(new SqlParameter("Currency", DBNull.Value));
                     else
                         sqlCmd.Parameters.Add(new SqlParameter("Currency", filters.Currency));
 
-                    if (filters.Address == null)
+                    if (filters.Address == null || filters.Address.Trim() == "")
                         sqlCmd.Parameters.Add(new SqlParameter("Address", DBNull.Value));
                     else
                         sqlCmd.Parameters.Add(new SqlParameter("Address", filters.Address));
 
-                    if (filters.Username == null)
+                    if (filters.Username == null || filters.Username.Trim() == "")
                         sqlCmd.Parameters.Add(new SqlParameter("Username", DBNull.Value));
                     else
-                        sqlCmd.Parameters.Add(new SqlParameter("Username", filters.Username));
+                        sqlCmd.Parameters.Add(new SqlParameter("Username", filters.Username.ToLower()));
 
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            cachedSaleHistoryEntries.Add(new CachedSaleHistoryEntry
+                            CachedSaleHistoryEntry entry = new CachedSaleHistoryEntry
                             {
                                 TransactionDateTime = (DateTime)reader["DateTime"],
                                 Seller = (string)reader["Seller"],
                                 Buyer = (string)reader["Buyer"],
                                 Price = null,
                                 Currency = null,
-                                Offer = true,
+                                Offer = (bool)reader["Offer"],
                                 Property = new CachedSaleHistoryEntryProperty
                                 {
                                     Id = (long)reader["Id"],
@@ -248,7 +248,19 @@ namespace Upland.Infrastructure.LocalData
                                     Mint = decimal.ToDouble((decimal)reader["OfferProp_Mint"]),
                                     CollectionIds = new List<int>()
                                 }
-                            });
+                            };
+
+                            if (reader["Price"] != DBNull.Value)
+                                entry.Price = decimal.ToDouble((decimal)reader["Price"]);
+                            else
+                                entry.Price = null;
+
+                            if (reader["Currency"] != DBNull.Value)
+                                entry.Currency = (string)reader["Currency"];
+                            else
+                                entry.Currency = null;
+
+                            cachedSaleHistoryEntries.Add(entry);
                         }
                         reader.Close();
                     }
