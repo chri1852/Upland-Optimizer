@@ -1123,7 +1123,7 @@ namespace Startup.Commands
             try
             {
                 await ReplyAsync(string.Format("Creating the map now!"));
-                fileName = _mappingProcessor.CreateMap(cityId, type, registeredUser.Id, colorBlind != "NOT");
+                fileName = _mappingProcessor.CreateMap(cityId, type, registeredUser.Id, colorBlind != "NOT", null);
             }
             catch (Exception ex)
             {

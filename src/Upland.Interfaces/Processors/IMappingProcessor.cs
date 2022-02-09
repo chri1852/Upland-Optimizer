@@ -13,6 +13,6 @@ namespace Upland.Interfaces.Processors
         void SaveMap(Image<Rgba32> map, string fileName);
         void DeleteSavedMap(string fileName);
         string GetMapLocaiton(string fileName);
-        string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind);
+        string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind, List<string> customColors);
     }
 }

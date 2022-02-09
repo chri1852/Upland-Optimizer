@@ -1495,6 +1495,7 @@ namespace Upland.InformationProcessor
             _localDataManager.TruncatePropertyStructure();
 
             List<long> savedIds = new List<long>();
+            List<string> uniqueBuildings = new List<string>();
 
             foreach (PropertyStructure propertyStructure in propertyStructures)
             {
@@ -1505,6 +1506,11 @@ namespace Upland.InformationProcessor
 
                 if (!savedIds.Contains(propertyStructure.PropertyId))
                 {
+                    if (!uniqueBuildings.Contains(propertyStructure.StructureType))
+                    {
+                        uniqueBuildings.Add(propertyStructure.StructureType);
+                    }
+
                     try
                     {
                         propertyStructure.StructureType = HelperFunctions.TranslateStructureType(propertyStructure.StructureType);

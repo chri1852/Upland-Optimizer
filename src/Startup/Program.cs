@@ -73,7 +73,7 @@ class Program
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
-        await localDataManager.PopulateStreets();
+        //await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
@@ -108,7 +108,7 @@ class Program
         //localDataManager.DetermineNeighborhoodIdsForCity(16);
 
         // Rebuild Property Structure List
-        //await informationProcessor.RebuildPropertyStructures();
+        await informationProcessor.RebuildPropertyStructures();
         //await informationProcessor.RunCityStatusUpdate();
         //await informationProcessor.RefreshCityById("PART", 1);
         //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);

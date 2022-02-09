@@ -5,6 +5,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -84,23 +85,30 @@ namespace Upland.InformationProcessor
             return Path.Combine("GeneratedMaps", string.Format("{0}.png", fileName));
         }
 
-        public string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind)
+        public string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind, List<string> customColors)
         {
             string typeString;
             Image<Rgba32> map;
             Image<Rgba32> key;
 
+            List<Color> customKey = null;
+
+            if (customKey != null && customKey.Count == 11)
+            {
+                customKey = BuildCustomKey(customColors);
+            }
+
             if (type.ToUpper() == "SOLD")
             {
                 typeString = "Sold Out";
-                map = CreateSoldOutMap(cityId, colorBlind, false);
-                key = BuildStandardKey(colorBlind);
+                map = CreateSoldOutMap(cityId, colorBlind, false, customKey);
+                key = BuildStandardKey(colorBlind, customKey);
             }
             else if (type.ToUpper() == "SOLDNONFSA")
             {
                 typeString = "Sold Out Non FSA";
-                map = CreateSoldOutMap(cityId, colorBlind, true);
-                key = BuildStandardKey(colorBlind);
+                map = CreateSoldOutMap(cityId, colorBlind, true, customKey);
+                key = BuildStandardKey(colorBlind, customKey);
             }
             else if (type.ToUpper() == "FLOOR" || type.ToUpper() == "FLOORUSD")
             {
@@ -136,8 +144,8 @@ namespace Upland.InformationProcessor
                     }
                 }
 
-                key = BuildFloorKey(lowestHoodPrice, colorBlind); ;
-                map = CreateFloorMap(cityId, lowestHoodPrice, colorBlind);
+                key = BuildFloorKey(lowestHoodPrice, colorBlind, customKey);
+                map = CreateFloorMap(cityId, lowestHoodPrice, colorBlind, customKey);
             }
             else if (type.ToUpper() == "PERUP2")
             {
@@ -160,8 +168,8 @@ namespace Upland.InformationProcessor
                     }
                 }
 
-                key = BuildPerUP2Key(neighborhoodPerUp2, colorBlind);
-                map = CreatePerUP2Map(cityId, neighborhoodPerUp2, colorBlind);
+                key = BuildPerUP2Key(neighborhoodPerUp2, colorBlind, customKey);
+                map = CreatePerUP2Map(cityId, neighborhoodPerUp2, colorBlind, customKey);
             }
             else if (type.ToUpper() == "BUILDINGS")
             {
@@ -183,8 +191,8 @@ namespace Upland.InformationProcessor
                 }
 
                 typeString = "Completed Buildings";
-                map = CreateBuildingCountMap(cityId, colorBlind, neighborhoodStructureCount);
-                key = BuildBuildingCountKey(neighborhoodStructureCount, colorBlind);
+                map = CreateBuildingCountMap(cityId, colorBlind, neighborhoodStructureCount, customKey);
+                key = BuildBuildingCountKey(neighborhoodStructureCount, colorBlind, customKey);
             }
             else if (type.ToUpper() == "PERCENTBUILT")
             {
@@ -211,8 +219,8 @@ namespace Upland.InformationProcessor
                 }
 
                 typeString = "Percent Built";
-                map = CreateBuildingPercentMap(cityId, colorBlind, neighborhoodStructurePercent);
-                key = BuildBuildingPercentKey(neighborhoodStructurePercent, colorBlind);
+                map = CreateBuildingPercentMap(cityId, colorBlind, neighborhoodStructurePercent, customKey);
+                key = BuildBuildingPercentKey(neighborhoodStructurePercent, colorBlind, customKey);
             }
             else
             {
@@ -232,18 +240,27 @@ namespace Upland.InformationProcessor
             combinedMap.Mutate(x => x.DrawImage(footer, new Point((combinedMap.Width - footer.Width) / 2, combinedMap.Height + -50), 1));
 
 
-            string filename = string.Format("{0}_{1}_{2}", Consts.Cities[cityId].Replace(" ", ""), type.ToUpper(), registeredUserId);
+            string filename = string.Format("{0}_{1}_{2}_{3}", Consts.Cities[cityId].Replace(" ", ""), type.ToUpper(), registeredUserId, DateTime.UtcNow.ToString("yyyyMMddHHmmss");
 
             SaveMap(combinedMap, filename);
 
             return filename;
         }
         
-        private Image<Rgba32> CreateFloorMap(int cityId, Dictionary<int, double> lowestHoodPrice, bool colorBlind)
+        private Image<Rgba32> CreateFloorMap(int cityId, Dictionary<int, double> lowestHoodPrice, bool colorBlind, List<Color> customKey)
         {
             Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
 
-            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            List<Color> colorKeys = new List<Color>();
+
+            if (customKey != null)
+            {
+                colorKeys = customKey;
+            }
+            else
+            {
+                colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            }
 
             Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
                 .Where(n => n.CityId == cityId)
@@ -325,11 +342,20 @@ namespace Upland.InformationProcessor
             return newBitmap;
         }
         
-        private Image<Rgba32> CreatePerUP2Map(int cityId, Dictionary<int, double> neighborhoodPerUp2, bool colorBlind)
+        private Image<Rgba32> CreatePerUP2Map(int cityId, Dictionary<int, double> neighborhoodPerUp2, bool colorBlind, List<Color> customKey)
         {
             Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
 
-            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            List<Color> colorKeys = new List<Color>();
+
+            if (customKey != null)
+            {
+                colorKeys = customKey;
+            }
+            else
+            {
+                colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            }
 
             Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
                 .Where(n => n.CityId == cityId)
@@ -411,11 +437,20 @@ namespace Upland.InformationProcessor
             return newBitmap;
         }
         
-        private Image<Rgba32> CreateSoldOutMap(int cityId, bool colorBlind, bool nonFSAOnly)
+        private Image<Rgba32> CreateSoldOutMap(int cityId, bool colorBlind, bool nonFSAOnly, List<Color> customKey)
         {
             Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
 
-            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            List<Color> colorKeys = new List<Color>();
+
+            if (customKey != null)
+            {
+                colorKeys = customKey;
+            }
+            else
+            {
+                colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            };
 
             Dictionary<int, CollatedStatsObject> neighborhoodStats = _localDataManager.GetNeighborhoodStats()
                 .ToDictionary(n => n.Id, n => n);
@@ -496,11 +531,20 @@ namespace Upland.InformationProcessor
             return newBitmap;
         }
 
-        private Image<Rgba32> CreateBuildingCountMap(int cityId, bool colorBlind, Dictionary<int, int> neighborhoodStructureCount)
+        private Image<Rgba32> CreateBuildingCountMap(int cityId, bool colorBlind, Dictionary<int, int> neighborhoodStructureCount, List<Color> customKey)
         {
             Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
 
-            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            List<Color> colorKeys = new List<Color>();
+
+            if (customKey != null)
+            {
+                colorKeys = customKey;
+            }
+            else
+            {
+                colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            }
 
             Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
                 .Where(n => n.CityId == cityId)
@@ -582,11 +626,20 @@ namespace Upland.InformationProcessor
             return newBitmap;
         }
 
-        private Image<Rgba32> CreateBuildingPercentMap(int cityId, bool colorBlind, Dictionary<int, double> neighborhoodStructurePercent)
+        private Image<Rgba32> CreateBuildingPercentMap(int cityId, bool colorBlind, Dictionary<int, double> neighborhoodStructurePercent, List<Color> customKey)
         {
             Image<Rgba32> cityMap = LoadBlankMapByCityId(cityId);
 
-            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            List<Color> colorKeys = new List<Color>();
+
+            if (customKey != null)
+            {
+                colorKeys = customKey;
+            }
+            else
+            {
+                colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            }
 
             Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()
                 .Where(n => n.CityId == cityId)
@@ -668,7 +721,7 @@ namespace Upland.InformationProcessor
             return newBitmap;
         }
 
-        private Image<Rgba32> BuildFloorKey(Dictionary<int, double> lowestHoodPrice, bool colorBlind)
+        private Image<Rgba32> BuildFloorKey(Dictionary<int, double> lowestHoodPrice, bool colorBlind, List<Color> customKey)
         {
             List<string> formattedOrderedPrices = lowestHoodPrice
                 .Where(l => l.Value != double.MaxValue)
@@ -692,10 +745,10 @@ namespace Upland.InformationProcessor
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxPriceLength)));
             keyTextStrings.Add("No Floor");
 
-            return BuildKey(colorBlind, keyTextStrings);
+            return BuildKey(colorBlind, keyTextStrings, customKey);
         }
 
-        private Image<Rgba32> BuildPerUP2Key(Dictionary<int, double> neighborhoodPerUp2, bool colorBlind)
+        private Image<Rgba32> BuildPerUP2Key(Dictionary<int, double> neighborhoodPerUp2, bool colorBlind, List<Color> customKey)
         {
             List<string> formattedOrderedPrices = neighborhoodPerUp2
                 .Where(l => l.Value != double.MaxValue)
@@ -719,10 +772,10 @@ namespace Upland.InformationProcessor
             keyTextStrings.Add(string.Format(" >= {0}", formattedOrderedPrices[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxPriceLength)));
             keyTextStrings.Add("Low Market Data");
 
-            return BuildKey(colorBlind, keyTextStrings);
+            return BuildKey(colorBlind, keyTextStrings, customKey);
         }
 
-        private Image<Rgba32> BuildBuildingCountKey(Dictionary<int, int> neighborhoodStructureCount, bool colorBlind)
+        private Image<Rgba32> BuildBuildingCountKey(Dictionary<int, int> neighborhoodStructureCount, bool colorBlind, List<Color> customKey)
         {
             List<string> formattedOrderedList= neighborhoodStructureCount
                 .GroupBy(l => l.Value)
@@ -745,10 +798,10 @@ namespace Upland.InformationProcessor
             keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxLength)));
             keyTextStrings.Add(string.Format(" >= {0} Buildings", formattedOrderedList[(int)Math.Floor(numberInbetween * 10)].PadLeft(maxLength)));
 
-            return BuildKey(colorBlind, keyTextStrings);
+            return BuildKey(colorBlind, keyTextStrings, customKey);
         }
 
-        private Image<Rgba32> BuildBuildingPercentKey(Dictionary<int, double> neighborhoodStructurePercent, bool colorBlind)
+        private Image<Rgba32> BuildBuildingPercentKey(Dictionary<int, double> neighborhoodStructurePercent, bool colorBlind, List<Color> customKey)
         {
             List<string> formattedOrderedList = neighborhoodStructurePercent
                 .GroupBy(l => l.Value)
@@ -771,11 +824,10 @@ namespace Upland.InformationProcessor
             keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 9)].PadLeft(maxLength)));
             keyTextStrings.Add(string.Format(" >= {0}%", formattedOrderedList[(int)Math.Floor(numberInbetween * 10)].PadLeft(maxLength)));
 
-            return BuildKey(colorBlind, keyTextStrings);
+            return BuildKey(colorBlind, keyTextStrings, customKey);
         }
 
-
-        private Image<Rgba32> BuildStandardKey(bool colorBlind)
+        private Image<Rgba32> BuildStandardKey(bool colorBlind, List<Color> customKey)
         {
             List<string> keyTextStrings = new List<string>();
             keyTextStrings.Add("     < 10%");
@@ -790,12 +842,21 @@ namespace Upland.InformationProcessor
             keyTextStrings.Add("90% -- 99%");
             keyTextStrings.Add("Sold Out");
 
-            return BuildKey(colorBlind, keyTextStrings);
+            return BuildKey(colorBlind, keyTextStrings, customKey);
         }
 
-        private Image<Rgba32> BuildKey(bool colorBlind, List<string> keyTextStrings)
+        private Image<Rgba32> BuildKey(bool colorBlind, List<string> keyTextStrings, List<Color> customKey)
         {
-            List<Color> colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            List<Color> colorKeys = new List<Color>();
+
+            if (customKey != null)
+            {
+                colorKeys = customKey;
+            }
+            else
+            {
+                colorKeys = colorBlind ? _colorBlindKey : _standardKey;
+            }
 
             Image<Rgba32> bmp = new Image<Rgba32>((keyTextStrings.Max(t => t.Length) * 14) + 4, 279);
 
@@ -948,6 +1009,44 @@ namespace Upland.InformationProcessor
             _colorBlindKey.Add(Color.FromRgb(118, 0, 99));
             _colorBlindKey.Add(Color.FromRgb(79, 0, 98));
             _colorBlindKey.Add(Color.FromRgb(28, 0, 94));
+        }
+
+        private List<Color> BuildCustomKey(List<string> colors)
+        {
+            List<Color> customKey = new List<Color>();
+
+            foreach (string color in colors)
+            {
+                string translatedColor = color;
+                //Remove # if present
+                if (translatedColor.IndexOf('#') != -1)
+                {
+                    translatedColor = translatedColor.Replace("#", "");
+                }
+
+                byte red = 0;
+                byte green = 0;
+                byte blue = 0;
+
+                if (translatedColor.Length == 6)
+                {
+                    //#RRGGBB
+                    red = byte.Parse(translatedColor.Substring(0, 2), NumberStyles.AllowHexSpecifier);
+                    green = byte.Parse(translatedColor.Substring(2, 2), NumberStyles.AllowHexSpecifier);
+                    blue = byte.Parse(translatedColor.Substring(4, 2), NumberStyles.AllowHexSpecifier);
+                }
+                else if (translatedColor.Length == 3)
+                {
+                    //#RGB
+                    red = byte.Parse(translatedColor[0].ToString() + translatedColor[0].ToString(), NumberStyles.AllowHexSpecifier);
+                    green = byte.Parse(translatedColor[1].ToString() + translatedColor[1].ToString(), NumberStyles.AllowHexSpecifier);
+                    blue = byte.Parse(translatedColor[2].ToString() + translatedColor[2].ToString(), NumberStyles.AllowHexSpecifier);
+                }
+
+                customKey.Add(Color.FromRgb(red, green, blue));
+            }
+
+            return customKey;
         }
     }
 }
