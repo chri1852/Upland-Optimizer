@@ -108,7 +108,7 @@ class Program
         //localDataManager.DetermineNeighborhoodIdsForCity(16);
 
         // Rebuild Property Structure List
-        await informationProcessor.RebuildPropertyStructures();
+        //await informationProcessor.RebuildPropertyStructures();
         //await informationProcessor.RunCityStatusUpdate();
         //await informationProcessor.RefreshCityById("PART", 1);
         //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
@@ -121,7 +121,7 @@ class Program
         //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
-        await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");
+        //await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
         //await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" }, "txt");

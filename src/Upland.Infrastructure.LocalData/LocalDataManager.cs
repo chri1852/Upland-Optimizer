@@ -228,6 +228,8 @@ namespace Upland.Infrastructure.LocalData
                     if (!existingCollections.Any(c => c.Id == collection.Id))
                     {
                         _localDataRepository.CreateCollectionProperties(collection.Id, propIds);
+
+                        await AdjustMintOnCollectionPropertys(collection, propIds);
                     }
                     else
                     {
@@ -235,6 +237,7 @@ namespace Upland.Infrastructure.LocalData
                         if (newPropIds.Count > 0)
                         {
                             _localDataRepository.CreateCollectionProperties(collection.Id, newPropIds);
+                            await AdjustMintOnCollectionPropertys(collection, newPropIds);
                         }
                     }
                 }
@@ -309,6 +312,25 @@ namespace Upland.Infrastructure.LocalData
             }
 
             return oddNodes;
+        }
+
+        private async Task AdjustMintOnCollectionPropertys(Collection collection, List<long> propIds)
+        {
+            // If the collection is new and is limited or better adjust mint price
+            if (collection.Category > 1)
+            {
+                List<Property> properties = _localDataRepository.GetProperties(propIds);
+                foreach (Property prop in properties)
+                {
+                    if (prop.Status == Consts.PROP_STATUS_UNLOCKED)
+                    {
+                        Property property = UplandMapper.Map(await _uplandApiRepository.GetPropertyById(prop.Id));
+
+                        prop.Mint = property.Mint;
+                        _localDataRepository.UpsertProperty(prop);
+                    }
+                }
+            }
         }
 
         public List<CachedForSaleProperty> GetCachedForSaleProperties(int cityId)

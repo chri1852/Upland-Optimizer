@@ -240,7 +240,7 @@ namespace Upland.InformationProcessor
             combinedMap.Mutate(x => x.DrawImage(footer, new Point((combinedMap.Width - footer.Width) / 2, combinedMap.Height + -50), 1));
 
 
-            string filename = string.Format("{0}_{1}_{2}_{3}", Consts.Cities[cityId].Replace(" ", ""), type.ToUpper(), registeredUserId, DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            string filename = string.Format("{0}_{1}_{2}_{3}", Consts.Cities[cityId].Replace(" ", ""), type.ToUpper(), registeredUserId, DateTime.UtcNow.ToString("yyyyMMddHHmmss"));
 
             SaveMap(combinedMap, filename);
 
