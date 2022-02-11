@@ -67,23 +67,51 @@ namespace Upland.InformationProcessor
             return _validTypes;
         }
 
-        public void SaveMap(Image<Rgba32> map, string fileName)
+        public string GetDisplayMapType(string mapType)
         {
-            if (!Directory.Exists(Path.Combine("GeneratedMaps")))
+            switch(mapType)
             {
-                Directory.CreateDirectory(Path.Combine("GeneratedMaps"));
+                case "SOLD":
+                    return "Sold Out";
+                case "SOLDNONFSA":
+                    return "Sold Out Non FSA";
+                case "FLOOR":
+                    return "UPX Floor";
+                case "FLOORUSD":
+                    return "USD Floor";
+                case "PERUP2":
+                    return "Average Price Per UP2 From Past 4 Weeks";
+                case "BUILDINGS":
+                    return "Completed Buildings";
+                case "PERCENTBUILT":
+                    return "Percent Built";
+                default:
+                    return "Unknown";
             }
-            map.SaveAsPng(Path.Combine("GeneratedMaps", string.Format("{0}.png", fileName)));
+        }
+
+        private string SaveMap(Image<Rgba32> map, string fileName)
+        {
+            string directoryPath = string.Format("{0}var{0}GeneratedMaps{0}", Path.DirectorySeparatorChar);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+            string fullPath = string.Format("{0}{1}.png", directoryPath, fileName);
+            map.SaveAsPng(fullPath);
+
+            return fullPath;
         }
 
         public string SearchForMap(int cityId, string mapType, int registeredUserId)
         {
-            string[] fileEntries = Directory.GetFiles(Path.Combine("GeneratedMaps"));
+            string directoryPath = string.Format("{0}var{0}GeneratedMaps{0}", Path.DirectorySeparatorChar);
+            string[] fileEntries = Directory.GetFiles(directoryPath);
             foreach (string fileName in fileEntries)
             {
                 if (Regex.IsMatch(fileName, string.Format("{0}_{1}_{2}_\\d+", Consts.Cities[cityId].Replace(" ", ""), mapType.ToUpper(), registeredUserId)))
                 {
-                    return fileName.Replace(".png", "");
+                    return fileName;
                 }
             }
 
@@ -97,12 +125,7 @@ namespace Upland.InformationProcessor
 
         public void DeleteSavedMap(string fileName)
         {
-            File.Delete(Path.Combine("GeneratedMaps", string.Format("{0}.png", fileName)));
-        }
-
-        public string GetMapLocaiton(string fileName)
-        {
-            return Path.Combine("GeneratedMaps", string.Format("{0}.png", fileName));
+            File.Delete(fileName);
         }
 
         public string CreateMap(int cityId, string type, int registeredUserId, bool colorBlind, List<string> customColors)
@@ -120,13 +143,13 @@ namespace Upland.InformationProcessor
 
             if (type.ToUpper() == "SOLD")
             {
-                typeString = "Sold Out";
+                typeString = GetDisplayMapType("SOLD");
                 map = CreateSoldOutMap(cityId, colorBlind, false, customKey);
                 key = BuildStandardKey(colorBlind, customKey);
             }
             else if (type.ToUpper() == "SOLDNONFSA")
             {
-                typeString = "Sold Out Non FSA";
+                typeString = GetDisplayMapType("SOLDNONFSA");
                 map = CreateSoldOutMap(cityId, colorBlind, true, customKey);
                 key = BuildStandardKey(colorBlind, customKey);
             }
@@ -134,7 +157,7 @@ namespace Upland.InformationProcessor
             {
                 string currency = type.ToUpper() == "FLOOR" ? "UPX" : "USD";
 
-                typeString = type.ToUpper() == "FLOOR" ? "UPX Floor" : "USD Floor";
+                typeString = GetDisplayMapType(type.ToUpper());
 
                 List<UplandForSaleProp> forSaleProps = _localDataManager
                     .GetPropertiesForSale_City(cityId, false)
@@ -169,7 +192,7 @@ namespace Upland.InformationProcessor
             }
             else if (type.ToUpper() == "PERUP2")
             {
-                typeString = "Average Price Per UP2 From Past 4 Weeks";
+                typeString = GetDisplayMapType("PERUP2");
 
                 List<Neighborhood> neighborhoods = _localDataManager.GetNeighborhoods().Where(n => n.CityId == cityId).ToList();
                 Dictionary<int, double> marketData = _profileAppraiser.GetNeighborhoodPricePerUP2();
@@ -210,7 +233,7 @@ namespace Upland.InformationProcessor
                     }
                 }
 
-                typeString = "Completed Buildings";
+                typeString = GetDisplayMapType("BUILDINGS");
                 map = CreateBuildingCountMap(cityId, colorBlind, neighborhoodStructureCount, customKey);
                 key = BuildBuildingCountKey(neighborhoodStructureCount, colorBlind, customKey);
             }
@@ -238,7 +261,7 @@ namespace Upland.InformationProcessor
                     }
                 }
 
-                typeString = "Percent Built";
+                typeString = GetDisplayMapType("PERCENTBUILT");
                 map = CreateBuildingPercentMap(cityId, colorBlind, neighborhoodStructurePercent, customKey);
                 key = BuildBuildingPercentKey(neighborhoodStructurePercent, colorBlind, customKey);
             }
@@ -259,12 +282,9 @@ namespace Upland.InformationProcessor
             combinedMap.Mutate(x => x.DrawImage(header, new Point((combinedMap.Width - header.Width) / 2, 0), 1));
             combinedMap.Mutate(x => x.DrawImage(footer, new Point((combinedMap.Width - footer.Width) / 2, combinedMap.Height + -50), 1));
 
-
             string filename = string.Format("{0}_{1}_{2}_{3}", Consts.Cities[cityId].Replace(" ", ""), type.ToUpper(), registeredUserId, DateTime.UtcNow.ToString("yyyyMMddHHmmss"));
 
-            SaveMap(combinedMap, filename);
-
-            return filename;
+            return SaveMap(combinedMap, filename);
         }
         
         private Image<Rgba32> CreateFloorMap(int cityId, Dictionary<int, double> lowestHoodPrice, bool colorBlind, List<Color> customKey)
@@ -994,7 +1014,7 @@ namespace Upland.InformationProcessor
 
         private Image<Rgba32> LoadBlankMapByCityId(int cityId)
         {
-            string filePath = string.Format("{0}root{0}OptimizerBot{0}CityMaps{0}{1}.bmp", Path.DirectorySeparatorChar, cityId);
+            string filePath = string.Format("{0}var{0}CityMaps{0}{1}.bmp", Path.DirectorySeparatorChar, cityId);
             Image<Rgba32> cityMap = (Image<Rgba32>)Image.Load(filePath);
             return cityMap;
         }

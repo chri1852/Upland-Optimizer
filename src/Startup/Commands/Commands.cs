@@ -1146,6 +1146,13 @@ namespace Startup.Commands
                 return;
             }
 
+            string oldMapFileName = _mappingProcessor.SearchForMap(cityId, type.ToUpper(), registeredUser.Id);
+
+            if (oldMapFileName != null && oldMapFileName.Trim() != "")
+            {
+                _mappingProcessor.DeleteSavedMap(oldMapFileName);
+            }
+
             try
             {
                 await ReplyAsync(string.Format("Creating the map now!"));
@@ -1158,16 +1165,7 @@ namespace Startup.Commands
                 return;
             }
 
-            await Context.Channel.SendFileAsync(_mappingProcessor.GetMapLocaiton(fileName));
-
-            try
-            {
-                _mappingProcessor.DeleteSavedMap(fileName);
-            }
-            catch (Exception ex)
-            {
-                _localDataManager.CreateErrorLog("Commands - CreateMap - Delete Map", ex.Message);
-            }
+            await Context.Channel.SendFileAsync(fileName);
 
             registeredUser.RunCount++;
             _localDataManager.UpdateRegisteredUser(registeredUser);
