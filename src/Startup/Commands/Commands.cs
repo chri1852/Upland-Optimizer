@@ -457,6 +457,8 @@ namespace Startup.Commands
                 return;
             }
 
+            CheckBlockChainStatus();
+
             List<string> collectionData = _informationProcessor.GetCollectionInformation(fileType.ToUpper());
 
             byte[] resultBytes = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, collectionData));
@@ -477,6 +479,8 @@ namespace Startup.Commands
             {
                 return;
             }
+
+            CheckBlockChainStatus();
 
             if (username == "___SELF___")
             {
@@ -503,6 +507,8 @@ namespace Startup.Commands
             {
                 return;
             }
+
+            CheckBlockChainStatus();
 
             List<string> neighborhoodData = _informationProcessor.GetNeighborhoodInformation(fileType.ToUpper());
 
@@ -532,6 +538,8 @@ namespace Startup.Commands
                 return;
             }
 
+            CheckBlockChainStatus();
+
             await ReplyAsync(string.Format("Sounds Good {0}! Lets find out whats for sale!", HelperFunctions.GetRandomName(_random)));
             List<string> collectionReport = _forSaleProcessor.GetCollectionPropertiesForSale(collectionId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
 
@@ -560,6 +568,8 @@ namespace Startup.Commands
             {
                 return;
             }
+
+            CheckBlockChainStatus();
 
             await ReplyAsync(string.Format("Sounds Good {0}! Lets find out whats for sale!", HelperFunctions.GetRandomName(_random)));
             List<string> neighborhoodReport = _forSaleProcessor.GetNeighborhoodPropertiesForSale(neighborhoodId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
@@ -632,6 +642,8 @@ namespace Startup.Commands
                 return;
             }
 
+            CheckBlockChainStatus();
+
             await ReplyAsync(string.Format("Running that query now {0}!", HelperFunctions.GetRandomName(_random)));
             List<string> salesData = _forSaleProcessor.GetCityPropertiesForSale(cityId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
 
@@ -660,6 +672,8 @@ namespace Startup.Commands
             {
                 return;
             }
+
+            CheckBlockChainStatus();
 
             await ReplyAsync(string.Format("Looking for Buildings now {0}!", HelperFunctions.GetRandomName(_random)));
 
@@ -691,6 +705,8 @@ namespace Startup.Commands
                 return;
             }
 
+            CheckBlockChainStatus();
+
             await ReplyAsync(string.Format("Running that query now {0}!", HelperFunctions.GetRandomName(_random)));
             List<string> salesData = _forSaleProcessor.GetStreetPropertiesForSale(streetId, orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
 
@@ -720,6 +736,8 @@ namespace Startup.Commands
                 return;
             }
 
+            CheckBlockChainStatus();
+
             await ReplyAsync(string.Format("Running that query now {0}!", HelperFunctions.GetRandomName(_random)));
             List<string> salesData = _forSaleProcessor.GetUsernamePropertiesForSale(uplandUsername.ToLower(), orderBy.ToUpper(), currency.ToUpper(), fileType.ToUpper());
 
@@ -748,6 +766,8 @@ namespace Startup.Commands
             {
                 return;
             }
+
+            CheckBlockChainStatus();
 
             await ReplyAsync(string.Format("Rodger that! Searching for unminted properties {0}!", HelperFunctions.GetRandomName(_random)));
 
@@ -798,6 +818,8 @@ namespace Startup.Commands
             {
                 return;
             }
+
+            CheckBlockChainStatus();
 
             await ReplyAsync(string.Format("Okey-Dokey! Searching for all properties {0}!", HelperFunctions.GetRandomName(_random)));
 
@@ -979,6 +1001,8 @@ namespace Startup.Commands
                 return;
             }
 
+            CheckBlockChainStatus();
+
             await ReplyAsync(string.Format("Grabbing that Sales History now {0}!", HelperFunctions.GetRandomName(_random)));
 
             List<string> saleHistoryData = _informationProcessor.GetSaleHistoryByType(type.ToUpper(), identifier, fileType.ToUpper());
@@ -1103,6 +1127,8 @@ namespace Startup.Commands
             {
                 return;
             }
+
+            CheckBlockChainStatus();
 
             if (!Consts.NON_BULLSHIT_CITY_IDS.Contains(cityId))
             {
@@ -1271,6 +1297,14 @@ namespace Startup.Commands
             }
 
             return true;
+        }
+
+        private async Task CheckBlockChainStatus()
+        {
+            if (!bool.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES)))
+            {
+                await ReplyAsync(string.Format("Blockchain Updates are Disabled. This data is likely out of date."));
+            }
         }
 
         public async Task<bool> EnsureRunsAvailable(RegisteredUser registeredUser)

@@ -261,6 +261,7 @@ namespace Upland.InformationProcessor
             }
 
             long propId = long.Parse(action.act.data.a45);
+            Property property = _localDataManager.GetProperty(propId);
             List<SaleHistoryEntry> allEntries = _localDataManager.GetRawSaleHistoryByPropertyId(propId);
             List<SaleHistoryEntry> buyEntries = allEntries
                 .Where(e => e.BuyerEOS == null && !e.Offer && e.AmountFiat > 0)
@@ -270,8 +271,8 @@ namespace Upland.InformationProcessor
             {
                 // If for some reason the sale already got set, check to see if it is there
                 buyEntries = allEntries
-                .Where(e => e.BuyerEOS == action.act.data.p14 && !e.Offer && e.AmountFiat > 0)
-                .OrderByDescending(e => e.DateTime).ToList();
+                    .Where(e => e.BuyerEOS == action.act.data.p14 && !e.Offer && e.AmountFiat > 0)
+                    .OrderByDescending(e => e.DateTime).ToList();
             }
 
             if (buyEntries.Count > 0)
@@ -288,8 +289,20 @@ namespace Upland.InformationProcessor
                     }
                 }
             }
+            else
+            {
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - No Sale Entry Found", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.act.data.a45, action.act.data.p14, action.trx_id));
+                
+                // Clear open sale entries anyway since it changed hands
+                foreach (SaleHistoryEntry entry in allEntries)
+                {
+                    if (entry.BuyerEOS == null || entry.SellerEOS == null)
+                    {
+                        _localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                    }
+                }
+            }
 
-            Property property = _localDataManager.GetProperty(propId);
             if (property != null && property.Address != null && property.Address != "")
             {
                 property.Status = Consts.PROP_STATUS_OWNED;
@@ -592,14 +605,15 @@ namespace Upland.InformationProcessor
                     return;
                 }
 
-                prop.Owner = action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0];
+                string newOwner = action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0];
+                prop.Owner = newOwner;
                 prop.Status = Consts.PROP_STATUS_OWNED;
 
                 _localDataManager.UpsertProperty(prop);
 
                 List<SaleHistoryEntry> allEntries = _localDataManager.GetRawSaleHistoryByPropertyId(prop.Id);
                 SaleHistoryEntry buyEntry = allEntries
-                    .Where(e => e.SellerEOS == null && e.Offer && e.BuyerEOS == action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0])
+                    .Where(e => e.SellerEOS == null && e.Offer && e.BuyerEOS == newOwner)
                     .OrderByDescending(e => e.DateTime)
                     .FirstOrDefault();
 
@@ -614,7 +628,7 @@ namespace Upland.InformationProcessor
                 {
                     if (!allEntries.Any(b =>
                          b.SellerEOS == action.act.data.p25 &&
-                         b.BuyerEOS == action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0] &&
+                         b.BuyerEOS == newOwner &&
                          b.PropId == prop.Id &&
                          b.Offer &&
                          b.Accepted

@@ -6,6 +6,8 @@ namespace Upland.Interfaces.Processors
 {
     public interface IWebProcessor
     {
+        bool GetIsBlockchainUpdatesDisabled();
+
         Task<UserProfile> GetWebUIProfile(string uplandUsername);
 
         List<CachedForSaleProperty> GetForSaleProps(WebForSaleFilters filters, bool noPaging);
