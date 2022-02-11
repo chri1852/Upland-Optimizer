@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Upland.Infrastructure.LocalData;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
@@ -73,6 +74,25 @@ namespace Upland.InformationProcessor
                 Directory.CreateDirectory(Path.Combine("GeneratedMaps"));
             }
             map.SaveAsPng(Path.Combine("GeneratedMaps", string.Format("{0}.png", fileName)));
+        }
+
+        public string SearchForMap(int cityId, string mapType, int registeredUserId)
+        {
+            string[] fileEntries = Directory.GetFiles(Path.Combine("GeneratedMaps"));
+            foreach (string fileName in fileEntries)
+            {
+                if (Regex.IsMatch(fileName, string.Format("{0}_{1}_{2}_\\d+", Consts.Cities[cityId].Replace(" ", ""), mapType.ToUpper(), registeredUserId)))
+                {
+                    return fileName.Replace(".png", "");
+                }
+            }
+
+            return null;
+        }
+
+        public DateTime GetDateFromFileName(string fileName)
+        {
+            return DateTime.Parse(fileName.Split("_")[3]);
         }
 
         public void DeleteSavedMap(string fileName)

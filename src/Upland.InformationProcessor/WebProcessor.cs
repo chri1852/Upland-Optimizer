@@ -20,6 +20,7 @@ namespace Upland.InformationProcessor
         private Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>> _cityForSaleListCache;
         private Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>> _cityUnmintedCache;
         private Tuple<DateTime, Dictionary<long, string>> _propertyStructureCache;
+        private Tuple<DateTime, bool> _isBlockchainUpdatesDisabledCache;
 
         private Dictionary<int, bool> _isLoadingCityForSaleListCache;
         private Dictionary<int, bool> _isLoadingCityUnmintedCache;
@@ -42,6 +43,11 @@ namespace Upland.InformationProcessor
             {
                 _collectionProperties.Add(new Tuple<int, HashSet<long>>(collectionId, collectionProperties.Where(c => c.Item1 == collectionId).Select(c => c.Item2).ToHashSet()));
             }
+        }
+
+        public bool GetIsBlockchainUpdatesDisabled()
+        {
+            return GetIsBlockchainUpdatesDisabledFromCache();
         }
 
         public async Task<UserProfile> GetWebUIProfile(string uplandUsername)
@@ -273,7 +279,7 @@ namespace Upland.InformationProcessor
             {
                 string propString = "";
                 propString += Consts.Cities[prop.CityId] + ",";
-                propString += prop.Address.Replace(",", " ");
+                propString += prop.Address.Replace(",", " ") + ","; ;
                 propString += _neighborhoods[prop.NeighborhoodId].Replace(",", "") + ",";
                 propString += prop.Size + ",";
                 propString += prop.Mint + ",";
@@ -361,6 +367,7 @@ namespace Upland.InformationProcessor
         {
             _isLoadingPropertyStructureCache = false;
             _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(DateTime.UtcNow.AddDays(-1), new Dictionary<long, string>());
+            _isBlockchainUpdatesDisabledCache = new Tuple<DateTime, bool>(DateTime.UtcNow.AddDays(-1), false);
 
             _isLoadingCityForSaleListCache = new Dictionary<int, bool>();
             _isLoadingCityUnmintedCache = new Dictionary<int, bool>();
@@ -432,6 +439,18 @@ namespace Upland.InformationProcessor
             RemoveExpiredUnmintedEntries();
 
             return _cityUnmintedCache[cityId].Item2;
+        }
+
+        private bool GetIsBlockchainUpdatesDisabledFromCache()
+        {
+            if (_isBlockchainUpdatesDisabledCache.Item1 < DateTime.UtcNow)
+            {
+                _isBlockchainUpdatesDisabledCache = new Tuple<DateTime, bool>(
+                    DateTime.UtcNow.AddMinutes(1),
+                    !bool.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES)));
+            }
+
+            return _isBlockchainUpdatesDisabledCache.Item2;
         }
 
         private void RemoveExpiredSalesEntries()

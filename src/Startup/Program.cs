@@ -72,7 +72,7 @@ class Program
         
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
-        //await localDataManager.PopulateDatabaseCollectionInfo();
+        await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
