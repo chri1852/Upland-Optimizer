@@ -486,6 +486,11 @@ namespace Startup.Commands
             {
                 username = registeredUser.UplandUsername;
             }
+            else if (username.ToLower() == "csv")
+            {
+                await ReplyAsync(string.Format("If you want your data in csv format you need to specify the upland username first, then add csv.", HelperFunctions.GetRandomName(_random));
+                return;
+            }
 
             List<string> propertyData = await _informationProcessor.GetPropertyInfo(username.ToLower(), fileType.ToUpper());
 
