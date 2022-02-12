@@ -488,7 +488,7 @@ namespace Startup.Commands
             }
             else if (username.ToLower() == "csv")
             {
-                await ReplyAsync(string.Format("If you want your data in csv format you need to specify the upland username first, then add csv.", HelperFunctions.GetRandomName(_random));
+                await ReplyAsync(string.Format("If you want your data in csv format you need to specify the upland username first, then add csv.", HelperFunctions.GetRandomName(_random)));
                 return;
             }
 
