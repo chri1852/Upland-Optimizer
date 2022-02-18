@@ -731,6 +731,15 @@ namespace Upland.InformationProcessor
 
             if (property != null && property.Address != null && property.Address != "")
             {
+                // if the Mint is 0, then double check and set the mint price
+                if (property.Mint == 0)
+                {
+                    UplandProperty uplandProperty = await _uplandApiManager.GetUplandPropertyById(property.Id);
+                    Property prop = UplandMapper.Map(uplandProperty);
+
+                    property.Mint = prop.Mint;
+                }
+
                 property.Owner = action.act.data.a54;
                 property.Status = Consts.PROP_STATUS_OWNED;
                 property.MintedOn = action.timestamp;

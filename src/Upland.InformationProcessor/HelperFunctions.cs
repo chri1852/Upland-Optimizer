@@ -299,8 +299,6 @@ namespace Upland.InformationProcessor
                 case 27:
                 case 28:
                     return 16; // Nashville
-                case 33:
-                    return 32; // Los Angeles
                 default:
                     return cityId;
             }

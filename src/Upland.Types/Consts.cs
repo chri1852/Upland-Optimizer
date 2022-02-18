@@ -48,6 +48,7 @@ namespace Upland.Types
             { 16   , "Nashville"      },
             { 29   , "Bronx"          },
             { 32   , "Los Angeles"    },
+            { 33   , "Detroit"        },
 
             // NYC Subcities
             { 17   , "New York"       },
