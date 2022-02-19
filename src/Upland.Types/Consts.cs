@@ -71,9 +71,6 @@ namespace Upland.Types
             { 26   , "Antioch"        },
             { 27   , "Nolensville"    },
             { 28   , "Whites Creek"   },
-
-            // Los Angeles Subcities
-            { 33   , "Inglewood"      }
         };
 
         public static readonly Dictionary<int, string> CollectionCategories = new Dictionary<int, string>

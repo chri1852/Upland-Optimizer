@@ -346,10 +346,8 @@ namespace Upland.CollectionOptimizer
             {
                 // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
                 if (!conflictingCollections.ContainsKey(entry.Value.Id)
-                    //&& conflictingCollections.Count < qualityLevel
                     && !Consts.StandardCollectionIds.Contains(entry.Value.Id)
-                    && !entry.Value.IsCityCollection
-                    )
+                    && !entry.Value.IsCityCollection)  
                 {
                     if (!conflictingCollections.Any(e => e.Value.IsCityCollection && e.Value.CityId == entry.Value.CityId)
                         && this.Collections.Any(e => e.Value.IsCityCollection && e.Value.CityId == entry.Value.CityId))
@@ -368,7 +366,7 @@ namespace Upland.CollectionOptimizer
                     }
                 }
             }
-
+            
             return conflictingCollections;
         }
 
