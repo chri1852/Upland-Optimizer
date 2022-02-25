@@ -6,18 +6,22 @@ BEGIN
 			CP.CollectionId AS 'Id',
 			P.FSA,
 			P.[Status],
+			CASE WHEN PS.StructureType IS NULL THEN CAST(0 AS BIT) ELSE CAST(1 AS BIT) END AS 'IsBuilt',
 			COUNT(*) AS 'PropCount'
 		FROM 
 			UPL.Property P (NOLOCK)
 				JOIN UPL.CollectionProperty CP (NOLOCK)
 					ON P.Id = CP.PropertyId
+				LEFT JOIN UPL.PropertyStructure PS (NOLOCK)
+					ON P.Id = PS.PropertyId
 		WHERE 
 			CP.CollectionId IS NOT NULL
 			AND [Status] IS NOT NULL
 		GROUP BY 
 			CP.CollectionId, 
 			P.FSA, 
-			P.[Status]
+			P.[Status],
+			CASE WHEN PS.StructureType IS NULL THEN CAST(0 AS BIT) ELSE CAST(1 AS BIT) END
 		ORDER BY 
 			CP.CollectionId, 
 			P.[STATUS], 

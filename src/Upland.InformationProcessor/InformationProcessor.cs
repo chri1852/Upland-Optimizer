@@ -42,7 +42,7 @@ namespace Upland.InformationProcessor
                 int propCountPad = 11;
 
 
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted"
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Built Props - Percent Minted - Percent Non-FSA Minted - Percent Built"
                     , "Id".PadLeft(idPad)
                     , "Category".PadLeft(categoryPad)
                     , "Name".PadLeft(NamePad)
@@ -83,8 +83,10 @@ namespace Upland.InformationProcessor
                             UnlockedFSAProps = 0,
                             ForSaleProps = 0,
                             OwnedProps = 0,
+                            BuildingCount = 0,
                             PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
+                            PercentNonFSAMinted = 100.00,
+                            PercentBuilt = 100.00
                         });
                     }
                     else
@@ -98,7 +100,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                output.Add("Id,Category,Name,Boost,Slots,Reward,NumberOfProperties,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
+                output.Add("Id,Category,Name,Boost,Slots,Reward,NumberOfProperties,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,BuiltProps,PercentMinted,PercentNonFSAMinted,PercentBuilt");
                 foreach (Collection collection in collections)
                 {
                     string collectionString = string.Format("{0},{1},{2},{3},{4},{5},"
@@ -120,8 +122,10 @@ namespace Upland.InformationProcessor
                             UnlockedFSAProps = 0,
                             ForSaleProps = 0,
                             OwnedProps = 0,
+                            BuildingCount = 0,
                             PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
+                            PercentNonFSAMinted = 100.00,
+                            PercentBuilt = 100.00
                         });
                     }
                     else
@@ -150,7 +154,7 @@ namespace Upland.InformationProcessor
                 int idPad = 9;
                 int namePad = neighborhoods.OrderByDescending(n => n.Name.Length).First().Name.Length;
 
-                output.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
+                output.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Built Props - Percent Minted - Percent Non-FSA Minted - Percent Built", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
                 output.Add("");
 
                 int cityId = -1;
@@ -178,8 +182,10 @@ namespace Upland.InformationProcessor
                             UnlockedFSAProps = 0,
                             ForSaleProps = 0,
                             OwnedProps = 0,
+                            BuildingCount = 0,
                             PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
+                            PercentNonFSAMinted = 100.00,
+                            PercentBuilt = 100.00
                         });
                     }
                     else
@@ -193,7 +199,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                output.Add("Id,Name,CityId,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
+                output.Add("Id,Name,CityId,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,BuiltProps,PercentMinted,PercentNonFSAMinted,PercentBuilt");
                 foreach (Neighborhood neighborhood in neighborhoods)
                 {
                     string neighborhoodString = string.Format("{0},{1},{2},"
@@ -212,8 +218,10 @@ namespace Upland.InformationProcessor
                             UnlockedFSAProps = 0,
                             ForSaleProps = 0,
                             OwnedProps = 0,
+                            BuildingCount = 0,
                             PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
+                            PercentNonFSAMinted = 100.00,
+                            PercentBuilt = 100.00
                         });
                     }
                     else
@@ -244,7 +252,7 @@ namespace Upland.InformationProcessor
                 int typePad = 14;
                 int namePad = streets.OrderByDescending(n => n.Name.Length).First().Name.Length;
 
-                output.Add(string.Format("{0} - {1} - {2} - {3} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "CityId".PadLeft(cityPad), "Name".PadLeft(namePad), "Type".PadLeft(typePad)));
+                output.Add(string.Format("{0} - {1} - {2} - {3} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Built Props - Percent Minted - Percent Non-FSA Minted - Percent Built", "Id".PadLeft(idPad), "CityId".PadLeft(cityPad), "Name".PadLeft(namePad), "Type".PadLeft(typePad)));
                 output.Add("");
 
                 int cityId = -1;
@@ -274,8 +282,10 @@ namespace Upland.InformationProcessor
                             UnlockedFSAProps = 0,
                             ForSaleProps = 0,
                             OwnedProps = 0,
+                            BuildingCount = 0,
                             PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
+                            PercentNonFSAMinted = 100.00,
+                            PercentBuilt = 100.00
                         });
                     }
                     else
@@ -289,7 +299,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                output.Add("Id,CityId,Name,Type,CityId,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
+                output.Add("Id,Name,Type,CityId,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,BuiltProps,PercentMinted,PercentNonFSAMinted,PercentBuilt");
                 foreach (Street street in streets)
                 {
                     string streetString = string.Format("{0},{1},{2},{3},"
@@ -309,8 +319,10 @@ namespace Upland.InformationProcessor
                             UnlockedFSAProps = 0,
                             ForSaleProps = 0,
                             OwnedProps = 0,
+                            BuildingCount = 0,
                             PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
+                            PercentNonFSAMinted = 100.00,
+                            PercentBuilt = 100.00
                         });
                     }
                     else
@@ -336,7 +348,7 @@ namespace Upland.InformationProcessor
                 int idPad = 5;
                 int namePad = Consts.Cities.Where(c => Consts.NON_BULLSHIT_CITY_IDS.Contains(c.Key)).OrderByDescending(c => c.Value.Length).First().Value.Length;
 
-                array.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Percent Minted - Percent Non-FSA Minted", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
+                array.Add(string.Format("{0} - {1} - Total Props - Locked Props - Unlocked Non-FSA Props - Unlocked FSA Props - For Sale Props - Owned Props - Built Props - Percent Minted - Percent Non-FSA Minted - Percent Built", "Id".PadLeft(idPad), "Name".PadLeft(namePad)));
 
                 foreach (int cityId in Consts.Cities.Keys.Where(k => Consts.NON_BULLSHIT_CITY_IDS.Contains(k)))
                 {
@@ -352,8 +364,10 @@ namespace Upland.InformationProcessor
                             UnlockedFSAProps = 0,
                             ForSaleProps = 0,
                             OwnedProps = 0,
+                            BuildingCount = 0,
                             PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
+                            PercentNonFSAMinted = 100.00,
+                            PercentBuilt = 100.00
                         });
                     }
                     else
@@ -366,8 +380,8 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                array.Add("Id,Name,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,PercentMinted,PercentNonFSAMinted");
-                foreach (int cityId in Consts.Cities.Keys)
+                array.Add("Id,Name,TotalProps,LockedProps,UnlockedNonFSAProps,UnlockedFSAProps,ForSaleProps,OwnedProps,BuiltProps,PercentMinted,PercentNonFSAMinted,PercentBuilt");
+                foreach (int cityId in Consts.Cities.Keys.Where(k => Consts.NON_BULLSHIT_CITY_IDS.Contains(k)))
                 {
                     string entry = string.Format("{0},{1},", cityId, Consts.Cities[cityId]);
 
@@ -381,8 +395,10 @@ namespace Upland.InformationProcessor
                             UnlockedFSAProps = 0,
                             ForSaleProps = 0,
                             OwnedProps = 0,
+                            BuildingCount = 0,
                             PercentMinted = 100.00,
-                            PercentNonFSAMinted = 100.00
+                            PercentNonFSAMinted = 100.00,
+                            PercentBuilt = 100.00
                         });
                     }
                     else
@@ -400,6 +416,7 @@ namespace Upland.InformationProcessor
         {
             List<string> output = new List<string>();
             List<Property> properties = await _localDataManager.GetPropertysByUsername(username);
+            Dictionary<long, AcquiredInfo> acquiredInfo = _localDataManager.GetAcquiredOnByPlayer(username).ToDictionary(a => a.PropertyId, a => a);
 
             properties = properties.OrderBy(p => p.Address).OrderBy(p => p.CityId).ToList();
 
@@ -408,10 +425,19 @@ namespace Upland.InformationProcessor
 
             if (fileType == "CSV")
             {
-                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Address,Structure");
+                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Address,Structure,Minted,LastAcquiredOn");
 
                 foreach (Property property in properties)
                 {
+                    string acquiredMinted = "Unknown";
+                    string acquiredDate = "Unknown";
+
+                    if (acquiredInfo.ContainsKey(property.Id))
+                    {
+                        acquiredMinted = acquiredInfo[property.Id].Minted.ToString();
+                        acquiredDate = acquiredInfo[property.Id].AcquiredDateTime == null ? "Unknown" : acquiredInfo[property.Id].AcquiredDateTime.Value.ToString("MM/dd/yyyy hh:mm:ss");
+                    }
+
                     string propString = "";
 
                     propString += string.Format("{0},", property.Id);
@@ -420,7 +446,9 @@ namespace Upland.InformationProcessor
                     propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
                     propString += string.Format("{0},", property.CityId);
                     propString += string.Format("{0},", property.Address);
-                    propString += string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None");
+                    propString += string.Format("{0},", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None");
+                    propString += string.Format("{0},", acquiredMinted);
+                    propString += string.Format("{0}", acquiredDate);
 
                     output.Add(propString);
                 }
@@ -433,16 +461,20 @@ namespace Upland.InformationProcessor
                 int neighborhoodPad = 14;
                 int addressPad = properties.Max(p => p.Address.Length);
                 int buildingPad = 29;
+                int mintedPad = 7;
+                int datePad = 19; 
 
                 output.Add(string.Format("Property Information For {0} as of {1:MM/dd/yy H:mm:ss}", username.ToUpper(), DateTime.Now));
                 output.Add("");
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
                     , "Id".PadLeft(idPad)
                     , "Size".PadLeft(sizePad)
                     , "Mint".PadLeft(mintPad)
                     , "NeighborhoodId".PadLeft(neighborhoodPad)
                     , "Address".PadLeft(addressPad)
-                    , "Building".PadLeft(buildingPad)));
+                    , "Building".PadLeft(buildingPad)
+                    , "Minted".PadLeft(mintedPad)
+                    , "AcquiredOn".PadLeft(datePad)));
 
                 int? cityId = -1;
                 foreach (Property property in properties)
@@ -454,13 +486,24 @@ namespace Upland.InformationProcessor
                         output.Add(Consts.Cities[cityId.Value]);
                     }
 
-                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                    string acquiredMinted = "Unknown";
+                    string acquiredDate = "Unknown";
+
+                    if (acquiredInfo.ContainsKey(property.Id))
+                    {
+                        acquiredMinted = acquiredInfo[property.Id].Minted.ToString();
+                        acquiredDate = acquiredInfo[property.Id].AcquiredDateTime == null ? "Unknown" : acquiredInfo[property.Id].AcquiredDateTime.Value.ToString("MM/dd/yyyy hh:mm:ss");
+                    }
+
+                    output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7}"
                         , property.Id.ToString().PadLeft(idPad)
                         , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
                         , string.Format("{0:N2}", property.Mint).PadLeft(mintPad)
                         , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
                         , property.Address.PadLeft(addressPad)
                         , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(buildingPad)
+                        , string.Format("{0}", acquiredMinted).PadLeft(mintedPad)
+                        , string.Format("{0}", acquiredDate).PadLeft(datePad)
                     ));
                 }
             }

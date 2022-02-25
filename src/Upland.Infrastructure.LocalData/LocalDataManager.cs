@@ -505,6 +505,11 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<AcquiredInfo> GetAcquiredOnByPlayer(string UplandUsername)
+        {
+            return _localDataRepository.GetAcquiredInfoByUser(UplandUsername);
+        }
+
         public List<CollatedStatsObject> GetCityStats()
         {
             return CollateStats(_localDataRepository.GetCityStats());
@@ -561,6 +566,11 @@ namespace Upland.Infrastructure.LocalData
                         }
                         break;
                 }
+
+                if (stat.IsBuilt)
+                {
+                    collatedStats.Last().BuildingCount += stat.PropCount;
+                }
             }
 
             foreach (CollatedStatsObject collatedStat in collatedStats)
@@ -575,6 +585,7 @@ namespace Upland.Infrastructure.LocalData
                 {
                     collatedStat.PercentMinted = 100.00 * (collatedStat.ForSaleProps + collatedStat.OwnedProps) / (collatedStat.TotalProps - collatedStat.LockedProps);
                     collatedStat.PercentNonFSAMinted = 100.00 * (collatedStat.ForSaleProps + collatedStat.OwnedProps + collatedStat.UnlockedFSAProps) / (collatedStat.TotalProps - collatedStat.LockedProps);
+                    collatedStat.PercentBuilt = 100.00 * (1.0 * collatedStat.BuildingCount / collatedStat.TotalProps);
                 }
             }
 
