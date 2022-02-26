@@ -53,6 +53,7 @@ namespace Upland.InformationProcessor
         public async Task<UserProfile> GetWebUIProfile(string uplandUsername)
         {
             UserProfile profile = await _uplandApiManager.GetUserProfile(uplandUsername);
+            Dictionary<long, AcquiredInfo> propertyAcquistionInfo = _localDataManager.GetAcquiredOnByPlayer(uplandUsername).ToDictionary(a => a.PropertyId, a => a);
 
             profile.Rank = HelperFunctions.TranslateUserLevel(int.Parse(profile.Rank));
             profile.EOSAccount = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername);
@@ -107,6 +108,12 @@ namespace Upland.InformationProcessor
                     property.Building = userBuildings[property.PropertyId];
                 }
                 property.CollectionIds = GetCollectionIdListForPropertyId(property.PropertyId);
+
+                if (propertyAcquistionInfo.ContainsKey(property.PropertyId))
+                {
+                    property.Minted = propertyAcquistionInfo[property.PropertyId].Minted;
+                    property.AcquiredOn = propertyAcquistionInfo[property.PropertyId].AcquiredDateTime;
+                }
             }
 
             return profile;
