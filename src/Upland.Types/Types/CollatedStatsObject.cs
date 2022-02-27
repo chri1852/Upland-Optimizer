@@ -5,6 +5,7 @@ namespace Upland.Types.Types
     public class CollatedStatsObject
     {
         public int DbId { get; set; }
+        public int CityId { get; set; }
         public int Id { get; set; }
         public int TotalProps { get; set; }
         public int LockedProps { get; set; }
