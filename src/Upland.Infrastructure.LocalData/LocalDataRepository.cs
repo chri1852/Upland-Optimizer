@@ -264,11 +264,11 @@ namespace Upland.Infrastructure.LocalData
                             {
                                 if (entry.Currency == "UPX")
                                 {
-                                    entry.Markup = entry.Price / entry.Property.Mint;
+                                    entry.Markup = entry.Price / Math.Max(entry.Property.Mint, 1);
                                 }
                                 else
                                 {
-                                    entry.Markup = (entry.Price * 1000) / entry.Property.Mint;
+                                    entry.Markup = (entry.Price * 1000) / Math.Max(entry.Property.Mint, 1);
                                 }
                             }
                             else

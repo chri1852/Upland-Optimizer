@@ -436,13 +436,12 @@ namespace Startup.Commands
             supportMeString.Add(string.Format("Hey {0}, Sounds like you really like this tool! For the low price of ${1:N2} you will get perpetual access to run this when ever you like, access to additional features, and get a warm fuzzy feeling knowing you are helping to pay for hosting and development costs.", HelperFunctions.GetRandomName(_random), upxToSupporter / 1000.0));
             supportMeString.Add("");
             supportMeString.Add(string.Format("You can pay by sending at least ${0:N2} bucks to Grombrindal through the below methods. Always be sure to DM Grombrindal when you do!", upxToSupporter / 1000.0));
-            supportMeString.Add(string.Format("   1. UPX - Offer {0} or more UPX on 9843 S Exchange Ave in Chicago, and DM Grombrindal with your upland username. I'll accept and buy it back for 1 UPX.", upxToSupporter));
-            supportMeString.Add(string.Format("   2. UPX - Keep Sending to the properties in #locations. For each 200 UPX in sends to those locations you will earn another run. Once you have sent {0} UPX total, and the bot will automatically set you as a supporter", Consts.SendUpxSupporterThreshold));
-            supportMeString.Add("   3. USD - Paypal - chri1852@umn.edu");
-            supportMeString.Add("   4. USD - Venmo  - Alex-Christensen-9");
-            supportMeString.Add("   5. WAX - Send to 5otpy.wam, with your upland username in the memo.");
-            supportMeString.Add("   6. Crypto - Send it to Grombrindal via the Tipbot in the channel.");
-            supportMeString.Add("   7. Anything Else - DM Grombindal and we'll work something out.");
+            supportMeString.Add(string.Format("   1. UPX - Keep Sending to the properties in #locations. For each 200 UPX in sends to those locations you will earn another run. Once you have sent {0} UPX total, and the bot will automatically set you as a supporter", Consts.SendUpxSupporterThreshold));
+            supportMeString.Add("   2. USD - Paypal - chri1852@umn.edu");
+            supportMeString.Add("   3. USD - Venmo  - Alex-Christensen-9");
+            supportMeString.Add("   4. WAX - Send to 5otpy.wam, with your upland username in the memo.");
+            supportMeString.Add("   5. Crypto - Send it to Grombrindal via the Tipbot in the channel.");
+            supportMeString.Add("   6. Anything Else - DM Grombindal and we'll work something out.");
 
             await ReplyAsync(string.Format("{0}", string.Join(Environment.NewLine, supportMeString)));
         }

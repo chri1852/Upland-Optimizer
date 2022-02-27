@@ -281,7 +281,8 @@ namespace Upland.InformationProcessor
                 return saleHistoryEntries;
             }
 
-            saleHistoryEntries = saleHistoryEntries.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
+            // return the first 25k lines for fast paging once loaded
+            saleHistoryEntries = saleHistoryEntries.Take(25000).ToList();
 
             return saleHistoryEntries;
         }
@@ -357,7 +358,7 @@ namespace Upland.InformationProcessor
         {
             List<string> csvString = new List<string>();
 
-            csvString.Add("TransactionDateTime,Seller,Buyer,Price,Currency,Offer,City,Address,Neighborhood,Mint,CollectionIds,OfferPropCity,OfferPropAddress,OfferPropNeighborhood,OfferPropMint,OfferPropCollectionIds");
+            csvString.Add("TransactionDateTime,Seller,Buyer,Price,Markup,Currency,Offer,City,Address,Neighborhood,Mint,CollectionIds,OfferPropCity,OfferPropAddress,OfferPropNeighborhood,OfferPropMint,OfferPropCollectionIds");
 
             foreach (CachedSaleHistoryEntry entry in cachedSaleHistoryEntries)
             {
