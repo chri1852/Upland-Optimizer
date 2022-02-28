@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
 using Upland.Types;
+using Upland.Types.Enums;
 using Upland.Types.Types;
 
 namespace Upland.InformationProcessor
@@ -21,10 +22,19 @@ namespace Upland.InformationProcessor
         private Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>> _cityUnmintedCache;
         private Tuple<DateTime, Dictionary<long, string>> _propertyStructureCache;
         private Tuple<DateTime, bool> _isBlockchainUpdatesDisabledCache;
+        private Tuple<DateTime, List<CollatedStatsObject>> _cityInfoCache;
+        private Tuple<DateTime, List<CollatedStatsObject>> _neighborhoodInfoCache;
+        private Tuple<DateTime, List<CollatedStatsObject>> _streetInfoCache;
+        private Tuple<DateTime, List<CollatedStatsObject>> _collectionInfoCache;
 
         private Dictionary<int, bool> _isLoadingCityForSaleListCache;
         private Dictionary<int, bool> _isLoadingCityUnmintedCache;
         private bool _isLoadingPropertyStructureCache;
+        private bool _isLoadingCityInfoCache;
+        private bool _isLoadingNeighborhoodInfoCache;
+        private bool _isLoadingStreetInfoCache;
+        private bool _isLoadingCollectionInfoCache;
+
 
         public WebProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
         {
@@ -53,6 +63,7 @@ namespace Upland.InformationProcessor
         public async Task<UserProfile> GetWebUIProfile(string uplandUsername)
         {
             UserProfile profile = await _uplandApiManager.GetUserProfile(uplandUsername);
+            Dictionary<long, AcquiredInfo> propertyAcquistionInfo = _localDataManager.GetAcquiredOnByPlayer(uplandUsername).ToDictionary(a => a.PropertyId, a => a);
 
             profile.Rank = HelperFunctions.TranslateUserLevel(int.Parse(profile.Rank));
             profile.EOSAccount = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername);
@@ -107,6 +118,12 @@ namespace Upland.InformationProcessor
                     property.Building = userBuildings[property.PropertyId];
                 }
                 property.CollectionIds = GetCollectionIdListForPropertyId(property.PropertyId);
+
+                if (propertyAcquistionInfo.ContainsKey(property.PropertyId))
+                {
+                    property.Minted = propertyAcquistionInfo[property.PropertyId].Minted;
+                    property.AcquiredOn = propertyAcquistionInfo[property.PropertyId].AcquiredDateTime;
+                }
             }
 
             return profile;
@@ -264,9 +281,27 @@ namespace Upland.InformationProcessor
                 return saleHistoryEntries;
             }
 
-            saleHistoryEntries = saleHistoryEntries.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
+            // return the first 25k lines for fast paging once loaded
+            saleHistoryEntries = saleHistoryEntries.Take(25000).ToList();
 
             return saleHistoryEntries;
+        }
+
+        public List<CollatedStatsObject> GetInfoByType(StatsTypes statsType)
+        {
+            switch(statsType)
+            {
+                case StatsTypes.City:
+                    return GetCityInfoFromCache();
+                case StatsTypes.Neighborhood:
+                    return GetNeighborhoodInfoFromCache();
+                case StatsTypes.Street:
+                    return GetStreetInfoFromCache();
+                case StatsTypes.Collection:
+                    return GetCollectionInfoFromCache();
+                default:
+                    return GetCityInfoFromCache();
+            }
         }
 
         public List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties)
@@ -323,7 +358,7 @@ namespace Upland.InformationProcessor
         {
             List<string> csvString = new List<string>();
 
-            csvString.Add("TransactionDateTime,Seller,Buyer,Price,Currency,Offer,City,Address,Neighborhood,Mint,CollectionIds,OfferPropCity,OfferPropAddress,OfferPropNeighborhood,OfferPropMint,OfferPropCollectionIds");
+            csvString.Add("TransactionDateTime,Seller,Buyer,Price,Markup,Currency,Offer,City,Address,Neighborhood,Mint,CollectionIds,OfferPropCity,OfferPropAddress,OfferPropNeighborhood,OfferPropMint,OfferPropCollectionIds");
 
             foreach (CachedSaleHistoryEntry entry in cachedSaleHistoryEntries)
             {
@@ -366,8 +401,17 @@ namespace Upland.InformationProcessor
         private void InitializeCache()
         {
             _isLoadingPropertyStructureCache = false;
+            _isLoadingCityInfoCache = false;
+            _isLoadingNeighborhoodInfoCache = false;
+            _isLoadingStreetInfoCache = false;
+            _isLoadingCollectionInfoCache = false;
+
             _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(DateTime.UtcNow.AddDays(-1), new Dictionary<long, string>());
             _isBlockchainUpdatesDisabledCache = new Tuple<DateTime, bool>(DateTime.UtcNow.AddDays(-1), false);
+            _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
+            _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
+            _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
+            _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
 
             _isLoadingCityForSaleListCache = new Dictionary<int, bool>();
             _isLoadingCityUnmintedCache = new Dictionary<int, bool>();
@@ -439,6 +483,62 @@ namespace Upland.InformationProcessor
             RemoveExpiredUnmintedEntries();
 
             return _cityUnmintedCache[cityId].Item2;
+        }
+
+        private List<CollatedStatsObject> GetCityInfoFromCache()
+        {
+            if (!_isLoadingCityInfoCache && _cityInfoCache.Item1 < DateTime.UtcNow)
+            {
+                _isLoadingCityInfoCache = true;
+                _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                    DateTime.UtcNow.AddMinutes(10),
+                    _localDataManager.GetCityStats());
+                _isLoadingCityInfoCache = false;
+            }
+
+            return _cityInfoCache.Item2;
+        }
+
+        private List<CollatedStatsObject> GetNeighborhoodInfoFromCache()
+        {
+            if (!_isLoadingNeighborhoodInfoCache && _neighborhoodInfoCache.Item1 < DateTime.UtcNow)
+            {
+                _isLoadingNeighborhoodInfoCache = true;
+                _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                    DateTime.UtcNow.AddMinutes(10),
+                    _localDataManager.GetNeighborhoodStats());
+                _isLoadingNeighborhoodInfoCache = false;
+            }
+
+            return _neighborhoodInfoCache.Item2;
+        }
+
+        private List<CollatedStatsObject> GetStreetInfoFromCache()
+        {
+            if (!_isLoadingStreetInfoCache && _streetInfoCache.Item1 < DateTime.UtcNow)
+            {
+                _isLoadingStreetInfoCache = true;
+                _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                    DateTime.UtcNow.AddMinutes(10),
+                    _localDataManager.GetStreetStats());
+                _isLoadingStreetInfoCache = false;
+            }
+
+            return _streetInfoCache.Item2;
+        }
+
+        private List<CollatedStatsObject> GetCollectionInfoFromCache()
+        {
+            if (!_isLoadingCollectionInfoCache && _collectionInfoCache.Item1 < DateTime.UtcNow)
+            {
+                _isLoadingCollectionInfoCache = true;
+                _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                    DateTime.UtcNow.AddMinutes(10),
+                    _localDataManager.GetCollectionStats());
+                _isLoadingCollectionInfoCache = false;
+            }
+
+            return _collectionInfoCache.Item2;
         }
 
         private bool GetIsBlockchainUpdatesDisabledFromCache()

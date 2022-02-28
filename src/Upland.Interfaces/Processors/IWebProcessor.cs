@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Upland.Types.Enums;
 using Upland.Types.Types;
 
 namespace Upland.Interfaces.Processors
@@ -15,6 +16,8 @@ namespace Upland.Interfaces.Processors
         List<CachedUnmintedProperty> GetUnmintedProperties(WebForSaleFilters filters, bool noPaging);
 
         List<CachedSaleHistoryEntry> GetSaleHistoryEntries(WebSaleHistoryFilters filters, bool noPaging);
+
+        List<CollatedStatsObject> GetInfoByType(StatsTypes statsType);
 
         List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties);
 

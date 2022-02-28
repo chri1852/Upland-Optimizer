@@ -3,23 +3,27 @@ AS
 BEGIN
 	BEGIN TRY		
 		SELECT 
-			StreetId AS 'Id',
-			FSA,
-			[Status],
+			P.StreetId AS 'Id',
+			P.FSA,
+			P.[Status],
+			CASE WHEN PS.StructureType IS NULL THEN CAST(0 AS BIT) ELSE CAST(1 AS BIT) END AS 'IsBuilt',
 			COUNT(*) AS 'PropCount'
 		FROM 
-			UPL.Property (NOLOCK)
+			UPL.Property P (NOLOCK)
+			LEFT JOIN UPL.PropertyStructure PS (NOLOCK)
+				ON P.Id = PS.PropertyId
 		WHERE 
-			StreetId IS NOT NULL
-			AND [Status] IS NOT NULL
+			P.StreetId IS NOT NULL
+			AND P.[Status] IS NOT NULL
 		GROUP BY 
-			StreetId, 
-			FSA, 
-			[Status]
+			P.StreetId, 
+			P.FSA, 
+			P.[Status],
+			CASE WHEN PS.StructureType IS NULL THEN CAST(0 AS BIT) ELSE CAST(1 AS BIT) END
 		ORDER BY 
-			StreetId, 
-			[STATUS], 
-			FSA
+			P.StreetId, 
+			P.[STATUS], 
+			P.FSA
 	END TRY
 
 	BEGIN CATCH

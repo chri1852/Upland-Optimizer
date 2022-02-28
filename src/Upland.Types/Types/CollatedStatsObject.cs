@@ -14,6 +14,12 @@ namespace Upland.Types.Types
         public int OwnedProps { get; set; }
         public double PercentMinted { get; set; }
         public double PercentNonFSAMinted { get; set; }
+        public double PercentBuilt { get; set; }
+        public int BuildingCount { get; set; }
         public DateTime TimeStamp { get; set; }
+
+        // used for the web UI
+        public int CityId { get; set; }
+        public string Name { get; set; }
     }
 }

@@ -21,6 +21,7 @@ namespace Upland.Interfaces.Repositories
         List<StatsObject> GetNeighborhoodStats();
         List<StatsObject> GetStreetStats();
         List<StatsObject> GetCollectionStats();
+        List<AcquiredInfo> GetAcquiredInfoByUser(string uplandUsername);
         List<PropertyAppraisalData> GetPreviousSalesAppraisalData();
         List<PropertyAppraisalData> GetCurrentFloorAppraisalData();
         List<Tuple<string, double>> GetBuildingAppraisalData();

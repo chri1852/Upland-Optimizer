@@ -217,16 +217,21 @@ namespace Upland.InformationProcessor
             returnString += " - ";
             returnString += string.Format("{0:N0}", statObject.OwnedProps).PadLeft(11);
             returnString += " - ";
+            returnString += string.Format("{0:N0}", statObject.BuildingCount).PadLeft(11);
+            returnString += " - ";
             returnString += string.Format("{0:N2}%", statObject.PercentMinted).PadLeft(14);
             returnString += " - ";
             returnString += string.Format("{0:N2}%", statObject.PercentNonFSAMinted).PadLeft(23);
+            returnString += " - ";
+            returnString += string.Format("{0:N2}%", statObject.PercentBuilt).PadLeft(13);
+
 
             return returnString;
         }
 
         public static string CreateCollatedStatCSVString(CollatedStatsObject statObject)
         {
-            return string.Format("{0},{1},{2},{3},{4},{5},{6:F2},{7:F2}", statObject.TotalProps, statObject.LockedProps, statObject.UnlockedNonFSAProps, statObject.UnlockedFSAProps, statObject.ForSaleProps, statObject.OwnedProps, statObject.PercentMinted, statObject.PercentNonFSAMinted);
+            return string.Format("{0},{1},{2},{3},{4},{5},{6},{7:F2},{8:F2},{9:F2}", statObject.TotalProps, statObject.LockedProps, statObject.UnlockedNonFSAProps, statObject.UnlockedFSAProps, statObject.ForSaleProps, statObject.OwnedProps, statObject.BuildingCount, statObject.PercentMinted, statObject.PercentNonFSAMinted, statObject.PercentBuilt);
         }
 
         public static string SusOutCityNameByMemoString(string memo)

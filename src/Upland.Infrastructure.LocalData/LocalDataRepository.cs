@@ -264,11 +264,11 @@ namespace Upland.Infrastructure.LocalData
                             {
                                 if (entry.Currency == "UPX")
                                 {
-                                    entry.Markup = entry.Price / entry.Property.Mint;
+                                    entry.Markup = entry.Price / Math.Max(entry.Property.Mint, 1);
                                 }
                                 else
                                 {
-                                    entry.Markup = (entry.Price * 1000) / entry.Property.Mint;
+                                    entry.Markup = (entry.Price * 1000) / Math.Max(entry.Property.Mint, 1);
                                 }
                             }
                             else
@@ -495,6 +495,7 @@ namespace Upland.Infrastructure.LocalData
                                     Id = (int)reader["Id"],
                                     FSA = (bool)reader["FSA"],
                                     Status = (string)reader["Status"],
+                                    IsBuilt = (bool)reader["IsBuilt"],
                                     PropCount = (int)reader["PropCount"],
                                 }
                              );
@@ -540,6 +541,7 @@ namespace Upland.Infrastructure.LocalData
                                     Id = (int)reader["Id"],
                                     FSA = (bool)reader["FSA"],
                                     Status = (string)reader["Status"],
+                                    IsBuilt = (bool)reader["IsBuilt"],
                                     PropCount = (int)reader["PropCount"],
                                 }
                              );
@@ -585,6 +587,7 @@ namespace Upland.Infrastructure.LocalData
                                     Id = (int)reader["Id"],
                                     FSA = (bool)reader["FSA"],
                                     Status = (string)reader["Status"],
+                                    IsBuilt = (bool)reader["IsBuilt"],
                                     PropCount = (int)reader["PropCount"],
                                 }
                              );
@@ -630,6 +633,7 @@ namespace Upland.Infrastructure.LocalData
                                     Id = (int)reader["Id"],
                                     FSA = (bool)reader["FSA"],
                                     Status = (string)reader["Status"],
+                                    IsBuilt = (bool)reader["IsBuilt"],
                                     PropCount = (int)reader["PropCount"],
                                 }
                              );
@@ -647,6 +651,58 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return stats;
+            }
+        }
+
+        public List<AcquiredInfo> GetAcquiredInfoByUser(string uplandUsername)
+        {
+            List<AcquiredInfo> acquiredInfoList = new List<AcquiredInfo>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetAcquiredOnByPlayer]";
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            AcquiredInfo newEntry = new AcquiredInfo
+                            {
+                                PropertyId = (long)reader["Id"],
+                                Minted = (bool)reader["Minted"]
+                            };
+
+                            if (reader["AcquiredDateTime"] != DBNull.Value)
+                            {
+                                newEntry.AcquiredDateTime = (DateTime)reader["AcquiredDateTime"];
+                            }
+                            else
+                            {
+                                newEntry.AcquiredDateTime = null;
+                            }
+                            acquiredInfoList.Add(newEntry);
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return acquiredInfoList;
             }
         }
 

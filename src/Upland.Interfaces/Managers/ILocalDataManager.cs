@@ -36,6 +36,7 @@ namespace Upland.Interfaces.Managers
         List<Collection> SearchCollections(string name);
         List<PropertySearchEntry> SearchProperties(int cityId, string address);
         void SetHistoricalCityStats(DateTime timeStamp);
+        List<AcquiredInfo> GetAcquiredOnByPlayer(string UplandUsername);
         List<CollatedStatsObject> GetCityStats();
         List<CollatedStatsObject> GetNeighborhoodStats();
         List<CollatedStatsObject> GetStreetStats();

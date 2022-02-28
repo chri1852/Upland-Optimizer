@@ -56,5 +56,8 @@ namespace Upland.Types.Types
         public string Status { get; set; }
         public string Building { get; set; }
         public List<int> CollectionIds { get; set; }
+
+        public bool Minted { get; set; }
+        public DateTime? AcquiredOn { get; set; }
     }
 }
