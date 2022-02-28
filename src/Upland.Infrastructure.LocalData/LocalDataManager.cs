@@ -512,22 +512,61 @@ namespace Upland.Infrastructure.LocalData
 
         public List<CollatedStatsObject> GetCityStats()
         {
-            return CollateStats(_localDataRepository.GetCityStats());
+            List<CollatedStatsObject> stats = CollateStats(_localDataRepository.GetCityStats());
+
+            foreach(CollatedStatsObject stat in stats)
+            {
+                stat.CityId = stat.Id;
+                stat.Name = Consts.Cities[stat.Id];
+            }
+
+            return stats;
         }
 
         public List<CollatedStatsObject> GetNeighborhoodStats()
         {
-            return CollateStats(_localDataRepository.GetNeighborhoodStats());
+            List<CollatedStatsObject> stats = CollateStats(_localDataRepository.GetNeighborhoodStats());
+            Dictionary<int, Neighborhood> neighborhoods = _localDataRepository.GetNeighborhoods().ToDictionary(n => n.Id, n => n);
+
+            foreach (CollatedStatsObject stat in stats)
+            {
+                stat.CityId = neighborhoods[stat.Id].CityId;
+                stat.Name = neighborhoods[stat.Id].Name;
+            }
+
+            return stats;
         }
 
         public List<CollatedStatsObject> GetStreetStats()
         {
-            return CollateStats(_localDataRepository.GetStreetStats());
+            List<CollatedStatsObject> stats = CollateStats(_localDataRepository.GetStreetStats());
+            Dictionary<int, Street> streets = _localDataRepository.GetStreets().ToDictionary(s => s.Id, s => s);
+
+            foreach (CollatedStatsObject stat in stats)
+            {
+                stat.CityId = streets[stat.Id].CityId;
+                stat.Name = streets[stat.Id].Name;
+                if (streets[stat.Id].type != "None")
+                {
+                    stat.Name += " " + streets[stat.Id].type;
+                }
+            }
+
+            return stats;
         }
 
         public List<CollatedStatsObject> GetCollectionStats()
         {
-            return CollateStats(_localDataRepository.GetCollectionStats());
+            List<CollatedStatsObject> stats = CollateStats(_localDataRepository.GetCollectionStats());
+            Dictionary<int, Collection> collections = _localDataRepository.GetCollections().ToDictionary(c => c.Id, c => c);
+
+            foreach (CollatedStatsObject stat in stats)
+            {
+                stat.CityId = collections[stat.Id].CityId.Value;
+                stat.Name = collections[stat.Id].Name;
+            }
+
+            return stats;
         }
 
         private List<CollatedStatsObject> CollateStats(List<StatsObject> rawStats)
