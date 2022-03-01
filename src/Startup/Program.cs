@@ -67,12 +67,12 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        OptimizerRunRequest runRequest = new OptimizerRunRequest("roguegent", 9, true);
-        await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("roguegent", 9, true);
+        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
         
         // Populate initial City Data
-        //await localDataManager.PopulateNeighborhoods();
-        await localDataManager.PopulateDatabaseCollectionInfo();
+        await localDataManager.PopulateNeighborhoods();
+        //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
