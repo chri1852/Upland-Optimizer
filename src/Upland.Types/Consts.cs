@@ -71,6 +71,9 @@ namespace Upland.Types
             { 26   , "Antioch"        },
             { 27   , "Nolensville"    },
             { 28   , "Whites Creek"   },
+
+            // Los Angeles Subcities
+            { -1   , "Inglewood"      },
         };
 
         public static readonly Dictionary<int, string> CollectionCategories = new Dictionary<int, string>
@@ -98,7 +101,7 @@ namespace Upland.Types
         public static readonly int MAX_LINES_TO_RETURN = 25000;
         //public static readonly double RateOfReturn = 0.1728; //Changed 01/27/2022
         public static readonly double RateOfReturn = 0.145152;
-        public static readonly int MaxStreetNumber = 50797;
+        public static readonly int MaxStreetNumber = 55692;
         public static readonly string HornbrodEOSAccount = "oqtr232h2c23";
     }
 }

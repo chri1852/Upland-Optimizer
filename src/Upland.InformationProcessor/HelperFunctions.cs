@@ -278,6 +278,12 @@ namespace Upland.InformationProcessor
             {
                 return 13;
             }
+
+            if (Regex.Match(cityName.ToUpper(), "INGLEWOOD").Success)
+            {
+                return 32;
+            }
+
             // Since the sub cities get wrapped up to the main city we need to do some finagaling
             if (Consts.Cities.Where(c => c.Value.ToUpper() == cityName.ToUpper()).ToList().Count == 0)
             {

@@ -116,7 +116,15 @@ namespace Upland.InformationProcessor
                 else
                 {
                     actions = actions.OrderBy(a => a.timestamp).ToList();
-                    await ProcessActions(actions);
+                    try
+                    {
+                        await ProcessActions(actions);
+                    }
+                    catch (Exception ex)
+                    {
+                        _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
+                        _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
+                    }
 
                     if (actions.Count < 1000)
                     {

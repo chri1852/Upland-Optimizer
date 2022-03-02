@@ -67,7 +67,7 @@ namespace Upland.InformationProcessor
                 {
                     try
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(2000);
                         actions = await _blockchainManager.GetSendActionsFromTime(startDate, minutesToMoveFoward);
                         if (actions != null)
                         {
