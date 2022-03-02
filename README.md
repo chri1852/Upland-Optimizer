@@ -7,9 +7,11 @@
 3. Update GetCityIdByName and SusOutCityNameByMemoString
 4. Update GetCityAreaCoordinates
 5. Add Neighborhoods via localDataManager.PopulateNeighborhoods();
-6. Add RGB to Neighborhood via SQL.
-7. Build Blank City Map.
-8. Create RGB map for city.
-9. Add New City to WebUI Enum.
-10. Wait till after main release.
-11. Populate Properties via AdminLoadCityAndProperties
+6. Update Max Street ID in Consts.
+7. Add Streets via localDataManger.PopulateStreets(); 
+8. Add RGB to Neighborhood via SQL.
+9. Build Blank City Map.
+10. Create RGB map for city.
+11. Add New City to WebUI Enum.
+12. Wait till after main release.
+13. Populate Properties via AdminLoadCityAndProperties
