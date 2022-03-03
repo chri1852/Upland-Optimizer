@@ -795,7 +795,7 @@ namespace Upland.InformationProcessor
             }
 
             // Set the other neighborhood mints
-            double perUp2Rate = property.Mint / property.Size;
+            double perUp2Rate = Math.Round(property.Mint / property.Size);
 
             List<Property> neighborhoodProperties = _localDataManager.GetPropertiesByCityId(property.CityId)
                 .Where(p => p.Mint == 0 && p.NeighborhoodId == property.NeighborhoodId && p.Status != Consts.PROP_STATUS_LOCKED).ToList();
@@ -803,7 +803,7 @@ namespace Upland.InformationProcessor
             foreach (Property hoodProp in neighborhoodProperties)
             {
                 hoodProp.Mint = hoodProp.Size * perUp2Rate;
-                _localDataManager.UpsertProperty(property);
+                _localDataManager.UpsertProperty(hoodProp);
             }
         }
     }

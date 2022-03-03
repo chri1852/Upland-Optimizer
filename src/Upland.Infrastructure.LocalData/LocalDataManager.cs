@@ -130,10 +130,15 @@ namespace Upland.Infrastructure.LocalData
                         // We only care if the prop is in the Database
                         if (!allCityProperties.ContainsKey(prop.Prop_Id))
                         {
+                            Property property = UplandMapper.Map(await _uplandApiRepository.GetPropertyById(prop.Prop_Id));
+                            property.NeighborhoodId = GetNeighborhoodIdForProp(neighborhoods, property);
+
+                            _localDataRepository.UpsertProperty(property);
+
                             continue;
                         }
 
-                        if (prop.status == Consts.PROP_STATUS_LOCKED && allCityProperties[prop.Prop_Id].Status != Consts.PROP_STATUS_LOCKED)
+                        if (prop.status == Consts.PROP_STATUS_LOCKED)
                         {
                             allCityProperties[prop.Prop_Id].Status = Consts.PROP_STATUS_LOCKED;
                             allCityProperties[prop.Prop_Id].Mint = 0;
@@ -141,6 +146,7 @@ namespace Upland.Infrastructure.LocalData
                             allCityProperties[prop.Prop_Id].MintedBy = null;
                             allCityProperties[prop.Prop_Id].MintedOn = null;
 
+                            _localDataRepository.UpsertProperty(allCityProperties[prop.Prop_Id]);
                             loadedProps.Add(prop.Prop_Id);
                         }
                     }
