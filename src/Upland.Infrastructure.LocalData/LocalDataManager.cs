@@ -101,6 +101,53 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public async Task ResetLockedProps(double north, double south, double east, double west, int cityId)
+        {
+            List<long> retryIds = new List<long>();
+            List<long> loadedProps = new List<long>();
+            Dictionary<long, Property> allCityProperties = new Dictionary<long, Property>();
+            List<Neighborhood> neighborhoods = GetNeighborhoods();
+
+            allCityProperties = _localDataRepository.GetPropertiesByCityId(cityId).Where(p => p.Latitude.HasValue).ToDictionary(p => p.Id, p => p);
+
+            double defaultStep = 0.005;
+            int totalprops = 0;
+
+            for (double y = north; y > south - defaultStep; y -= defaultStep)
+            {
+                for (double x = west; x < east + defaultStep; x += defaultStep)
+                {
+                    List<UplandProperty> sectorProps = await _uplandApiRepository.GetPropertiesByArea(y, x, defaultStep);
+                    totalprops += sectorProps.Count;
+                    foreach (UplandProperty prop in sectorProps)
+                    {
+                        // skip loadedProps
+                        if (loadedProps.Contains(prop.Prop_Id))
+                        {
+                            continue;
+                        }
+
+                        // We only care if the prop is in the Database
+                        if (!allCityProperties.ContainsKey(prop.Prop_Id))
+                        {
+                            continue;
+                        }
+
+                        if (prop.status == Consts.PROP_STATUS_LOCKED && allCityProperties[prop.Prop_Id].Status != Consts.PROP_STATUS_LOCKED)
+                        {
+                            allCityProperties[prop.Prop_Id].Status = Consts.PROP_STATUS_LOCKED;
+                            allCityProperties[prop.Prop_Id].Mint = 0;
+                            allCityProperties[prop.Prop_Id].Owner = null;
+                            allCityProperties[prop.Prop_Id].MintedBy = null;
+                            allCityProperties[prop.Prop_Id].MintedOn = null;
+
+                            loadedProps.Add(prop.Prop_Id);
+                        }
+                    }
+                }
+            }
+        }
+
         public int GetNeighborhoodIdForProp(List<Neighborhood> neighborhoods, Property property)
         {
             foreach (Neighborhood neighborhood in neighborhoods)

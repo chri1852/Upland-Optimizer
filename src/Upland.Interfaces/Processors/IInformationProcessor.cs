@@ -22,6 +22,7 @@ namespace Upland.Interfaces.Processors
         void ClearSalesCache();
         Task RebuildPropertyStructures();
         Task LoadMissingCityProperties(int cityId);
+        Task ResetLockedPropsToLocked(int cityId);
         Task<List<string>> GetBuildingsUnderConstruction(int userLevel);
     }
 }

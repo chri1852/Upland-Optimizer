@@ -10,6 +10,7 @@ namespace Upland.Interfaces.Managers
     public interface ILocalDataManager
     {
         Task PopulateAllPropertiesInArea(double north, double south, double east, double west, int cityId);
+        Task ResetLockedProps(double north, double south, double east, double west, int cityId);
         int GetNeighborhoodIdForProp(List<Neighborhood> neighborhoods, Property property);
         Task PopulateIndividualPropertyById(long propertyId, List<Neighborhood> neighborhoods);
         Task PopulateNeighborhoods();

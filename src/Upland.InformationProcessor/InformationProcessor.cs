@@ -1575,6 +1575,12 @@ namespace Upland.InformationProcessor
             await _localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId);
         }
 
+        public async Task ResetLockedPropsToLocked(int cityId)
+        {
+            List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            await _localDataManager.ResetLockedProps(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId);
+        }
+
         public async Task<List<string>> GetBuildingsUnderConstruction(int userLevel)
         {
             List<SparkStakingReport> rawSparkReport = new List<SparkStakingReport>();

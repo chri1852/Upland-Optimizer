@@ -294,5 +294,26 @@ namespace Startup.Commands
                 await ReplyAsync(string.Format("Failed Loading CityId {0}: {1}", cityId, ex.Message));
             }
         }
+
+        [Command("AdminResetLockedProps")]
+        public async Task AdminResetLockedProps(int cityId)
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                await ReplyAsync(string.Format("Performing Relock of CityId {0}", cityId));
+                await _informationProcessor.ResetLockedPropsToLocked(cityId);
+                await ReplyAsync(string.Format("CityId {0} Relocked.", cityId));
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("AdminCommands - AdminResetLockedProps", ex.Message);
+                await ReplyAsync(string.Format("Failed Relocking CityId {0}: {1}", cityId, ex.Message));
+            }
+        }
     }
 }

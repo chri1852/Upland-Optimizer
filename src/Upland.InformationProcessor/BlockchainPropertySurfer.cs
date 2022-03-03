@@ -746,6 +746,9 @@ namespace Upland.InformationProcessor
                     Property prop = UplandMapper.Map(uplandProperty);
 
                     property.Mint = prop.Mint;
+
+                    // DEBUG REMOVE IF DETROIT FAILS
+                    SetMintsOnRestOfNeighborhood(property);
                 }
 
                 property.Owner = action.act.data.a54;
@@ -781,6 +784,27 @@ namespace Upland.InformationProcessor
             property.NeighborhoodId = _localDataManager.GetNeighborhoodIdForProp(neighborhoods, property);
 
             return property;
+        }
+
+        private void SetMintsOnRestOfNeighborhood(Property property)
+        {
+            // pointless on a null mint property.
+            if (property.Mint == 0)
+            {
+                return;
+            }
+
+            // Set the other neighborhood mints
+            double perUp2Rate = property.Mint / property.Size;
+
+            List<Property> neighborhoodProperties = _localDataManager.GetPropertiesByCityId(property.CityId)
+                .Where(p => p.Mint == 0 && p.NeighborhoodId == property.NeighborhoodId && p.Status != Consts.PROP_STATUS_LOCKED).ToList();
+
+            foreach (Property hoodProp in neighborhoodProperties)
+            {
+                hoodProp.Mint = hoodProp.Size * perUp2Rate;
+                _localDataManager.UpsertProperty(property);
+            }
         }
     }
 }
