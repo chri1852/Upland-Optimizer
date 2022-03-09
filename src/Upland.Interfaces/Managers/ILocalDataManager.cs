@@ -44,6 +44,7 @@ namespace Upland.Interfaces.Managers
         List<CollatedStatsObject> GetCollectionStats();
         List<PropertyAppraisalData> GetPreviousSalesAppraisalData();
         List<PropertyAppraisalData> GetCurrentFloorAppraisalData();
+        List<PropertyAppraisalData> GetCurrentMarkupFloorAppraisalData();
         List<Tuple<string, double>> GetBuildingAppraisalData();
         void CreateOptimizationRun(OptimizationRun optimizationRun);
         void CreateAppraisalRun(AppraisalRun appraisalRun);

@@ -16,11 +16,13 @@ namespace Upland.InformationProcessor
     {
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _previousSalesData;
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _currentFloorData;
+        private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _currentMarkupFloorData;
         private Dictionary<string, double> _buildingData;
         private Dictionary<long, string> _propertyStructures;
 
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _newPreviousSalesData;
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _newCurrentFloorData;
+        private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _newCurrentMarkupFloorData;
         private Dictionary<string, double> _newBuildingData;
         private Dictionary<long, string> _newPropertyStructures;
 
@@ -46,6 +48,13 @@ namespace Upland.InformationProcessor
             RefreshData();
 
             return _previousSalesData.Where(i => i.Value.Type == "NEIGHBORHOOD").ToDictionary(i => i.Value.Id, i => (double)i.Value.Value);
+        }
+
+        public Dictionary<int, double> GetNeighborhoodMarkupFloor()
+        {
+            RefreshData();
+
+            return _currentMarkupFloorData.Where(i => i.Value.Type == "NEIGHBORHOOD").ToDictionary(i => i.Value.Id, i => (double)i.Value.Value);
         }
 
         public async Task<AppraisalResults> RunAppraisal(RegisteredUser registeredUser)
@@ -77,6 +86,7 @@ namespace Upland.InformationProcessor
             {
                 PropertyAppraisal propertyAppraisal = new PropertyAppraisal();
                 propertyAppraisal.Notes = new List<string>();
+                propertyAppraisal.Figures = new List<PropertyAppraisalFigure>();
                 propertyAppraisal.Property = property;
 
                 List<decimal> salesValues = new List<decimal>();
@@ -87,19 +97,27 @@ namespace Upland.InformationProcessor
                 double upperBound = propertyAppraisal.Property.Mint;
                 bool isLargeProp = false;
 
-                // City
-                Tuple<string, int, string> cityTupleUPX = new Tuple<string, int, string>("CITY", property.CityId, "UPX");
-                if (_currentFloorData.ContainsKey(cityTupleUPX)) { floorValues.Add(_currentFloorData[cityTupleUPX].Value); }
-
                 // Street
                 Tuple<string, int, string> streetTupleUPX = new Tuple<string, int, string>("STREET", property.StreetId, "UPX");
-
                 if (_previousSalesData.ContainsKey(streetTupleUPX)) 
-                { 
-                    salesValues.Add(_previousSalesData[streetTupleUPX].Value * property.Size);
+                {
+                    decimal val = _previousSalesData[streetTupleUPX].Value * property.Size;
+                    propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Street Average Previous Sale", val));
+                    salesValues.Add(val);
                     isLargeProp = isLargeProp ? isLargeProp : propertyAppraisal.Property.Size > _previousSalesData[streetTupleUPX].AverageSize * 10;
                 }
-                if (_currentFloorData.ContainsKey(streetTupleUPX)) { floorValues.Add(_currentFloorData[streetTupleUPX].Value); }
+                if (_currentFloorData.ContainsKey(streetTupleUPX)) 
+                {
+                    decimal val = _currentFloorData[streetTupleUPX].Value;
+                    propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Street UPX Floor", val));
+                    floorValues.Add(val); 
+                }
+                if (_currentMarkupFloorData.ContainsKey(streetTupleUPX))
+                {
+                    decimal val = _currentMarkupFloorData[streetTupleUPX].Value * (decimal)property.Mint;
+                    propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Street Markup Floor", val));
+                    floorValues.Add(val);
+                }
 
                 // Neighborhood
                 if (property.NeighborhoodId != null)
@@ -107,11 +125,24 @@ namespace Upland.InformationProcessor
                     Tuple<string, int, string> neighborhoodTupleUPX = new Tuple<string, int, string>("NEIGHBORHOOD", property.NeighborhoodId.Value, "UPX");
 
                     if (_previousSalesData.ContainsKey(neighborhoodTupleUPX)) 
-                    { 
-                        salesValues.Add(_previousSalesData[neighborhoodTupleUPX].Value * property.Size);
+                    {
+                        decimal val = _previousSalesData[neighborhoodTupleUPX].Value * property.Size;
+                        propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Neighborhood Average Previous Sale", val));
+                        salesValues.Add(val);
                         isLargeProp = isLargeProp ? isLargeProp : propertyAppraisal.Property.Size > _previousSalesData[neighborhoodTupleUPX].AverageSize * 10;
                     }
-                    if (_currentFloorData.ContainsKey(neighborhoodTupleUPX)) { floorValues.Add(_currentFloorData[neighborhoodTupleUPX].Value); }
+                    if (_currentFloorData.ContainsKey(neighborhoodTupleUPX)) 
+                    {
+                        decimal val = _currentFloorData[neighborhoodTupleUPX].Value;
+                        propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Neighborhood UPX Floor", val));
+                        floorValues.Add(_currentFloorData[neighborhoodTupleUPX].Value); 
+                    }
+                    if (_currentMarkupFloorData.ContainsKey(neighborhoodTupleUPX))
+                    {
+                        decimal val = _currentMarkupFloorData[neighborhoodTupleUPX].Value * (decimal)property.Mint;
+                        propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Neighborhood Markup Floor", val));
+                        floorValues.Add(val);
+                    }
                 }
                 else
                 {
@@ -124,13 +155,44 @@ namespace Upland.InformationProcessor
                     Tuple<string, int, string> collectionTupleUPX = new Tuple<string, int, string>("COLLECTION", collection.Id, "UPX");
 
                     if (_previousSalesData.ContainsKey(collectionTupleUPX)) 
-                    { 
-                        salesValues.Add(_previousSalesData[collectionTupleUPX].Value * property.Size);
+                    {
+                        decimal val = _previousSalesData[collectionTupleUPX].Value * property.Size;
+                        propertyAppraisal.Figures.Add(new PropertyAppraisalFigure(string.Format("Collection - {0} - Average Previous Sale", HelperFunctions.GetCollectionCategory(collection.Category)), val));
+                        salesValues.Add(val);
                         isLargeProp = isLargeProp ? isLargeProp : propertyAppraisal.Property.Size > _previousSalesData[collectionTupleUPX].AverageSize * 10;
                     }
-                    if (_currentFloorData.ContainsKey(collectionTupleUPX)) { floorValues.Add(_currentFloorData[collectionTupleUPX].Value); }
+                    if (_currentFloorData.ContainsKey(collectionTupleUPX)) 
+                    {
+                        decimal val = _currentFloorData[collectionTupleUPX].Value;
+                        propertyAppraisal.Figures.Add(new PropertyAppraisalFigure(string.Format("Collection - {0} - UPX Floor", HelperFunctions.GetCollectionCategory(collection.Category)), val));
+                        floorValues.Add(val); 
+                    }
+                    if (_currentMarkupFloorData.ContainsKey(collectionTupleUPX))
+                    {
+                        decimal val = _currentMarkupFloorData[collectionTupleUPX].Value * (decimal)property.Mint;
+                        propertyAppraisal.Figures.Add(new PropertyAppraisalFigure(string.Format("Collection - {0} - Markup Floor", HelperFunctions.GetCollectionCategory(collection.Category)), val));
+                        floorValues.Add(val);
+                    }
 
-                    if (maxCollectionCategory < collection.Category) { maxCollectionCategory = collection.Category; }
+                    if (maxCollectionCategory < collection.Category) 
+                    { 
+                        maxCollectionCategory = collection.Category; 
+                    }
+                }
+
+                // City
+                Tuple<string, int, string> cityTupleUPX = new Tuple<string, int, string>("CITY", property.CityId, "UPX");
+                if (_currentFloorData.ContainsKey(cityTupleUPX) && floorValues.Count == 0)
+                {
+                    decimal val = _currentFloorData[cityTupleUPX].Value;
+                    propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("City UPX Floor", val));
+                    floorValues.Add(val);
+                }
+                if (_currentMarkupFloorData.ContainsKey(cityTupleUPX) && floorValues.Count == 1)
+                {
+                    decimal val = _currentMarkupFloorData[cityTupleUPX].Value * (decimal)property.Mint;
+                    propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("City Markup Floor", val));
+                    floorValues.Add(val);
                 }
 
                 // Handle Low Data
@@ -144,25 +206,25 @@ namespace Upland.InformationProcessor
                 {
                     if (salesValues.Count == 0)
                     {
-                        salesValues.Add((int)Math.Round(property.Mint));
                         propertyAppraisal.Notes.Add("No Sales Data");
                     }
 
                     if (floorValues.Count == 0)
                     {
-                        salesValues.Add((int)Math.Round(property.Mint));
                         propertyAppraisal.Notes.Add("No Floor Data");
                     }
                 }
+
+                salesValues.Add((int)Math.Round(property.Mint));
+                propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Property Mint", (decimal)property.Mint));
 
                 if (floorValues.Count > 0)
                 {
                     maxFloor = (double)floorValues.Max(v => v);
                 }
 
-                if(floorValues.Count + salesValues.Count > 0)
+                if(salesValues.Count > 0)
                 {
-                    salesValues.AddRange(floorValues);
                     upperBound = (double)salesValues.GroupBy(v => v).Select(g => g.First()).OrderByDescending(v => v).First();
                 }
 
@@ -201,12 +263,47 @@ namespace Upland.InformationProcessor
                     propertyAppraisal.Notes.Add(string.Format("Large Property"));
                 }
 
+                List<decimal> totalValuesList = floorValues.Concat(salesValues).OrderBy(v => v).ToList();
+
+                if (totalValuesList.Count() > 0)
+                {
+                    int halfIndex = totalValuesList.Count() / 2;
+
+                    if ((totalValuesList.Count() % 2) == 0)
+                    {
+                        propertyAppraisal.UPX_Mid = (double)((totalValuesList.ElementAt(halfIndex) + totalValuesList.ElementAt(halfIndex - 1)) / 2);
+                    }
+                    else
+                    {
+                        propertyAppraisal.UPX_Mid = (double)totalValuesList.ElementAt(halfIndex);
+                    }
+                    propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Median Figure", (decimal)propertyAppraisal.UPX_Mid));
+                }
+                else
+                {
+                    propertyAppraisal.UPX_Mid = property.Mint;
+                }
+
                 if (_propertyStructures.ContainsKey(property.Id))
                 {
                     propertyAppraisal.UPX_Lower += _buildingData[_propertyStructures[property.Id]];
+                    propertyAppraisal.UPX_Mid += _buildingData[_propertyStructures[property.Id]];
                     propertyAppraisal.UPX_Upper += _buildingData[_propertyStructures[property.Id]];
+                    propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Building Value Added", (decimal)_buildingData[_propertyStructures[property.Id]]));
                     propertyAppraisal.Notes.Add(string.Format("{0}", _propertyStructures[property.Id]));
                 }
+
+                // Now lets sort them
+                List<double> finalValues = new List<double>();
+                finalValues.Add(propertyAppraisal.UPX_Lower);
+                finalValues.Add(propertyAppraisal.UPX_Mid);
+                finalValues.Add(propertyAppraisal.UPX_Upper);
+                finalValues.Sort();
+                propertyAppraisal.UPX_Lower = finalValues[0];
+                propertyAppraisal.UPX_Mid = finalValues[1];
+                propertyAppraisal.UPX_Upper = finalValues[2];
+
+                propertyAppraisal.Figures.Sort();
 
                 propertyAppraisals.Add(propertyAppraisal);
             }
@@ -218,16 +315,17 @@ namespace Upland.InformationProcessor
         {
             List<string> output = new List<string>();
 
-            output.Add(string.Format("City,Address,Size,Mint,Lower UPX Value,Upper UPX Value,Note"));
+            output.Add(string.Format("City,Address,Size,Mint,Lower UPX Value,Middle UPX Value,Upper UPX Value,Note"));
 
             foreach (AppraisalProperty property in results.Properties)
             {
-                output.Add(string.Format("{0},{1},{2},{3},{4},{5},{6}"
+                output.Add(string.Format("{0},{1},{2},{3},{4},{5},{6},{7}"
                     , property.City
                     , property.Address
                     , property.Size
                     , property.Mint
                     , property.LowerValue
+                    , property.MiddleValue
                     , property.UpperValue
                     , string.Join(" ", property.Note)
                 ));
@@ -256,8 +354,10 @@ namespace Upland.InformationProcessor
                 property.Collections = new List<int>();
                 property.Mint = appraisal.Property.Mint;
                 property.LowerValue = appraisal.UPX_Lower;
+                property.MiddleValue = appraisal.UPX_Mid;
                 property.UpperValue = appraisal.UPX_Upper;
                 property.Note = string.Join(", ", appraisal.Notes);
+                property.Figures = appraisal.Figures;
 
                 results.Properties.Add(property);
             }
@@ -273,6 +373,7 @@ namespace Upland.InformationProcessor
             int sizePad = 9;
             int mintPad = 15;
             int upperPad = 15;
+            int midPad = 16;
             int lowerPad = 15;
             int notePad = results.Properties.Max(p => string.Join(", ", p.Note).Length) < 4 ? 4 : results.Properties.Max(p => string.Join(", ", p.Note).Length);
 
@@ -283,8 +384,9 @@ namespace Upland.InformationProcessor
                 , "Size".PadLeft(sizePad)
                 , "Mint".PadLeft(mintPad)
                 , "Lower UPX Value".PadLeft(lowerPad)
+                , "Middle UPX Value".PadLeft(midPad)
                 , "Upper UPX Value".PadLeft(upperPad)
-                , "Note".PadLeft(notePad)));
+                , "Note".PadLeft(notePad))); ;
 
             string city = "";
 
@@ -294,26 +396,29 @@ namespace Upland.InformationProcessor
                 {
                     city = property.City;
                     output.Add("");
-                    output.Add(string.Format("{0} - {1:N2} -> {2:N2}"
+                    output.Add(string.Format("{0} - {1:N2} -> {2:N2} -> {3:N2}"
                         , city
                         , results.Properties.Where(p => p.City == city).Sum(p => p.LowerValue)
+                        , results.Properties.Where(p => p.City == city).Sum(p => p.MiddleValue)
                         , results.Properties.Where(p => p.City == city).Sum(p => p.UpperValue)
                         ));
                 }
 
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5}"
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6}"
                     , property.Address.PadLeft(addressPad)
                     , string.Format("{0:N0}", property.Size).PadLeft(sizePad)
                     , string.Format("{0:N2}", property.Mint).PadLeft(mintPad)
                     , string.Format("{0:N}", property.LowerValue).PadLeft(lowerPad)
+                    , string.Format("{0:N}", property.MiddleValue).PadLeft(midPad)
                     , string.Format("{0:N}", property.UpperValue).PadLeft(upperPad)
                     , string.Join(", ", property.Note).PadLeft(notePad)
                 ));
             }
 
             output.Add("");
-            output.Add(string.Format("Total - {0:N2} -> {1:N2}"
+            output.Add(string.Format("Total - {0:N2} -> {1:N2} -> {2:N2}"
                 , results.Properties.Sum(p => p.LowerValue)
+                , results.Properties.Sum(p => p.MiddleValue)
                 , results.Properties.Sum(p => p.UpperValue)
                 ));
 
@@ -327,6 +432,8 @@ namespace Upland.InformationProcessor
                 _previousSalesData = _localDataManager.GetPreviousSalesAppraisalData()
                     .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                 _currentFloorData = _localDataManager.GetCurrentFloorAppraisalData()
+                    .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
+                _currentMarkupFloorData = _localDataManager.GetCurrentMarkupFloorAppraisalData()
                     .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                 _buildingData = _localDataManager.GetBuildingAppraisalData()
                     .ToDictionary(d => d.Item1, d => d.Item2);
@@ -345,6 +452,8 @@ namespace Upland.InformationProcessor
                         .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                     _newCurrentFloorData = _localDataManager.GetCurrentFloorAppraisalData()
                         .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
+                    _newCurrentMarkupFloorData = _localDataManager.GetCurrentMarkupFloorAppraisalData()
+                        .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                     _newBuildingData = _localDataManager.GetBuildingAppraisalData()
                         .ToDictionary(d => d.Item1, d => d.Item2);
                     _newPropertyStructures = _localDataManager.GetPropertyStructures()
@@ -352,6 +461,7 @@ namespace Upland.InformationProcessor
 
                     _previousSalesData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newPreviousSalesData);
                     _currentFloorData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newCurrentFloorData);
+                    _currentMarkupFloorData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newCurrentMarkupFloorData);
                     _buildingData = new Dictionary<string, double>(_newBuildingData);
                     _propertyStructures = new Dictionary<long, string>(_newPropertyStructures);
                 });

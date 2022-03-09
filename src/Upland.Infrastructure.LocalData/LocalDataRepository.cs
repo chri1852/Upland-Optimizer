@@ -799,6 +799,52 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<PropertyAppraisalData> GetCurrentMarkupFloorAppraisalData()
+        {
+            List<PropertyAppraisalData> data = new List<PropertyAppraisalData>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 600;
+                    sqlCmd.CommandText = "[UPL].[GetCurrentMarkupFloorAppraisalData]";
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            data.Add(
+                                new PropertyAppraisalData
+                                {
+                                    Type = (string)reader["Type"],
+                                    Id = (int)reader["Id"],
+                                    Currency = (string)reader["Currency"],
+                                    Value = (decimal)reader["MarkUpFloor"],
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return data;
+            }
+        }
+
         public List<Tuple<string, double>> GetBuildingAppraisalData()
         {
             List<Tuple<string, double>> data = new List<Tuple<string, double>>();

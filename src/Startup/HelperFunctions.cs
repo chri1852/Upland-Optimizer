@@ -185,8 +185,11 @@ namespace Startup
                     helpOutput.Add("EX: !CreateMap 10 Buildings");
                     helpOutput.Add("The above command creates a map displaying the number of completed buildings in each neighborhood in Chicago.");
                     helpOutput.Add("");
-                    helpOutput.Add("EX: !CreateMap 12 PercentBuild colorBlind");
+                    helpOutput.Add("EX: !CreateMap 12 PercentBuilt colorBlind");
                     helpOutput.Add("The above command creates a map using a colorbind safe scale displaying the percent of properties in each neighborhood in Santa Clara with a building built on them.");
+                    helpOutput.Add("");
+                    helpOutput.Add("EX: !CreateMap 12 Markup");
+                    helpOutput.Add("The above command creates a map displaying the markup floor of properties for sale in each neighborhood in Santa Clara with a building built on them.");
                     helpOutput.Add("");
                     break;
                 case "4":

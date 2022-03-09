@@ -24,6 +24,7 @@ namespace Upland.Interfaces.Repositories
         List<AcquiredInfo> GetAcquiredInfoByUser(string uplandUsername);
         List<PropertyAppraisalData> GetPreviousSalesAppraisalData();
         List<PropertyAppraisalData> GetCurrentFloorAppraisalData();
+        List<PropertyAppraisalData> GetCurrentMarkupFloorAppraisalData();
         List<Tuple<string, double>> GetBuildingAppraisalData();
         void UpsertProperty(Property property);
         void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined);

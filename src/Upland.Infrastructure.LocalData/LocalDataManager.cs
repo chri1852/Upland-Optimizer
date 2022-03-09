@@ -694,6 +694,11 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetCurrentFloorAppraisalData();
         }
 
+        public List<PropertyAppraisalData> GetCurrentMarkupFloorAppraisalData()
+        {
+            return _localDataRepository.GetCurrentMarkupFloorAppraisalData();
+        }
+
         public List<Tuple<string, double>> GetBuildingAppraisalData()
         {
             return _localDataRepository.GetBuildingAppraisalData();

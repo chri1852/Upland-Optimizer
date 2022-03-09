@@ -151,5 +151,6 @@
     <Build Include="StoredProcedures\UPL.GetCachedSaleEntries.sql" />
     <Build Include="StoredProcedures\UPL.CatchWhales.sql" />
     <Build Include="StoredProcedures\UPL.GetAquiredOnByPlayer.sql" />
+    <Build Include="StoredProcedures\UPL.GetCurrentMarkupFloorAppraisalData.sql" />
   </ItemGroup>
 </Project>
