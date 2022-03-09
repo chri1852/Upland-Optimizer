@@ -113,6 +113,8 @@ namespace Upland.CollectionOptimizer
             await SetDataForOptimization(runRequest);
             RunOptimization(runRequest.Username, runRequest.Level);
 
+            OptimizerResults results = BuildOptimizerResults(runRequest.Username, runRequest.Level);
+
             if (this.DebugMode)
             {
                 HelperFunctions.WriteCollecitonToConsole(this.FilledCollections, this.Properties, this.SlottedPropertyIds, this.UnfilledCollections, this.UnoptimizedCollections, this.MissingCollections);
@@ -159,6 +161,9 @@ namespace Upland.CollectionOptimizer
                 collectionResult.MissingProps = 0;
                 collectionResult.Properties = new List<OptimizerCollectionProperty>();
 
+                collectionResult.CategoryId = collection.Category;
+                collectionResult.CityId = collectionResult.IsStandardCollection ? 0 : this.Properties[collection.SlottedPropertyIds[0]].CityId;
+
                 foreach (long propertyId in collection.SlottedPropertyIds)
                 {
                     OptimizerCollectionProperty property = new OptimizerCollectionProperty();
@@ -184,6 +189,10 @@ namespace Upland.CollectionOptimizer
                     extraCollectionResult.Boost = collection.Boost;
                     extraCollectionResult.MissingProps = collection.EligablePropertyIds.Count - collection.SlottedPropertyIds.Count;
                     extraCollectionResult.Properties = new List<OptimizerCollectionProperty>();
+
+                    extraCollectionResult.CategoryId = collection.Category;
+                    extraCollectionResult.CityId = extraCollectionResult.IsStandardCollection ? 0 : this.Properties[collection.SlottedPropertyIds[0]].CityId;
+
                     foreach (long propertyId in collection.EligablePropertyIds.Where(p => !allNonCityOrStandardSlottedPropIds.Contains(p)))
                     {
                         OptimizerCollectionProperty property = new OptimizerCollectionProperty();
@@ -209,6 +218,9 @@ namespace Upland.CollectionOptimizer
                     collectionResult.Boost = entry.Value.Boost;
                     collectionResult.MissingProps = entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count;
                     collectionResult.Properties = new List<OptimizerCollectionProperty>();
+
+                    collectionResult.CategoryId = entry.Value.Category;
+                    collectionResult.CityId = entry.Value.CityId.HasValue ? entry.Value.CityId.Value : 0;
 
                     foreach (long propertyId in entry.Value.EligablePropertyIds)
                     {
@@ -237,6 +249,9 @@ namespace Upland.CollectionOptimizer
                     collectionResult.MissingProps = entry.Value.NumberOfProperties - entry.Value.EligablePropertyIds.Count;
                     collectionResult.Properties = new List<OptimizerCollectionProperty>();
 
+                    collectionResult.CategoryId = entry.Value.Category;
+                    collectionResult.CityId = entry.Value.CityId.HasValue ? entry.Value.CityId.Value : 0;
+
                     foreach (long propertyId in entry.Value.EligablePropertyIds)
                     {
                         OptimizerCollectionProperty property = new OptimizerCollectionProperty();
@@ -264,9 +279,17 @@ namespace Upland.CollectionOptimizer
                     collectionResult.MissingProps = entry.Value.NumberOfProperties;
                     collectionResult.Properties = new List<OptimizerCollectionProperty>();
 
+                    collectionResult.CategoryId = entry.Value.Category;
+                    collectionResult.CityId = entry.Value.CityId.HasValue ? entry.Value.CityId.Value : 0;
+
                     results.MissingCollections.Add(collectionResult);
                 }
             }
+
+            results.UnfilledCollections = SortOptimizerResults(results.UnfilledCollections, "COLLECTION");
+            results.UnoptimizedCollections = SortOptimizerResults(results.UnoptimizedCollections, "COLLECTION");
+            results.ExtraCollections = SortOptimizerResults(results.ExtraCollections, "COLLECTION");
+            results.MissingCollections = SortOptimizerResults(results.MissingCollections, "COLLECTION");
 
             return results;
         }
@@ -786,7 +809,7 @@ namespace Upland.CollectionOptimizer
             }
         }
 
-        public static string BuildTextOutput(OptimizerResults results)
+        public static string BuildTextOutput(OptimizerResults results, string sortBy = "UPX")
         {
             List<string> outputStrings = new List<string>();
 
@@ -795,6 +818,11 @@ namespace Upland.CollectionOptimizer
             outputStrings.Add(string.Format("Ran for {0} at Quality Level {1}", results.Username, results.QualityLevel));
             outputStrings.Add(string.Format("Run Time - {0}", new TimeSpan(results.TimeToRunTicks)));
             outputStrings.Add("");
+
+            if (sortBy.ToUpper() != "UPX")
+            {
+                results.OptimizedCollections = SortOptimizerResults(results.OptimizedCollections, sortBy);
+            }
 
             foreach (OptimizerCollectionResult collection in results.OptimizedCollections)
             {
@@ -837,29 +865,21 @@ namespace Upland.CollectionOptimizer
                         outputStrings.Add(string.Format("     {0} - {1} - Missing Props {2}", collection.City, collection.Name, collection.MissingProps));
                     }
                 }
-
-                // Takes Up too much space on the report, can reenable later
-                /*
-                if (results.MissingCollections.Count > 0)
-                {
-                    outputStrings.Add("");
-                    outputStrings.Add("Missing Collections");
-                    foreach ((OptimizerCollectionResult collection in results.MissingCollections)
-                    {
-                        outputStrings.Add(string.Format("     {0} - {1} - Missing Props {2}", collection.City, collection.Name, collection.MissingProps));
-                    }
-                }
-                */
             }
 
             return string.Join(Environment.NewLine, outputStrings);
         }
 
-        public static string BuildCsvOutput(OptimizerResults results)
+        public static string BuildCsvOutput(OptimizerResults results, string sortBy = "UPX")
         {
             List<string> outputStrings = new List<string>();
 
             outputStrings.Add("City,Collection,Category,Boost,Address,BaseEarnings,BoostedEarnings");
+
+            if (sortBy.ToUpper() != "UPX")
+            {
+                results.OptimizedCollections = SortOptimizerResults(results.OptimizedCollections, sortBy);
+            }
 
             foreach (OptimizerCollectionResult collection in results.OptimizedCollections)
             {
@@ -877,6 +897,19 @@ namespace Upland.CollectionOptimizer
             }
 
             return string.Join(Environment.NewLine, outputStrings);
+        }
+
+        public static List<OptimizerCollectionResult> SortOptimizerResults(List<OptimizerCollectionResult> results, string sortBy)
+        {
+            if (sortBy.ToUpper() == "COLLECTION")
+            {
+                return results.OrderBy(r => r.CityId)
+                    .ThenBy(r => r.CategoryId)
+                    .ThenBy(r => r.Boost)
+                    .ToList();
+            }
+
+            return results;
         }
     }
 }

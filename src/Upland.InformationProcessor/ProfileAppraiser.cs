@@ -303,7 +303,7 @@ namespace Upland.InformationProcessor
                 propertyAppraisal.UPX_Mid = finalValues[1];
                 propertyAppraisal.UPX_Upper = finalValues[2];
 
-                propertyAppraisal.Figures.Sort();
+                propertyAppraisal.Figures = propertyAppraisal.Figures.OrderBy(f => f.Value).ToList();
 
                 propertyAppraisals.Add(propertyAppraisal);
             }
