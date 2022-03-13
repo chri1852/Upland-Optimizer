@@ -14,5 +14,6 @@ namespace Upland.Interfaces.Managers
         Task<List<HistoryAction>> GetPropertyActionsFromTime(DateTime timeFrom, int minutesToAdd);
         Task<List<HistoryAction>> GetSendActionsFromTime(DateTime timeFrom, int minutesToAdd);
         Task<GetTransactionEntry> GetSingleTransactionById(string transactionId);
+        Task<List<EOSFlareAction>> GetEOSFlareActions(long position);
     }
 }

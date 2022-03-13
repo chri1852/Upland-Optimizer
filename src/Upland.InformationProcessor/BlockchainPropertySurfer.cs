@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -20,6 +21,9 @@ namespace Upland.InformationProcessor
         private readonly IBlockchainManager _blockchainManager;
         private readonly IUplandApiManager _uplandApiManager;
 
+        private List<string> _propertyIdsToWatch;
+        List<Tuple<decimal, string, string>> _registeredUserEOSAccounts;
+
         private List<Neighborhood> neighborhoods;
         private bool isProcessing;
 
@@ -35,11 +39,11 @@ namespace Upland.InformationProcessor
 
         public async Task RunBlockChainUpdate()
         {
-            DateTime lastDateProcessed = DateTime.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXTIMESTAMPPROCESSED));
+            long lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM));
 
             try
             {
-                await BuildBlockChainFromDate(lastDateProcessed);
+                await BuildBlockChainFromDate(lastActionProcessed);
             }
             catch (Exception ex)
             {
@@ -53,10 +57,12 @@ namespace Upland.InformationProcessor
             // Upland went live on the blockchain on 2019-06-06 11:51:37
             DateTime startDate = new DateTime(2019, 06, 05, 01, 00, 00);
 
-            await BuildBlockChainFromDate(startDate);
+            //await BuildBlockChainFromDate(startDate);
+            await BuildBlockChainFromDate(-1);
         }
 
-        public async Task BuildBlockChainFromDate(DateTime startDate)
+        //public async Task BuildBlockChainFromDate(DateTime startDate)
+        public async Task BuildBlockChainFromDate(long lastActionProcessed)
         {
             bool enableUpdates = bool.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
 
@@ -68,22 +74,23 @@ namespace Upland.InformationProcessor
             this.isProcessing = true;
 
             DateTime historyTimeStamp = _localDataManager.GetLastHistoricalCityStatusDate();
+            _registeredUserEOSAccounts = _localDataManager.GetRegisteredUsersEOSAccounts();
+            _propertyIdsToWatch = _localDataManager.GetConfigurationValue(Consts.CONFIG_PROPIDSTOMONITORFORSENDS).Split(",").ToList();
 
             if (historyTimeStamp == DateTime.MinValue)
             {
-                historyTimeStamp = new DateTime(startDate.Year, startDate.Month, startDate.Day);
+                historyTimeStamp = new DateTime(2019, 06, 05);
             }
             else
             {
                 historyTimeStamp = new DateTime(historyTimeStamp.Year, historyTimeStamp.Month, historyTimeStamp.Day);
             }
 
-            int minutesToMoveFoward = 60; // One Hours
             bool continueLoad = true;
 
             while (continueLoad)
             {
-                List<HistoryAction> actions = new List<HistoryAction>();
+                List<EOSFlareAction> actions = new List<EOSFlareAction>();
 
                 // Have to do this in a retry loop due to timeouts
                 bool retry = true;
@@ -91,8 +98,8 @@ namespace Upland.InformationProcessor
                 {
                     try
                     {
-                        Thread.Sleep(1000);
-                        actions = await _blockchainManager.GetPropertyActionsFromTime(startDate, minutesToMoveFoward);
+                        Thread.Sleep(2000);
+                        actions = await _blockchainManager.GetEOSFlareActions(lastActionProcessed + 1);
                         if (actions != null)
                         {
                             retry = false;
@@ -111,11 +118,10 @@ namespace Upland.InformationProcessor
 
                 if (actions.Count == 0)
                 {
-                    startDate = startDate.AddMinutes(minutesToMoveFoward);
+                    //continueLoad = false;
                 }
                 else
                 {
-                    actions = actions.OrderBy(a => a.timestamp).ToList();
                     try
                     {
                         await ProcessActions(actions);
@@ -126,46 +132,38 @@ namespace Upland.InformationProcessor
                         _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
                     }
 
-                    if (actions.Count < 1000)
-                    {
-                        startDate = startDate.AddMinutes(minutesToMoveFoward);
-                    }
-                    else
-                    {
-                        startDate = actions.Max(a => a.timestamp);
-                    }
+                    lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM));
 
-                    if (historyTimeStamp.AddDays(1).Ticks < startDate.Ticks)
+                    if (historyTimeStamp.AddDays(1).Ticks < actions.Last().block_time.Ticks)
                     {
-                        historyTimeStamp = new DateTime(startDate.Year, startDate.Month, startDate.Day);
+                        historyTimeStamp = new DateTime(actions.Last().block_time.Year, actions.Last().block_time.Month, actions.Last().block_time.Day);
                         _localDataManager.SetHistoricalCityStats(historyTimeStamp);
                     }
-                }
 
-                if (startDate >= DateTime.UtcNow)
-                {
-                    continueLoad = false;
+                    //DEBUG
+                    if (historyTimeStamp > new DateTime(2021, 6, 1, 0, 0, 0))
+                    {
+                        continueLoad = false;
+                    }
                 }
             }
 
             this.isProcessing = false;
         }
 
-        private async Task ProcessActions(List<HistoryAction> actions)
+        private async Task ProcessActions(List<EOSFlareAction> actions)
         {
-            DateTime maxTimestampProcessed = DateTime.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXTIMESTAMPPROCESSED));
-
-            foreach (HistoryAction action in actions)
+            long maxUplandActionSeqNum = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM));
+            foreach (EOSFlareAction action in actions)
             {
-
-                if (action.timestamp < maxTimestampProcessed)
+                if (action.account_action_seq < maxUplandActionSeqNum)
                 {
                     // We've already processed this event
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessActions", string.Format("Skipping Action {0} < {1}", action.account_action_seq, maxUplandActionSeqNum));
                     continue;
                 }
 
-
-                switch (action.act.name)
+                switch (action.action_trace.act.name)
                 {
                     case "a4":
                         await ProcessMintingAction(action);
@@ -177,7 +175,7 @@ namespace Upland.InformationProcessor
                         ProcessOfferResolutionAction(action);
                         break;
                     case "n5":
-                        ProcessPurchaseAction(action);
+                        await ProcessPurchaseAction(action);
                         break;
                     case "n2":
                         ProcessPlaceForSaleAction(action);
@@ -194,28 +192,32 @@ namespace Upland.InformationProcessor
                     case "n34":
                         ProcessDeleteVisitorAction(action);
                         break;
-                    default:
-                        continue;
+                    case "n41":
+                        ProcessSendAction(action);
+                        break;
+                    case "n111":
+                        ProcessSendUPXAction(action);
+                        break;
                 }
 
-                if (action.timestamp > maxTimestampProcessed)
+                if (action.account_action_seq > maxUplandActionSeqNum)
                 {
-                    maxTimestampProcessed = action.timestamp;
-                    _localDataManager.UpsertConfigurationValue(Consts.CONFIG_MAXTIMESTAMPPROCESSED, action.timestamp.ToString());
+                    maxUplandActionSeqNum = action.account_action_seq;
+                    _localDataManager.UpsertConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM, action.account_action_seq.ToString());
                 }
             }
         }
 
-        private void ProcessDeleteVisitorAction(HistoryAction action)
+        private void ProcessDeleteVisitorAction(EOSFlareAction action)
         {
-            if (action.act.data.p52 == null)
+            if (action.action_trace.act.data.p52 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessDeleteVisitorAction", string.Format("p52 (Visitor EOS): {0}, Trx_id: {1}", action.act.data.p52, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessDeleteVisitorAction", string.Format("p52 (Visitor EOS): {0}, Trx_id: {1}", action.action_trace.act.data.p52, action.action_trace.trx_id));
                 return;
             }
 
-            List<Property> properties = _localDataManager.GetPropertiesByUplandUsername(action.act.data.p52);
-            _localDataManager.DeleteEOSUser(action.act.data.p52);
+            List<Property> properties = _localDataManager.GetPropertiesByUplandUsername(action.action_trace.act.data.p52);
+            _localDataManager.DeleteEOSUser(action.action_trace.act.data.p52);
 
             foreach (Property prop in properties)
             {
@@ -223,70 +225,89 @@ namespace Upland.InformationProcessor
                 prop.Status = Consts.PROP_STATUS_UNLOCKED;
                 prop.MintedBy = null;
                 prop.MintedOn = null;
+                _localDataManager.DeleteSaleHistoryByPropertyId(prop.Id);
                 _localDataManager.UpsertProperty(prop);
             }
         }
 
-        private void ProcessBecomeUplanderAction(HistoryAction action)
+        private void ProcessBecomeUplanderAction(EOSFlareAction action)
         {
-            if (action.act.data.p53 == null || action.act.data.p52 == null)
+            if (action.action_trace.act.data.p53 == null || action.action_trace.act.data.p52 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBecomeUplanderAction", string.Format("p53 (New EOS): {0}, p52 (Visitor EOS): {1}, Trx_id: {2}", action.act.data.p53, action.act.data.p52, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBecomeUplanderAction", string.Format("p53 (New EOS): {0}, p52 (Visitor EOS): {1}, Trx_id: {2}", action.action_trace.act.data.p53, action.action_trace.act.data.p52, action.action_trace.trx_id));
                 return;
             }
-            string uplandUsername = action.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding ")[0];
+            string uplandUsername = action.action_trace.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding ")[0];
 
-            List<Property> properties = _localDataManager.GetPropertiesByUplandUsername(action.act.data.p52);
+            List<Property> properties = _localDataManager.GetPropertiesByUplandUsername(action.action_trace.act.data.p52);
 
             foreach (Property prop in properties)
             {
-                prop.Owner = action.act.data.p53;
-                prop.MintedBy = action.act.data.p53;
+                prop.Owner = action.action_trace.act.data.p53;
+                prop.MintedBy = action.action_trace.act.data.p53;
                 _localDataManager.UpsertProperty(prop);
             }
 
-            _localDataManager.DeleteEOSUser(action.act.data.p52);
+            _localDataManager.DeleteEOSUser(action.action_trace.act.data.p52);
 
-            _localDataManager.UpsertEOSUser(action.act.data.p53, uplandUsername, action.timestamp);
+            _localDataManager.UpsertEOSUser(action.action_trace.act.data.p53, uplandUsername, action.block_time);
         }
 
-        private async Task ProcessBuyForFiatAction(HistoryAction action)
+        private async Task ProcessBuyForFiatAction(EOSFlareAction action)
         {
-            if (action.act.data.a45 == null || action.act.data.p14 == null)
+            if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.p14 == null)
             {
-                GetTransactionEntry transactionEntry = await _blockchainManager.GetSingleTransactionById(action.trx_id);
+                GetTransactionEntry transactionEntry = await _blockchainManager.GetSingleTransactionById(action.action_trace.trx_id);
 
                 if (transactionEntry.traces.Where(t => t.act.name == "n52").ToList().Count == 1)
                 {
-                    action.act.data.a45 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.a45;
-                    action.act.data.p14 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.p14;
+                    action.action_trace.act.data.a45 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.a45;
+                    action.action_trace.act.data.p14 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.p14;
                 }
                 else
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Missing Data", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.act.data.a45, action.act.data.p14, action.trx_id));
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Missing Data", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
                     return;
                 }
             }
 
-            long propId = long.Parse(action.act.data.a45);
+            long propId = long.Parse(action.action_trace.act.data.a45);
             Property property = _localDataManager.GetProperty(propId);
             List<SaleHistoryEntry> allEntries = _localDataManager.GetRawSaleHistoryByPropertyId(propId);
             List<SaleHistoryEntry> buyEntries = allEntries
                 .Where(e => e.BuyerEOS == null && !e.Offer && e.AmountFiat > 0)
                 .OrderByDescending(e => e.DateTime).ToList();
+            
+            if (property.MintedBy == null)
+            {
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Never Minted", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
+                property.MintedBy = action.action_trace.act.data.p14;
+                property.MintedOn = action.block_time;
+            }
+
+            if (property.Owner == null)
+            {
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Never Owned", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
+                property.Owner = action.action_trace.act.data.p14;
+            }
 
             if (buyEntries.Count == 0)
             {
                 // If for some reason the sale already got set, check to see if it is there
                 buyEntries = allEntries
-                    .Where(e => e.BuyerEOS == action.act.data.p14 && !e.Offer && e.AmountFiat > 0)
+                    .Where(e => e.BuyerEOS == action.action_trace.act.data.p14 && !e.Offer && e.AmountFiat > 0)
                     .OrderByDescending(e => e.DateTime).ToList();
+
+                if (buyEntries.Count > 0)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Found Resolved Buy Action", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
+                }
             }
 
             if (buyEntries.Count > 0)
             {
-                buyEntries.First().BuyerEOS = action.act.data.p14;
-                buyEntries.First().DateTime = action.timestamp;
+                buyEntries.First().BuyerEOS = action.action_trace.act.data.p14;
+                buyEntries.First().DateTime = action.block_time;
                 _localDataManager.UpsertSaleHistory(buyEntries.First());
 
                 foreach (SaleHistoryEntry entry in allEntries)
@@ -299,7 +320,7 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - No Sale Entry Found", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.act.data.a45, action.act.data.p14, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - No Sale Entry Found", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
                 
                 // Clear open sale entries anyway since it changed hands
                 foreach (SaleHistoryEntry entry in allEntries)
@@ -314,108 +335,183 @@ namespace Upland.InformationProcessor
             if (property != null && property.Address != null && property.Address != "")
             {
                 property.Status = Consts.PROP_STATUS_OWNED;
-                property.Owner = action.act.data.p14;
+                property.Owner = action.action_trace.act.data.p14;
                 _localDataManager.UpsertProperty(property);
             }
         }
 
-        private void ProcessRemoveFromSaleAction(HistoryAction action)
+        private void ProcessRemoveFromSaleAction(EOSFlareAction action)
         {
-            if (action.act.data.a45 == null || action.act.data.a54 == null)
+            if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.a54 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.act.data.a45, action.act.data.a54, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
                 return;
             }
 
-            long propId = long.Parse(action.act.data.a45);
+            long propId = long.Parse(action.action_trace.act.data.a45);
             List<SaleHistoryEntry> historyEntries = _localDataManager.GetRawSaleHistoryByPropertyId(propId);
 
+            bool deletedHistoryEntry = false;
             foreach (SaleHistoryEntry entry in historyEntries)
             {
-                if (entry.SellerEOS == action.act.data.a54 && entry.BuyerEOS == null)
+                if (entry.SellerEOS == action.action_trace.act.data.a54 && entry.BuyerEOS == null)
                 {
                     _localDataManager.DeleteSaleHistoryById(entry.Id.Value);
+                    deletedHistoryEntry = true;
                 }
+            }
+
+            if (!deletedHistoryEntry)
+            {
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction - No Active Sale Entry Found", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
             }
 
             Property property = _localDataManager.GetProperty(propId);
 
             if (property != null && property.Address != null && property.Address != "")
             {
+                if (property.MintedBy == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction - Never Minted", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
+                    property.MintedBy = action.action_trace.act.data.a54;
+                    property.MintedOn = action.block_time;
+                }
+
+                if (property.Owner == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction - Never Owned", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
+                    property.Owner = action.action_trace.act.data.a54;
+                }
+
                 property.Status = Consts.PROP_STATUS_OWNED;
                 _localDataManager.UpsertProperty(property);
             }
         }
 
-        private void ProcessPlaceForSaleAction(HistoryAction action)
+        private void ProcessPlaceForSaleAction(EOSFlareAction action)
         {
-            if (action.act.data.a45 == null || action.act.data.a54 == null || action.act.data.p11 == null || action.act.data.p3 == null)
+            if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.a54 == null || action.action_trace.act.data.p11 == null || action.action_trace.act.data.p3 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.act.data.a45, action.act.data.a54, action.act.data.p11, action.act.data.p3, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
                 return;
             }
 
             SaleHistoryEntry historyEntry = new SaleHistoryEntry
             {
-                DateTime = action.timestamp,
-                SellerEOS = action.act.data.a54,
+                DateTime = action.block_time,
+                SellerEOS = action.action_trace.act.data.a54,
                 BuyerEOS = null,
-                PropId = long.Parse(action.act.data.a45),
+                PropId = long.Parse(action.action_trace.act.data.a45),
                 Offer = false
             };
 
-            if (Regex.Match(action.act.data.p11, "^0.00 UP").Success)
+            if (Regex.Match(action.action_trace.act.data.p11, "^0.00 UP").Success)
             {
-                historyEntry.AmountFiat = double.Parse(action.act.data.p3.Split(" FI")[0]);
+                historyEntry.AmountFiat = double.Parse(action.action_trace.act.data.p3.Split(" FI")[0]);
                 historyEntry.Amount = null;
             }
-            else if (Regex.Match(action.act.data.p3, "^0.00 FI").Success)
+            else if (Regex.Match(action.action_trace.act.data.p3, "^0.00 FI").Success)
             {
-                historyEntry.Amount = double.Parse(action.act.data.p11.Split(" UP")[0]);
+                historyEntry.Amount = double.Parse(action.action_trace.act.data.p11.Split(" UP")[0]);
                 historyEntry.AmountFiat = null;
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Failed Parsing Amount", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.act.data.a45, action.act.data.a54, action.act.data.p11, action.act.data.p3, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Failed Parsing Amount", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
             }
 
             Property property = _localDataManager.GetProperty(historyEntry.PropId);
 
             if (property != null && property.Address != null && property.Address != "")
             {
+                if (property.MintedBy == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Property Never Minted", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                    property.MintedBy = action.action_trace.act.data.a54;
+                    property.MintedOn = action.block_time;
+                }
+                
+                if (property.Owner == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Owner Is Null", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                    property.Owner = action.action_trace.act.data.a54;
+                }
+                
+                if (property.Owner != historyEntry.SellerEOS)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Blockchain Error Seller is not Owner", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                    property.Owner = historyEntry.SellerEOS;
+                }
+
                 _localDataManager.UpsertSaleHistory(historyEntry);
                 property.Status = Consts.PROP_STATUS_FORSALE;
                 _localDataManager.UpsertProperty(property);
             }
+            else
+            {
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Property Not Found", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+            }
         }
 
-        private void ProcessPurchaseAction(HistoryAction action)
+        private async Task ProcessPurchaseAction(EOSFlareAction action)
         {
-            if (action.act.data.p14 == null || action.act.data.a45 == null || action.act.data.p24 == null || action.act.data.memo == null)
+            if (action.action_trace.act.data.p14 == null || action.action_trace.act.data.a45 == null || action.action_trace.act.data.p24 == null || action.action_trace.act.data.memo == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.act.data.p14, action.act.data.a45, action.act.data.p24, action.act.data.memo, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 return;
             }
 
-            long propId = long.Parse(action.act.data.a45);
+            long propId = long.Parse(action.action_trace.act.data.a45);
 
             Property property = _localDataManager.GetProperty(propId);
             if (property == null || property.Address == null || property.Address == "")
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Missing Prop", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.act.data.p14, action.act.data.a45, action.act.data.p24, action.act.data.memo, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Missing Prop", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 return;
             }
 
             List<SaleHistoryEntry> allEntries = _localDataManager.GetRawSaleHistoryByPropertyId(propId);
             List<SaleHistoryEntry> buyEntries = allEntries
-                .Where(e => e.BuyerEOS == null && !e.Offer && e.Amount == double.Parse(action.act.data.p24.Split(" UP")[0]))
+                .Where(e => e.BuyerEOS == null && !e.Offer && e.Amount == double.Parse(action.action_trace.act.data.p24.Split(" UP")[0]))
                 .OrderByDescending(e => e.DateTime).ToList();
+
+            if (property.MintedBy == null)
+            {
+                string ogMinttx = action.action_trace.act.data.memo.Split("transaction: ")[1];
+
+                GetTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById(action.action_trace.act.data.memo.Split("transaction: ")[1]);
+
+                if (mintTransaction == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Never Minted", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    property.MintedBy = action.action_trace.act.data.p14;
+                    property.MintedOn = action.block_time;
+                }
+                else
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Never Minted - Got Mint Transaction", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    property.MintedBy = mintTransaction.traces[0].act.data.a54;
+                    property.MintedOn = mintTransaction.block_time;
+                }
+            }
+
+            if (property.Owner == null)
+            {
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Never Owned", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                property.Owner = action.action_trace.act.data.p14;
+            }
 
             if (buyEntries.Count == 0)
             {
+                if (property.Owner == action.action_trace.act.data.p14)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Blockchain Fault Owner == Buyer", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    return;
+                }
+
                 if (!allEntries.Any(b =>
                          b.SellerEOS == property.Owner &&
-                         b.BuyerEOS == action.act.data.p14 &&
+                         b.BuyerEOS == action.action_trace.act.data.p14 &&
                          b.PropId == property.Id &&
                          !b.Offer &&
                          !b.Accepted &&
@@ -426,23 +522,29 @@ namespace Upland.InformationProcessor
                     _localDataManager.UpsertSaleHistory(
                         new SaleHistoryEntry
                         {
-                            DateTime = action.timestamp,
+                            DateTime = action.block_time,
                             SellerEOS = property.Owner,
-                            BuyerEOS = action.act.data.p14,
+                            BuyerEOS = action.action_trace.act.data.p14,
                             PropId = propId,
-                            Amount = double.Parse(action.act.data.p24.Split(" UP")[0]),
+                            Amount = double.Parse(action.action_trace.act.data.p24.Split(" UP")[0]),
                             AmountFiat = null,
                             OfferPropId = null,
                             Offer = false,
                             Accepted = false
                         }
                     );
+
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Added Missing Buy Entry", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                }
+                else
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Could Not Find Buy Entry", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 }
             }
             else
             {
-                buyEntries.First().BuyerEOS = action.act.data.p14;
-                buyEntries.First().DateTime = action.timestamp;
+                buyEntries.First().BuyerEOS = action.action_trace.act.data.p14;
+                buyEntries.First().DateTime = action.block_time;
                 _localDataManager.UpsertSaleHistory(buyEntries.First());
             }
 
@@ -455,111 +557,127 @@ namespace Upland.InformationProcessor
             }
 
             property.Status = Consts.PROP_STATUS_OWNED;
-            property.Owner = action.act.data.p14;
+            property.Owner = action.action_trace.act.data.p14;
             _localDataManager.UpsertProperty(property);
         }
 
-        private void ProcessOfferResolutionAction(HistoryAction action)
+        private void ProcessOfferResolutionAction(EOSFlareAction action)
         {
-            if (action.act.data.p25 == null || action.act.data.memo == null)
+            if (action.action_trace.act.data.p25 == null || action.action_trace.act.data.memo == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 return;
             }
 
-            if (Regex.Match(action.act.data.memo, @"\) and Upland user ").Success)
+            if (Regex.Match(action.action_trace.act.data.memo, @"\) and Upland user ").Success)
             {
                 int propOneCityId = 1;
                 int propTwoCityId = 1;
                 string propOneAddress = "";
                 string propTwoAddress = "";
 
-                if (Regex.Match(action.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                if (Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                 {
-                    propOneCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(", ")[1]);
-                    propOneAddress = action.act.data.memo.Split(" owns ")[1].Split(", ")[0];
+                    propOneCityId = HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[1]);
+                    propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(", ")[0];
 
-                    propTwoCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(", ")[3]);
-                    propTwoAddress = action.act.data.memo.Split(" owns ")[2].Split(", ")[0];
+                    propTwoCityId = HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[3]);
+                    propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(", ")[0];
                 }
-                else if (Regex.Match(action.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success || Regex.Match(action.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                else if (Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success || Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                 {
                     // First match 3 commas
-                    if (Regex.Match(action.act.data.memo.Split(")")[1], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                    if (Regex.Match(action.action_trace.act.data.memo.Split(")")[1], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                     {
-                        string cityName = action.act.data.memo.Split(")")[1].Split(",")[2].Trim();
+                        string cityName = action.action_trace.act.data.memo.Split(")")[1].Split(",")[2].Trim();
                         propOneCityId = HelperFunctions.GetCityIdByName(cityName);
-                        propOneAddress = action.act.data.memo.Split(")")[1].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
+                        propOneAddress = action.action_trace.act.data.memo.Split(")")[1].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
                     }
                     else
                     {
-                        propOneCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(")")[1].Split(",")[1].Trim());
-                        propOneAddress = action.act.data.memo.Split(" owns ")[1].Split(",")[0].Trim();
+                        propOneCityId = HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[1].Split(",")[1].Trim());
+                        propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(",")[0].Trim();
                     }
 
-                    if (Regex.Match(action.act.data.memo.Split(")")[3], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                    if (Regex.Match(action.action_trace.act.data.memo.Split(")")[3], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                     {
-                        string cityName = action.act.data.memo.Split(")")[3].Split(",")[2].Trim();
+                        string cityName = action.action_trace.act.data.memo.Split(")")[3].Split(",")[2].Trim();
                         propTwoCityId = HelperFunctions.GetCityIdByName(cityName);
-                        propTwoAddress = action.act.data.memo.Split(")")[3].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
+                        propTwoAddress = action.action_trace.act.data.memo.Split(")")[3].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
                     }
                     else
                     {
-                        propTwoCityId = HelperFunctions.GetCityIdByName(action.act.data.memo.Split(")")[3].Split(",")[1].Trim());
-                        propTwoAddress = action.act.data.memo.Split(" owns ")[2].Split(",")[0].Trim();
+                        propTwoCityId = HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[3].Split(",")[1].Trim());
+                        propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(",")[0].Trim();
                     }
                 }
                 else
                 {
-                    propOneAddress = action.act.data.memo.Split(" owns ")[1].Split(" (ini")[0];
-                    propTwoAddress = action.act.data.memo.Split(" owns ")[2].Split(" (ini")[0];
+                    propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(" (ini")[0];
+                    propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(" (ini")[0];
                 }
 
                 Property propOne = _localDataManager.GetPropertyByCityIdAndAddress(propOneCityId, propOneAddress);
                 Property propTwo = _localDataManager.GetPropertyByCityIdAndAddress(propTwoCityId, propTwoAddress);
 
-                propOne.Owner = action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0];
+                propOne.Owner = action.action_trace.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0];
                 propOne.Status = Consts.PROP_STATUS_OWNED;
+
+                if (propOne.MintedBy == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - SWAP ONE Never Minted", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    propOne.MintedBy = propOne.Owner;
+                    propOne.MintedOn = action.block_time;
+                }
+
                 if (propOne != null && propOne.Address != null && propOne.Address != "")
                 {
                     _localDataManager.UpsertProperty(propOne);
                 }
                 else
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 }
 
-                propTwo.Owner = action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0];
+                propTwo.Owner = action.action_trace.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0];
                 propTwo.Status = Consts.PROP_STATUS_OWNED;
+
+                if (propTwo.MintedBy == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - SWAP TWO Never Minted", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    propTwo.MintedBy = propOne.Owner;
+                    propTwo.MintedOn = action.block_time;
+                }
+
                 if (propTwo != null && propTwo.Address != null && propTwo.Address != "")
                 {
                     _localDataManager.UpsertProperty(propTwo);
                 }
                 else
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 }
 
                 List<SaleHistoryEntry> allEntriesOne = _localDataManager.GetRawSaleHistoryByPropertyId(propOne.Id);
                 List<SaleHistoryEntry> allEntriesTwo = _localDataManager.GetRawSaleHistoryByPropertyId(propTwo.Id);
 
                 SaleHistoryEntry buyEntry = allEntriesTwo
-                    .Where(e => e.SellerEOS == null && e.Offer && e.BuyerEOS == action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0])
+                    .Where(e => e.SellerEOS == null && e.Offer && e.BuyerEOS == action.action_trace.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0])
                     .OrderByDescending(e => e.DateTime)
                     .FirstOrDefault();
 
                 if (buyEntry != null)
                 {
-                    buyEntry.SellerEOS = action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0];
+                    buyEntry.SellerEOS = action.action_trace.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0];
                     buyEntry.Accepted = true;
-                    buyEntry.DateTime = action.timestamp;
+                    buyEntry.DateTime = action.block_time;
                     _localDataManager.UpsertSaleHistory(buyEntry);
                 }
                 else
                 {
                     if (!allEntriesTwo.Any(b =>
-                         b.SellerEOS == action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0] &&
-                         b.BuyerEOS == action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0] &&
+                         b.SellerEOS == action.action_trace.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0] &&
+                         b.BuyerEOS == action.action_trace.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0] &&
                          b.PropId == propTwo.Id &&
                          b.Offer &&
                          b.Accepted &&
@@ -571,9 +689,9 @@ namespace Upland.InformationProcessor
                         // buy offer entry is null, lets create one
                         _localDataManager.UpsertSaleHistory(new SaleHistoryEntry
                         {
-                            DateTime = action.timestamp,
-                            SellerEOS = action.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0],
-                            BuyerEOS = action.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0],
+                            DateTime = action.block_time,
+                            SellerEOS = action.action_trace.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0],
+                            BuyerEOS = action.action_trace.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0],
                             PropId = propTwo.Id,
                             Amount = null,
                             AmountFiat = null,
@@ -581,6 +699,12 @@ namespace Upland.InformationProcessor
                             Offer = true,
                             Accepted = true
                         });
+
+                        _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - SWAP Did Not Find Completed Offer, Created One", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    }
+                    else
+                    {
+                        _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - SWAP Found Completed Offer Resolution)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     }
                 }
 
@@ -602,20 +726,33 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                string cityName = HelperFunctions.SusOutCityNameByMemoString(action.act.data.memo);
+                string cityName = HelperFunctions.SusOutCityNameByMemoString(action.action_trace.act.data.memo);
                 Property prop = _localDataManager.GetPropertyByCityIdAndAddress(
                     HelperFunctions.GetCityIdByName(cityName),
-                    action.act.data.memo.Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0]);
+                    action.action_trace.act.data.memo.Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0]);
 
                 if (prop == null || prop.Id == 0 || prop.Address == null || prop.Address == "")
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     return;
                 }
 
-                string newOwner = action.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0];
+                string newOwner = action.action_trace.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0];
                 prop.Owner = newOwner;
                 prop.Status = Consts.PROP_STATUS_OWNED;
+
+                if (prop.MintedBy == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Never Minted", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    prop.MintedBy = newOwner;
+                    prop.MintedOn = action.block_time;
+                }
+
+                if (prop.Owner == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Never Owned", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    prop.Owner = newOwner;
+                }
 
                 _localDataManager.UpsertProperty(prop);
 
@@ -625,24 +762,35 @@ namespace Upland.InformationProcessor
                     .OrderByDescending(e => e.DateTime)
                     .FirstOrDefault();
 
-                if (buyEntry != null)
+                if (action.action_trace.act.data.p25 == newOwner)
                 {
-                    buyEntry.SellerEOS = action.act.data.p25;
-                    buyEntry.Accepted = true;
-                    buyEntry.DateTime = action.timestamp;
-                    _localDataManager.UpsertSaleHistory(buyEntry);
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Blockchain Error Buyer = Seller", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 }
                 else
                 {
-                    if (!allEntries.Any(b =>
-                         b.SellerEOS == action.act.data.p25 &&
-                         b.BuyerEOS == newOwner &&
-                         b.PropId == prop.Id &&
-                         b.Offer &&
-                         b.Accepted
-                    ))
+                    if (buyEntry != null)
                     {
-                        _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Buy Entry", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.act.data.p25, action.act.data.memo, action.trx_id));
+                        buyEntry.SellerEOS = action.action_trace.act.data.p25;
+                        buyEntry.Accepted = true;
+                        buyEntry.DateTime = action.block_time;
+                        _localDataManager.UpsertSaleHistory(buyEntry);
+                    }
+                    else
+                    {
+                        if (!allEntries.Any(b =>
+                             b.SellerEOS == action.action_trace.act.data.p25 &&
+                             b.BuyerEOS == newOwner &&
+                             b.PropId == prop.Id &&
+                             b.Offer &&
+                             b.Accepted
+                        ))
+                        {
+                            _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Completed Offer Entry", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        }
+                        else
+                        {
+                            _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Found Completed Offer Entry", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        }
                     }
                 }
 
@@ -656,85 +804,104 @@ namespace Upland.InformationProcessor
             }
         }
 
-        private void ProcessOfferAction(HistoryAction action)
+        private void ProcessOfferAction(EOSFlareAction action)
         {
-            if (action.act.data.p23 == null || action.act.data.p15 == null || action.act.data.p21 == null)
+            if (action.action_trace.act.data.p23 == null || action.action_trace.act.data.p15 == null || action.action_trace.act.data.p21 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.act.data.p23, action.act.data.p15, string.Join(" ", action.act.data.p21), action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
                 return;
             }
 
             SaleHistoryEntry historyEntry = new SaleHistoryEntry
             {
-                DateTime = action.timestamp,
-                BuyerEOS = action.act.data.p23,
+                DateTime = action.block_time,
+                BuyerEOS = action.action_trace.act.data.p23,
                 SellerEOS = null,
-                PropId = long.Parse(action.act.data.p15),
+                PropId = long.Parse(action.action_trace.act.data.p15),
                 Offer = true
             };
 
-            if (action.act.data.p21[0] == "asset")
+            if (action.action_trace.act.data.p21[0] == "asset")
             {
-                historyEntry.Amount = double.Parse(action.act.data.p21[1].Split(" UP")[0]);
+                historyEntry.Amount = double.Parse(action.action_trace.act.data.p21[1].Split(" UP")[0]);
                 historyEntry.AmountFiat = null;
             }
-            else if (action.act.data.p21[0] == "uint64")
+            else if (action.action_trace.act.data.p21[0] == "uint64")
             {
-                historyEntry.OfferPropId = long.Parse(action.act.data.p21[1]);
+                historyEntry.OfferPropId = long.Parse(action.action_trace.act.data.p21[1]);
                 historyEntry.AmountFiat = null;
                 historyEntry.Amount = null;
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Could Not Parse p21", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.act.data.p23, action.act.data.p15, string.Join(" ", action.act.data.p21), action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Could Not Parse p21", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
             }
 
-            Property property = _localDataManager.GetProperty(long.Parse(action.act.data.p15));
+            Property property = _localDataManager.GetProperty(long.Parse(action.action_trace.act.data.p15));
 
             if (property != null)
             {
+                if (property.MintedBy == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Never Minted", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
+                }
+
+                if (property.Owner == null)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Never Owned", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
+                }
                 _localDataManager.UpsertSaleHistory(historyEntry);
+            }
+            else
+            {
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Property Doesn't Exist", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
             }
         }
 
-        private async Task ProcessMintingAction(HistoryAction action)
+        private async Task ProcessMintingAction(EOSFlareAction action)
         {
-            if (action.act.data.a45 == null || action.act.data.p44 == null || action.act.data.a54 == null || action.act.data.memo == null)
+            if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.p44 == null || action.action_trace.act.data.a54 == null || action.action_trace.act.data.memo == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.act.data.a45, action.act.data.p44, action.act.data.a54, action.act.data.memo, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 return;
             }
 
-            string uplandUsername = action.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding EOS account ")[0];
-            Property property = _localDataManager.GetProperty(long.Parse(action.act.data.a45));
-            Tuple<string, string> existingAccount = _localDataManager.GetUplandUsernameByEOSAccount(action.act.data.a54);
+            string uplandUsername = action.action_trace.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding EOS account ")[0];
+            Tuple<string, string> existingAccount = _localDataManager.GetUplandUsernameByEOSAccount(action.action_trace.act.data.a54);
 
             if (existingAccount != null && existingAccount.Item2 != uplandUsername)
             {
-                // Tried Upserting a EOS Account that already exists, the older one must have been deleted, but not processed yet
-                HistoryAction deleteAction = new HistoryAction
+                List<Property> properties = _localDataManager.GetPropertiesByUplandUsername(existingAccount.Item1);
+                if (properties.Count != 0)
                 {
-                    act = new ActionEntry
-                    {
-                        data = new ActionData
-                        {
-                            p52 = existingAccount.Item1
-                        }
-                    }
-                };
-                ProcessDeleteVisitorAction(deleteAction);
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction - Existing Old EOS Has Props", string.Format("Existing Uplander {5}, a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id, existingAccount.Item2));
 
-                _localDataManager.UpsertEOSUser(action.act.data.a54, uplandUsername, action.timestamp);
+                    foreach (Property prop in properties)
+                    {
+                        prop.Owner = null;
+                        prop.Status = Consts.PROP_STATUS_UNLOCKED;
+                        prop.MintedBy = null;
+                        prop.MintedOn = null;
+                        _localDataManager.DeleteSaleHistoryByPropertyId(prop.Id);
+                        _localDataManager.UpsertProperty(prop);
+                    }
+
+                }
+
+                _localDataManager.DeleteEOSUser(existingAccount.Item1);
+                _localDataManager.UpsertEOSUser(action.action_trace.act.data.a54, uplandUsername, action.block_time);
             }
             else if (existingAccount == null)
             {
-                _localDataManager.UpsertEOSUser(action.act.data.a54, uplandUsername, action.timestamp);
+                _localDataManager.UpsertEOSUser(action.action_trace.act.data.a54, uplandUsername, action.block_time);
             }
+
+            Property property = _localDataManager.GetProperty(long.Parse(action.action_trace.act.data.a45));
 
             // We might be missing this property in the database
             if (property == null || property.Address == null || property.Address == "")
             {
-                property = await TryToLoadPropertyById(long.Parse(action.act.data.a45));
+                property = await TryToLoadPropertyById(long.Parse(action.action_trace.act.data.a45));
             }
 
             if (property != null && property.Address != null && property.Address != "")
@@ -748,18 +915,82 @@ namespace Upland.InformationProcessor
                     property.Mint = prop.Mint;
 
                     // DEBUG REMOVE IF DETROIT FAILS
-                    SetMintsOnRestOfNeighborhood(property);
+                    //SetMintsOnRestOfNeighborhood(property);
                 }
 
-                property.Owner = action.act.data.a54;
+                property.Owner = action.action_trace.act.data.a54;
                 property.Status = Consts.PROP_STATUS_OWNED;
-                property.MintedOn = action.timestamp;
-                property.MintedBy = action.act.data.a54;
+                property.MintedOn = action.block_time;
+                property.MintedBy = action.action_trace.act.data.a54;
                 _localDataManager.UpsertProperty(property);
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction - Property Not Found", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.act.data.a45, action.act.data.p44, action.act.data.a54, action.act.data.memo, action.trx_id));
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction - Property Not Found", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id));
+            }
+        }
+
+        private void ProcessSendAction(EOSFlareAction action)
+        {
+            if (_registeredUserEOSAccounts.Any(e => e.Item3 == action.action_trace.act.data.p51) && _propertyIdsToWatch.Any(p => p == action.action_trace.act.data.a45))
+            {
+                try
+                {
+                    string uplandUsername = _registeredUserEOSAccounts.Where(e => e.Item3 == action.action_trace.act.data.p51).First().Item2;
+                    RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUsername);
+                    registeredUser.SendUPX += int.Parse(action.action_trace.act.data.p54.Split(".00 UP")[0]);
+                    _localDataManager.UpdateRegisteredUser(registeredUser);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer - ProcessActions", string.Format("Failed Adding UPX, a45: {0}, p51: {1}, p54: {2}, ex: {3}", action.action_trace.act.data.a45, action.action_trace.act.data.p51, action.action_trace.act.data.p54, ex.Message));
+                }
+            }
+        }
+
+        private void ProcessSendUPXAction(EOSFlareAction action)
+        {
+            ActionData data = null;
+            try
+            {
+                data = JsonConvert.DeserializeObject<ActionData>(action.action_trace.act.data.data);
+            }
+            catch
+            {
+                // Eat it
+            }
+
+            if (action.action_trace.act.data.p2 != null && action.action_trace.act.data.p2 == Consts.HornbrodEOSAccount && _registeredUserEOSAccounts.Any(e => e.Item3 == action.action_trace.act.data.p1))
+            {
+                try
+                {
+                    string uplandUsername = _registeredUserEOSAccounts.Where(e => e.Item3 == action.action_trace.act.data.p1).First().Item2;
+                    RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUsername);
+                    registeredUser.SendUPX += int.Parse(action.action_trace.act.data.p45.Split(".00 UP")[0]) - (int)Math.Floor(double.Parse(action.action_trace.act.data.p134.Split("UP")[0]));
+                    _localDataManager.UpdateRegisteredUser(registeredUser);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer - Process Send UPX", string.Format("Failed Adding UPX, p1: {0}, p133: {1}, p134: {2}, p2: {3}, p45: {4}, ex: {5}", action.action_trace.act.data.p1, action.action_trace.act.data.p133, action.action_trace.act.data.p134, action.action_trace.act.data.p2, action.action_trace.act.data.p45, ex.Message));
+                }
+            }
+            else if (data != null && data.p2 != null && data.p2 == Consts.HornbrodEOSAccount && _registeredUserEOSAccounts.Any(e => e.Item3 == data.p1))
+            {
+                try
+                {
+                    string uplandUsername = _registeredUserEOSAccounts.Where(e => e.Item3 == data.p1).First().Item2;
+                    RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUsername);
+                    registeredUser.SendUPX += int.Parse(data.p45.Split(".00 UP")[0]) - (int)Math.Floor(double.Parse(data.p134.Split("UP")[0]));
+                    _localDataManager.UpdateRegisteredUser(registeredUser);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer - Process Send UPX Sub", string.Format("Failed Adding UPX, p1: {0}, p133: {1}, p134: {2}, p2: {3}, p45: {4}, ex: {5}", action.action_trace.act.data.p1, action.action_trace.act.data.p133, action.action_trace.act.data.p134, action.action_trace.act.data.p2, action.action_trace.act.data.p45, ex.Message));
+                }
+            }
+            else
+            {
+                _localDataManager.CreateErrorLog("BlockchainPropertSurfer - Failed Process Send UPX", string.Format("Failed Adding UPX, trxId: {0}", action.action_trace.trx_id));
             }
         }
 

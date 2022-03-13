@@ -9,6 +9,6 @@ namespace Upland.Interfaces.Processors
     {
         Task RunBlockChainUpdate();
         Task BuildBlockChainFromBegining();
-        Task BuildBlockChainFromDate(DateTime startDate);
+        Task BuildBlockChainFromDate(long lastActionProcessed);
     }
 }

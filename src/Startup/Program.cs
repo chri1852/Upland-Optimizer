@@ -21,6 +21,7 @@ using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
 using Upland.Interfaces.Repositories;
 using Upland.Types;
+using Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
 
 class Program
@@ -32,7 +33,6 @@ class Program
 
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
-    private Timer _sendTimer;
 
     ///*
     static async Task Main(string[] args) // DEBUG FUNCTION
@@ -50,7 +50,6 @@ class Program
         BlockchainManager blockchainManager = new BlockchainManager();
 
         BlockchainPropertySurfer blockchainPropertySurfer = new BlockchainPropertySurfer(localDataManager, uplandApiManager, blockchainManager);
-        BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder(localDataManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
@@ -69,7 +68,7 @@ class Program
         /// Test Optimizer
         //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
         //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
-        
+
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
@@ -118,8 +117,9 @@ class Program
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
         //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
 
-        await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
-        //await blockchainPropertySurfer.BuildBlockChainFromBegining();
+        //List<EOSFlareAction> actions = await blockchainManager.GetEOSFlareActions(0);
+            await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
+            //await blockchainPropertySurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
         //await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
@@ -156,7 +156,6 @@ class Program
             .AddSingleton<IMappingProcessor, MappingProcessor>()
             .AddSingleton<IInformationProcessor, InformationProcessor>()
             .AddSingleton<IForSaleProcessor, ForSaleProcessor>()
-            .AddSingleton<IBlockchainSendFinder, BlockchainSendFinder>()
             .AddSingleton<IBlockchainPropertySurfer, BlockchainPropertySurfer>()
             .AddSingleton<IResyncProcessor, ResyncProcessor>()
             .AddSingleton(_client)
@@ -168,7 +167,6 @@ class Program
 
         InitializeRefreshTimer();
         InitializeBlockchainUpdateTimer();
-        InitializeSendTimer();
 
         await RegisterCommandsAsync();
 
@@ -321,20 +319,6 @@ class Program
         };
         _blockchainUpdateTimer.Interval = 30000; // Every 30 Seconds
         _blockchainUpdateTimer.Start();
-    }
-
-    private void InitializeSendTimer()
-    {
-        _sendTimer = new Timer();
-        _sendTimer.Elapsed += (sender, e) =>
-        {
-            Task child = Task.Factory.StartNew(async () =>
-            {
-                await _services.GetService<IBlockchainSendFinder>().RunBlockChainUpdate();
-            });
-        };
-        _sendTimer.Interval = 300000; // Every 5 Minutes
-        _sendTimer.Start();
     }
 
     private async Task RunRefreshActions()

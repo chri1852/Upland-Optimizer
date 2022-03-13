@@ -18,6 +18,7 @@ namespace Upland.Types.BlockchainTypes
 
     public class GetTransactionEntry
     {
+        public DateTime block_time { get; set; }
         public List<TRANSACTIONENTRY_SUBCLASS> traces { get; set; }
     }
 
@@ -56,6 +57,8 @@ namespace Upland.Types.BlockchainTypes
         public string p133 { get; set; }
         public string p134 { get; set; }
 
-        public ActionData data { get; set; }
+        public string id { get; set; }
+        public string data { get; set; }
+        //public ActionData data { get; set; }
     }
 }

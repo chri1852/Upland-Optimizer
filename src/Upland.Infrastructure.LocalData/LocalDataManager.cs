@@ -836,19 +836,10 @@ namespace Upland.Infrastructure.LocalData
 
         public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
         {
-            Tuple<string, string> returnTuple;
-            if (eosAccount == null || eosAccount.Trim() == "")
-            {
-                returnTuple = new Tuple<string, string>("", "");
-            }
-            else
+            Tuple<string, string> returnTuple = null;
+            if (eosAccount != null)
             {
                 returnTuple = _localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
-
-                if (returnTuple == null)
-                {
-                    returnTuple = new Tuple<string, string>("", "");
-                }
             }
 
             return returnTuple;

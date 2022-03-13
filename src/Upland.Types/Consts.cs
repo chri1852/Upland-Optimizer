@@ -9,6 +9,7 @@ namespace Upland.Types
         public static readonly string CONFIG_MAXSENDTIMESTAMPPROCESSED = "MaxSendTimeStampProcessed";
         public static readonly string CONFIG_ENABLEBLOCKCHAINUPDATES = "EnableBlockChainUpdates";
         public static readonly string CONFIG_PROPIDSTOMONITORFORSENDS = "PropIdsToMonitorForSends";
+        public static readonly string CONFIG_MAXUPLANDACTIONSEQNUM = "MaxUplandActionSeqNum";
 
         public static readonly List<int> StandardCollectionIds = new List<int>
         {

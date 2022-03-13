@@ -84,5 +84,10 @@ namespace Upland.Infrastructure.Blockchain
         {
             return await blockchainRepository.GetSingleTransactionById(transactionId);
         }
+
+        public async Task<List<EOSFlareAction>> GetEOSFlareActions(long position)
+        {
+            return await blockchainRepository.GetEOSFlareActions(position);
+        }
     }
 }

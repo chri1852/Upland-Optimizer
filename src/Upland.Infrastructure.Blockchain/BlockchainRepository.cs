@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Upland.Interfaces.Repositories;
 using Upland.Types.BlockchainTypes;
@@ -16,12 +17,17 @@ namespace Upland.Infrastructure.Blockchain
     {
         HttpClient httpClient;
         Eos eos;
+        HttpClient eosFlareClient;
 
         public BlockchainRepository()
         {
             this.httpClient = new HttpClient();
             this.httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             this.httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+
+            this.eosFlareClient = new HttpClient();
+            this.eosFlareClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            this.eosFlareClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
 
             this.eos = new Eos(new EosConfigurator()
             {
@@ -234,6 +240,35 @@ namespace Upland.Infrastructure.Blockchain
             historyQuery = await CallApi<HistoryV2Query>(requestUri);
 
             return historyQuery;
+        }
+
+        public async Task<List<EOSFlareAction>> GetEOSFlareActions(long position)
+        {
+            List<EOSFlareAction> actions = new List<EOSFlareAction>();
+
+            string requestUri = @"https://api.eosflare.io/v1/eosflare/get_actions";
+
+            HttpContent httpContent = new StringContent(
+                JsonConvert.SerializeObject(new GetEOSFlareActionsRequest
+                {
+                    account_name = "playuplandme",
+                    pos = position,
+                    offset = 1000
+                }), 
+                Encoding.UTF8, 
+                "application/json");
+
+            try
+            {
+                HttpResponseMessage httpResponse = await this.eosFlareClient.PostAsync(requestUri, httpContent);
+                string responseJson = await httpResponse.Content.ReadAsStringAsync();
+
+                return JsonConvert.DeserializeObject<GetEOSFlareActionsResponse>(responseJson).actions;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private async Task<T> CallApi<T>(string requestUri)
