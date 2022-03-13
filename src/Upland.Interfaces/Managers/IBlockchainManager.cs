@@ -11,9 +11,7 @@ namespace Upland.Interfaces.Managers
         Task<List<PropertyStructure>> GetPropertyStructures();
         Task<List<long>> GetPropertiesUnderConstruction();
         Task<Dictionary<string, double>> GetStakedSpark();
-        Task<List<HistoryAction>> GetPropertyActionsFromTime(DateTime timeFrom, int minutesToAdd);
-        Task<List<HistoryAction>> GetSendActionsFromTime(DateTime timeFrom, int minutesToAdd);
         Task<GetTransactionEntry> GetSingleTransactionById(string transactionId);
-        Task<List<EOSFlareAction>> GetEOSFlareActions(long position);
+        Task<List<EOSFlareAction>> GetEOSFlareActions(long position, string accountName);
     }
 }

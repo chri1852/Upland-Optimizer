@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Upland.Infrastructure.UplandApi;
 using Upland.Interfaces.Managers;
@@ -290,7 +291,11 @@ namespace Upland.Infrastructure.LocalData
                         if (newPropIds.Count > 0)
                         {
                             _localDataRepository.CreateCollectionProperties(collection.Id, newPropIds);
-                            await AdjustMintOnCollectionPropertys(collection, newPropIds);
+
+                            if (collection.CityId == 33)
+                            {
+                                await AdjustMintOnCollectionPropertys(collection, newPropIds);
+                            }
                         }
                     }
                 }
@@ -375,12 +380,20 @@ namespace Upland.Infrastructure.LocalData
                 List<Property> properties = _localDataRepository.GetProperties(propIds);
                 foreach (Property prop in properties)
                 {
-                    if (prop.Status == Consts.PROP_STATUS_UNLOCKED)
+                    bool retry = true;
+                    while (retry)
                     {
-                        Property property = UplandMapper.Map(await _uplandApiRepository.GetPropertyById(prop.Id));
-
-                        prop.Mint = property.Mint;
-                        _localDataRepository.UpsertProperty(prop);
+                        try
+                        {
+                            Property property = UplandMapper.Map(await _uplandApiRepository.GetPropertyById(prop.Id));
+                            prop.Mint = property.Mint;
+                            _localDataRepository.UpsertProperty(prop);
+                            retry = false;
+                        }
+                        catch
+                        {
+                            Thread.Sleep(1000);
+                        }
                     }
                 }
             }

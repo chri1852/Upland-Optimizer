@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Upland.Interfaces.Processors
 {
-    public interface IBlockchainPropertySurfer
+    public interface IPlayUplandMeSurfer
     {
         Task RunBlockChainUpdate();
         Task BuildBlockChainFromBegining();

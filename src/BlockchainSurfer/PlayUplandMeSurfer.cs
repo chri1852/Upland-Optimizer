@@ -13,13 +13,14 @@ using Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
-namespace Upland.InformationProcessor
+namespace Upland.BlockchainSurfer
 {
-    public class BlockchainPropertySurfer : IBlockchainPropertySurfer
+    public class PlayUplandMeSurfer : IPlayUplandMeSurfer
     {
         private readonly ILocalDataManager _localDataManager;
         private readonly IBlockchainManager _blockchainManager;
         private readonly IUplandApiManager _uplandApiManager;
+        private readonly string _playuplandme;
 
         private List<string> _propertyIdsToWatch;
         List<Tuple<decimal, string, string>> _registeredUserEOSAccounts;
@@ -27,11 +28,12 @@ namespace Upland.InformationProcessor
         private List<Neighborhood> neighborhoods;
         private bool isProcessing;
 
-        public BlockchainPropertySurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
+        public PlayUplandMeSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;
             _blockchainManager = blockchainManager;
+            _playuplandme = "playuplandme";
 
             neighborhoods = new List<Neighborhood>();
             isProcessing = false;
@@ -99,7 +101,7 @@ namespace Upland.InformationProcessor
                     try
                     {
                         Thread.Sleep(2000);
-                        actions = await _blockchainManager.GetEOSFlareActions(lastActionProcessed + 1);
+                        actions = await _blockchainManager.GetEOSFlareActions(lastActionProcessed + 1, _playuplandme);
                         if (actions != null)
                         {
                             retry = false;
@@ -193,10 +195,10 @@ namespace Upland.InformationProcessor
                         ProcessDeleteVisitorAction(action);
                         break;
                     case "n41":
-                        ProcessSendAction(action);
+                       // ProcessSendAction(action);
                         break;
                     case "n111":
-                        ProcessSendUPXAction(action);
+                        //ProcessSendUPXAction(action);
                         break;
                 }
 
@@ -578,10 +580,10 @@ namespace Upland.InformationProcessor
 
                 if (Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                 {
-                    propOneCityId = HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[1]);
+                    propOneCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[1]);
                     propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(", ")[0];
 
-                    propTwoCityId = HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[3]);
+                    propTwoCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[3]);
                     propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(", ")[0];
                 }
                 else if (Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success || Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
@@ -590,24 +592,24 @@ namespace Upland.InformationProcessor
                     if (Regex.Match(action.action_trace.act.data.memo.Split(")")[1], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                     {
                         string cityName = action.action_trace.act.data.memo.Split(")")[1].Split(",")[2].Trim();
-                        propOneCityId = HelperFunctions.GetCityIdByName(cityName);
+                        propOneCityId = HelperFunctions.HelperFunctions.GetCityIdByName(cityName);
                         propOneAddress = action.action_trace.act.data.memo.Split(")")[1].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
                     }
                     else
                     {
-                        propOneCityId = HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[1].Split(",")[1].Trim());
+                        propOneCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[1].Split(",")[1].Trim());
                         propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(",")[0].Trim();
                     }
 
                     if (Regex.Match(action.action_trace.act.data.memo.Split(")")[3], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                     {
                         string cityName = action.action_trace.act.data.memo.Split(")")[3].Split(",")[2].Trim();
-                        propTwoCityId = HelperFunctions.GetCityIdByName(cityName);
+                        propTwoCityId = HelperFunctions.HelperFunctions.GetCityIdByName(cityName);
                         propTwoAddress = action.action_trace.act.data.memo.Split(")")[3].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
                     }
                     else
                     {
-                        propTwoCityId = HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[3].Split(",")[1].Trim());
+                        propTwoCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[3].Split(",")[1].Trim());
                         propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(",")[0].Trim();
                     }
                 }
@@ -726,9 +728,9 @@ namespace Upland.InformationProcessor
             }
             else
             {
-                string cityName = HelperFunctions.SusOutCityNameByMemoString(action.action_trace.act.data.memo);
+                string cityName = HelperFunctions.HelperFunctions.SusOutCityNameByMemoString(action.action_trace.act.data.memo);
                 Property prop = _localDataManager.GetPropertyByCityIdAndAddress(
-                    HelperFunctions.GetCityIdByName(cityName),
+                    HelperFunctions.HelperFunctions.GetCityIdByName(cityName),
                     action.action_trace.act.data.memo.Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0]);
 
                 if (prop == null || prop.Id == 0 || prop.Address == null || prop.Address == "")

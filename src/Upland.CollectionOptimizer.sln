@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.InformationProcessor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Infrastructure.Blockchain", "Upland.Infrastructure.Blockchain\Upland.Infrastructure.Blockchain.csproj", "{DF1C8ED7-3CBA-4F3F-BA31-1C3344D2720B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upland.Interfaces", "Upland.Interfaces\Upland.Interfaces.csproj", "{17DCAB4F-294D-49F7-A8C1-CBAC3E1036AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Interfaces", "Upland.Interfaces\Upland.Interfaces.csproj", "{17DCAB4F-294D-49F7-A8C1-CBAC3E1036AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upland.BlockchainSurfer", "BlockchainSurfer\Upland.BlockchainSurfer.csproj", "{CA69AE82-C51D-457C-AD69-ED4F6C07AC3A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,6 +66,10 @@ Global
 		{17DCAB4F-294D-49F7-A8C1-CBAC3E1036AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17DCAB4F-294D-49F7-A8C1-CBAC3E1036AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17DCAB4F-294D-49F7-A8C1-CBAC3E1036AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA69AE82-C51D-457C-AD69-ED4F6C07AC3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA69AE82-C51D-457C-AD69-ED4F6C07AC3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA69AE82-C51D-457C-AD69-ED4F6C07AC3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA69AE82-C51D-457C-AD69-ED4F6C07AC3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

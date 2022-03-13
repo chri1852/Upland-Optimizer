@@ -14,8 +14,6 @@ namespace Upland.Interfaces.Repositories
         Task<List<t2Entry>> GetForSaleProps();
         Task<List<t3Entry>> GetActiveOffers();
         Task<GetTransactionEntry> GetSingleTransactionById(string transactionId);
-        Task<HistoryV2Query> GetPropertyActionsFromTime(DateTime fromTime, int minutesToAdd);
-        Task<HistoryV2Query> GetSendActionsFromTime(DateTime fromTime, int minutesToAdd);
-        Task<List<EOSFlareAction>> GetEOSFlareActions(long position);
+        Task<List<EOSFlareAction>> GetEOSFlareActions(long position, string accountName);
     }
 }

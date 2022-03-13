@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
+using Upland.BlockchainSurfer;
 using Upland.CollectionOptimizer;
 using Upland.InformationProcessor;
 using Upland.Infrastructure.Blockchain;
@@ -49,7 +50,7 @@ class Program
         UplandApiManager uplandApiManager = new UplandApiManager(uplandApiRepository);
         BlockchainManager blockchainManager = new BlockchainManager();
 
-        BlockchainPropertySurfer blockchainPropertySurfer = new BlockchainPropertySurfer(localDataManager, uplandApiManager, blockchainManager);
+        PlayUplandMeSurfer blockchainPropertySurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
@@ -156,7 +157,7 @@ class Program
             .AddSingleton<IMappingProcessor, MappingProcessor>()
             .AddSingleton<IInformationProcessor, InformationProcessor>()
             .AddSingleton<IForSaleProcessor, ForSaleProcessor>()
-            .AddSingleton<IBlockchainPropertySurfer, BlockchainPropertySurfer>()
+            .AddSingleton<IPlayUplandMeSurfer, PlayUplandMeSurfer>()
             .AddSingleton<IResyncProcessor, ResyncProcessor>()
             .AddSingleton(_client)
             .AddSingleton(_commands)
@@ -314,7 +315,7 @@ class Program
         {
             Task child = Task.Factory.StartNew(async () =>
             {
-                await _services.GetService<IBlockchainPropertySurfer>().RunBlockChainUpdate();
+                await _services.GetService<IPlayUplandMeSurfer>().RunBlockChainUpdate();
             });
         };
         _blockchainUpdateTimer.Interval = 30000; // Every 30 Seconds

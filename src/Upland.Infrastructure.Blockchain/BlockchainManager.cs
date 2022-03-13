@@ -70,24 +70,14 @@ namespace Upland.Infrastructure.Blockchain
             return userStakes;
         }
 
-        public async Task<List<HistoryAction>> GetPropertyActionsFromTime(DateTime timeFrom, int minutesToAdd)
-        {
-            return (await blockchainRepository.GetPropertyActionsFromTime(timeFrom, minutesToAdd)).actions;
-        }
-
-        public async Task<List<HistoryAction>> GetSendActionsFromTime(DateTime timeFrom, int minutesToAdd)
-        {
-            return (await blockchainRepository.GetSendActionsFromTime(timeFrom, minutesToAdd)).actions;
-        }
-
         public async Task<GetTransactionEntry> GetSingleTransactionById(string transactionId)
         {
             return await blockchainRepository.GetSingleTransactionById(transactionId);
         }
 
-        public async Task<List<EOSFlareAction>> GetEOSFlareActions(long position)
+        public async Task<List<EOSFlareAction>> GetEOSFlareActions(long position, string accountName)
         {
-            return await blockchainRepository.GetEOSFlareActions(position);
+            return await blockchainRepository.GetEOSFlareActions(position, accountName);
         }
     }
 }

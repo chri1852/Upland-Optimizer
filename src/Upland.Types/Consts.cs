@@ -5,11 +5,11 @@ namespace Upland.Types
     public static class Consts
     {
         // Config Values
-        public static readonly string CONFIG_MAXTIMESTAMPPROCESSED = "MaxTimeStampProcessed";
-        public static readonly string CONFIG_MAXSENDTIMESTAMPPROCESSED = "MaxSendTimeStampProcessed";
         public static readonly string CONFIG_ENABLEBLOCKCHAINUPDATES = "EnableBlockChainUpdates";
         public static readonly string CONFIG_PROPIDSTOMONITORFORSENDS = "PropIdsToMonitorForSends";
         public static readonly string CONFIG_MAXUPLANDACTIONSEQNUM = "MaxUplandActionSeqNum";
+        public static readonly string CONFIG_MAXUSPKTOKENACCACTIONSEQNUM = "MaxUSPKTokenAccActionSeqNum";
+        public static readonly string CONFIG_MAXUPLANDNFTACTACTIONSEQNUM = "MaxUplandNFTActActionSeqNum";
 
         public static readonly List<int> StandardCollectionIds = new List<int>
         {
