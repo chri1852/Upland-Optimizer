@@ -19,7 +19,9 @@ namespace Upland.Types.Types
         public List<int> Collections { get; set; }
         public double Mint { get; set; }
         public double LowerValue { get; set; }
+        public double MiddleValue { get; set; }
         public double UpperValue { get; set; }
         public string Note { get; set; }
+        public List<PropertyAppraisalFigure> Figures { get; set; }
     }
 }

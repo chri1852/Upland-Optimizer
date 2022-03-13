@@ -34,7 +34,7 @@ class Program
     private Timer _blockchainUpdateTimer;
     private Timer _sendTimer;
 
-    /*
+    ///*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -67,11 +67,11 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        //OptimizerRunRequest runRequest = new OptimizerRunRequest("roguegent", 9, true);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
         //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
         
         // Populate initial City Data
-        await localDataManager.PopulateNeighborhoods();
+        //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
 
@@ -118,21 +118,22 @@ class Program
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
         //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
 
-        //await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
+        await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
         //await blockchainPropertySurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
         //await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
-        //await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" }, "txt");
+        //AppraisalResults results = await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" });
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\hornbrod.csv", string.Join(Environment.NewLine, profileAppraiser.BuildAppraisalCsvStrings(results)));
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
-    */
-    ///*
+    //*/
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    //*/
+    */
 
     public async Task RunBotAsync()
     {

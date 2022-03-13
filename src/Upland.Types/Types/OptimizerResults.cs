@@ -28,6 +28,9 @@ namespace Upland.Types.Types
         public double Boost { get; set; }
         public int MissingProps { get; set; }
 
+        public int CityId { get; set; }
+        public int CategoryId { get; set; }
+
         public List<OptimizerCollectionProperty> Properties { get; set; }
     }
 
