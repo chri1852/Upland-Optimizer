@@ -959,7 +959,8 @@ namespace Upland.BlockchainSurfer
                     Spark = 0
                 });
             }
-            else if (existingAccount == null)
+            
+            if (existingAccount == null)
             {
                 _localDataManager.UpsertEOSUser(new EOSUser
                 {
@@ -970,7 +971,7 @@ namespace Upland.BlockchainSurfer
                 });
             }
 
-            if (existingAccount.UplandUsername == "")
+            if (existingAccount != null && existingAccount.UplandUsername == "")
             {
                 existingAccount.UplandUsername = uplandUsername;
                 _localDataManager.UpsertEOSUser(existingAccount);
