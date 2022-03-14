@@ -99,9 +99,11 @@ namespace Upland.BlockchainSurfer
                     try
                     {
                         Thread.Sleep(2000);
-                        actions = (await _blockchainManager.GetEOSFlareActions<GetPlayUplandMeActionsResponse>(lastActionProcessed + 1, _playuplandme)).actions;
-                        if (actions != null)
+                        GetPlayUplandMeActionsResponse response = await _blockchainManager.GetEOSFlareActions<GetPlayUplandMeActionsResponse>(lastActionProcessed + 1, _playuplandme);
+                        
+                        if (response != null && response.actions != null)
                         {
+                            actions = response.actions;
                             retry = false;
                         }
                         else
@@ -250,7 +252,13 @@ namespace Upland.BlockchainSurfer
 
             _localDataManager.DeleteEOSUser(action.action_trace.act.data.p52);
 
-            _localDataManager.UpsertEOSUser(action.action_trace.act.data.p53, uplandUsername, action.block_time);
+            _localDataManager.UpsertEOSUser(new EOSUser
+            {
+                EOSAccount = action.action_trace.act.data.p53,
+                UplandUsername = uplandUsername,
+                Joined = action.block_time,
+                Spark = 0
+            });
         }
 
         private async Task ProcessBuyForFiatAction(PlayUplandMeAction action)
@@ -406,6 +414,8 @@ namespace Upland.BlockchainSurfer
                 Offer = false
             };
 
+            List<SaleHistoryEntry> allEntries = _localDataManager.GetRawSaleHistoryByPropertyId(historyEntry.PropId);
+
             if (Regex.Match(action.action_trace.act.data.p11, "^0.00 UP").Success)
             {
                 historyEntry.AmountFiat = double.Parse(action.action_trace.act.data.p3.Split(" FI")[0]);
@@ -442,6 +452,18 @@ namespace Upland.BlockchainSurfer
                 {
                     _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPlaceForSaleAction - Blockchain Error Seller is not Owner", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
                     property.Owner = historyEntry.SellerEOS;
+                }
+
+                if (allEntries.Any(s => 
+                    s.BuyerEOS == null && 
+                    s.SellerEOS == historyEntry.SellerEOS && 
+                    s.AmountFiat == historyEntry.AmountFiat &&
+                    s.Amount == historyEntry.Amount))
+                {
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPlaceForSaleAction - Duplicate Sale Entry Found", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                    property.Status = Consts.PROP_STATUS_FORSALE;
+                    _localDataManager.UpsertProperty(property);
+                    return;
                 }
 
                 _localDataManager.UpsertSaleHistory(historyEntry);
@@ -868,14 +890,14 @@ namespace Upland.BlockchainSurfer
             }
 
             string uplandUsername = action.action_trace.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding EOS account ")[0];
-            Tuple<string, string> existingAccount = _localDataManager.GetUplandUsernameByEOSAccount(action.action_trace.act.data.a54);
+            EOSUser existingAccount = _localDataManager.GetUplandUsernameByEOSAccount(action.action_trace.act.data.a54);
 
-            if (existingAccount != null && existingAccount.Item2 != uplandUsername)
+            if (existingAccount != null && existingAccount.UplandUsername != uplandUsername)
             {
-                List<Property> properties = _localDataManager.GetPropertiesByUplandUsername(existingAccount.Item1);
+                List<Property> properties = _localDataManager.GetPropertiesByUplandUsername(existingAccount.UplandUsername);
                 if (properties.Count != 0)
                 {
-                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessMintingAction - Existing Old EOS Has Props", string.Format("Existing Uplander {5}, a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id, existingAccount.Item2));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessMintingAction - Existing Old EOS Has Props", string.Format("Existing Uplander {5}, a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id, existingAccount.UplandUsername));
 
                     foreach (Property prop in properties)
                     {
@@ -889,12 +911,24 @@ namespace Upland.BlockchainSurfer
 
                 }
 
-                _localDataManager.DeleteEOSUser(existingAccount.Item1);
-                _localDataManager.UpsertEOSUser(action.action_trace.act.data.a54, uplandUsername, action.block_time);
+                _localDataManager.DeleteEOSUser(existingAccount.EOSAccount);
+                _localDataManager.UpsertEOSUser(new EOSUser
+                {
+                    EOSAccount = action.action_trace.act.data.a54,
+                    UplandUsername = uplandUsername,
+                    Joined = action.block_time,
+                    Spark = 0
+                });
             }
             else if (existingAccount == null)
             {
-                _localDataManager.UpsertEOSUser(action.action_trace.act.data.a54, uplandUsername, action.block_time);
+                _localDataManager.UpsertEOSUser(new EOSUser
+                {
+                    EOSAccount = action.action_trace.act.data.a54,
+                    UplandUsername = uplandUsername,
+                    Joined = action.block_time,
+                    Spark = 0
+                });
             }
 
             Property property = _localDataManager.GetProperty(long.Parse(action.action_trace.act.data.a45));

@@ -847,18 +847,17 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetConfigurationValue(name);
         }
 
-        public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
+        public EOSUser GetUplandUsernameByEOSAccount(string eosAccount)
         {
-            Tuple<string, string> returnTuple = null;
             if (eosAccount != null)
             {
-                returnTuple = _localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
+                return _localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
             }
 
-            return returnTuple;
+            return null;
         }
 
-        public string GetEOSAccountByUplandUsername(string uplandUsername)
+        public EOSUser GetEOSAccountByUplandUsername(string uplandUsername)
         {
             return _localDataRepository.GetEOSAccountByUplandUsername(uplandUsername);
         }
@@ -948,9 +947,9 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetPropertyStructures();
         }
 
-        public void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined)
+        public void UpsertEOSUser(EOSUser eOSUser)
         {
-            _localDataRepository.UpsertEOSUser(eosAccount, uplandUsername, joined);
+            _localDataRepository.UpsertEOSUser(eOSUser);
         }
 
         public void UpsertSaleHistory(SaleHistoryEntry saleHistory)

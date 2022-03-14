@@ -66,7 +66,7 @@ namespace Upland.InformationProcessor
             Dictionary<long, AcquiredInfo> propertyAcquistionInfo = _localDataManager.GetAcquiredOnByPlayer(uplandUsername).ToDictionary(a => a.PropertyId, a => a);
 
             profile.Rank = HelperFunctions.TranslateUserLevel(int.Parse(profile.Rank));
-            profile.EOSAccount = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername);
+            profile.EOSAccount = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername).EOSAccount;
 
             Dictionary<long, Property> userProperties = _localDataManager
                 .GetProperties(profile.Properties.Select(p => p.PropertyId).ToList())

@@ -931,7 +931,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined)
+        public void UpsertEOSUser(EOSUser eosUser)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -945,9 +945,10 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[UpsertEOSUser]";
-                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", eosAccount));
-                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
-                    sqlCmd.Parameters.Add(new SqlParameter("Joined", joined));
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", eosUser.EOSAccount));
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", eosUser.UplandUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("Joined", eosUser.Joined));
+                    sqlCmd.Parameters.Add(new SqlParameter("Spark", eosUser.Spark));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -2295,9 +2296,9 @@ namespace Upland.Infrastructure.LocalData
         }
 
 
-        public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
+        public EOSUser GetUplandUsernameByEOSAccount(string eosAccount)
         {
-            Tuple<string, string> EOSAccount = null;
+            EOSUser user = null;
             SqlConnection sqlConnection = GetSQLConnector();
 
             using (sqlConnection)
@@ -2315,7 +2316,14 @@ namespace Upland.Infrastructure.LocalData
                     {
                         while (reader.Read())
                         {
-                            EOSAccount = new Tuple<string, string>((string)reader["EOSAccount"], (string)reader["UplandUsername"]);
+                            user = new EOSUser
+                            {
+                                Id = (int)reader["Id"],
+                                EOSAccount = (string)reader["EOSAccount"],
+                                UplandUsername = (string)reader["UplandUsername"],
+                                Joined = (DateTime)reader["Joined"],
+                                Spark = (decimal)reader["Spark"]
+                            };
                         }
                         reader.Close();
                     }
@@ -2329,13 +2337,13 @@ namespace Upland.Infrastructure.LocalData
                     sqlConnection.Close();
                 }
 
-                return EOSAccount;
+                return user;
             }
         }
 
-        public string GetEOSAccountByUplandUsername(string uplandUsername)
+        public EOSUser GetEOSAccountByUplandUsername(string uplandUsername)
         {
-            string EOSAccount = null;
+            EOSUser user = null;
             SqlConnection sqlConnection = GetSQLConnector();
 
             using (sqlConnection)
@@ -2353,7 +2361,14 @@ namespace Upland.Infrastructure.LocalData
                     {
                         while (reader.Read())
                         {
-                            EOSAccount = (string)reader["EOSAccount"];
+                            user = new EOSUser
+                            {
+                                Id = (int)reader["Id"],
+                                EOSAccount = (string)reader["EOSAccount"],
+                                UplandUsername = (string)reader["UplandUsername"],
+                                Joined = (DateTime)reader["Joined"],
+                                Spark = (decimal)reader["Spark"]
+                            };
                         }
                         reader.Close();
                     }
@@ -2367,7 +2382,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlConnection.Close();
                 }
 
-                return EOSAccount;
+                return user;
             }
         }
 

@@ -27,7 +27,7 @@ namespace Upland.Interfaces.Repositories
         List<PropertyAppraisalData> GetCurrentMarkupFloorAppraisalData();
         List<Tuple<string, double>> GetBuildingAppraisalData();
         void UpsertProperty(Property property);
-        void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined);
+        void UpsertEOSUser(EOSUser eosUser);
         void UpsertSaleHistory(SaleHistoryEntry saleHistory);
         Property GetProperty(long id);
         List<Property> GetProperties(List<long> propertyIds);
@@ -60,8 +60,8 @@ namespace Upland.Interfaces.Repositories
         void UpdateRegisteredUser(RegisteredUser registeredUser);
         RegisteredUser GetRegisteredUser(decimal discordUserId);
         RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername);
-        Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount);
-        string GetEOSAccountByUplandUsername(string uplandUsername);
+        EOSUser GetUplandUsernameByEOSAccount(string eosAccount);
+        EOSUser GetEOSAccountByUplandUsername(string uplandUsername);
         List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts();
         List<SaleHistoryQueryEntry> GetSaleHistoryByCityId(int cityId);
         List<SaleHistoryQueryEntry> GetSaleHistoryByNeighborhoodId(int neighborhoodId);

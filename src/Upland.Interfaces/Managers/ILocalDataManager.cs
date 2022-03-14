@@ -73,8 +73,8 @@ namespace Upland.Interfaces.Managers
         List<UplandForSaleProp> GetPropertiesForSale_Collection(int collectionId, bool onlyBuildings);
         List<UplandForSaleProp> GetPropertiesForSale_Seller(string uplandUsername, bool onlyBuildings);
         string GetConfigurationValue(string name);
-        Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount);
-        string GetEOSAccountByUplandUsername(string uplandUsername);
+        EOSUser GetUplandUsernameByEOSAccount(string eosAccount);
+        EOSUser GetEOSAccountByUplandUsername(string uplandUsername);
         List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts();
         DateTime GetLastHistoricalCityStatusDate();
         DateTime GetLastSaleHistoryDateTime();
@@ -91,7 +91,7 @@ namespace Upland.Interfaces.Managers
         void TruncatePropertyStructure();
         void CreatePropertyStructure(PropertyStructure propertyStructure);
         List<PropertyStructure> GetPropertyStructures();
-        void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined);
+        void UpsertEOSUser(EOSUser eosUser);
         void UpsertSaleHistory(SaleHistoryEntry saleHistory);
         void UpsertConfigurationValue(string name, string value);
         void UpsertProperty(Property property);

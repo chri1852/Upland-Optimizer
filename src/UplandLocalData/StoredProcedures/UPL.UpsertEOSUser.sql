@@ -2,7 +2,8 @@
 (
 	@EOSAccount      VARCHAR(12),
 	@UplandUsername  VARCHAR(50),
-	@Joined          DATETIME
+	@Joined          DATETIME,
+	@Spark           DECIMAL(6,2)
 )
 AS
 BEGIN
@@ -14,13 +15,15 @@ BEGIN
 		(
 			[EOSAccount],
 			[UplandUsername],
-			[Joined]
+			[Joined],
+			[Spark]
 		)
 		Values
 		(
 			@EOSAccount,
 			@UplandUsername,
-			@Joined
+			@Joined,
+			@Spark
 		)
 	END TRY
 

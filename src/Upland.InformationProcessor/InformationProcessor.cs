@@ -1082,7 +1082,7 @@ namespace Upland.InformationProcessor
                     propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
                     propString += string.Format("{0},", property.CityId);
                     propString += string.Format("{0},", property.Status);
-                    propString += string.Format("{0},", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).Item2);
+                    propString += string.Format("{0},", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).UplandUsername);
                     propString += string.Format("{0},", property.FSA);
                     propString += string.Format("{0},", property.Address);
                     propString += string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None");
@@ -1125,7 +1125,7 @@ namespace Upland.InformationProcessor
                         , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
                         , string.Format("{0}", cityId).PadLeft(cityPad)
                         , string.Format("{0}", property.Status).PadLeft(statusPad)
-                        , string.Format("{0}", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).Item2).PadLeft(ownerPad)
+                        , string.Format("{0}", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).UplandUsername).PadLeft(ownerPad)
                         , string.Format("{0}", property.FSA).PadLeft(fsaPad)
                         , property.Address.PadLeft(addressPad)
                         , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(structurePad)
