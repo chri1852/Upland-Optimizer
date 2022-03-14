@@ -14,6 +14,6 @@ namespace Upland.Interfaces.Repositories
         Task<List<t2Entry>> GetForSaleProps();
         Task<List<t3Entry>> GetActiveOffers();
         Task<GetTransactionEntry> GetSingleTransactionById(string transactionId);
-        Task<List<EOSFlareAction>> GetEOSFlareActions(long position, string accountName);
+        Task<T> GetEOSFlareActions<T>(long position, string accountName);
     }
 }

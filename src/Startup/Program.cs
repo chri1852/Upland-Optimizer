@@ -50,7 +50,7 @@ class Program
         UplandApiManager uplandApiManager = new UplandApiManager(uplandApiRepository);
         BlockchainManager blockchainManager = new BlockchainManager();
 
-        PlayUplandMeSurfer blockchainPropertySurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
+        PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
@@ -111,7 +111,6 @@ class Program
         //await informationProcessor.RebuildPropertyStructures();
         //await informationProcessor.RunCityStatusUpdate();
         //await informationProcessor.RefreshCityById("PART", 1);
-        //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
 
         // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
 
@@ -119,8 +118,8 @@ class Program
         //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
 
         //List<EOSFlareAction> actions = await blockchainManager.GetEOSFlareActions(0);
-            await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
-            //await blockchainPropertySurfer.BuildBlockChainFromBegining();
+        await playUplandMeSurfer.RunBlockChainUpdate();
+        //await playUplandMeSurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
         //await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();

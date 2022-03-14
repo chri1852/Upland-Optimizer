@@ -216,10 +216,8 @@ namespace Upland.Infrastructure.Blockchain
             return transactionEntry;
         }
 
-        public async Task<List<EOSFlareAction>> GetEOSFlareActions(long position, string accountName)
+        public async Task<T> GetEOSFlareActions<T>(long position, string accountName)
         {
-            List<EOSFlareAction> actions = new List<EOSFlareAction>();
-
             string requestUri = @"https://api.eosflare.io/v1/eosflare/get_actions";
 
             HttpContent httpContent = new StringContent(
@@ -237,11 +235,11 @@ namespace Upland.Infrastructure.Blockchain
                 HttpResponseMessage httpResponse = await this.eosFlareClient.PostAsync(requestUri, httpContent);
                 string responseJson = await httpResponse.Content.ReadAsStringAsync();
 
-                return JsonConvert.DeserializeObject<GetEOSFlareActionsResponse>(responseJson).actions;
+                return JsonConvert.DeserializeObject<T>(responseJson);
             }
             catch
             {
-                return null;
+                return default(T);
             }
         }
 

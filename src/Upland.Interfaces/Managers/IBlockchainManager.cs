@@ -12,6 +12,6 @@ namespace Upland.Interfaces.Managers
         Task<List<long>> GetPropertiesUnderConstruction();
         Task<Dictionary<string, double>> GetStakedSpark();
         Task<GetTransactionEntry> GetSingleTransactionById(string transactionId);
-        Task<List<EOSFlareAction>> GetEOSFlareActions(long position, string accountName);
+        Task<T> GetEOSFlareActions<T>(long position, string accountName);
     }
 }

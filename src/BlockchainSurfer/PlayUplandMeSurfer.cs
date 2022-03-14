@@ -25,8 +25,8 @@ namespace Upland.BlockchainSurfer
         private List<string> _propertyIdsToWatch;
         List<Tuple<decimal, string, string>> _registeredUserEOSAccounts;
 
-        private List<Neighborhood> neighborhoods;
-        private bool isProcessing;
+        private List<Neighborhood> _neighborhoods;
+        private bool _isProcessing;
 
         public PlayUplandMeSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
         {
@@ -35,8 +35,8 @@ namespace Upland.BlockchainSurfer
             _blockchainManager = blockchainManager;
             _playuplandme = "playuplandme";
 
-            neighborhoods = new List<Neighborhood>();
-            isProcessing = false;
+            _neighborhoods = new List<Neighborhood>();
+            _isProcessing = false;
         }
 
         public async Task RunBlockChainUpdate()
@@ -45,12 +45,12 @@ namespace Upland.BlockchainSurfer
 
             try
             {
-                await BuildBlockChainFromDate(lastActionProcessed);
+                await ProcessBlockchainFromAction(lastActionProcessed);
             }
             catch (Exception ex)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - RunBlockChainUpdate", ex.Message);
-                this.isProcessing = false;
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - RunBlockChainUpdate", ex.Message);
+                _isProcessing = false;
             }
         }
 
@@ -59,21 +59,19 @@ namespace Upland.BlockchainSurfer
             // Upland went live on the blockchain on 2019-06-06 11:51:37
             DateTime startDate = new DateTime(2019, 06, 05, 01, 00, 00);
 
-            //await BuildBlockChainFromDate(startDate);
-            await BuildBlockChainFromDate(-1);
+            await ProcessBlockchainFromAction(-1);
         }
 
-        //public async Task BuildBlockChainFromDate(DateTime startDate)
-        public async Task BuildBlockChainFromDate(long lastActionProcessed)
+        public async Task ProcessBlockchainFromAction(long lastActionProcessed)
         {
             bool enableUpdates = bool.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
 
-            if (!enableUpdates || this.isProcessing)
+            if (!enableUpdates || _isProcessing)
             {
                 return;
             }
 
-            this.isProcessing = true;
+            _isProcessing = true;
 
             DateTime historyTimeStamp = _localDataManager.GetLastHistoricalCityStatusDate();
             _registeredUserEOSAccounts = _localDataManager.GetRegisteredUsersEOSAccounts();
@@ -92,7 +90,7 @@ namespace Upland.BlockchainSurfer
 
             while (continueLoad)
             {
-                List<EOSFlareAction> actions = new List<EOSFlareAction>();
+                List<PlayUplandMeAction> actions = new List<PlayUplandMeAction>();
 
                 // Have to do this in a retry loop due to timeouts
                 bool retry = true;
@@ -101,7 +99,7 @@ namespace Upland.BlockchainSurfer
                     try
                     {
                         Thread.Sleep(2000);
-                        actions = await _blockchainManager.GetEOSFlareActions(lastActionProcessed + 1, _playuplandme);
+                        actions = (await _blockchainManager.GetEOSFlareActions<GetPlayUplandMeActionsResponse>(lastActionProcessed + 1, _playuplandme)).actions;
                         if (actions != null)
                         {
                             retry = false;
@@ -113,7 +111,7 @@ namespace Upland.BlockchainSurfer
                     }
                     catch (Exception ex)
                     {
-                        _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - BuildBlockChainFromDate - Loop", ex.Message);
+                        _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - BuildBlockChainFromDate - Loop", ex.Message);
                         Thread.Sleep(5000);
                     }
                 }
@@ -130,7 +128,7 @@ namespace Upland.BlockchainSurfer
                     }
                     catch (Exception ex)
                     {
-                        _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
+                        _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
                         _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
                     }
 
@@ -150,18 +148,18 @@ namespace Upland.BlockchainSurfer
                 }
             }
 
-            this.isProcessing = false;
+            _isProcessing = false;
         }
 
-        private async Task ProcessActions(List<EOSFlareAction> actions)
+        private async Task ProcessActions(List<PlayUplandMeAction> actions)
         {
-            long maxUplandActionSeqNum = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM));
-            foreach (EOSFlareAction action in actions)
+            long maxActionSeqNum = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM));
+            foreach (PlayUplandMeAction action in actions)
             {
-                if (action.account_action_seq < maxUplandActionSeqNum)
+                if (action.account_action_seq < maxActionSeqNum)
                 {
                     // We've already processed this event
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessActions", string.Format("Skipping Action {0} < {1}", action.account_action_seq, maxUplandActionSeqNum));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessActions", string.Format("Skipping Action {0} < {1}", action.account_action_seq, maxActionSeqNum));
                     continue;
                 }
 
@@ -202,19 +200,19 @@ namespace Upland.BlockchainSurfer
                         break;
                 }
 
-                if (action.account_action_seq > maxUplandActionSeqNum)
+                if (action.account_action_seq > maxActionSeqNum)
                 {
-                    maxUplandActionSeqNum = action.account_action_seq;
+                    maxActionSeqNum = action.account_action_seq;
                     _localDataManager.UpsertConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM, action.account_action_seq.ToString());
                 }
             }
         }
 
-        private void ProcessDeleteVisitorAction(EOSFlareAction action)
+        private void ProcessDeleteVisitorAction(PlayUplandMeAction action)
         {
             if (action.action_trace.act.data.p52 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessDeleteVisitorAction", string.Format("p52 (Visitor EOS): {0}, Trx_id: {1}", action.action_trace.act.data.p52, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessDeleteVisitorAction", string.Format("p52 (Visitor EOS): {0}, Trx_id: {1}", action.action_trace.act.data.p52, action.action_trace.trx_id));
                 return;
             }
 
@@ -232,11 +230,11 @@ namespace Upland.BlockchainSurfer
             }
         }
 
-        private void ProcessBecomeUplanderAction(EOSFlareAction action)
+        private void ProcessBecomeUplanderAction(PlayUplandMeAction action)
         {
             if (action.action_trace.act.data.p53 == null || action.action_trace.act.data.p52 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBecomeUplanderAction", string.Format("p53 (New EOS): {0}, p52 (Visitor EOS): {1}, Trx_id: {2}", action.action_trace.act.data.p53, action.action_trace.act.data.p52, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessBecomeUplanderAction", string.Format("p53 (New EOS): {0}, p52 (Visitor EOS): {1}, Trx_id: {2}", action.action_trace.act.data.p53, action.action_trace.act.data.p52, action.action_trace.trx_id));
                 return;
             }
             string uplandUsername = action.action_trace.act.data.memo.Split(" notarizes that Upland user ")[1].Split(" with corresponding ")[0];
@@ -255,7 +253,7 @@ namespace Upland.BlockchainSurfer
             _localDataManager.UpsertEOSUser(action.action_trace.act.data.p53, uplandUsername, action.block_time);
         }
 
-        private async Task ProcessBuyForFiatAction(EOSFlareAction action)
+        private async Task ProcessBuyForFiatAction(PlayUplandMeAction action)
         {
             if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.p14 == null)
             {
@@ -263,12 +261,13 @@ namespace Upland.BlockchainSurfer
 
                 if (transactionEntry.traces.Where(t => t.act.name == "n52").ToList().Count == 1)
                 {
-                    action.action_trace.act.data.a45 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.a45;
-                    action.action_trace.act.data.p14 = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data.p14;
+                    PlayUplandMeData traceData = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data;
+                    action.action_trace.act.data.a45 = traceData.a45;
+                    action.action_trace.act.data.p14 = traceData.p14;
                 }
                 else
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Missing Data", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessBuyForFiatAction - Missing Data", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
                     return;
                 }
             }
@@ -282,14 +281,14 @@ namespace Upland.BlockchainSurfer
             
             if (property.MintedBy == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Never Minted", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessBuyForFiatAction - Never Minted", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
                 property.MintedBy = action.action_trace.act.data.p14;
                 property.MintedOn = action.block_time;
             }
 
             if (property.Owner == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Never Owned", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessBuyForFiatAction - Never Owned", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
                 property.Owner = action.action_trace.act.data.p14;
             }
 
@@ -302,7 +301,7 @@ namespace Upland.BlockchainSurfer
 
                 if (buyEntries.Count > 0)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - Found Resolved Buy Action", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessBuyForFiatAction - Found Resolved Buy Action", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
                 }
             }
 
@@ -322,7 +321,7 @@ namespace Upland.BlockchainSurfer
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessBuyForFiatAction - No Sale Entry Found", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessBuyForFiatAction - No Sale Entry Found", string.Format("a45 (propId): {0}, p14 (Buyer EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.p14, action.action_trace.trx_id));
                 
                 // Clear open sale entries anyway since it changed hands
                 foreach (SaleHistoryEntry entry in allEntries)
@@ -342,11 +341,11 @@ namespace Upland.BlockchainSurfer
             }
         }
 
-        private void ProcessRemoveFromSaleAction(EOSFlareAction action)
+        private void ProcessRemoveFromSaleAction(PlayUplandMeAction action)
         {
             if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.a54 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessRemoveFromSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
                 return;
             }
 
@@ -365,7 +364,7 @@ namespace Upland.BlockchainSurfer
 
             if (!deletedHistoryEntry)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction - No Active Sale Entry Found", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessRemoveFromSaleAction - No Active Sale Entry Found", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
             }
 
             Property property = _localDataManager.GetProperty(propId);
@@ -374,14 +373,14 @@ namespace Upland.BlockchainSurfer
             {
                 if (property.MintedBy == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction - Never Minted", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessRemoveFromSaleAction - Never Minted", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
                     property.MintedBy = action.action_trace.act.data.a54;
                     property.MintedOn = action.block_time;
                 }
 
                 if (property.Owner == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessRemoveFromSaleAction - Never Owned", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessRemoveFromSaleAction - Never Owned", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, Trx_id: {2}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.trx_id));
                     property.Owner = action.action_trace.act.data.a54;
                 }
 
@@ -390,11 +389,11 @@ namespace Upland.BlockchainSurfer
             }
         }
 
-        private void ProcessPlaceForSaleAction(EOSFlareAction action)
+        private void ProcessPlaceForSaleAction(PlayUplandMeAction action)
         {
             if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.a54 == null || action.action_trace.act.data.p11 == null || action.action_trace.act.data.p3 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPlaceForSaleAction", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
                 return;
             }
 
@@ -419,7 +418,7 @@ namespace Upland.BlockchainSurfer
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Failed Parsing Amount", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPlaceForSaleAction - Failed Parsing Amount", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
             }
 
             Property property = _localDataManager.GetProperty(historyEntry.PropId);
@@ -428,20 +427,20 @@ namespace Upland.BlockchainSurfer
             {
                 if (property.MintedBy == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Property Never Minted", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPlaceForSaleAction - Property Never Minted", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
                     property.MintedBy = action.action_trace.act.data.a54;
                     property.MintedOn = action.block_time;
                 }
                 
                 if (property.Owner == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Owner Is Null", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPlaceForSaleAction - Owner Is Null", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
                     property.Owner = action.action_trace.act.data.a54;
                 }
                 
                 if (property.Owner != historyEntry.SellerEOS)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Blockchain Error Seller is not Owner", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPlaceForSaleAction - Blockchain Error Seller is not Owner", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
                     property.Owner = historyEntry.SellerEOS;
                 }
 
@@ -451,15 +450,15 @@ namespace Upland.BlockchainSurfer
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPlaceForSaleAction - Property Not Found", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPlaceForSaleAction - Property Not Found", string.Format("a45 (propId): {0}, a54 (Seller EOS): {1}, p11 (UPX): {2}, p3 (USD): {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.a54, action.action_trace.act.data.p11, action.action_trace.act.data.p3, action.action_trace.trx_id));
             }
         }
 
-        private async Task ProcessPurchaseAction(EOSFlareAction action)
+        private async Task ProcessPurchaseAction(PlayUplandMeAction action)
         {
             if (action.action_trace.act.data.p14 == null || action.action_trace.act.data.a45 == null || action.action_trace.act.data.p24 == null || action.action_trace.act.data.memo == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseAction", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 return;
             }
 
@@ -468,7 +467,7 @@ namespace Upland.BlockchainSurfer
             Property property = _localDataManager.GetProperty(propId);
             if (property == null || property.Address == null || property.Address == "")
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Missing Prop", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseAction - Missing Prop", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 return;
             }
 
@@ -485,13 +484,13 @@ namespace Upland.BlockchainSurfer
 
                 if (mintTransaction == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Never Minted", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseAction - Never Minted", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     property.MintedBy = action.action_trace.act.data.p14;
                     property.MintedOn = action.block_time;
                 }
                 else
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Never Minted - Got Mint Transaction", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseAction - Never Minted - Got Mint Transaction", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     property.MintedBy = mintTransaction.traces[0].act.data.a54;
                     property.MintedOn = mintTransaction.block_time;
                 }
@@ -499,7 +498,7 @@ namespace Upland.BlockchainSurfer
 
             if (property.Owner == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Never Owned", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseAction - Never Owned", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 property.Owner = action.action_trace.act.data.p14;
             }
 
@@ -507,7 +506,7 @@ namespace Upland.BlockchainSurfer
             {
                 if (property.Owner == action.action_trace.act.data.p14)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Blockchain Fault Owner == Buyer", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseAction - Blockchain Fault Owner == Buyer", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     return;
                 }
 
@@ -536,11 +535,11 @@ namespace Upland.BlockchainSurfer
                         }
                     );
 
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Added Missing Buy Entry", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseAction - Added Missing Buy Entry", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 }
                 else
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessPurchaseAction - Could Not Find Buy Entry", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseAction - Could Not Find Buy Entry", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 }
             }
             else
@@ -563,11 +562,11 @@ namespace Upland.BlockchainSurfer
             _localDataManager.UpsertProperty(property);
         }
 
-        private void ProcessOfferResolutionAction(EOSFlareAction action)
+        private void ProcessOfferResolutionAction(PlayUplandMeAction action)
         {
             if (action.action_trace.act.data.p25 == null || action.action_trace.act.data.memo == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 return;
             }
 
@@ -627,7 +626,7 @@ namespace Upland.BlockchainSurfer
 
                 if (propOne.MintedBy == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - SWAP ONE Never Minted", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - SWAP ONE Never Minted", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     propOne.MintedBy = propOne.Owner;
                     propOne.MintedOn = action.block_time;
                 }
@@ -638,7 +637,7 @@ namespace Upland.BlockchainSurfer
                 }
                 else
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 }
 
                 propTwo.Owner = action.action_trace.act.data.memo.Split("(EOS account ")[2].Split(") now owns ")[0];
@@ -646,7 +645,7 @@ namespace Upland.BlockchainSurfer
 
                 if (propTwo.MintedBy == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - SWAP TWO Never Minted", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - SWAP TWO Never Minted", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     propTwo.MintedBy = propOne.Owner;
                     propTwo.MintedOn = action.block_time;
                 }
@@ -657,7 +656,7 @@ namespace Upland.BlockchainSurfer
                 }
                 else
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 }
 
                 List<SaleHistoryEntry> allEntriesOne = _localDataManager.GetRawSaleHistoryByPropertyId(propOne.Id);
@@ -702,11 +701,11 @@ namespace Upland.BlockchainSurfer
                             Accepted = true
                         });
 
-                        _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - SWAP Did Not Find Completed Offer, Created One", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - SWAP Did Not Find Completed Offer, Created One", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     }
                     else
                     {
-                        _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - SWAP Found Completed Offer Resolution)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - SWAP Found Completed Offer Resolution)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     }
                 }
 
@@ -735,7 +734,7 @@ namespace Upland.BlockchainSurfer
 
                 if (prop == null || prop.Id == 0 || prop.Address == null || prop.Address == "")
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     return;
                 }
 
@@ -745,14 +744,14 @@ namespace Upland.BlockchainSurfer
 
                 if (prop.MintedBy == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Never Minted", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Never Minted", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     prop.MintedBy = newOwner;
                     prop.MintedOn = action.block_time;
                 }
 
                 if (prop.Owner == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Never Owned", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Never Owned", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                     prop.Owner = newOwner;
                 }
 
@@ -766,7 +765,7 @@ namespace Upland.BlockchainSurfer
 
                 if (action.action_trace.act.data.p25 == newOwner)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Blockchain Error Buyer = Seller", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Blockchain Error Buyer = Seller", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 }
                 else
                 {
@@ -787,11 +786,11 @@ namespace Upland.BlockchainSurfer
                              b.Accepted
                         ))
                         {
-                            _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Could Not Find Completed Offer Entry", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                            _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Completed Offer Entry", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                         }
                         else
                         {
-                            _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferResolutionAction - Found Completed Offer Entry", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                            _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Found Completed Offer Entry", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
                         }
                     }
                 }
@@ -806,11 +805,11 @@ namespace Upland.BlockchainSurfer
             }
         }
 
-        private void ProcessOfferAction(EOSFlareAction action)
+        private void ProcessOfferAction(PlayUplandMeAction action)
         {
             if (action.action_trace.act.data.p23 == null || action.action_trace.act.data.p15 == null || action.action_trace.act.data.p21 == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferAction", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
                 return;
             }
 
@@ -836,7 +835,7 @@ namespace Upland.BlockchainSurfer
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Could Not Parse p21", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferAction - Could Not Parse p21", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
             }
 
             Property property = _localDataManager.GetProperty(long.Parse(action.action_trace.act.data.p15));
@@ -845,26 +844,26 @@ namespace Upland.BlockchainSurfer
             {
                 if (property.MintedBy == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Never Minted", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferAction - Never Minted", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
                 }
 
                 if (property.Owner == null)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Never Owned", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferAction - Never Owned", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
                 }
                 _localDataManager.UpsertSaleHistory(historyEntry);
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessOfferAction - Property Doesn't Exist", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferAction - Property Doesn't Exist", string.Format("p23 (Buyer EOS): {0}, p15 (PropId): {1}, p21 (Offer): {2}, Trx_id: {3}", action.action_trace.act.data.p23, action.action_trace.act.data.p15, string.Join(" ", action.action_trace.act.data.p21), action.action_trace.trx_id));
             }
         }
 
-        private async Task ProcessMintingAction(EOSFlareAction action)
+        private async Task ProcessMintingAction(PlayUplandMeAction action)
         {
             if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.p44 == null || action.action_trace.act.data.a54 == null || action.action_trace.act.data.memo == null)
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessMintingAction", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 return;
             }
 
@@ -876,7 +875,7 @@ namespace Upland.BlockchainSurfer
                 List<Property> properties = _localDataManager.GetPropertiesByUplandUsername(existingAccount.Item1);
                 if (properties.Count != 0)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction - Existing Old EOS Has Props", string.Format("Existing Uplander {5}, a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id, existingAccount.Item2));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessMintingAction - Existing Old EOS Has Props", string.Format("Existing Uplander {5}, a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id, existingAccount.Item2));
 
                     foreach (Property prop in properties)
                     {
@@ -928,11 +927,11 @@ namespace Upland.BlockchainSurfer
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer.cs - ProcessMintingAction - Property Not Found", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessMintingAction - Property Not Found", string.Format("a45 (PropId): {0}, p44 (Amount): {1}, a54 (Minter EOS): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.a45, action.action_trace.act.data.p44, action.action_trace.act.data.a54, action.action_trace.act.data.memo, action.action_trace.trx_id));
             }
         }
 
-        private void ProcessSendAction(EOSFlareAction action)
+        private void ProcessSendAction(PlayUplandMeAction action)
         {
             if (_registeredUserEOSAccounts.Any(e => e.Item3 == action.action_trace.act.data.p51) && _propertyIdsToWatch.Any(p => p == action.action_trace.act.data.a45))
             {
@@ -945,17 +944,17 @@ namespace Upland.BlockchainSurfer
                 }
                 catch (Exception ex)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer - ProcessActions", string.Format("Failed Adding UPX, a45: {0}, p51: {1}, p54: {2}, ex: {3}", action.action_trace.act.data.a45, action.action_trace.act.data.p51, action.action_trace.act.data.p54, ex.Message));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer - ProcessActions", string.Format("Failed Adding UPX, a45: {0}, p51: {1}, p54: {2}, ex: {3}", action.action_trace.act.data.a45, action.action_trace.act.data.p51, action.action_trace.act.data.p54, ex.Message));
                 }
             }
         }
 
-        private void ProcessSendUPXAction(EOSFlareAction action)
+        private void ProcessSendUPXAction(PlayUplandMeAction action)
         {
-            ActionData data = null;
+            PlayUplandMeData subData = null;
             try
             {
-                data = JsonConvert.DeserializeObject<ActionData>(action.action_trace.act.data.data);
+                subData = JsonConvert.DeserializeObject<PlayUplandMeData>(action.action_trace.act.data.data);
             }
             catch
             {
@@ -973,35 +972,35 @@ namespace Upland.BlockchainSurfer
                 }
                 catch (Exception ex)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer - Process Send UPX", string.Format("Failed Adding UPX, p1: {0}, p133: {1}, p134: {2}, p2: {3}, p45: {4}, ex: {5}", action.action_trace.act.data.p1, action.action_trace.act.data.p133, action.action_trace.act.data.p134, action.action_trace.act.data.p2, action.action_trace.act.data.p45, ex.Message));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer - Process Send UPX", string.Format("Failed Adding UPX, p1: {0}, p133: {1}, p134: {2}, p2: {3}, p45: {4}, ex: {5}", action.action_trace.act.data.p1, action.action_trace.act.data.p133, action.action_trace.act.data.p134, action.action_trace.act.data.p2, action.action_trace.act.data.p45, ex.Message));
                 }
             }
-            else if (data != null && data.p2 != null && data.p2 == Consts.HornbrodEOSAccount && _registeredUserEOSAccounts.Any(e => e.Item3 == data.p1))
+            else if (subData != null && subData.p2 != null && subData.p2 == Consts.HornbrodEOSAccount && _registeredUserEOSAccounts.Any(e => e.Item3 == subData.p1))
             {
                 try
                 {
-                    string uplandUsername = _registeredUserEOSAccounts.Where(e => e.Item3 == data.p1).First().Item2;
+                    string uplandUsername = _registeredUserEOSAccounts.Where(e => e.Item3 == subData.p1).First().Item2;
                     RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUsername);
-                    registeredUser.SendUPX += int.Parse(data.p45.Split(".00 UP")[0]) - (int)Math.Floor(double.Parse(data.p134.Split("UP")[0]));
+                    registeredUser.SendUPX += int.Parse(subData.p45.Split(".00 UP")[0]) - (int)Math.Floor(double.Parse(subData.p134.Split("UP")[0]));
                     _localDataManager.UpdateRegisteredUser(registeredUser);
                 }
                 catch (Exception ex)
                 {
-                    _localDataManager.CreateErrorLog("BlockchainPropertSurfer - Process Send UPX Sub", string.Format("Failed Adding UPX, p1: {0}, p133: {1}, p134: {2}, p2: {3}, p45: {4}, ex: {5}", action.action_trace.act.data.p1, action.action_trace.act.data.p133, action.action_trace.act.data.p134, action.action_trace.act.data.p2, action.action_trace.act.data.p45, ex.Message));
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer - Process Send UPX Sub", string.Format("Failed Adding UPX, p1: {0}, p133: {1}, p134: {2}, p2: {3}, p45: {4}, ex: {5}", subData.p1, subData.p133, subData.p134, subData.p2, subData.p45, ex.Message));
                 }
             }
             else
             {
-                _localDataManager.CreateErrorLog("BlockchainPropertSurfer - Failed Process Send UPX", string.Format("Failed Adding UPX, trxId: {0}", action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer - Failed Process Send UPX", string.Format("Failed Adding UPX, trxId: {0}", action.action_trace.trx_id));
             }
         }
 
         private async Task<Property> TryToLoadPropertyById(long propertyId)
         {
             // Load the neighborhoods if not done already
-            if (neighborhoods.Count == 0)
+            if (_neighborhoods.Count == 0)
             {
-                neighborhoods = _localDataManager.GetNeighborhoods();
+                _neighborhoods = _localDataManager.GetNeighborhoods();
             }
 
             UplandProperty uplandProperty = await _uplandApiManager.GetUplandPropertyById(propertyId);
@@ -1014,7 +1013,7 @@ namespace Upland.BlockchainSurfer
 
             Property property = UplandMapper.Map(uplandProperty);
 
-            property.NeighborhoodId = _localDataManager.GetNeighborhoodIdForProp(neighborhoods, property);
+            property.NeighborhoodId = _localDataManager.GetNeighborhoodIdForProp(_neighborhoods, property);
 
             return property;
         }
