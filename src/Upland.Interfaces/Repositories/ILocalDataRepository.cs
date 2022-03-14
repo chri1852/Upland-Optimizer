@@ -82,5 +82,7 @@ namespace Upland.Interfaces.Repositories
         void CreatePropertyStructure(PropertyStructure propertyStructure);
         void TruncatePropertyStructure();
         List<PropertyStructure> GetPropertyStructures();
+        void UpsertSparkStaking(SparkStaking sparkStaking);
+        List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId);
     }
 }   

@@ -13,7 +13,7 @@ namespace Upland.Interfaces.Repositories
         Task<List<a21Entry>> GetNftsRelatedToPropertys();
         Task<List<t2Entry>> GetForSaleProps();
         Task<List<t3Entry>> GetActiveOffers();
-        Task<GetTransactionEntry> GetSingleTransactionById(string transactionId);
+        Task<T> GetSingleTransactionById<T>(string transactionId);
         Task<T> GetEOSFlareActions<T>(long position, string accountName);
     }
 }

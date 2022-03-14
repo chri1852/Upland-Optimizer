@@ -152,5 +152,8 @@
     <Build Include="StoredProcedures\UPL.CatchWhales.sql" />
     <Build Include="StoredProcedures\UPL.GetAquiredOnByPlayer.sql" />
     <Build Include="StoredProcedures\UPL.GetCurrentMarkupFloorAppraisalData.sql" />
+    <Build Include="Tables\UPL.SparkStaking.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertSparkStaking.sql" />
+    <Build Include="StoredProcedures\UPL.GetSparkStakingByEOSUserId.sql" />
   </ItemGroup>
 </Project>

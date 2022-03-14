@@ -132,6 +132,7 @@ namespace Upland.BlockchainSurfer
                     {
                         _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
                         _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
+                        continueLoad = false;
                     }
 
                     lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM));
@@ -140,12 +141,6 @@ namespace Upland.BlockchainSurfer
                     {
                         historyTimeStamp = new DateTime(actions.Last().block_time.Year, actions.Last().block_time.Month, actions.Last().block_time.Day);
                         _localDataManager.SetHistoricalCityStats(historyTimeStamp);
-                    }
-
-                    //DEBUG
-                    if (historyTimeStamp > new DateTime(2021, 6, 1, 0, 0, 0))
-                    {
-                        continueLoad = false;
                     }
                 }
             }
@@ -265,7 +260,7 @@ namespace Upland.BlockchainSurfer
         {
             if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.p14 == null)
             {
-                GetTransactionEntry transactionEntry = await _blockchainManager.GetSingleTransactionById(action.action_trace.trx_id);
+                PlayUplandMeTransactionEntry transactionEntry = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.trx_id);
 
                 if (transactionEntry.traces.Where(t => t.act.name == "n52").ToList().Count == 1)
                 {
@@ -339,6 +334,19 @@ namespace Upland.BlockchainSurfer
                         _localDataManager.DeleteSaleHistoryById(entry.Id.Value);
                     }
                 }
+            }
+
+            // Dumb user has bout something before minting
+            EOSUser existingAccount = _localDataManager.GetUplandUsernameByEOSAccount(action.action_trace.act.data.p14);
+            if (existingAccount == null)
+            {
+                _localDataManager.UpsertEOSUser(new EOSUser
+                {
+                    EOSAccount = action.action_trace.act.data.p14,
+                    UplandUsername = "",
+                    Joined = action.block_time,
+                    Spark = 0
+                });
             }
 
             if (property != null && property.Address != null && property.Address != "")
@@ -502,7 +510,7 @@ namespace Upland.BlockchainSurfer
             {
                 string ogMinttx = action.action_trace.act.data.memo.Split("transaction: ")[1];
 
-                GetTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById(action.action_trace.act.data.memo.Split("transaction: ")[1]);
+                PlayUplandMeTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.act.data.memo.Split("transaction: ")[1]);
 
                 if (mintTransaction == null)
                 {
@@ -577,6 +585,19 @@ namespace Upland.BlockchainSurfer
                 {
                     _localDataManager.DeleteSaleHistoryById(entry.Id.Value);
                 }
+            }
+
+            // Dumb user has bout something before minting
+            EOSUser existingAccount = _localDataManager.GetUplandUsernameByEOSAccount(action.action_trace.act.data.p14);
+            if (existingAccount == null)
+            {
+                _localDataManager.UpsertEOSUser(new EOSUser
+                {
+                    EOSAccount = action.action_trace.act.data.p14,
+                    UplandUsername = "",
+                    Joined = action.block_time,
+                    Spark = 0
+                });
             }
 
             property.Status = Consts.PROP_STATUS_OWNED;
@@ -779,6 +800,24 @@ namespace Upland.BlockchainSurfer
 
                 _localDataManager.UpsertProperty(prop);
 
+                // Dumb user has bout something before minting
+                EOSUser existingAccount = _localDataManager.GetUplandUsernameByEOSAccount(newOwner);
+                if (existingAccount == null)
+                {
+                    _localDataManager.UpsertEOSUser(new EOSUser
+                    {
+                        EOSAccount = action.action_trace.act.data.p14,
+                        UplandUsername = action.action_trace.act.data.memo.Split(" that Upland user ")[1].Split(" with EOS account")[0],
+                        Joined = action.block_time,
+                        Spark = 0
+                    });
+                }
+                else if (existingAccount.UplandUsername == "")
+                {
+                    existingAccount.UplandUsername = action.action_trace.act.data.memo.Split(" that Upland user ")[1].Split(" with EOS account")[0];
+                    _localDataManager.UpsertEOSUser(existingAccount);
+                }
+
                 List<SaleHistoryEntry> allEntries = _localDataManager.GetRawSaleHistoryByPropertyId(prop.Id);
                 SaleHistoryEntry buyEntry = allEntries
                     .Where(e => e.SellerEOS == null && e.Offer && e.BuyerEOS == newOwner)
@@ -930,6 +969,12 @@ namespace Upland.BlockchainSurfer
                     Spark = 0
                 });
             }
+
+            if (existingAccount.UplandUsername == "")
+            {
+                existingAccount.UplandUsername = uplandUsername;
+                _localDataManager.UpsertEOSUser(existingAccount);
+            }    
 
             Property property = _localDataManager.GetProperty(long.Parse(action.action_trace.act.data.a45));
 

@@ -204,14 +204,14 @@ namespace Upland.Infrastructure.Blockchain
             return totalResults;
         }
 
-        public async Task<GetTransactionEntry> GetSingleTransactionById(string transactionId)
+        public async Task<T> GetSingleTransactionById<T>(string transactionId)
         {
-            GetTransactionEntry transactionEntry;
+            T transactionEntry;
 
             string requestUri = @"https://eos.greymass.com/v1/history/get_transaction?id=";
             requestUri += string.Format("{0}&before=", transactionId);
 
-            transactionEntry = await CallApi<GetTransactionEntry>(requestUri);
+            transactionEntry = await CallApi<T>(requestUri);
 
             return transactionEntry;
         }

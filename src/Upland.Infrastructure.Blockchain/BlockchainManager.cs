@@ -70,9 +70,9 @@ namespace Upland.Infrastructure.Blockchain
             return userStakes;
         }
 
-        public async Task<GetTransactionEntry> GetSingleTransactionById(string transactionId)
+        public async Task<T> GetSingleTransactionById<T>(string transactionId)
         {
-            return await blockchainRepository.GetSingleTransactionById(transactionId);
+            return await blockchainRepository.GetSingleTransactionById<T>(transactionId);
         }
 
         public async Task<T> GetEOSFlareActions<T>(long position, string accountName)

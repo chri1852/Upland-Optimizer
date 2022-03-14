@@ -3109,6 +3109,86 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void UpsertSparkStaking(SparkStaking sparkStaking)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertSparkStaking]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", sparkStaking.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", sparkStaking.DGoodId));
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSUserId", sparkStaking.EOSUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Amount", sparkStaking.Amount));
+                    sqlCmd.Parameters.Add(new SqlParameter("Start", sparkStaking.Start));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("End", sparkStaking.End));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId)
+        {
+            List<SparkStaking> sparkStakings = new List<SparkStaking>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSparkStakingByEOSUserId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSUserId", eosUserId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            sparkStakings.Add(new SparkStaking
+                            {
+                                Id = (int)reader["Id"],
+                                DGoodId = (int)reader["DGoodId"],
+                                EOSUserId = (int)reader["EOSUserId"],
+                                Amount = (decimal)reader["Amount"],
+                                Start = (DateTime)reader["Start"],
+                                End = ReadNullParameterSafe<DateTime?>(reader, "End")
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return sparkStakings;
+            }
+        }
+
         private SqlParameter AddNullParmaterSafe<T>(string parameterName, T value)
         {
             if (value == null)
@@ -3118,6 +3198,18 @@ namespace Upland.Infrastructure.LocalData
             else
             {
                 return new SqlParameter(parameterName, value);
+            }
+        }
+
+        private T ReadNullParameterSafe<T>(SqlDataReader reader, string parameter)
+        {
+            if (reader[parameter] != DBNull.Value)
+            {
+                return (T)reader[parameter];
+            }
+            else
+            {
+                return default(T);
             }
         }
 

@@ -966,5 +966,15 @@ namespace Upland.Infrastructure.LocalData
         {
             _localDataRepository.UpsertProperty(property);
         }
+
+        public void UpsertSparkStaking(SparkStaking sparkStaking)
+        {
+            _localDataRepository.UpsertSparkStaking(sparkStaking);
+        }
+
+        public List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId)
+        {
+            return _localDataRepository.GetSparkStakingByEOSUserId(eosUserId);
+        }
     }
 }

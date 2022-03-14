@@ -95,5 +95,7 @@ namespace Upland.Interfaces.Managers
         void UpsertSaleHistory(SaleHistoryEntry saleHistory);
         void UpsertConfigurationValue(string name, string value);
         void UpsertProperty(Property property);
+        void UpsertSparkStaking(SparkStaking sparkStaking);
+        List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId);
     }
 }
