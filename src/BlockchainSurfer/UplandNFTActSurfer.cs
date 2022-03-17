@@ -22,7 +22,6 @@ namespace Upland.BlockchainSurfer
         private readonly string _playuplandme;
 
         private List<SeriesTableEntry> _loadedSeries;
-        private List<string> _loadedStructureTypes;
         private bool _isProcessing;
 
         public UplandNFTActSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
@@ -34,7 +33,6 @@ namespace Upland.BlockchainSurfer
             _playuplandme = "playuplandme";
 
             _isProcessing = false;
-            _loadedStructureTypes = new List<string>();
             _loadedSeries = new List<SeriesTableEntry>();
         }
 
@@ -173,7 +171,32 @@ namespace Upland.BlockchainSurfer
 
         private async Task ProcessBurnNFTAction(UplandNFTActAction action)
         {
+            if (action.action_trace.act.data.dGood_Ids.Count > 1)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessBurnNFTAction", string.Format("Multiple DGoodIds Burned, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
 
+            int dGoodId = action.action_trace.act.data.dGood_Ids.First();
+
+            NFT burningNft = _localDataManager.GetNftByDGoodId(dGoodId);
+
+            if (burningNft == null)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessBurnNFTAction", string.Format("No NFT to Burn, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
+
+            burningNft.Burned = true;
+            burningNft.BurnedOn = action.block_time;
+
+            List<NFTHistory> nftHistory = _localDataManager.GetNftHistoryByDGoodId(dGoodId).Where(h => h.DisposedOn == null).ToList();
+
+            foreach(NFTHistory history in nftHistory)
+            {
+                history.DisposedOn = action.block_time;
+                _localDataManager.UpsertNftHistory(history);
+            }
         }
 
         private async Task ProcessCreateAction(UplandNFTActAction action)
@@ -182,7 +205,8 @@ namespace Upland.BlockchainSurfer
             {
                 Id = -1,
                 Name = action.action_trace.act.data.token_name,
-                Category = action.action_trace.act.data.category
+                Category = action.action_trace.act.data.category,
+                FullyLoaded = false
             };
 
             NFTMetadata existingMetadata = _localDataManager.GetNftMetadataByNameAndCategory(newMetadata.Name, newMetadata.Category);
@@ -198,31 +222,75 @@ namespace Upland.BlockchainSurfer
                 case "blkexplorer":
                     newMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new BlockExplorerMetadata
                     {
+                        DisplayName = action.action_trace.act.data.display_name,
+                        Image = "",
+                        SeriesId = action.action_trace.act.data.series_id,
+                        SeriesName = await GetSeriesNameById(action.action_trace.act.data.series_id),
+                        Description = "",
+                        RarityLevel = "",
+                        MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "essential":
                     newMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new EssentialMetadata
                     {
+                        DisplayName = action.action_trace.act.data.display_name,
+                        Image = "",
+                        TeamName = "",
+                        FanPoints = 0,
+                        Season = 0,
+                        ModelType = "",
+                        PlayerFullName = "",
+                        PlayerPosition = "",
+                        MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "memento":
                     newMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new MementoMetadata
                     {
+                        DisplayName = action.action_trace.act.data.display_name,
+                        Image = "",
+                        TeamName = "",
+                        FanPoints = 0,
+                        Season = 0,
+                        ModelType = "",
+                        PlayerFullName = "",
+                        PlayerPosition = "",
+                        MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "spirithlwn":
                     newMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new SpirithlwnMetadata
                     {
+                        DisplayName = action.action_trace.act.data.display_name,
+                        Image = "",
+                        RarityLevel = "",
+                        MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "structornmt":
                     newMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new StructornmtMetadata
                     {
+                        DisplayName = action.action_trace.act.data.display_name,
+                        Image = "",
+                        RarityLevel = "",
+                        BuildingType = "",
+                        MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "structure":
                     newMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new StructureMetadata
                     {
+                        DisplayName = action.action_trace.act.data.display_name,
+                        Image = "",
+                        SparkHours = 0,
+                        MinimumSpark = 0,
+                        MaximumSpark = 0,
                     });
                     break;
                 default:
@@ -234,7 +302,58 @@ namespace Upland.BlockchainSurfer
 
         private async Task ProcessIssueAction(UplandNFTActAction action)
         {
+            if (action.action_trace.act.data.dGood_Ids.Count > 1)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("Multiple DGoodIds Issued, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
 
+            int dGoodId = action.action_trace.act.data.dGood_Ids.First();
+
+            NFT existingNft = _localDataManager.GetNftByDGoodId(dGoodId);
+
+            if (existingNft != null)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("NFT Already Exists, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
+
+            NFTMetadata nftMetadata = _localDataManager.GetNftMetadataByNameAndCategory(action.action_trace.act.data.token_name, action.action_trace.act.data.category);
+
+            if (nftMetadata != null)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("No NFT Metadata Found, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
+
+            NFT newNft = new NFT
+            {
+                DGoodId = dGoodId,
+                NFTMetadataId = nftMetadata.Id,
+                SerialNumber = 0,
+                Burned = false,
+                CreatedOn = action.block_time,
+                BurnedOn = null,
+                FullyLoaded = false,
+            };
+
+            switch (nftMetadata.Category)
+            {
+                case "blkexplorer":
+                    break;
+                case "essential":
+                    break;
+                case "memento":
+                    break;
+                case "spirithlwn":
+                    break;
+                case "structornmt":
+                    break;
+                case "structure":
+                    break;
+                default:
+                    throw new Exception("Unknown NFT Category Detected Stoping Updates");
+            }
         }
 
         private async Task ProcessTransferNFTAction(UplandNFTActAction action)

@@ -73,6 +73,36 @@ namespace Upland.Infrastructure.UplandApi
             return UplandMapper.MapBlockExplorers(await _uplandApiRepository.GetBlockExplorersByUserName(userName));
         }
 
+        public async Task<NFLPALegit> GetNFLPALegitsByDGoodId(int dGoodId)
+        {
+            return UplandMapper.MapNFLPALegit(await _uplandApiRepository.GetNFLPALegitsByDGoodId(dGoodId));
+        }
+
+        public async Task<SpiritLegit> GetSpiritLegitsByDGoodId(int dGoodId)
+        {
+            return UplandMapper.MapSpiritLegit(await _uplandApiRepository.GetSpiritLegitsByDGoodId(dGoodId));
+        }
+
+        public async Task<Decoration> GetDecorationsByDGoodId(int dGoodId)
+        {
+            return UplandMapper.MapDecoration(await _uplandApiRepository.GetDecorationsByDGoodId(dGoodId));
+        }
+
+        public async Task<BlockExplorer> GetBlockExplorersByDGoodId(int dGoodId)
+        {
+            return UplandMapper.MapBlockExplorer(await _uplandApiRepository.GetBlockExplorersByDGoodId(dGoodId));
+        }
+
+        public async Task<NFLPALegitMintInfo> GetEssentialMintInfo(int legitId)
+        {
+            return await _uplandApiRepository.GetEssentialMintInfo(legitId);
+        }
+
+        public async Task<NFLPALegitMintInfo> GetMementoMintInfo(int legitId)
+        {
+            return await _uplandApiRepository.GetMementoMintInfo(legitId);
+        }
+
         public async Task<UplandUserProfile> GetUplandUserProfile(string userName)
         {
             UplandUserProfile profile = await _uplandApiRepository.GetProfileByUsername(userName);

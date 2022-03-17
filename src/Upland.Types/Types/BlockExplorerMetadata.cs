@@ -9,9 +9,10 @@ namespace Upland.Types.Types
         public string DisplayName { get; set; }
         public string Image { get; set; }
         public int SeriesId { get; set; }
-        public int SeriesName { get; set; }
+        public string SeriesName { get; set; }
         public string Description { get; set; }
         public string RarityLevel { get; set; }
         public int MaxSupply { get; set; }
+        public int MaxIssueDays { get; set; }
     }
 }

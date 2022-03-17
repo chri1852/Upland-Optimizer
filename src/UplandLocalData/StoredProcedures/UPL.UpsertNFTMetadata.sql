@@ -1,9 +1,10 @@
 ﻿CREATE PROCEDURE [UPL].[UpsertNFTMetadata]
 (
-	@Id       INT,
-	@Name     VARCHAR(2000),
-	@Category VARCHAR(50),
-	@Metadata VARBINARY(MAX)
+	@Id          INT,
+	@Name        VARCHAR(2000),
+	@Category    VARCHAR(50),
+	@FullyLoaded BIT,
+	@Metadata    VARBINARY(MAX)
 )
 AS
 BEGIN
@@ -14,12 +15,14 @@ BEGIN
 				(
 					[Name],
 					[Category],
+					[FullyLoaded],
 					[Metadata]
 				)
 				Values
 				(
 					@Name,
 					@Category,
+					@FullyLoaded,
 					@Metadata
 				)
 			END
@@ -29,6 +32,7 @@ BEGIN
 				SET
 					[Name] = @Name,
 					[Category] = @Category,
+					[FullyLoaded] = @FullyLoaded,
 					[Metadata] = @Metadata
 				WHERE [Id] = @Id
 			END

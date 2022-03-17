@@ -103,6 +103,7 @@ namespace Upland.Interfaces.Managers
         NFT GetNftByDGoodId(int dGoodId);
         NFTMetadata GetNftMetadataById(int id);
         NFTMetadata GetNftMetadataByNameAndCategory(string name, string category);
-        List<NFTHistory> GetNftHistoryByDGoodId(string dGoodId);
+        List<NFTMetadata> GetAllNFTMetadata();
+        List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId);
     }
 }

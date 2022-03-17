@@ -8,5 +8,6 @@
         public string RarityLevel { get; set; }
         public string BuildingType { get; set; }
         public int MaxSupply { get; set; }
+        public int MaxIssueDays { get; set; }
     }
 }

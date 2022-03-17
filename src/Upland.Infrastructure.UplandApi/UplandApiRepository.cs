@@ -191,6 +191,66 @@ namespace Upland.Infrastructure.UplandApi
             return assets;
         }
 
+        public async Task<UplandAsset> GetNFLPALegitsByDGoodId(int dGoodId)
+        {
+            UplandAsset assets;
+            string requestUri = @"https://nft.upland.me/assets/legits/nft-id/" + dGoodId;
+
+            assets = await CallApi<UplandAsset>(requestUri, false);
+
+            return assets;
+        }
+
+        public async Task<UplandAsset> GetSpiritLegitsByDGoodId(int dGoodId)
+        {
+            UplandAsset assets;
+            string requestUri = @"https://nft.upland.me/assets/spirits/nft-id/" + dGoodId;
+
+            assets = await CallApi<UplandAsset>(requestUri, false);
+
+            return assets;
+        }
+
+        public async Task<UplandAsset> GetDecorationsByDGoodId(int dGoodId)
+        {
+            UplandAsset assets;
+            string requestUri = @"https://nft.upland.me/assets/decorations/nft-id/" + dGoodId;
+
+            assets = await CallApi<UplandAsset>(requestUri, false);
+
+            return assets;
+        }
+
+        public async Task<UplandAsset> GetBlockExplorersByDGoodId(int dGoodId)
+        {
+            UplandAsset assets;
+            string requestUri = @"https://nft.upland.me/assets/block-explorers/nft-id/" + dGoodId;
+
+            assets = await CallApi<UplandAsset>(requestUri, false);
+
+            return assets;
+        }
+
+        public async Task<NFLPALegitMintInfo> GetEssentialMintInfo(int legitId)
+        {
+            NFLPALegitMintInfo asset;
+            string requestUri = @"https://nflpa.upland.me/legit-mint-info/essential/" + legitId;
+
+            asset = await CallApi<NFLPALegitMintInfo>(requestUri, false);
+
+            return asset;
+        }
+
+        public async Task<NFLPALegitMintInfo> GetMementoMintInfo(int legitId)
+        {
+            NFLPALegitMintInfo asset;
+            string requestUri = @"https://nflpa.upland.me/legit-mint-info/memento/" + legitId;
+
+            asset = await CallApi<NFLPALegitMintInfo>(requestUri, false);
+
+            return asset;
+        }
+
         public async Task<UplandUserProfile> GetProfileByUsername(string username)
         {
             UplandUserProfile profile;

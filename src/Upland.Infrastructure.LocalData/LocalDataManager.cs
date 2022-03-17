@@ -1007,7 +1007,12 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetNftMetadataByNameAndCategory(name, category);
         }
 
-        public List<NFTHistory> GetNftHistoryByDGoodId(string dGoodId)
+        public List<NFTMetadata> GetAllNFTMetadata()
+        {
+            return _localDataRepository.GetAllNFTMetadata();
+        }
+
+        public List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId)
         {
             return _localDataRepository.GetNftHistoryByDGoodId(dGoodId);
         }

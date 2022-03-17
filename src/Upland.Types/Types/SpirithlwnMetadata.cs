@@ -6,5 +6,6 @@
         public string Image { get; set; }
         public string RarityLevel { get; set; }
         public int MaxSupply { get; set; }
+        public int MaxIssueDays { get; set; }
     }
 }

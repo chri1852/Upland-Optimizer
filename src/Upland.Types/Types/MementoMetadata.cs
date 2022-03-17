@@ -11,5 +11,6 @@
         public string PlayerFullName { get; set; }
         public string PlayerPosition { get; set; }
         public int MaxSupply { get; set; }
+        public int MaxIssueDays { get; set; }
     }
 }

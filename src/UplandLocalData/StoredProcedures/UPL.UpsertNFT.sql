@@ -6,6 +6,7 @@
 	@Burned          BIT,
 	@CreatedDateTime DATETIME,
 	@BurnedDateTime  DATETIME,
+	@FullyLoaded     BIT,
 	@Metadata        VARBINARY(MAX)
 )
 AS
@@ -21,6 +22,7 @@ BEGIN
 					[Burned],
 					[CreatedDateTime],
 					[BurnedDateTime],
+					[FullyLoaded],
 					[Metadata]
 				)
 				Values
@@ -31,6 +33,7 @@ BEGIN
 					@Burned,
 					@CreatedDateTime,
 					@BurnedDateTime,
+					@FullyLoaded,
 					@Metadata
 				)
 			END
@@ -43,6 +46,7 @@ BEGIN
 					[Burned] = @Burned,
 					[CreatedDateTime] = @CreatedDateTime,
 					[BurnedDateTime] = @BurnedDateTime,
+					[FullyLoaded] = @FullyLoaded,
 					[Metadata] = @Metadata
 				WHERE [DGoodId] = @DGoodId
 			END

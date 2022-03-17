@@ -3241,6 +3241,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("Id", nftMetadata.Id));
                     sqlCmd.Parameters.Add(new SqlParameter("Name", nftMetadata.Name));
                     sqlCmd.Parameters.Add(new SqlParameter("Category", nftMetadata.Category));
+                    sqlCmd.Parameters.Add(new SqlParameter("FullyLoaded", nftMetadata.FullyLoaded));
                     sqlCmd.Parameters.Add(new SqlParameter("Metadata", nftMetadata.Metadata));
 
                     sqlCmd.ExecuteNonQuery();
@@ -3316,6 +3317,7 @@ namespace Upland.Infrastructure.LocalData
                             nft.Burned = (bool)reader["Burned"];
                             nft.CreatedOn = (DateTime)reader["CreatedDateTie"];
                             nft.BurnedOn = ReadNullParameterSafe<DateTime?>(reader, "BurnedDateTime");
+                            nft.FullyLoaded = (bool)reader["FullyLoaded"];
                             nft.Metadata = (byte[])reader["Metadata"];
 
                         }
@@ -3360,8 +3362,8 @@ namespace Upland.Infrastructure.LocalData
                             nftMetadata.Id = (int)reader["Id"];
                             nftMetadata.Name = (string)reader["Name"];
                             nftMetadata.Category = (string)reader["Category"];
+                            nftMetadata.FullyLoaded = (bool)reader["FullyLoaded"];
                             nftMetadata.Metadata = (byte[])reader["Metadata"];
-
                         }
                         reader.Close();
                     }
@@ -3405,8 +3407,8 @@ namespace Upland.Infrastructure.LocalData
                             nftMetadata.Id = (int)reader["Id"];
                             nftMetadata.Name = (string)reader["Name"];
                             nftMetadata.Category = (string)reader["Category"];
+                            nftMetadata.FullyLoaded = (bool)reader["FullyLoaded"];
                             nftMetadata.Metadata = (byte[])reader["Metadata"];
-
                         }
                         reader.Close();
                     }
@@ -3424,7 +3426,52 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public List<NFTHistory> GetNftHistoryByDGoodId(string dGoodId)
+        public List<NFTMetadata> GetAllNFTMetadata()
+        {
+            List<NFTMetadata> nftMetadata = new List<NFTMetadata>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetAllNFTMetadata]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftMetadata.Add(new NFTMetadata
+                            {
+                                Id = (int)reader["Id"],
+                                Name = (string)reader["Name"],
+                                Category = (string)reader["Category"],
+                                FullyLoaded = (bool)reader["FullyLoaded"],
+                                Metadata = (byte[])reader["Metadata"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftMetadata;
+            }
+        }
+
+        public List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId)
         {
             List<NFTHistory> nftHistory = new List<NFTHistory>();
             SqlConnection sqlConnection = GetSQLConnector();

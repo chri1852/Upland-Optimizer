@@ -10,6 +10,7 @@ namespace Upland.Types.Types
         public bool Burned { get; set; }
         public DateTime CreatedOn { get; set; }
         public DateTime? BurnedOn { get; set; }
+        public bool FullyLoaded { get; set; }
         public byte[] Metadata { get; set; }
     }
 }

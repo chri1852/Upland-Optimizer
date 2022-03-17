@@ -6,7 +6,8 @@
 	[Burned]	      BIT NOT NULL,
 	[CreatedDateTime] DATETIME NOT NULL,
 	[BurnedDateTime]  DATETIME,
-	[Metadata]        VARBINARY(MAX) NOT NULL,
+	[FullyLoaded]     BIT NOT NULL,
+	[Metadata]        VARBINARY(MAX) NOT NULL
 
 	CONSTRAINT pk_NFTDGoodId PRIMARY KEY(DGoodId)
 )
