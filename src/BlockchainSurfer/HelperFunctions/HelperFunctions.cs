@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Upland.Types;
 
 namespace Upland.BlockchainSurfer.HelperFunctions
@@ -89,6 +88,16 @@ namespace Upland.BlockchainSurfer.HelperFunctions
                 default:
                     return cityId;
             }
+        }
+
+        public static byte[] EncodeMetadata<T>(T metadata)
+        {
+            return Encoding.UTF8.GetBytes(JsonSerializer.Serialize<T>(metadata));
+        }
+
+        public static T DecodeMetadata<T>(byte[] metadata)
+        {
+            return JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(metadata));
         }
     }
 }

@@ -3189,6 +3189,287 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void UpsertNft(NFT nft)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertNFT]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", nft.DGoodId));
+                    sqlCmd.Parameters.Add(new SqlParameter("NFTMetadataId", nft.NFTMetadataId));
+                    sqlCmd.Parameters.Add(new SqlParameter("SerialNumber", nft.SerialNumber));
+                    sqlCmd.Parameters.Add(new SqlParameter("Burned", nft.Burned));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("CreatedDateTime", nft.CreatedOn));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("BurnedDateTime", nft.BurnedOn));
+                    sqlCmd.Parameters.Add(new SqlParameter("Metadata", nft.Metadata));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void UpsertNftMetadata(NFTMetadata nftMetadata)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertNFTMetadata]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", nftMetadata.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("Name", nftMetadata.Name));
+                    sqlCmd.Parameters.Add(new SqlParameter("Category", nftMetadata.Category));
+                    sqlCmd.Parameters.Add(new SqlParameter("Metadata", nftMetadata.Metadata));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void UpsertNftHistory(NFTHistory nftHistory)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertNFTHistory]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", nftHistory.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", nftHistory.DGoodId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Owner", nftHistory.Owner));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("ObtainedDateTime", nftHistory.ObtainedOn));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("DisposedDateTime", nftHistory.DisposedOn));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public NFT GetNftByDGoodId(int dGoodId)
+        {
+            NFT nft = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTByDGoodId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", dGoodId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nft = new NFT();
+                            nft.DGoodId = (int)reader["DGoodId"];
+                            nft.NFTMetadataId = (int)reader["NFTMetadataId"];
+                            nft.SerialNumber = (int)reader["SerialNumber"];
+                            nft.Burned = (bool)reader["Burned"];
+                            nft.CreatedOn = (DateTime)reader["CreatedDateTie"];
+                            nft.BurnedOn = ReadNullParameterSafe<DateTime?>(reader, "BurnedDateTime");
+                            nft.Metadata = (byte[])reader["Metadata"];
+
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nft;
+            }
+        }
+
+        public NFTMetadata GetNftMetadataById(int id)
+        {
+            NFTMetadata nftMetadata = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTMetadataById]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", id));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftMetadata = new NFTMetadata();
+                            nftMetadata.Id = (int)reader["Id"];
+                            nftMetadata.Name = (string)reader["Name"];
+                            nftMetadata.Category = (string)reader["Category"];
+                            nftMetadata.Metadata = (byte[])reader["Metadata"];
+
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftMetadata;
+            }
+        }
+
+        public NFTMetadata GetNftMetadataByNameAndCategory(string name, string category)
+        {
+            NFTMetadata nftMetadata = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTMetadataByNameAndCategory]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Name", name));
+                    sqlCmd.Parameters.Add(new SqlParameter("Category", category));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftMetadata = new NFTMetadata();
+                            nftMetadata.Id = (int)reader["Id"];
+                            nftMetadata.Name = (string)reader["Name"];
+                            nftMetadata.Category = (string)reader["Category"];
+                            nftMetadata.Metadata = (byte[])reader["Metadata"];
+
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftMetadata;
+            }
+        }
+
+        public List<NFTHistory> GetNftHistoryByDGoodId(string dGoodId)
+        {
+            List<NFTHistory> nftHistory = new List<NFTHistory>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTHistoryDGoodId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", dGoodId));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftHistory.Add(new NFTHistory
+                            {
+                                Id = (int)reader["Id"],
+                                DGoodId = (int)reader["DGoodId"],
+                                Owner = (string)reader["Owner"],
+                                ObtainedOn = (DateTime)reader["ObtainedDateTime"],
+                                DisposedOn = ReadNullParameterSafe<DateTime?>(reader, "DisposedDateTime")
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftHistory;
+            }
+        }
+
         private SqlParameter AddNullParmaterSafe<T>(string parameterName, T value)
         {
             if (value == null)

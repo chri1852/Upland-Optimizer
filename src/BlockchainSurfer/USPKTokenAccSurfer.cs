@@ -17,23 +17,21 @@ namespace Upland.BlockchainSurfer
     {
         private readonly ILocalDataManager _localDataManager;
         private readonly IBlockchainManager _blockchainManager;
-        private readonly IUplandApiManager _uplandApiManager;
         private readonly string _uspktokenacc;
         private readonly string _playuplandme;
 
-        List<Tuple<decimal, string, string>> _registeredUserEOSAccounts;
-
+        private List<string> _loadedStructureTypes;
         private bool _isProcessing;
 
-        public USPKTokenAccSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
+        public USPKTokenAccSurfer(ILocalDataManager localDataManager, IBlockchainManager blockchainManager)
         {
             _localDataManager = localDataManager;
-            _uplandApiManager = uplandApiManager;
             _blockchainManager = blockchainManager;
             _uspktokenacc = "uspktokenacc";
             _playuplandme = "playuplandme";
 
             _isProcessing = false;
+            _loadedStructureTypes = new List<string>();
         }
 
         public async Task RunBlockChainUpdate()
@@ -106,7 +104,8 @@ namespace Upland.BlockchainSurfer
                 {
                     try
                     {
-                        if (actions.First().block_time > new DateTime(2021, 7, 10))
+                        // DEBUG
+                        if (actions.Last().block_time > new DateTime(2021, 6, 20))
                         {
                             continueLoad = false;
                             break;
@@ -135,6 +134,12 @@ namespace Upland.BlockchainSurfer
                 {
                     // We've already processed this event
                     _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessActions", string.Format("Skipping Action {0} < {1}", action.account_action_seq, maxActionSeqNum));
+                    continue;
+                }
+
+                // DEBUG
+                if (action.block_time > new DateTime(2021, 6, 20))
+                {
                     continue;
                 }
 
@@ -220,17 +225,18 @@ namespace Upland.BlockchainSurfer
                 }
                 else if (Regex.Match(action.action_trace.act.data.memo, "^BUILD,").Success)
                 {
+                    int dGoodId = int.Parse(action.action_trace.act.data.memo.Split("BUILD,")[1].Split(",")[0]);
                     _localDataManager.UpsertSparkStaking(new SparkStaking
                     {
                         Id = -1,
-                        DGoodId = int.Parse(action.action_trace.act.data.memo.Split("BUILD,")[1].Split(",")[0]),
+                        DGoodId = dGoodId,
                         EOSUserId = user.Id,
                         Amount = amount,
                         Start = action.block_time,
                         End = null
                     });
 
-                    // TODO REQUIRES DGoodTable
+                    HandleStructureDGoodCreation(dGoodId, action);
                 }
                 else
                 {
@@ -349,6 +355,81 @@ namespace Upland.BlockchainSurfer
                     user.Spark += amount;
                     _localDataManager.UpsertEOSUser(user);
                 }
+            }
+        }
+
+        private void HandleStructureDGoodCreation(int dGoodId, UspkTokenAccAction action)
+        {
+            long propertyId = long.Parse(action.action_trace.act.data.memo.Split(string.Format("BUILD,{0},", dGoodId))[1].Split(",")[0]);
+            string category = "structure";
+            string name = action.action_trace.act.data.memo.Split(",")[9];
+
+            NFTMetadata structureMetadata = _localDataManager.GetNftMetadataByNameAndCategory(name, category);
+            NFT structureNFT = _localDataManager.GetNftByDGoodId(dGoodId);
+
+            if (structureMetadata == null)
+            {
+                // TODO ONLY FOR TESTING THE SPK ACCT
+                structureMetadata = new NFTMetadata
+                {
+                    Id = -1,
+                    Name = action.action_trace.act.data.memo.Split(",")[9],
+                    Category = action.action_trace.act.data.memo.Split(",")[8],
+                    Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new StructureMetadata
+                    {
+                        SparkHours = int.Parse(action.action_trace.act.data.memo.Split(",")[5]),
+                        MinimumSpark = decimal.Parse(action.action_trace.act.data.memo.Split(",")[6]) / 100,
+                        MaximumSpark = decimal.Parse(action.action_trace.act.data.memo.Split(",")[7]) / 100
+                    })
+                };
+
+                _loadedStructureTypes.Add(name);
+
+                _localDataManager.UpsertNftMetadata(structureMetadata);
+            }
+            else
+            {
+                if (!_loadedStructureTypes.Contains(name))
+                {
+                    StructureMetadata metadata = HelperFunctions.HelperFunctions.DecodeMetadata<StructureMetadata>(structureMetadata.Metadata);
+                    metadata.SparkHours = int.Parse(action.action_trace.act.data.memo.Split(",")[5]);
+                    metadata.MinimumSpark = decimal.Parse(action.action_trace.act.data.memo.Split(",")[6]) / 100;
+                    metadata.MaximumSpark = decimal.Parse(action.action_trace.act.data.memo.Split(",")[7]) / 100;
+                    structureMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(metadata);
+
+                    _loadedStructureTypes.Add(name);
+
+                    _localDataManager.UpsertNftMetadata(structureMetadata);
+                }
+            }
+
+            if (structureNFT == null)
+            {
+                // This Should Happen rarely, the uplandnftact scrapper should find and create these
+                structureNFT = new NFT
+                {
+                    DGoodId = dGoodId,
+                    NFTMetadataId = 0, // This will get set by the uplandnftact scrapper
+                    SerialNumber = 0, // No serial number on structures
+                    Burned = false,
+                    CreatedOn = action.block_time,
+                    Metadata = HelperFunctions.HelperFunctions.EncodeMetadata<StructureSpecificMetaData>(new StructureSpecificMetaData
+                    {
+                        PropertyId = propertyId,
+                    })
+                };
+
+                _localDataManager.UpsertNft(structureNFT);
+            }
+            else
+            {
+                // Only set the metadata, the rest has been handled by the uplandnftact scrapper
+                structureNFT.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata<StructureSpecificMetaData>(new StructureSpecificMetaData
+                {
+                    PropertyId = propertyId,
+                });
+
+                _localDataManager.UpsertNft(structureNFT);
             }
         }
     }

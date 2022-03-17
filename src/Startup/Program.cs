@@ -18,6 +18,7 @@ using Upland.InformationProcessor;
 using Upland.Infrastructure.Blockchain;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.BlockchainSurfers;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
 using Upland.Interfaces.Repositories;
@@ -51,7 +52,7 @@ class Program
         BlockchainManager blockchainManager = new BlockchainManager();
 
         PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
-        USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, uplandApiManager, blockchainManager);
+        USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
@@ -159,6 +160,7 @@ class Program
             .AddSingleton<IInformationProcessor, InformationProcessor>()
             .AddSingleton<IForSaleProcessor, ForSaleProcessor>()
             .AddSingleton<IPlayUplandMeSurfer, PlayUplandMeSurfer>()
+            .AddSingleton<IUSPKTokenAccSurfer, USPKTokenAccSurfer>()
             .AddSingleton<IResyncProcessor, ResyncProcessor>()
             .AddSingleton(_client)
             .AddSingleton(_commands)

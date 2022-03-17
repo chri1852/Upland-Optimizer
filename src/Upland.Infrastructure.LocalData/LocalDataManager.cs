@@ -976,5 +976,40 @@ namespace Upland.Infrastructure.LocalData
         {
             return _localDataRepository.GetSparkStakingByEOSUserId(eosUserId);
         }
+
+        public void UpsertNft(NFT nft)
+        {
+            _localDataRepository.UpsertNft(nft);
+        }
+
+        public void UpsertNftMetadata(NFTMetadata nftMetadata)
+        {
+            _localDataRepository.UpsertNftMetadata(nftMetadata);
+        }
+
+        public void UpsertNftHistory(NFTHistory nftHistory)
+        {
+            _localDataRepository.UpsertNftHistory(nftHistory);
+        }
+
+        public NFT GetNftByDGoodId(int dGoodId)
+        {
+            return _localDataRepository.GetNftByDGoodId(dGoodId);
+        }
+
+        public NFTMetadata GetNftMetadataById(int id)
+        {
+            return _localDataRepository.GetNftMetadataById(id);
+        }
+
+        public NFTMetadata GetNftMetadataByNameAndCategory(string name, string category)
+        {
+            return _localDataRepository.GetNftMetadataByNameAndCategory(name, category);
+        }
+
+        public List<NFTHistory> GetNftHistoryByDGoodId(string dGoodId)
+        {
+            return _localDataRepository.GetNftHistoryByDGoodId(dGoodId);
+        }
     }
 }

@@ -594,7 +594,7 @@ namespace Upland.BlockchainSurfer
                 _localDataManager.UpsertEOSUser(new EOSUser
                 {
                     EOSAccount = action.action_trace.act.data.p14,
-                    UplandUsername = "",
+                    UplandUsername = action.action_trace.act.data.memo.Split(" that Upland user ")[1].Split(" with EOS account ")[0],
                     Joined = action.block_time,
                     Spark = 0
                 });
@@ -806,7 +806,7 @@ namespace Upland.BlockchainSurfer
                 {
                     _localDataManager.UpsertEOSUser(new EOSUser
                     {
-                        EOSAccount = action.action_trace.act.data.p14,
+                        EOSAccount = newOwner,
                         UplandUsername = action.action_trace.act.data.memo.Split(" that Upland user ")[1].Split(" with EOS account")[0],
                         Joined = action.block_time,
                         Spark = 0

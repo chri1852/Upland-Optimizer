@@ -204,6 +204,39 @@ namespace Upland.Infrastructure.Blockchain
             return totalResults;
         }
 
+        public async Task<List<SeriesTableEntry>> GetSeriesTable()
+        {
+            List<SeriesTableEntry> totalResults = new List<SeriesTableEntry>();
+            GetTableRowsResponse result = new GetTableRowsResponse { more = true };
+            long index = 0;
+
+            while (result.more)
+            {
+                result = await this.eos.GetTableRows(new GetTableRowsRequest()
+                {
+                    json = true,
+                    code = "uplandnftact",
+                    scope = "uplandnftact",
+                    table = "series",
+                    lower_bound = index.ToString(),
+                    upper_bound = null,
+                    index_position = "0",
+                    key_type = "",
+                    limit = 5000,
+                    reverse = false,
+                    show_payer = false,
+                });
+
+                foreach (Newtonsoft.Json.Linq.JObject item in result.rows)
+                {
+                    totalResults.Add(item.ToObject<SeriesTableEntry>());
+                }
+                index = totalResults.Max(i => i.id);
+            }
+
+            return totalResults;
+        }
+
         public async Task<T> GetSingleTransactionById<T>(string transactionId)
         {
             T transactionEntry;
