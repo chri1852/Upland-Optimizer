@@ -11,6 +11,7 @@ namespace Upland.Types.Types
 
         // Memento Only
         public NFLPALegitMintInfoStats Stats { get; set; }
+        public NFLPALegitMintInfoScene Scene { get; set; }
 
         public int FanPoints { get; set; }
     }

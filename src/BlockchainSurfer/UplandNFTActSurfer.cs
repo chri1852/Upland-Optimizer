@@ -23,6 +23,7 @@ namespace Upland.BlockchainSurfer
 
         private List<SeriesTableEntry> _loadedSeries;
         private bool _isProcessing;
+        private List<dGood> _currentdGoodTable;
 
         public UplandNFTActSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
         {
@@ -34,6 +35,7 @@ namespace Upland.BlockchainSurfer
 
             _isProcessing = false;
             _loadedSeries = new List<SeriesTableEntry>();
+            _currentdGoodTable = null;
         }
 
         public async Task RunBlockChainUpdate()
@@ -58,7 +60,7 @@ namespace Upland.BlockchainSurfer
 
         public async Task ProcessBlockchainFromAction(long lastActionProcessed)
         {
-            bool enableUpdates = bool.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDNFTACTACTIONSEQNUM));
+            bool enableUpdates = bool.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
 
             if (!enableUpdates || _isProcessing)
             {
@@ -148,7 +150,7 @@ namespace Upland.BlockchainSurfer
                 switch (action.action_trace.act.name)
                 {
                     case "burnnft":
-                        await ProcessBurnNFTAction(action);
+                        ProcessBurnNFTAction(action);
                         break;
                     case "create":
                         await ProcessCreateAction(action);
@@ -169,7 +171,7 @@ namespace Upland.BlockchainSurfer
             }
         }
 
-        private async Task ProcessBurnNFTAction(UplandNFTActAction action)
+        private void ProcessBurnNFTAction(UplandNFTActAction action)
         {
             if (action.action_trace.act.data.dGood_Ids.Count > 1)
             {
@@ -192,7 +194,7 @@ namespace Upland.BlockchainSurfer
 
             List<NFTHistory> nftHistory = _localDataManager.GetNftHistoryByDGoodId(dGoodId).Where(h => h.DisposedOn == null).ToList();
 
-            foreach(NFTHistory history in nftHistory)
+            foreach (NFTHistory history in nftHistory)
             {
                 history.DisposedOn = action.block_time;
                 _localDataManager.UpsertNftHistory(history);
@@ -224,8 +226,8 @@ namespace Upland.BlockchainSurfer
                     {
                         DisplayName = action.action_trace.act.data.display_name,
                         Image = "",
-                        SeriesId = action.action_trace.act.data.series_id,
-                        SeriesName = await GetSeriesNameById(action.action_trace.act.data.series_id),
+                        SeriesId = action.action_trace.act.data.series_id.HasValue ? action.action_trace.act.data.series_id.Value : 0,
+                        SeriesName = action.action_trace.act.data.series_id.HasValue ? await GetSeriesNameById(action.action_trace.act.data.series_id.Value) : "",
                         Description = "",
                         RarityLevel = "",
                         MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
@@ -279,6 +281,7 @@ namespace Upland.BlockchainSurfer
                         Image = "",
                         RarityLevel = "",
                         BuildingType = "",
+                        DecorationId = 0,
                         MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
                         MaxIssueDays = action.action_trace.act.data.max_issue_days
                     });
@@ -320,7 +323,7 @@ namespace Upland.BlockchainSurfer
 
             NFTMetadata nftMetadata = _localDataManager.GetNftMetadataByNameAndCategory(action.action_trace.act.data.token_name, action.action_trace.act.data.category);
 
-            if (nftMetadata != null)
+            if (nftMetadata == null)
             {
                 _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("No NFT Metadata Found, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
                 return;
@@ -340,25 +343,117 @@ namespace Upland.BlockchainSurfer
             switch (nftMetadata.Category)
             {
                 case "blkexplorer":
+                    await PopulateBlkexplorerNFT(newNft, nftMetadata);
                     break;
                 case "essential":
+                    await PopulateEssentialNFT(newNft, nftMetadata);
                     break;
                 case "memento":
+                    await PopulateMementoNFT(newNft, nftMetadata);
                     break;
                 case "spirithlwn":
+                    await PopulateSpirithlwnNFT(newNft, nftMetadata);
                     break;
                 case "structornmt":
+                    await PopulateStructornmtNFT(newNft, nftMetadata);
                     break;
                 case "structure":
+                    // Need to wait for the transfer action to process these
+                    _localDataManager.UpsertNft(newNft);
                     break;
                 default:
                     throw new Exception("Unknown NFT Category Detected Stoping Updates");
+            }
+
+            if (action.action_trace.act.data.to != _playuplandme)
+            {
+                NFTHistory newHistoryEntry = new NFTHistory
+                {
+                    Id = -1,
+                    DGoodId = dGoodId,
+                    Owner = action.action_trace.act.data.to,
+                    ObtainedOn = action.block_time,
+                    DisposedOn = null
+                };
+                _localDataManager.UpsertNftHistory(newHistoryEntry);
             }
         }
 
         private async Task ProcessTransferNFTAction(UplandNFTActAction action)
         {
+            if (action.action_trace.act.data.dGood_Ids.Count > 1)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessTransferNFTAction", string.Format("Multiple Transfered, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
 
+            int dGoodId = action.action_trace.act.data.dGood_Ids.First();
+
+            NFT transferingNft = _localDataManager.GetNftByDGoodId(dGoodId);
+
+            if (transferingNft == null)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessTransferNFTAction", string.Format("No NFT to Transfer, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
+
+            if (Regex.Match(action.action_trace.act.data.memo, "^BUILD,").Success)
+            {
+                string name = action.action_trace.act.data.memo.Split(",")[9];
+                string category = action.action_trace.act.data.memo.Split(",")[8];
+                NFTMetadata structureMetadata = _localDataManager.GetNftMetadataByNameAndCategory(name, category);
+
+                if (!structureMetadata.FullyLoaded)
+                {
+                    StructureMetadata currentMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<StructureMetadata>(structureMetadata.Metadata);
+                    currentMetadata.Image = @"https://static.upland.me/" + currentMetadata.DisplayName.Replace(" ", "_").ToLower() + "/blank.png";
+                    currentMetadata.SparkHours = int.Parse(action.action_trace.act.data.memo.Split(",")[5]);
+                    currentMetadata.MinimumSpark = decimal.Parse(action.action_trace.act.data.memo.Split(",")[6]) / 100;
+                    currentMetadata.MaximumSpark = decimal.Parse(action.action_trace.act.data.memo.Split(",")[7]) / 100;
+                    structureMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(currentMetadata);
+                    structureMetadata.FullyLoaded = true;
+
+                    _localDataManager.UpsertNftMetadata(structureMetadata);
+                }
+
+                if (!transferingNft.FullyLoaded)
+                {
+                    transferingNft.FullyLoaded = true;
+                    StructureSpecificMetaData structMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<StructureSpecificMetaData>(transferingNft.Metadata);
+                    structMetadata.PropertyId = long.Parse(action.action_trace.act.data.memo.Split(string.Format("BUILD,{0},", dGoodId))[1].Split(",")[0]);
+                    transferingNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(structMetadata);
+
+                    _localDataManager.UpsertNft(transferingNft);
+                }
+            }
+
+            List<NFTHistory> nftHistory = _localDataManager.GetNftHistoryByDGoodId(dGoodId);
+
+            if (action.action_trace.act.data.to == _playuplandme)
+            {
+                foreach (NFTHistory history in nftHistory.Where(h => h.DisposedOn == null).ToList())
+                {
+                    history.DisposedOn = action.block_time;
+                    _localDataManager.UpsertNftHistory(history);
+                }
+            }
+            else if (action.action_trace.act.data.from == _playuplandme)
+            {
+                NFTHistory newHistoryEntry = new NFTHistory
+                {
+                    Id = -1,
+                    DGoodId = dGoodId,
+                    Owner = action.action_trace.act.data.to,
+                    ObtainedOn = action.block_time,
+                    DisposedOn = null
+                };
+                _localDataManager.UpsertNftHistory(newHistoryEntry);
+            }
+            else
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessTransferNFTAction", string.Format("History Between Two EOS Accounts (Unexpected), ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
         }
 
         private async Task<string> GetSeriesNameById(int id)
@@ -383,6 +478,378 @@ namespace Upland.BlockchainSurfer
             }
 
             return matchingEntry.name;
+        }
+
+        private async Task PopulateBlkexplorerNFT(NFT newNft, NFTMetadata metadata)
+        {
+            if (newNft.FullyLoaded && metadata.FullyLoaded)
+            {
+                return;
+            }
+
+            dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
+            BlockExplorer blockExplorer = null;
+            bool useBlockExplorer = false;
+
+            try
+            {
+                if (!metadata.FullyLoaded || dGood == null)
+                {
+                    blockExplorer = await _uplandApiManager.GetBlockExplorersByDGoodId(newNft.DGoodId);
+                    useBlockExplorer = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateBlkexplorerNFT", string.Format("Could Not Load BlockExplorer By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+
+            if (!newNft.FullyLoaded)
+            {
+                if (useBlockExplorer)
+                {
+                    newNft.SerialNumber = blockExplorer.Mint;
+                }
+                else
+                {
+                    newNft.SerialNumber = dGood.serial_number.Value;
+                }
+
+                newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new BlockExplorerSpecificMetadata
+                {
+                    Link = @"https://play.upland.me/nft/block_explorer/nft-id/" + newNft.DGoodId
+                });
+                newNft.FullyLoaded = true;
+
+                try
+                {
+                    _localDataManager.UpsertNft(newNft);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateBlkexplorerNFT", string.Format("Failed Saving BlockExplorer NFT, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+
+            if (!metadata.FullyLoaded)
+            {
+                BlockExplorerMetadata currentMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<BlockExplorerMetadata>(metadata.Metadata);
+                currentMetadata.Image = blockExplorer.Image;
+                currentMetadata.Description = blockExplorer.Description;
+                currentMetadata.RarityLevel = blockExplorer.RarityLevel;
+                metadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(currentMetadata);
+                metadata.FullyLoaded = true;
+
+                try
+                {
+                    _localDataManager.UpsertNftMetadata(metadata);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateBlkexplorerNFT", string.Format("Failed Saving BlockExplorer Metadata, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+        }
+
+        private async Task PopulateEssentialNFT(NFT newNft, NFTMetadata metadata)
+        {
+            if (newNft.FullyLoaded && metadata.FullyLoaded)
+            {
+                return;
+            }
+
+            NFLPALegit legit = null;
+            NFLPALegitMintInfo legitMintInfo = null;
+
+            try
+            {
+                legit = await _uplandApiManager.GetNFLPALegitsByDGoodId(newNft.DGoodId);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateEssentialNFT", string.Format("Could Not Load Essential By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+
+            try
+            {
+                legitMintInfo = await _uplandApiManager.GetMementoMintInfo(newNft.DGoodId);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateEssentialNFT", string.Format("Could Not Load Essential Mint Info By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+
+            if (!newNft.FullyLoaded)
+            {
+                newNft.SerialNumber = legit.Mint;
+                newNft.FullyLoaded = true;
+                newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new EssentialSpecificMetadata
+                {
+                    LegitId = legit.LegitId,
+                    IsVariant = legitMintInfo.IsVariant,
+                    Link = legit.Link
+                });
+
+                try
+                {
+                    _localDataManager.UpsertNft(newNft);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateEssentialNFT", string.Format("Failed Saving Essential NFT, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+
+            if (legit.Position == null || legit.Position.Trim() == "")
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateEssentialNFT", string.Format("Missing Metadata, DGoodId: {0}", newNft.DGoodId));
+            }
+
+            if (!metadata.FullyLoaded)
+            {
+                MementoMetadata currentMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<MementoMetadata>(metadata.Metadata);
+                currentMetadata.Image = legit.Image;
+                currentMetadata.TeamName = legit.TeamName;
+                currentMetadata.FanPoints = legit.FanPoints;
+                currentMetadata.Season = int.Parse(legit.Year);
+                currentMetadata.ModelType = legit.LegitType;
+                currentMetadata.PlayerFullName = legit.PlayerName;
+                currentMetadata.PlayerPosition = legit.Position;
+                metadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(currentMetadata);
+                metadata.FullyLoaded = true;
+
+                try
+                {
+                    _localDataManager.UpsertNftMetadata(metadata);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateEssentialNFT", string.Format("Failed Saving Essential Metadata, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+        }
+
+        private async Task PopulateMementoNFT(NFT newNft, NFTMetadata metadata)
+        {
+            if (newNft.FullyLoaded && metadata.FullyLoaded)
+            {
+                return;
+            }
+
+            NFLPALegit legit = null;
+            NFLPALegitMintInfo legitMintInfo = null;
+
+            try
+            {
+                legit = await _uplandApiManager.GetNFLPALegitsByDGoodId(newNft.DGoodId);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Could Not Load Memento By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+
+            try
+            {
+                legitMintInfo = await _uplandApiManager.GetMementoMintInfo(newNft.DGoodId);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Could Not Load Memento Mint Info By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+
+            if (!newNft.FullyLoaded)
+            {
+                newNft.SerialNumber = legit.Mint;
+                newNft.FullyLoaded = true;
+                newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new MementoSpecificMetadata
+                {
+                    LegitId = legit.LegitId,
+                    GameDate = legitMintInfo.Scene.GameDate,
+                    OpponentTeam = legitMintInfo.Scene.OpponentTeamName,
+                    HomeTeam = legitMintInfo.Scene.HomeTeamName,
+                    MainStats = legitMintInfo.Stats.MainStats,
+                    AdditionalStats = legitMintInfo.Stats.AdditionalStats,
+                    Link = legit.Link
+                });
+
+                try
+                {
+                    _localDataManager.UpsertNft(newNft);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Failed Saving Memento NFT, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+
+            if (legit.Position == null || legit.Position.Trim() == "")
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Missing Metadata, DGoodId: {0}", newNft.DGoodId));
+            }
+
+            if (!metadata.FullyLoaded)
+            {
+                MementoMetadata currentMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<MementoMetadata>(metadata.Metadata);
+                currentMetadata.Image = legit.Image;
+                currentMetadata.TeamName = legit.TeamName;
+                currentMetadata.FanPoints = legit.FanPoints;
+                currentMetadata.Season = int.Parse(legit.Year);
+                currentMetadata.ModelType = legit.LegitType;
+                currentMetadata.PlayerFullName = legit.PlayerName;
+                currentMetadata.PlayerPosition = legit.Position;
+                metadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(currentMetadata);
+                metadata.FullyLoaded = true;
+
+                try
+                {
+                    _localDataManager.UpsertNftMetadata(metadata);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Failed Saving Memento Metadata, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+        }
+
+        private async Task PopulateSpirithlwnNFT(NFT newNft, NFTMetadata metadata)
+        {
+            if (newNft.FullyLoaded && metadata.FullyLoaded)
+            {
+                return;
+            }
+
+            SpiritLegit spiritLegit = null;
+
+            try
+            {
+                spiritLegit = await _uplandApiManager.GetSpiritLegitsByDGoodId(newNft.DGoodId);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateSpirithlwnNFT", string.Format("Could Not Load SpiritLegit By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+
+            if (!newNft.FullyLoaded)
+            {
+                newNft.SerialNumber = spiritLegit.Mint;
+                newNft.FullyLoaded = true;
+                newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new SpirithlwnSpecificMetadata
+                {
+                    Link = spiritLegit.Link
+                });
+
+                try
+                {
+                    _localDataManager.UpsertNft(newNft);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateSpirithlwnNFT", string.Format("Failed Saving SpiritLegit NFT, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+
+            if (!metadata.FullyLoaded)
+            {
+                SpirithlwnMetadata currentMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<SpirithlwnMetadata>(metadata.Metadata);
+                currentMetadata.Image = spiritLegit.Image;
+                currentMetadata.RarityLevel = spiritLegit.Rarity;
+                metadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(currentMetadata);
+                metadata.FullyLoaded = true;
+
+                try
+                {
+                    _localDataManager.UpsertNftMetadata(metadata);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateSpirithlwnNFT", string.Format("Failed Saving SpiritLegit Metadata, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+        }
+
+        private async Task PopulateStructornmtNFT(NFT newNft, NFTMetadata metadata)
+        {
+            if (newNft.FullyLoaded && metadata.FullyLoaded)
+            {
+                return;
+            }
+
+            Decoration decoration = null;
+
+            try
+            {
+                decoration = await _uplandApiManager.GetDecorationsByDGoodId(newNft.DGoodId);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateStructornmtNFT", string.Format("Could Not Load Decoration By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+
+            if (!newNft.FullyLoaded)
+            {
+                newNft.SerialNumber = decoration.Mint;
+                newNft.FullyLoaded = true;
+                newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new StructornmtSpecificMetadata
+                {
+                    Link = decoration.Link
+                });
+
+                try
+                {
+                    _localDataManager.UpsertNft(newNft);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateStructornmtNFT", string.Format("Failed Saving Decoration NFT, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+
+            if (!metadata.FullyLoaded)
+            {
+                StructornmtMetadata currentMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<StructornmtMetadata>(metadata.Metadata);
+                currentMetadata.Image = decoration.Image;
+                currentMetadata.DecorationId = decoration.DecorationId;
+                currentMetadata.RarityLevel = decoration.Rarity;
+                currentMetadata.BuildingType = decoration.Subtitle;
+                metadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(currentMetadata);
+                metadata.FullyLoaded = true;
+
+                try
+                {
+                    _localDataManager.UpsertNftMetadata(metadata);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateStructornmtNFT", string.Format("Failed Saving Decoration Metadata, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+        }
+
+        private async Task<dGood> GetDGoodFromTable(int dGoodId)
+        {
+            if (_currentdGoodTable == null || _currentdGoodTable.Count == 0)
+            {
+                _currentdGoodTable = await _blockchainManager.GetAllDGoodsFromTable();
+            }
+
+            return _currentdGoodTable.FirstOrDefault(d => d.id == dGoodId);
         }
     }
 }

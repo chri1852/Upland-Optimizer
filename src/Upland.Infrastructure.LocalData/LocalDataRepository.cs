@@ -3209,6 +3209,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("Burned", nft.Burned));
                     sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("CreatedDateTime", nft.CreatedOn));
                     sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("BurnedDateTime", nft.BurnedOn));
+                    sqlCmd.Parameters.Add(new SqlParameter("FullyLoaded", nft.FullyLoaded));
                     sqlCmd.Parameters.Add(new SqlParameter("Metadata", nft.Metadata));
 
                     sqlCmd.ExecuteNonQuery();

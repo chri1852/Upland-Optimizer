@@ -53,6 +53,7 @@ class Program
 
         PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
         USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager);
+        UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
@@ -122,6 +123,7 @@ class Program
         //List<EOSFlareAction> actions = await blockchainManager.GetEOSFlareActions(0);
         await playUplandMeSurfer.RunBlockChainUpdate();
         //await uspkTokenAccSurfer.RunBlockChainUpdate();
+        //await uplandNFTActSurfer.RunBlockChainUpdate();
         //await playUplandMeSurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
         //await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");
@@ -161,6 +163,7 @@ class Program
             .AddSingleton<IForSaleProcessor, ForSaleProcessor>()
             .AddSingleton<IPlayUplandMeSurfer, PlayUplandMeSurfer>()
             .AddSingleton<IUSPKTokenAccSurfer, USPKTokenAccSurfer>()
+            .AddSingleton<IUplandNFTActSurfer, UplandNFTActSurfer>()
             .AddSingleton<IResyncProcessor, ResyncProcessor>()
             .AddSingleton(_client)
             .AddSingleton(_commands)

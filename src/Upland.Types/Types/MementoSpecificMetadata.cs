@@ -11,5 +11,6 @@ namespace Upland.Types.Types
         public string HomeTeam { get; set; }
         public List<NFLPALegitStatObject> MainStats { get; set; }
         public List<NFLPALegitStatObject> AdditionalStats { get; set; }
+        public string Link { get; set; }
     }
 }

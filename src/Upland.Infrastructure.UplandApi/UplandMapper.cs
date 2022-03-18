@@ -183,12 +183,14 @@ namespace Upland.Infrastructure.UplandApi
                 legit.FanPoints = asset.Metadata.FanPoints;
             }
 
+            legit.LegitId = asset.Metadata.LegitId;
             legit.DGoodId = asset.DGoodId;
             legit.DisplayName = asset.Metadata.DisplayName;
             legit.Mint = asset.Mint;
             legit.CurrentSupply = asset.Stat.CurrentSupply;
             legit.MaxSupply = asset.Stat.MaxSupply;
             legit.Link = @"https://play.upland.me/legit-preview/" + asset.DGoodId;
+            legit.Image = @"https://static.upland.me/" + asset.Metadata.Image;
 
             return legit;
         }
@@ -217,6 +219,7 @@ namespace Upland.Infrastructure.UplandApi
             legit.CurrentSupply = asset.Stat.CurrentSupply;
             legit.MaxSupply = asset.Stat.MaxSupply;
             legit.Link = @"https://play.upland.me/nft-3d/spirit/" + asset.DGoodId;
+            legit.Image = @"https://static.upland.me/" + asset.Metadata.Image;
 
             return legit;
         }
@@ -251,6 +254,7 @@ namespace Upland.Infrastructure.UplandApi
 
             decoration.Rarity = asset.Metadata.RarityLevel;
             decoration.Subtitle = asset.Metadata.Subtitle;
+            decoration.DecorationId = asset.Metadata.DecorationId;
 
             decoration.DGoodId = asset.DGoodId;
             decoration.DisplayName = asset.Metadata.DisplayName;
@@ -258,6 +262,7 @@ namespace Upland.Infrastructure.UplandApi
             decoration.CurrentSupply = asset.Stat.CurrentSupply;
             decoration.MaxSupply = asset.Stat.MaxSupply;
             decoration.Link = @"https://play.upland.me/nft-3d/decoration/" + asset.DGoodId;
+            decoration.Image = @"https://static.upland.me/" + asset.Metadata.Image;
 
             return decoration;
         }
@@ -267,12 +272,16 @@ namespace Upland.Infrastructure.UplandApi
             BlockExplorer blockExplorer = new BlockExplorer();
 
             blockExplorer.Description = asset.Description;
+            blockExplorer.SeriesId = asset.Series == null ? 0 : asset.Series.Id;
+            blockExplorer.SeriesName = asset.Series == null ? "" : asset.Series.Name;
+            blockExplorer.RarityLevel = asset.Metadata.RarityLevel;
 
             blockExplorer.DGoodId = asset.DGoodId;
             blockExplorer.DisplayName = asset.Name;
             blockExplorer.Mint = asset.SerialNumber;
             blockExplorer.MaxSupply = asset.TotalCount;
-            blockExplorer.Link = @"https://play.upland.me/nft/block_explorer/" + asset.OwnerUsername + "/" + asset.DGoodId;
+            blockExplorer.Link = @"https://play.upland.me/nft/block_explorer/nft-id/" + asset.DGoodId;
+            blockExplorer.Image = asset.Image;
 
             return blockExplorer;
         }

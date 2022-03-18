@@ -29,7 +29,7 @@ namespace Upland.Types.BlockchainTypes
         public int max_issue_days { get; set; }
         public string max_supply { get; set; }
         public string display_name { get; set; }
-        public int series_id { get; set; }
+        public int? series_id { get; set; }
 
         // Transfernft
         public string from { get; set; }

@@ -11,6 +11,7 @@ namespace Upland.Interfaces.Managers
         Task<List<PropertyStructure>> GetPropertyStructures();
         Task<List<long>> GetPropertiesUnderConstruction();
         Task<Dictionary<string, double>> GetStakedSpark();
+        Task<List<dGood>> GetAllDGoodsFromTable();
         Task<List<SeriesTableEntry>> GetSeriesTable();
         Task<T> GetSingleTransactionById<T>(string transactionId);
         Task<T> GetEOSFlareActions<T>(long position, string accountName);

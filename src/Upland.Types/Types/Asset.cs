@@ -8,5 +8,6 @@
         public int CurrentSupply { get; set; }
         public int MaxSupply { get; set; }
         public string Link { get; set; }
+        public string Image { get; set; }
     }
 }
