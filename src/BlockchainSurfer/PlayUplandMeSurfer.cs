@@ -118,7 +118,11 @@ namespace Upland.BlockchainSurfer
                     }
                 }
 
-                if (actions.Count == 0)
+                if (actions.Any(a => !a.irreversible))
+                {
+                    continueLoad = false;
+                }
+                else if (actions.Count == 0)
                 {
                     //continueLoad = false;
                 }

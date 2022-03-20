@@ -26,7 +26,7 @@ namespace Upland.Types.BlockchainTypes
         public bool sn_enabled { get; set; }
         public string rev_split { get; set; }
         public string base_uri { get; set; }
-        public int max_issue_days { get; set; }
+        public long max_issue_days { get; set; }
         public string max_supply { get; set; }
         public string display_name { get; set; }
         public int? series_id { get; set; }

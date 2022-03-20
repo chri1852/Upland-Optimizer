@@ -94,12 +94,16 @@ namespace Upland.BlockchainSurfer
                     }
                     catch (Exception ex)
                     {
-                        _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - BuildBlockChainFromDate - Loop", ex.Message);
+                        //_localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - BuildBlockChainFromDate - Loop", ex.Message);
                         Thread.Sleep(5000);
                     }
                 }
 
-                if (actions.Count == 0)
+                if (actions.Any(a => !a.irreversible))
+                {
+                    continueLoad = false;
+                }
+                else if (actions.Count == 0)
                 {
                     // DEBUG
                     //continueLoad = false;
@@ -109,7 +113,7 @@ namespace Upland.BlockchainSurfer
                     try
                     {
                         // DEBUG
-                        if (actions.Last().block_time > new DateTime(2021, 6, 20))
+                        if (actions.Last().block_time > new DateTime(2021, 12, 1))
                         {
                             continueLoad = false;
                             break;
@@ -142,7 +146,7 @@ namespace Upland.BlockchainSurfer
                 }
 
                 // DEBUG
-                if (action.block_time > new DateTime(2021, 6, 20))
+                if (action.block_time > new DateTime(2021, 12, 1))
                 {
                     continue;
                 }
@@ -159,7 +163,7 @@ namespace Upland.BlockchainSurfer
                         await ProcessIssueAction(action);
                         break;
                     case "transfernft":
-                        await ProcessTransferNFTAction(action);
+                        ProcessTransferNFTAction(action);
                         break;
                 }
 
@@ -191,6 +195,7 @@ namespace Upland.BlockchainSurfer
 
             burningNft.Burned = true;
             burningNft.BurnedOn = action.block_time;
+            _localDataManager.UpsertNft(burningNft);
 
             List<NFTHistory> nftHistory = _localDataManager.GetNftHistoryByDGoodId(dGoodId).Where(h => h.DisposedOn == null).ToList();
 
@@ -231,7 +236,7 @@ namespace Upland.BlockchainSurfer
                         Description = "",
                         RarityLevel = "",
                         MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
-                        MaxIssueDays = action.action_trace.act.data.max_issue_days
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days > int.MaxValue ? int.MaxValue : (int)action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "essential":
@@ -246,7 +251,7 @@ namespace Upland.BlockchainSurfer
                         PlayerFullName = "",
                         PlayerPosition = "",
                         MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
-                        MaxIssueDays = action.action_trace.act.data.max_issue_days
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days > int.MaxValue ? int.MaxValue : (int)action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "memento":
@@ -261,7 +266,7 @@ namespace Upland.BlockchainSurfer
                         PlayerFullName = "",
                         PlayerPosition = "",
                         MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
-                        MaxIssueDays = action.action_trace.act.data.max_issue_days
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days > int.MaxValue ? int.MaxValue : (int)action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "spirithlwn":
@@ -271,7 +276,7 @@ namespace Upland.BlockchainSurfer
                         Image = "",
                         RarityLevel = "",
                         MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
-                        MaxIssueDays = action.action_trace.act.data.max_issue_days
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days > int.MaxValue ? int.MaxValue : (int)action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "structornmt":
@@ -283,7 +288,7 @@ namespace Upland.BlockchainSurfer
                         BuildingType = "",
                         DecorationId = 0,
                         MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
-                        MaxIssueDays = action.action_trace.act.data.max_issue_days
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days > int.MaxValue ? int.MaxValue : (int)action.action_trace.act.data.max_issue_days
                     });
                     break;
                 case "structure":
@@ -317,8 +322,8 @@ namespace Upland.BlockchainSurfer
 
             if (existingNft != null)
             {
-                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("NFT Already Exists, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
-                return;
+               _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("NFT Already Exists, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+               return;
             }
 
             NFTMetadata nftMetadata = _localDataManager.GetNftMetadataByNameAndCategory(action.action_trace.act.data.token_name, action.action_trace.act.data.category);
@@ -359,6 +364,7 @@ namespace Upland.BlockchainSurfer
                     break;
                 case "structure":
                     // Need to wait for the transfer action to process these
+                    newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new StructureSpecificMetaData());
                     _localDataManager.UpsertNft(newNft);
                     break;
                 default:
@@ -379,7 +385,7 @@ namespace Upland.BlockchainSurfer
             }
         }
 
-        private async Task ProcessTransferNFTAction(UplandNFTActAction action)
+        private void ProcessTransferNFTAction(UplandNFTActAction action)
         {
             if (action.action_trace.act.data.dGood_Ids.Count > 1)
             {
@@ -561,12 +567,17 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
+            dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
             NFLPALegit legit = null;
-            NFLPALegitMintInfo legitMintInfo = null;
+            bool useLegit = false;
 
             try
             {
-                legit = await _uplandApiManager.GetNFLPALegitsByDGoodId(newNft.DGoodId);
+                if (!metadata.FullyLoaded || dGood == null)
+                {
+                    legit = await _uplandApiManager.GetNFLPALegitsByDGoodId(newNft.DGoodId);
+                    useLegit = true;
+                }
             }
             catch (Exception ex)
             {
@@ -574,25 +585,23 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
-            try
-            {
-                legitMintInfo = await _uplandApiManager.GetMementoMintInfo(newNft.DGoodId);
-            }
-            catch (Exception ex)
-            {
-                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateEssentialNFT", string.Format("Could Not Load Essential Mint Info By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
-                return;
-            }
-
             if (!newNft.FullyLoaded)
             {
-                newNft.SerialNumber = legit.Mint;
+                if (useLegit)
+                {
+                    newNft.SerialNumber = legit.Mint;
+                }
+                else
+                {
+                    newNft.SerialNumber = dGood.serial_number.Value;
+                }
+
+                string displayName = HelperFunctions.HelperFunctions.DecodeMetadata<EssentialMetadata>(metadata.Metadata).DisplayName;
                 newNft.FullyLoaded = true;
                 newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new EssentialSpecificMetadata
                 {
-                    LegitId = legit.LegitId,
-                    IsVariant = legitMintInfo.IsVariant,
-                    Link = legit.Link
+                    IsVariant = Regex.Match(displayName, " AWAY ").Success,
+                    Link = @"https://play.upland.me/legit-preview/" + newNft.DGoodId
                 });
 
                 try
@@ -606,13 +615,13 @@ namespace Upland.BlockchainSurfer
                 }
             }
 
-            if (legit.Position == null || legit.Position.Trim() == "")
-            {
-                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateEssentialNFT", string.Format("Missing Metadata, DGoodId: {0}", newNft.DGoodId));
-            }
-
             if (!metadata.FullyLoaded)
             {
+                if (legit.Position == null || legit.Position.Trim() == "")
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateEssentialNFT", string.Format("Missing Metadata, DGoodId: {0}", newNft.DGoodId));
+                }
+
                 MementoMetadata currentMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<MementoMetadata>(metadata.Metadata);
                 currentMetadata.Image = legit.Image;
                 currentMetadata.TeamName = legit.TeamName;
@@ -729,11 +738,17 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
+            dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
             SpiritLegit spiritLegit = null;
+            bool useSpiritLegit = false;
 
             try
             {
-                spiritLegit = await _uplandApiManager.GetSpiritLegitsByDGoodId(newNft.DGoodId);
+                if (!metadata.FullyLoaded || dGood == null)
+                {
+                    spiritLegit = await _uplandApiManager.GetSpiritLegitsByDGoodId(newNft.DGoodId);
+                    useSpiritLegit = true;
+                }
             }
             catch (Exception ex)
             {
@@ -743,11 +758,19 @@ namespace Upland.BlockchainSurfer
 
             if (!newNft.FullyLoaded)
             {
-                newNft.SerialNumber = spiritLegit.Mint;
+                if (useSpiritLegit)
+                {
+                    newNft.SerialNumber = spiritLegit.Mint;
+                }
+                else
+                {
+                    newNft.SerialNumber = dGood.serial_number.Value;
+                }
+
                 newNft.FullyLoaded = true;
                 newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new SpirithlwnSpecificMetadata
                 {
-                    Link = spiritLegit.Link
+                    Link = @"https://play.upland.me/nft-3d/spirit/" + newNft.DGoodId
                 });
 
                 try
@@ -788,11 +811,17 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
+            dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
             Decoration decoration = null;
+            bool useDecoration = false;
 
             try
             {
-                decoration = await _uplandApiManager.GetDecorationsByDGoodId(newNft.DGoodId);
+                if (!metadata.FullyLoaded || dGood == null)
+                {
+                    decoration = await _uplandApiManager.GetDecorationsByDGoodId(newNft.DGoodId);
+                    useDecoration = true;
+                }
             }
             catch (Exception ex)
             {
@@ -802,11 +831,19 @@ namespace Upland.BlockchainSurfer
 
             if (!newNft.FullyLoaded)
             {
-                newNft.SerialNumber = decoration.Mint;
+                if (useDecoration)
+                {
+                    newNft.SerialNumber = decoration.Mint;
+                }
+                else
+                {
+                    newNft.SerialNumber = dGood.serial_number.Value;
+                }
+
                 newNft.FullyLoaded = true;
                 newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new StructornmtSpecificMetadata
                 {
-                    Link = decoration.Link
+                    Link = @"https://play.upland.me/nft-3d/decoration/" + newNft.DGoodId
                 });
 
                 try

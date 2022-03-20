@@ -3316,7 +3316,7 @@ namespace Upland.Infrastructure.LocalData
                             nft.NFTMetadataId = (int)reader["NFTMetadataId"];
                             nft.SerialNumber = (int)reader["SerialNumber"];
                             nft.Burned = (bool)reader["Burned"];
-                            nft.CreatedOn = (DateTime)reader["CreatedDateTie"];
+                            nft.CreatedOn = (DateTime)reader["CreatedDateTime"];
                             nft.BurnedOn = ReadNullParameterSafe<DateTime?>(reader, "BurnedDateTime");
                             nft.FullyLoaded = (bool)reader["FullyLoaded"];
                             nft.Metadata = (byte[])reader["Metadata"];
@@ -3486,7 +3486,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[GetNFTHistoryDGoodId]";
+                    sqlCmd.CommandText = "[UPL].[GetNFTHistoryByDGoodId]";
                     sqlCmd.Parameters.Add(new SqlParameter("DGoodId", dGoodId));
 
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())

@@ -121,9 +121,9 @@ class Program
         //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
 
         //List<EOSFlareAction> actions = await blockchainManager.GetEOSFlareActions(0);
-        await playUplandMeSurfer.RunBlockChainUpdate();
+        //await playUplandMeSurfer.RunBlockChainUpdate();
         //await uspkTokenAccSurfer.RunBlockChainUpdate();
-        //await uplandNFTActSurfer.RunBlockChainUpdate();
+        await uplandNFTActSurfer.RunBlockChainUpdate();
         //await playUplandMeSurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
         //await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");

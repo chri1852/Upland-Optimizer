@@ -44,6 +44,11 @@ namespace Upland.BlockchainSurfer.HelperFunctions
                 return returnName;
             }
 
+            if (returnName == "" && Regex.Match(memo.ToUpper(), "KANSAS,").Success)
+            {
+                return "Kansas";
+            }
+
             throw new Exception("Unknown City Detected");
         }
 
@@ -57,6 +62,11 @@ namespace Upland.BlockchainSurfer.HelperFunctions
             if (Regex.Match(cityName.ToUpper(), "INGLEWOOD").Success)
             {
                 return 32;
+            }
+
+            if (Regex.Match(cityName.ToUpper(), "KANSAS").Success)
+            {
+                return 14;
             }
 
             // Since the sub cities get wrapped up to the main city we need to do some finagaling

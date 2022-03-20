@@ -13,6 +13,7 @@ namespace Upland.Types.BlockchainTypes
     {
         public long account_action_seq { get; set; }
         public DateTime block_time { get; set; }
+        public bool irreversible { get; set; }
         public PlayUplandMeActionTrace action_trace { get; set; }
     }
 
