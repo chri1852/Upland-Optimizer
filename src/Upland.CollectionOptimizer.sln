@@ -21,7 +21,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Infrastructure.Block
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Interfaces", "Upland.Interfaces\Upland.Interfaces.csproj", "{17DCAB4F-294D-49F7-A8C1-CBAC3E1036AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upland.BlockchainSurfer", "Upland.BlockchainSurfer\Upland.BlockchainSurfer.csproj", "{CA69AE82-C51D-457C-AD69-ED4F6C07AC3A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.BlockchainSurfer", "Upland.BlockchainSurfer\Upland.BlockchainSurfer.csproj", "{CA69AE82-C51D-457C-AD69-ED4F6C07AC3A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{A2793743-CF8F-48C9-9D3F-671E14C9460B}"
+	ProjectSection(SolutionItems) = preProject
+		AnnouncementsEditor.ps1 = AnnouncementsEditor.ps1
+		MoveNugets.ps1 = MoveNugets.ps1
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

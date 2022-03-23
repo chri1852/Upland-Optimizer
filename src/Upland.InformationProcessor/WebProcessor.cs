@@ -414,6 +414,7 @@ namespace Upland.InformationProcessor
 
             _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(DateTime.UtcNow.AddDays(-1), new Dictionary<long, string>());
             _isBlockchainUpdatesDisabledCache = new Tuple<DateTime, bool>(DateTime.UtcNow.AddDays(-1), false);
+            _latestAnnouncementString = new Tuple<DateTime, string>(DateTime.UtcNow.AddDays(-1), "");
             _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
             _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
             _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
@@ -565,7 +566,7 @@ namespace Upland.InformationProcessor
             {
                 _latestAnnouncementString = new Tuple<DateTime, string>(
                     DateTime.UtcNow.AddMinutes(5),
-                    _localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
+                    _localDataManager.GetConfigurationValue(Consts.CONFIG_LATESTANNOUNCEMENT));
             }
 
             return _latestAnnouncementString.Item2;

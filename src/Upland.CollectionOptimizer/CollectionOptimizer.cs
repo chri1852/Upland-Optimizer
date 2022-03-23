@@ -508,6 +508,13 @@ namespace Upland.CollectionOptimizer
                 copiedCollections = RemoveIdsFromCollections(copiedCollections, collection.SlottedPropertyIds);
                 copiedCollections = RebuildCollections(copiedCollections, copiedIgnorePropertyIds, false);
 
+                // find the total mint 
+                double doneMint = collections
+                    .Where(c => !copiedCollections.ContainsKey(c.Key))
+                    .Sum(c => c.Value.SlottedPropertyIds
+                        .Where(e => !copiedIgnorePropertyIds.Contains(e))
+                        .Sum(p => this.Properties[p].Mint));
+
                 double maxMonthly = 0;
                 int maxId = -1;
                 bool isMaxCityCollection = false;
@@ -523,7 +530,7 @@ namespace Upland.CollectionOptimizer
                     }
                 }
 
-                return collection.TotalMint + maxMonthly;
+                return collection.TotalMint + maxMonthly + doneMint;
             }
         }
 

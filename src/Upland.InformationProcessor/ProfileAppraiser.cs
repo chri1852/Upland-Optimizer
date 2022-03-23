@@ -286,11 +286,18 @@ namespace Upland.InformationProcessor
 
                 if (_propertyStructures.ContainsKey(property.Id))
                 {
-                    propertyAppraisal.UPX_Lower += _buildingData[_propertyStructures[property.Id]];
-                    propertyAppraisal.UPX_Mid += _buildingData[_propertyStructures[property.Id]];
-                    propertyAppraisal.UPX_Upper += _buildingData[_propertyStructures[property.Id]];
-                    propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Building Value Added", (decimal)_buildingData[_propertyStructures[property.Id]]));
-                    propertyAppraisal.Notes.Add(string.Format("{0}", _propertyStructures[property.Id]));
+                    if (_buildingData.ContainsKey(_propertyStructures[property.Id]))
+                    {
+                        propertyAppraisal.UPX_Lower += _buildingData[_propertyStructures[property.Id]];
+                        propertyAppraisal.UPX_Mid += _buildingData[_propertyStructures[property.Id]];
+                        propertyAppraisal.UPX_Upper += _buildingData[_propertyStructures[property.Id]];
+                        propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Building Value Added", (decimal)_buildingData[_propertyStructures[property.Id]]));
+                        propertyAppraisal.Notes.Add(string.Format("{0}", _propertyStructures[property.Id]));
+                    }
+                    else
+                    {
+                        propertyAppraisal.Notes.Add(string.Format("Not Enough Sales Data to Appraise a {0}", _propertyStructures[property.Id]));
+                    }
                 }
 
                 // Now lets sort them
