@@ -5,7 +5,7 @@
         public string DisplayName { get; set; }
         public string Image { get; set; }
         public string TeamName { get; set; }
-        public int FanPoints { get; set; }
+        public double FanPoints { get; set; }
         public int Season { get; set; }
         public string ModelType { get; set; }
         public string PlayerFullName { get; set; }

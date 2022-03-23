@@ -28,7 +28,7 @@ namespace Upland.Interfaces.Managers
         List<long> GetPropertyIdsByCollectionId(int collectionId);
         List<Property> GetPropertiesByUplandUsername(string uplandUsername);
         List<Property> GetPropertiesByCityId(int cityId);
-        Property GetPropertyByCityIdAndAddress(int cityId, string address);
+        List<Property> GetPropertyByCityIdAndAddress(int cityId, string address);
         List<Property> GetPropertiesByCollectionId(int collectionId);
         List<Collection> GetCollections();
         Task<List<Property>> GetPropertysByUsername(string username);

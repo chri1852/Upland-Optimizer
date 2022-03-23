@@ -10,6 +10,7 @@ namespace Upland.Types
         public static readonly string CONFIG_MAXUPLANDACTIONSEQNUM = "MaxUplandActionSeqNum";
         public static readonly string CONFIG_MAXUSPKTOKENACCACTIONSEQNUM = "MaxUSPKTokenAccActionSeqNum";
         public static readonly string CONFIG_MAXUPLANDNFTACTACTIONSEQNUM = "MaxUplandNFTActActionSeqNum";
+        public static readonly string CONFIG_LATESTANNOUNCEMENT = "LatestAnnouncement";
 
         public static readonly List<int> StandardCollectionIds = new List<int>
         {

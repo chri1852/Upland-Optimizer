@@ -274,16 +274,20 @@ namespace Upland.Infrastructure.UplandApi
             {
                 httpResponse = await this.httpClient.GetAsync(requestUri);
             }
-            responseJson = await httpResponse.Content.ReadAsStringAsync();
 
-            try
+            if (httpResponse.IsSuccessStatusCode)
             {
+                responseJson = await httpResponse.Content.ReadAsStringAsync();
                 return JsonConvert.DeserializeObject<T>(responseJson);
             }
-            catch
+            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 return (T)Activator.CreateInstance(typeof(T));
             }
+            else
+            {
+                return (T)Activator.CreateInstance(typeof(T));
+            }    
         }
     }
 }

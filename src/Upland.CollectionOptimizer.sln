@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Infrastructure.Block
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upland.Interfaces", "Upland.Interfaces\Upland.Interfaces.csproj", "{17DCAB4F-294D-49F7-A8C1-CBAC3E1036AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upland.BlockchainSurfer", "BlockchainSurfer\Upland.BlockchainSurfer.csproj", "{CA69AE82-C51D-457C-AD69-ED4F6C07AC3A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upland.BlockchainSurfer", "Upland.BlockchainSurfer\Upland.BlockchainSurfer.csproj", "{CA69AE82-C51D-457C-AD69-ED4F6C07AC3A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

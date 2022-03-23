@@ -77,7 +77,7 @@ namespace Upland.Infrastructure.UplandApi
         public async Task<NFLPALegit> GetNFLPALegitsByDGoodId(int dGoodId)
         {
             // Fucking Upland Rate Limiting
-            Thread.Sleep(3000);
+           // Thread.Sleep(1000);
             return UplandMapper.MapNFLPALegit(await _uplandApiRepository.GetNFLPALegitsByDGoodId(dGoodId));
         }
 

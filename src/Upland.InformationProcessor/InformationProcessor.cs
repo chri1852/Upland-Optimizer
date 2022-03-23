@@ -1407,15 +1407,22 @@ namespace Upland.InformationProcessor
                     return output;
                 }
                 string address = identifier.Substring(identifier.IndexOf(',') + 1).Trim();
-                Property searchProp = _localDataManager.GetPropertyByCityIdAndAddress(intId, address);
 
-                if (searchProp == null || searchProp.Id == 0)
+                List<Property> properties = _localDataManager.GetPropertyByCityIdAndAddress(intId, address);
+
+                if (properties == null || properties.Count == 0)
                 {
                     output.Add(string.Format("I Couldn't find that property in city Id {0} with address {1}", intId, address));
                     return output;
                 }
 
-                propId = searchProp.Id;
+                if (properties.Count > 1)
+                {
+                    output.Add(string.Format("More than one property in city Id {0} with address {1}", intId, address));
+                    return output;
+                }
+
+                propId = properties.First().Id;
             }
 
             switch (type.ToUpper())

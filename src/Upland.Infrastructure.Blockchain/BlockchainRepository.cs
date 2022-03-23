@@ -31,7 +31,10 @@ namespace Upland.Infrastructure.Blockchain
 
             this.eos = new Eos(new EosConfigurator()
             {
-                HttpEndpoint = " https://eos.greymass.com", //Mainnet
+                //HttpEndpoint = " https://eos.greymass.com", //Fast 100 limit
+                //HttpEndpoint = "https://api.eosflare.io", // Fast Good
+                //HttpEndpoint = "https://api.eosdetroit.io", // Slow Holes
+                HttpEndpoint = "https://api.eos.wiki",
                 ExpireSeconds = 60,
             });
         }
@@ -235,6 +238,12 @@ namespace Upland.Infrastructure.Blockchain
             }
 
             return totalResults;
+        }
+
+        public async Task GetCleosActions(long position, string accountName)
+        {
+            GetActionsResponse Result = await this.eos.GetActions(accountName, (int)position, 1000);
+           // Result.actions.
         }
 
         public async Task<T> GetSingleTransactionById<T>(string transactionId)

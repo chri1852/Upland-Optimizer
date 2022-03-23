@@ -1403,9 +1403,9 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public Property GetPropertyByCityIdAndAddress(int cityId, string address)
+        public List<Property> GetPropertyByCityIdAndAddress(int cityId, string address)
         {
-            Property property = new Property();
+            List<Property> properties = new List<Property>();
             SqlConnection sqlConnection = GetSQLConnector();
 
             using (sqlConnection)
@@ -1425,7 +1425,7 @@ namespace Upland.Infrastructure.LocalData
                     {
                         while (reader.Read())
                         {
-                            property = ReadPropertyFromReader(reader);
+                            properties.Add(ReadPropertyFromReader(reader));
                         }
                         reader.Close();
                     }
@@ -1439,7 +1439,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlConnection.Close();
                 }
 
-                return property;
+                return properties;
             }
         }
 

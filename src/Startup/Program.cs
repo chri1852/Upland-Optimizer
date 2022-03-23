@@ -46,6 +46,7 @@ class Program
 
         LocalDataRepository localDataRepository = new LocalDataRepository(configuration);
         UplandApiRepository uplandApiRepository = new UplandApiRepository(configuration);
+        BlockchainRepository blockchainRepository = new BlockchainRepository();
 
         LocalDataManager localDataManager = new LocalDataManager(uplandApiRepository, localDataRepository);
         UplandApiManager uplandApiManager = new UplandApiManager(uplandApiRepository);
@@ -120,10 +121,12 @@ class Program
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
         //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
 
+        //await blockchainRepository.GetCleosActions(0, "playuplandme");
+
         //List<EOSFlareAction> actions = await blockchainManager.GetEOSFlareActions(0);
-        //await playUplandMeSurfer.RunBlockChainUpdate();
+        await playUplandMeSurfer.RunBlockChainUpdate();
         //await uspkTokenAccSurfer.RunBlockChainUpdate();
-        await uplandNFTActSurfer.RunBlockChainUpdate();
+        //await uplandNFTActSurfer.RunBlockChainUpdate();
         //await playUplandMeSurfer.BuildBlockChainFromBegining();
         //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
         //await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");

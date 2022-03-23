@@ -12,7 +12,7 @@ namespace Upland.Types.Types
         public string Year { get; set; }
         public string PlayerName { get; set; }
         public string LegitType { get; set; }
-        public int FanPoints { get; set; }
+        public double FanPoints { get; set; }
         public string Position { get; set; }
     }
 }

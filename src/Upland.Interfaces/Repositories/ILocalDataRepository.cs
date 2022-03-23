@@ -39,7 +39,7 @@ namespace Upland.Interfaces.Repositories
         List<UplandForSaleProp> GetPropertiesForSale_Street(int streetId, bool onlyBuildings);
         List<UplandForSaleProp> GetPropertiesForSale_Collection(int collectionId, bool onlyBuildings);
         List<UplandForSaleProp> GetPropertiesForSale_Seller(string uplandUsername, bool onlyBuildings);
-        Property GetPropertyByCityIdAndAddress(int cityId, string address);
+        List<Property> GetPropertyByCityIdAndAddress(int cityId, string address);
         List<PropertySearchEntry> SearchProperties(int cityId, string address);
         void CreateOptimizationRun(OptimizationRun optimizationRun);
         void CreateAppraisalRun(AppraisalRun appraisalRun);

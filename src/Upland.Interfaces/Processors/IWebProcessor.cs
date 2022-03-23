@@ -7,6 +7,8 @@ namespace Upland.Interfaces.Processors
 {
     public interface IWebProcessor
     {
+        string GetLatestAnnouncement();
+
         bool GetIsBlockchainUpdatesDisabled();
 
         Task<UserProfile> GetWebUIProfile(string uplandUsername);

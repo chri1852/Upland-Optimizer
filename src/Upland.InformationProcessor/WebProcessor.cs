@@ -22,6 +22,7 @@ namespace Upland.InformationProcessor
         private Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>> _cityUnmintedCache;
         private Tuple<DateTime, Dictionary<long, string>> _propertyStructureCache;
         private Tuple<DateTime, bool> _isBlockchainUpdatesDisabledCache;
+        private Tuple<DateTime, string> _latestAnnouncementString;
         private Tuple<DateTime, List<CollatedStatsObject>> _cityInfoCache;
         private Tuple<DateTime, List<CollatedStatsObject>> _neighborhoodInfoCache;
         private Tuple<DateTime, List<CollatedStatsObject>> _streetInfoCache;
@@ -58,6 +59,11 @@ namespace Upland.InformationProcessor
         public bool GetIsBlockchainUpdatesDisabled()
         {
             return GetIsBlockchainUpdatesDisabledFromCache();
+        }
+
+        public string GetLatestAnnouncement()
+        {
+            return GetLatestAnnouncemenFromCache();
         }
 
         public async Task<UserProfile> GetWebUIProfile(string uplandUsername)
@@ -551,6 +557,18 @@ namespace Upland.InformationProcessor
             }
 
             return _isBlockchainUpdatesDisabledCache.Item2;
+        }
+
+        private string GetLatestAnnouncemenFromCache()
+        {
+            if (_latestAnnouncementString.Item1 < DateTime.UtcNow)
+            {
+                _latestAnnouncementString = new Tuple<DateTime, string>(
+                    DateTime.UtcNow.AddMinutes(5),
+                    _localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES));
+            }
+
+            return _latestAnnouncementString.Item2;
         }
 
         private void RemoveExpiredSalesEntries()

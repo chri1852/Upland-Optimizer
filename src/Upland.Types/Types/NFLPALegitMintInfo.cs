@@ -13,7 +13,7 @@ namespace Upland.Types.Types
         public NFLPALegitMintInfoStats Stats { get; set; }
         public NFLPALegitMintInfoScene Scene { get; set; }
 
-        public int FanPoints { get; set; }
+        public double FanPoints { get; set; }
     }
 
     public class NFLPALegitMintInfoStats

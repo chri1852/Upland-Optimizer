@@ -470,7 +470,7 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetPropertiesByCityId(cityId);
         }
 
-        public Property GetPropertyByCityIdAndAddress(int cityId, string address)
+        public List<Property> GetPropertyByCityIdAndAddress(int cityId, string address)
         {
             return _localDataRepository.GetPropertyByCityIdAndAddress(cityId, address);
         }

@@ -2,17 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Authors>Alex Christensen</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>1.0.0.36</Version>
+    <Authors>Alex Christensen</Authors>
+    <Product />
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Upland.Types\Upland.Types.csproj" />
+    <ProjectReference Include="..\Upland.Infrastructure.UplandApi\Upland.Infrastructure.UplandApi.csproj" />
+    <ProjectReference Include="..\Upland.Interfaces\Upland.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>
