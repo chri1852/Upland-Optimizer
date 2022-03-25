@@ -579,6 +579,11 @@ namespace Upland.InformationProcessor
                 });
             }
 
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
+
             if (filters.SortDescending)
             {
                 if (filters.SortBy == "Mint")
@@ -639,6 +644,11 @@ namespace Upland.InformationProcessor
                 });
             }
 
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
+
             if (filters.SortDescending)
             {
                 if (filters.SortBy == "Mint")
@@ -697,6 +707,11 @@ namespace Upland.InformationProcessor
                     Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel
                 });
             }
+
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
 
             if (filters.SortDescending)
             {
@@ -761,6 +776,11 @@ namespace Upland.InformationProcessor
                     ModelType = metadataDictionary[nft.NFTMetadataId].ModelType
                 });
             }
+
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
 
             if (filters.SortDescending)
             {
@@ -839,7 +859,8 @@ namespace Upland.InformationProcessor
             webNfts = webNfts
                 .Where(n =>
                     (string.IsNullOrWhiteSpace(filters.Filters.Opponent) || n.Opponent.IndexOf(filters.Filters.Opponent, StringComparison.OrdinalIgnoreCase) >= 0)
-                    && (string.IsNullOrWhiteSpace(filters.Filters.HomeTeam) || n.HomeTeam.IndexOf(filters.Filters.HomeTeam, StringComparison.OrdinalIgnoreCase) >= 0))
+                    && (string.IsNullOrWhiteSpace(filters.Filters.HomeTeam) || n.HomeTeam.IndexOf(filters.Filters.HomeTeam, StringComparison.OrdinalIgnoreCase) >= 0)
+                    && (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
                 .ToList();
 
             if (filters.SortDescending)

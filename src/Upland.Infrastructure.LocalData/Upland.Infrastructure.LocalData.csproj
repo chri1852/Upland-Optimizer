@@ -5,7 +5,7 @@
     <Authors>Alex Christensen</Authors>
     <Product />
     <Description />
-    <Version>1.0.0.37</Version>
+    <Version>1.0.0.38</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
