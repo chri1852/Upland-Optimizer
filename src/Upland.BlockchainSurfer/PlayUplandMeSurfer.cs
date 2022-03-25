@@ -669,52 +669,56 @@ namespace Upland.BlockchainSurfer
                 List<Property> propsOne = _localDataManager.GetPropertyByCityIdAndAddress(propOneCityId, propOneAddress);
                 List<Property> propsTwo = _localDataManager.GetPropertyByCityIdAndAddress(propTwoCityId, propTwoAddress);
 
+                Property propOne;
                 if (propsOne == null || propsOne.Count == 0)
                 {
-                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
-                    return;
+                    propOne = await GetPropertyFromTransactionId(action.action_trace.act.data.memo.Split("initial transaction: ")[1].Split(")")[0]);
+
+                    if (propOne == null)
+                    {
+                        _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        return;
+                    }
                 }
-
-                Property propOne = propsOne.First();
-
-                if (propsTwo == null || propsTwo.Count == 0)
-                {
-                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
-                    return;
-                }
-
-                Property propTwo = propsTwo.First();
-
-                // Multiple Props match, lets find the real one
                 if (propsOne.Count > 1)
                 {
-                    try
-                    {
-                        string mintTrx = action.action_trace.act.data.memo.Split("initial transaction: ")[1].Split(")")[0];
-                        PlayUplandMeTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(mintTrx);
-                        long propId = long.Parse(mintTransaction.traces.Where(t => t.act.name == "a4").First().act.data.a45);
-                        propOne = _localDataManager.GetProperty(propId);
-                    }
-                    catch (Exception ex)
+                    propOne = await GetPropertyFromTransactionId(action.action_trace.act.data.memo.Split("initial transaction: ")[1].Split(")")[0]);
+
+                    if (propOne == null)
                     {
                         _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Dupe Prop Find Real PropId Failed (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        return;
                     }
                 }
+                else
+                {
+                    propOne = propsOne.First();
+                }
 
-                // Multiple Props match, lets find the real one
+                Property propTwo;
+                if (propsTwo == null || propsTwo.Count == 0)
+                {
+                    propTwo = await GetPropertyFromTransactionId(action.action_trace.act.data.memo.Split("initial transaction: ")[2].Split(")")[0]);
+
+                    if (propTwo == null)
+                    {
+                        _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        return;
+                    }
+                }
                 if (propsTwo.Count > 1)
                 {
-                    try
-                    {
-                        string mintTrx = action.action_trace.act.data.memo.Split("initial transaction: ")[2].Split(")")[0];
-                        PlayUplandMeTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(mintTrx);
-                        long propId = long.Parse(mintTransaction.traces.Where(t => t.act.name == "a4").First().act.data.a45);
-                        propTwo = _localDataManager.GetProperty(propId);
-                    }
-                    catch (Exception ex)
+                    propTwo = await GetPropertyFromTransactionId(action.action_trace.act.data.memo.Split("initial transaction: ")[2].Split(")")[0]);
+
+                    if (propTwo == null)
                     {
                         _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Dupe Prop Find Real PropId Failed (SWAP)", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        return;
                     }
+                }
+                else
+                {
+                    propTwo = propsTwo.First();
                 }
 
                 propOne.Owner = action.action_trace.act.data.memo.Split("(EOS account ")[1].Split(") owns")[0];
@@ -823,6 +827,7 @@ namespace Upland.BlockchainSurfer
             }
             else
             {
+                Property prop;
                 string cityName = HelperFunctions.HelperFunctions.SusOutCityNameByMemoString(action.action_trace.act.data.memo);
                 List<Property> properties = _localDataManager.GetPropertyByCityIdAndAddress(
                     HelperFunctions.HelperFunctions.GetCityIdByName(cityName),
@@ -830,26 +835,27 @@ namespace Upland.BlockchainSurfer
 
                 if (properties == null || properties.Count == 0)
                 {
-                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
-                    return;
+                    prop = await GetPropertyFromTransactionId(action.action_trace.act.data.memo.Split("Initial minting transaction: ")[1]);
+
+                    if (prop == null)
+                    {
+                        _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Could Not Find Prop", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        return;
+                    }
                 }
-
-                Property prop = properties.First();
-
-                // Multiple Props match, lets find the real one
                 if (properties.Count > 1)
                 {
-                    try
-                    {
-                        string mintTrx = action.action_trace.act.data.memo.Split("Initial minting transaction: ")[1];
-                        PlayUplandMeTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(mintTrx);
-                        long propId = long.Parse(mintTransaction.traces.Where(t => t.act.name == "a4").First().act.data.a45);
-                        prop = _localDataManager.GetProperty(propId);
-                    }
-                    catch (Exception ex)
+                    prop = await GetPropertyFromTransactionId(action.action_trace.act.data.memo.Split("Initial minting transaction: ")[1]);
+                    
+                    if (prop == null)
                     {
                         _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessOfferResolutionAction - Dupe Prop Find Real PropId Failed", string.Format("p25 (Seller EOS): {0}, memo: {1}, Trx_id: {2}", action.action_trace.act.data.p25, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                        return;
                     }
+                }
+                else
+                {
+                    prop = properties.First();
                 }
 
                 string newOwner = action.action_trace.act.data.memo.Split("EOS account ")[1].Split(" owns ")[0];
@@ -1167,6 +1173,21 @@ namespace Upland.BlockchainSurfer
             property.NeighborhoodId = _localDataManager.GetNeighborhoodIdForProp(_neighborhoods, property);
 
             return property;
+        }
+
+        private async Task<Property> GetPropertyFromTransactionId(string mintTrx)
+        {
+            try
+            {
+                PlayUplandMeTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(mintTrx);
+                long propId = long.Parse(mintTransaction.traces.Where(t => t.act.name == "a4").First().act.data.a45);
+                return _localDataManager.GetProperty(propId);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer - GetPropertyFromTransactionId", string.Format("Failed Finding Property trxId: {0}", mintTrx));
+                return null;
+            }
         }
 
         private void SetMintsOnRestOfNeighborhood(Property property)

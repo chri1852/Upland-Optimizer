@@ -166,5 +166,8 @@
     <Build Include="StoredProcedures\UPL.UpsertNFTHistory.sql" />
     <Build Include="StoredProcedures\UPL.GetNFTMetadataByNameAndCategory.sql" />
     <Build Include="StoredProcedures\UPL.GetAllNFTMetadata.sql" />
+    <Build Include="Types\UPL.NFTIdTable.sql" />
+    <Build Include="StoredProcedures\UPL.GetNFTsByNFTMetadataIds.sql" />
+    <Build Include="StoredProcedures\UPL.GetCurrentNFTCounts.sql" />
   </ItemGroup>
 </Project>

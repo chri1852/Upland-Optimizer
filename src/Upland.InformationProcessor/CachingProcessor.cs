@@ -29,6 +29,7 @@ namespace Upland.InformationProcessor
         private Tuple<DateTime, Dictionary<int, BlockExplorerMetadata>> _blockExplorerMetadataCache;
         private Tuple<DateTime, Dictionary<int, EssentialMetadata>> _essentialMetadataCache;
         private Tuple<DateTime, Dictionary<int, MementoMetadata>> _mementoMetadataCache;
+        private Tuple<DateTime, Dictionary<int, int>> _nftCountsCache;
 
         private Dictionary<int, bool> _isLoadingCityForSaleListCache;
         private Dictionary<int, bool> _isLoadingCityUnmintedCache;
@@ -94,6 +95,7 @@ namespace Upland.InformationProcessor
             _blockExplorerMetadataCache = new Tuple<DateTime, Dictionary<int, BlockExplorerMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, BlockExplorerMetadata>());
             _essentialMetadataCache = new Tuple<DateTime, Dictionary<int, EssentialMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, EssentialMetadata>());
             _mementoMetadataCache = new Tuple<DateTime, Dictionary<int, MementoMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, MementoMetadata>());
+            _nftCountsCache = new Tuple<DateTime, Dictionary<int, int>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, int>());
         }
 
         public Dictionary<long, string> GetPropertyStructuresFromCache()
@@ -260,6 +262,16 @@ namespace Upland.InformationProcessor
             return _mementoMetadataCache.Item2;
         }
 
+        public Dictionary<int, int> GetCurrentNFTCountsFromCache()
+        {
+            if (!_isLoadingNFTMetadataCache && _nftCountsCache.Item1 < DateTime.UtcNow)
+            {
+                ReloadNFTMetaDataCache();
+            }
+
+            return _nftCountsCache.Item2;
+        }
+
         private void ReloadNFTMetaDataCache()
         {
             if (_isLoadingNFTMetadataCache)
@@ -295,6 +307,10 @@ namespace Upland.InformationProcessor
                 DateTime.UtcNow.AddHours(1),
                 newMetada.Where(m => m.Category == Consts.METADATA_TYPE_MEMENTO)
                     .ToDictionary(m => m.Id, m => HelperFunctions.DecodeMetadata<MementoMetadata>(m.Metadata)));
+
+            _nftCountsCache = new Tuple<DateTime, Dictionary<int, int>>(
+                DateTime.UtcNow.AddHours(1),
+                _localDataManager.GetCurrentNFTCounts());
 
             _isLoadingNFTMetadataCache = false;
         }
@@ -336,6 +352,11 @@ namespace Upland.InformationProcessor
             }
 
             return collectionIds;
+        }
+
+        public Dictionary<int, string> GetNeighborhoodsFromCache()
+        {
+            return _neighborhoods;
         }
 
         private void RemoveExpiredSalesEntries()

@@ -133,6 +133,29 @@ class Program
         //await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
+        /*
+        WebNFTFilters filters = new WebNFTFilters
+        {
+            IncludeBurned = false,
+            SortBy = "Mint",
+            SortDescending = false,
+            Category = Consts.METADATA_TYPE_MEMENTO,
+            PageSize = 100,
+            Page = 1,
+            NoPaging = false,
+            Filters = new WebNFT
+            {
+                Name = "Aaron",
+                Owner = null,
+                Team = "Green Bay",
+                Year = "2020",
+                Position = null,
+                ModelType = null
+            }
+        };
+
+        List<WebNFT> nfts = webProcessor.SearchNFTs(filters);
+        */
         //AppraisalResults results = await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" });
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\hornbrod.csv", string.Join(Environment.NewLine, profileAppraiser.BuildAppraisalCsvStrings(results)));
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");

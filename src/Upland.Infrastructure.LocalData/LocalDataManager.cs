@@ -445,6 +445,11 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetCollectionPropertyTable();
         }
 
+        public List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds)
+        {
+            return _localDataRepository.GetNFTsByNFTMetadataId(metadataIds);
+        }
+
         public Property GetProperty(long id)
         {
             return _localDataRepository.GetProperty(id);
@@ -1015,6 +1020,11 @@ namespace Upland.Infrastructure.LocalData
         public List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId)
         {
             return _localDataRepository.GetNftHistoryByDGoodId(dGoodId);
+        }
+
+        public Dictionary<int, int> GetCurrentNFTCounts()
+        {
+            return _localDataRepository.GetCurrentNFTCounts();
         }
     }
 }

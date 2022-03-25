@@ -21,10 +21,16 @@ namespace Upland.Interfaces.Processors
 
         List<CollatedStatsObject> GetInfoByType(StatsTypes statsType);
 
+        List<WebNFT> SearchNFTs(WebNFTFilters filters);
+
+        List<WebNFTHistory> GetNFTHistory(int dGoodId);
+
         List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties);
 
         List<string> ConvertListCachedUnmintedPropertyToCSV(List<CachedUnmintedProperty> cachedUnmintedProperties);
 
         List<string> ConvertListCachedSaleHistoryEntriesToCSV(List<CachedSaleHistoryEntry> cachedSaleHistoryEntries);
+
+        List<string> ConvertListWebNFTSToCSV(List<WebNFT> nfts, string category);
     }
 }

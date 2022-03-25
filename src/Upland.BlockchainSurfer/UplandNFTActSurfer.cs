@@ -113,7 +113,7 @@ namespace Upland.BlockchainSurfer
                     try
                     {
                         // DEBUG
-                        if (actions.Last().block_time > new DateTime(2022, 2, 17))
+                        if (actions.Last().block_time > new DateTime(2022, 3, 10))
                         {
                             continueLoad = false;
                             break;
@@ -146,7 +146,7 @@ namespace Upland.BlockchainSurfer
                 }
 
                 // DEBUG
-                if (action.block_time > new DateTime(2022, 2, 17))
+                if (action.block_time > new DateTime(2022, 3, 10))
                 {
                     continue;
                 }

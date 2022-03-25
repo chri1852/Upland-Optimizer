@@ -25,6 +25,7 @@ namespace Upland.Interfaces.Managers
         List<Tuple<int, long>> GetCollectionPropertyTable();
         Property GetProperty(long id);
         List<Property> GetProperties(List<long> ids);
+        List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds);
         List<long> GetPropertyIdsByCollectionId(int collectionId);
         List<Property> GetPropertiesByUplandUsername(string uplandUsername);
         List<Property> GetPropertiesByCityId(int cityId);
@@ -105,5 +106,6 @@ namespace Upland.Interfaces.Managers
         NFTMetadata GetNftMetadataByNameAndCategory(string name, string category);
         List<NFTMetadata> GetAllNFTMetadata();
         List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId);
+        Dictionary<int, int> GetCurrentNFTCounts();
     }
 }

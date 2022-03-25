@@ -20,5 +20,7 @@ namespace Upland.InformationProcessor
         bool GetIsBlockchainUpdatesDisabledFromCache();
         string GetLatestAnnouncemenFromCache();
         List<int> GetCollectionIdListForPropertyId(long propertyId);
+        Dictionary<int, string> GetNeighborhoodsFromCache();
+        Dictionary<int, int> GetCurrentNFTCountsFromCache();
     }
 }

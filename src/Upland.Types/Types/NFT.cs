@@ -12,5 +12,6 @@ namespace Upland.Types.Types
         public DateTime? BurnedOn { get; set; }
         public bool FullyLoaded { get; set; }
         public byte[] Metadata { get; set; }
+        public string Owner { get; set; }
     }
 }

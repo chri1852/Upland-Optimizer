@@ -1053,6 +1053,57 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds)
+        {
+            List<NFT> nfts = new List<NFT>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTsByNFTMetadataIds]";
+                    sqlCmd.Parameters.Add(new SqlParameter("NFTMetadataIds", CreateNFTIdTable(metadataIds)));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nfts.Add(
+                                new NFT
+                                {
+                                    DGoodId = (int)reader["DGoodId"],
+                                    NFTMetadataId = (int)reader["NFTMetadataId"],
+                                    SerialNumber = (int)reader["SerialNumber"],
+                                    Burned = (bool)reader["Burned"],
+                                    CreatedOn = ReadNullParameterSafe<DateTime>(reader, "CreatedDateTime"),
+                                    BurnedOn = ReadNullParameterSafe<DateTime>(reader, "BurnedDateTime"),
+                                    FullyLoaded = (bool)reader["FullyLoaded"],
+                                    Metadata = (byte[])reader["Metadata"],
+                                    Owner = reader["UplandUsername"] == DBNull.Value ? "" : (string)reader["UplandUsername"]
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nfts;
+            }
+        }
+
         public List<Property> GetPropertiesByUplandUsername(string uplandUsername)
         {
             List<Property> properties = new List<Property>();
@@ -3518,6 +3569,48 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public Dictionary<int, int> GetCurrentNFTCounts()
+        {
+            Dictionary<int, int> nftCounts = new Dictionary<int, int>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCurrentNFTCounts]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftCounts.Add(
+                            
+                                (int)reader["Id"],
+                                (int)reader["Count"]
+                            );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftCounts;
+            }
+        }
+
         private SqlParameter AddNullParmaterSafe<T>(string parameterName, T value)
         {
             if (value == null)
@@ -3547,6 +3640,18 @@ namespace Upland.Infrastructure.LocalData
             DataTable table = new DataTable();
             table.Columns.Add("PropertyId", typeof(long));
             foreach (long id in propertyIds)
+            {
+                table.Rows.Add(id);
+            }
+
+            return table;
+        }
+
+        private DataTable CreateNFTIdTable (List<int> nftIds)
+        {
+            DataTable table = new DataTable();
+            table.Columns.Add("NFTMetadataId", typeof(int));
+            foreach (int id in nftIds)
             {
                 table.Rows.Add(id);
             }
