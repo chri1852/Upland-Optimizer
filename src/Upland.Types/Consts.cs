@@ -12,6 +12,14 @@ namespace Upland.Types
         public static readonly string CONFIG_MAXUPLANDNFTACTACTIONSEQNUM = "MaxUplandNFTActActionSeqNum";
         public static readonly string CONFIG_LATESTANNOUNCEMENT = "LatestAnnouncement";
 
+        // NFT Metadata Types
+        public static readonly string METADATA_TYPE_STRUCTURE = "structure";
+        public static readonly string METADATA_TYPE_STRUCTORNMT = "structornmt";
+        public static readonly string METADATA_TYPE_SPIRITHLWN = "spirithlwn";
+        public static readonly string METADATA_TYPE_MEMENTO = "memento";
+        public static readonly string METADATA_TYPE_ESSENTIAL = "essential";
+        public static readonly string METADATA_TYPE_BLKEXPLORER = "blkexplorer";
+
         public static readonly List<int> StandardCollectionIds = new List<int>
         {
             1,   // King of the Street

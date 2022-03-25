@@ -52,6 +52,7 @@ class Program
         UplandApiManager uplandApiManager = new UplandApiManager(uplandApiRepository);
         BlockchainManager blockchainManager = new BlockchainManager();
 
+        CachingProcessor cachingProcessor = new CachingProcessor(localDataManager);
         PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
         USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager);
         UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager);
@@ -60,7 +61,7 @@ class Program
         //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
         //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
-        WebProcessor webProcessor = new WebProcessor(localDataManager, uplandApiManager);
+        WebProcessor webProcessor = new WebProcessor(localDataManager, uplandApiManager, cachingProcessor);
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager, uplandApiRepository);
 
         // Populate City
@@ -157,6 +158,7 @@ class Program
             .AddSingleton<IUplandApiRepository, UplandApiRepository>()
             .AddSingleton<IUplandApiManager, UplandApiManager>()
             .AddSingleton<ILocalDataRepository, LocalDataRepository>()
+            .AddSingleton<ICachingProcessor, CachingProcessor>()
             .AddSingleton<ILocalDataManager, LocalDataManager>()
             .AddSingleton<IBlockChainRepository, BlockchainRepository>()
             .AddSingleton<IBlockchainManager, BlockchainManager>()

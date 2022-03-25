@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Upland.Types;
 using Upland.Types.Types;
@@ -234,6 +236,16 @@ namespace Upland.InformationProcessor
         public static string CreateCollatedStatCSVString(CollatedStatsObject statObject)
         {
             return string.Format("{0},{1},{2},{3},{4},{5},{6},{7:F2},{8:F2},{9:F2}", statObject.TotalProps, statObject.LockedProps, statObject.UnlockedNonFSAProps, statObject.UnlockedFSAProps, statObject.ForSaleProps, statObject.OwnedProps, statObject.BuildingCount, statObject.PercentMinted, statObject.PercentNonFSAMinted, statObject.PercentBuilt);
+        }
+
+        public static byte[] EncodeMetadata<T>(T metadata)
+        {
+            return Encoding.UTF8.GetBytes(JsonSerializer.Serialize<T>(metadata));
+        }
+
+        public static T DecodeMetadata<T>(byte[] metadata)
+        {
+            return JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(metadata));
         }
     }
 }
