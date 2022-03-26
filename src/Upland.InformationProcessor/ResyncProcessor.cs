@@ -83,6 +83,10 @@ namespace Upland.InformationProcessor
             {
                 await Process_ClearDupeForSale();
             }
+            else if (action == "CheckLocked")
+            {
+                await Process_CheckLocked();
+            }
         }
 
         private async Task Process_SetOwner(List<Property> localProperties)
@@ -554,6 +558,10 @@ namespace Upland.InformationProcessor
 
             foreach (int cityId in ids)
             {
+                if (cityId == 33 || cityId == 32 || cityId == 16 || cityId == 14)
+                {
+                    continue;
+                }
                 int okayProps = 0;
 
                 List<Property> properties = _localDataManager
@@ -564,14 +572,14 @@ namespace Upland.InformationProcessor
 
                 if (cityIds == "-1")
                 {
-                    properties = properties.Where(p => !p.FSA).ToList();
+                   // properties = properties.Where(p => !p.FSA).ToList();
                 }
 
                 foreach (Property localProperty in properties)
                 {
                     UplandProperty uplandProperty = await _uplandApiManager.GetUplandPropertyById(localProperty.Id);
 
-                    if (uplandProperty.status == localProperty.Status)
+                    if (uplandProperty.status == localProperty.Status && localProperty.Mint > 0)
                     {
                         okayProps++;
                     }
@@ -677,6 +685,41 @@ namespace Upland.InformationProcessor
                     UplandProperty uplandProperty = await _uplandApiManager.GetUplandPropertyById(propId);
 
                     Process_Single_SetForSale(properties[propId], uplandProperty);
+                }
+            }
+        }
+
+        private async Task Process_CheckLocked()
+        {
+            List<int> ids = Consts.NON_BULLSHIT_CITY_IDS;
+
+            foreach (int cityId in ids)
+            {
+                int okayProps = 0;
+
+                List<Property> properties = _localDataManager
+                    .GetPropertiesByCityId(cityId)
+                    .Where(p => p.Status == Consts.PROP_STATUS_LOCKED)
+                    .OrderBy(p => p.Mint)
+                    .ToList();
+
+                foreach (Property localProperty in properties)
+                {
+                    UplandProperty uplandProperty = await _uplandApiManager.GetUplandPropertyById(localProperty.Id);
+
+                    if (uplandProperty.status == Consts.PROP_STATUS_LOCKED)
+                    {
+                        okayProps++;
+                    }
+                    else
+                    {
+                        Process_Single_FullResync(localProperty, uplandProperty);
+                    }
+
+                    if (okayProps == 100)
+                    {
+                        break;
+                    }
                 }
             }
         }
