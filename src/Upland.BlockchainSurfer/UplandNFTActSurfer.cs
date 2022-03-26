@@ -24,6 +24,7 @@ namespace Upland.BlockchainSurfer
         private List<SeriesTableEntry> _loadedSeries;
         private bool _isProcessing;
         private List<dGood> _currentdGoodTable;
+        private DateTime _dGoodTableExpirationDate;
 
         public UplandNFTActSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
         {
@@ -36,6 +37,7 @@ namespace Upland.BlockchainSurfer
             _isProcessing = false;
             _loadedSeries = new List<SeriesTableEntry>();
             _currentdGoodTable = null;
+            _dGoodTableExpirationDate = DateTime.UtcNow.AddDays(-1);
         }
 
         public async Task RunBlockChainUpdate()
@@ -99,29 +101,28 @@ namespace Upland.BlockchainSurfer
                     }
                 }
 
+                /*
                 if (actions.Any(a => !a.irreversible))
                 {
                     continueLoad = false;
                 }
-                else if (actions.Count == 0)
+                */
+                if (actions.Count < 10)
                 {
-                    // DEBUG
-                    //continueLoad = false;
+                    continueLoad = false;
                 }
-                else
-                {
-                    try
-                    {
-                        await ProcessActions(actions);
-                    }
-                    catch (Exception ex)
-                    {
-                        _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
-                        _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
-                    }
 
-                    lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDNFTACTACTIONSEQNUM));
+                try
+                {
+                    await ProcessActions(actions);
                 }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
+                    _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
+                }
+
+                lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDNFTACTACTIONSEQNUM));    
             }
 
             _isProcessing = false;
@@ -868,12 +869,18 @@ namespace Upland.BlockchainSurfer
 
         private async Task<dGood> GetDGoodFromTable(int dGoodId)
         {
-            if (_currentdGoodTable == null || _currentdGoodTable.Count == 0)
+            // IN Prod Get the DGoods Individually
+            return await _blockchainManager.GetDGoodFromTable(dGoodId);
+            /*
+            // FOR DEV LOADING ONLY
+            if (_currentdGoodTable == null || _currentdGoodTable.Count == 0 || _dGoodTableExpirationDate < DateTime.UtcNow)
             {
                 _currentdGoodTable = await _blockchainManager.GetAllDGoodsFromTable();
+                _dGoodTableExpirationDate.AddDays(1);
             }
 
             return _currentdGoodTable.FirstOrDefault(d => d.id == dGoodId);
+            */
         }
     }
 }

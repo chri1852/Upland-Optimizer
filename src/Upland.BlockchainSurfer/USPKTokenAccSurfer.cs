@@ -93,35 +93,34 @@ namespace Upland.BlockchainSurfer
                     }
                 }
 
+                /*
                 if (actions.Any(a => !a.irreversible))
                 {
                     continueLoad = false;
                 }
-                else if (actions.Count == 0)
+                */
+                if (actions.Count < 10)
+                {
+                    continueLoad = false;
+                }
+
+                try
                 {
                     // DEBUG
-                    //continueLoad = false;
+                    if (actions.Last().block_time > new DateTime(2022, 3, 10))
+                    {
+                        continueLoad = false;
+                        break;
+                    }
+                    await ProcessActions(actions);
                 }
-                else
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        // DEBUG
-                        if (actions.Last().block_time > new DateTime(2022, 3, 10))
-                        {
-                            continueLoad = false;
-                            break;
-                        }
-                        await ProcessActions(actions);
-                    }
-                    catch (Exception ex)
-                    {
-                        _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
-                        _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
-                    }
-
-                    lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUSPKTOKENACCACTIONSEQNUM));
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
+                    _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
                 }
+
+                lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUSPKTOKENACCACTIONSEQNUM));   
             }
 
             _isProcessing = false;

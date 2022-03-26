@@ -118,34 +118,34 @@ namespace Upland.BlockchainSurfer
                     }
                 }
 
+                /*
                 if (actions.Any(a => !a.irreversible))
                 {
                     continueLoad = false;
                 }
-                else if (actions.Count == 0)
+                */
+                if (actions.Count < 100)
                 {
-                    //continueLoad = false;
+                    continueLoad = false;
                 }
-                else
+
+                try
                 {
-                    try
-                    {
-                        await ProcessActions(actions);
-                    }
-                    catch (Exception ex)
-                    {
-                        _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
-                        _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
-                        continueLoad = false;
-                    }
+                    await ProcessActions(actions);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
+                    _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
+                    continueLoad = false;
+                }
 
-                    lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM));
+                lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM));
 
-                    if (historyTimeStamp.AddDays(1).Ticks < actions.Last().block_time.Ticks)
-                    {
-                        historyTimeStamp = new DateTime(actions.Last().block_time.Year, actions.Last().block_time.Month, actions.Last().block_time.Day);
-                        _localDataManager.SetHistoricalCityStats(historyTimeStamp);
-                    }
+                if (historyTimeStamp.AddDays(1).Ticks < actions.Last().block_time.Ticks)
+                {
+                    historyTimeStamp = new DateTime(actions.Last().block_time.Year, actions.Last().block_time.Month, actions.Last().block_time.Day);
+                    _localDataManager.SetHistoricalCityStats(historyTimeStamp);
                 }
             }
 

@@ -75,6 +75,11 @@ namespace Upland.Infrastructure.Blockchain
             return await _blockchainRepository.GetAllNFTs();
         }
 
+        public async Task<dGood> GetDGoodFromTable(int dGoodId)
+        {
+            return await _blockchainRepository.GetDGoodFromTable(dGoodId);
+        }
+
         public async Task<List<SeriesTableEntry>> GetSeriesTable()
         {
             return await _blockchainRepository.GetSeriesTable();

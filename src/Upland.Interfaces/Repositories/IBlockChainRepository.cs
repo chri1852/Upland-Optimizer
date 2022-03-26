@@ -9,6 +9,7 @@ namespace Upland.Interfaces.Repositories
     public interface IBlockChainRepository
     {
         Task<List<dGood>> GetAllNFTs();
+        Task<dGood> GetDGoodFromTable(int dGoodId);
         Task<List<a24Entry>> GetSparkStakingTable();
         Task<List<a21Entry>> GetNftsRelatedToPropertys();
         Task<List<t2Entry>> GetForSaleProps();

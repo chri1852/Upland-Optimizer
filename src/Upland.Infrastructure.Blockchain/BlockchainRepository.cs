@@ -39,6 +39,34 @@ namespace Upland.Infrastructure.Blockchain
             });
         }
 
+        public async Task<dGood> GetDGoodFromTable(int dGoodId)
+        {
+            List<dGood> totalResults = new List<dGood>();
+            GetTableRowsResponse result = new GetTableRowsResponse { more = true };
+
+            result = await this.eos.GetTableRows(new GetTableRowsRequest()
+            {
+                json = true,
+                code = "uplandnftact",
+                scope = "uplandnftact",
+                table = "dgood",
+                lower_bound = dGoodId.ToString(),
+                upper_bound = null,
+                index_position = "0",
+                key_type = "",
+                limit = 1,
+                reverse = false,
+                show_payer = false,
+            });
+
+            foreach (Newtonsoft.Json.Linq.JObject item in result.rows)
+            {
+                totalResults.Add(item.ToObject<dGood>());
+            }
+            
+            return totalResults.Count == 0 ? null : totalResults.First();
+        }
+
         public async Task<List<dGood>> GetAllNFTs()
         {
             List<dGood> totalResults = new List<dGood>();
