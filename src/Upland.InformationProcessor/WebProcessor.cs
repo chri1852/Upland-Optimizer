@@ -389,7 +389,7 @@ namespace Upland.InformationProcessor
                 }
             }
 
-            return webHistory;
+            return webHistory.OrderByDescending(h => h.DateTime).ToList();
         }
 
         public List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties)
@@ -494,7 +494,7 @@ namespace Upland.InformationProcessor
         {
             List<string> csvString = new List<string>();
 
-            string headerString = "DGoodId,SerialNumber,MaxSupply,Name,Owner";
+            string headerString = "DGoodId,SerialNumber,CurrentSupply,MaxSupply,Name,Owner";
             switch (category)
             {
                 case Consts.METADATA_TYPE_BLKEXPLORER:
@@ -520,7 +520,7 @@ namespace Upland.InformationProcessor
 
             foreach (WebNFT nft in nfts)
             {
-                string entryString = string.Format("{0},{1},{2},{3},{4}", nft.DGoodId, nft.SerialNumber, nft.MaxSupply, nft.Name, nft.Owner);
+                string entryString = string.Format("{0},{1},{2},{3},{4},{5}", nft.DGoodId, nft.SerialNumber, nft.CurrentSupply, nft.MaxSupply, nft.Name, nft.Owner);
                 switch (category)
                 {
                     case Consts.METADATA_TYPE_BLKEXPLORER:
