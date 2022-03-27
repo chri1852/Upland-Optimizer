@@ -154,7 +154,7 @@
     <Build Include="StoredProcedures\UPL.GetCurrentMarkupFloorAppraisalData.sql" />
     <Build Include="Tables\UPL.SparkStaking.sql" />
     <Build Include="StoredProcedures\UPL.UpsertSparkStaking.sql" />
-    <Build Include="StoredProcedures\UPL.GetSparkStakingByEOSUserId.sql" />
+    <Build Include="StoredProcedures\UPL.GetSparkStakingByEOSAccount.sql" />
     <Build Include="Tables\UPL.NFT.sql" />
     <Build Include="Tables\UPL.NFTMetadata.sql" />
     <Build Include="Tables\UPL.NFTHistory.sql" />
@@ -169,5 +169,8 @@
     <Build Include="Types\UPL.NFTIdTable.sql" />
     <Build Include="StoredProcedures\UPL.GetNFTsByNFTMetadataIds.sql" />
     <Build Include="StoredProcedures\UPL.GetCurrentNFTCounts.sql" />
+    <Build Include="Tables\UPL.NFTSaleData.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertNFTSaleData.sql" />
+    <Build Include="StoredProcedures\UPL.GetNFTSaleDataByDGoodId.sql" />
   </ItemGroup>
 </Project>

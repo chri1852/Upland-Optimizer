@@ -191,7 +191,7 @@ namespace Upland.BlockchainSurfer
 
                 if (Regex.Match(action.action_trace.act.data.memo, "^STAKE,").Success)
                 {
-                    List<SparkStaking> stakedSpark = _localDataManager.GetSparkStakingByEOSUserId(user.Id);
+                    List<SparkStaking> stakedSpark = _localDataManager.GetSparkStakingByEOSAccount(user.EOSAccount);
                     int dGoodId = int.Parse(action.action_trace.act.data.memo.Split("STAKE,")[1]);
 
                     SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == dGoodId).FirstOrDefault();
@@ -202,7 +202,7 @@ namespace Upland.BlockchainSurfer
                         {
                             Id = -1,
                             DGoodId = dGoodId,
-                            EOSUserId = user.Id,
+                            EOSAccount = user.EOSAccount,
                             Amount = amount,
                             Start = action.block_time,
                             End = null
@@ -217,7 +217,7 @@ namespace Upland.BlockchainSurfer
                         {
                             Id = -1,
                             DGoodId = dGoodId,
-                            EOSUserId = user.Id,
+                            EOSAccount = user.EOSAccount,
                             Amount = stake.Amount + amount,
                             Start = action.block_time,
                             End = null
@@ -231,7 +231,7 @@ namespace Upland.BlockchainSurfer
                     {
                         Id = -1,
                         DGoodId = dGoodId,
-                        EOSUserId = user.Id,
+                        EOSAccount = user.EOSAccount,
                         Amount = amount,
                         Start = action.block_time,
                         End = null
@@ -266,7 +266,7 @@ namespace Upland.BlockchainSurfer
                     };
                 }
 
-                List<SparkStaking> stakedSpark = _localDataManager.GetSparkStakingByEOSUserId(user.Id);
+                List<SparkStaking> stakedSpark = _localDataManager.GetSparkStakingByEOSAccount(user.EOSAccount);
 
                 if (stakedSpark == null
                     || stakedSpark.Count == 0
@@ -296,7 +296,7 @@ namespace Upland.BlockchainSurfer
                         {
                             Id = -1,
                             DGoodId = stake.DGoodId,
-                            EOSUserId = stake.EOSUserId,
+                            EOSAccount = stake.EOSAccount,
                             Amount = stake.Amount - amount,
                             Start = action.block_time,
                             End = null

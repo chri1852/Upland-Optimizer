@@ -977,9 +977,9 @@ namespace Upland.Infrastructure.LocalData
             _localDataRepository.UpsertSparkStaking(sparkStaking);
         }
 
-        public List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId)
+        public List<SparkStaking> GetSparkStakingByEOSAccount(string eosAccount)
         {
-            return _localDataRepository.GetSparkStakingByEOSUserId(eosUserId);
+            return _localDataRepository.GetSparkStakingByEOSAccount(eosAccount);
         }
 
         public void UpsertNft(NFT nft)
@@ -1025,6 +1025,16 @@ namespace Upland.Infrastructure.LocalData
         public Dictionary<int, int> GetCurrentNFTCounts()
         {
             return _localDataRepository.GetCurrentNFTCounts();
+        }
+
+        public void UpsertNFTSaleData(NFTSaleData saleData)
+        {
+            _localDataRepository.UpsertNFTSaleData(saleData);
+        }
+
+        public List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId)
+        {
+            return _localDataRepository.GetNFTSaleDataByDGoodId(dGoodId);
         }
     }
 }

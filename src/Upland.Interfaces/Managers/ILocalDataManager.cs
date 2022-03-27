@@ -97,7 +97,7 @@ namespace Upland.Interfaces.Managers
         void UpsertConfigurationValue(string name, string value);
         void UpsertProperty(Property property);
         void UpsertSparkStaking(SparkStaking sparkStaking);
-        List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId);
+        List<SparkStaking> GetSparkStakingByEOSAccount(string eosAccount);
         void UpsertNft(NFT nft);
         void UpsertNftMetadata(NFTMetadata nftMetadata);
         void UpsertNftHistory(NFTHistory nftHistory);
@@ -107,5 +107,7 @@ namespace Upland.Interfaces.Managers
         List<NFTMetadata> GetAllNFTMetadata();
         List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId);
         Dictionary<int, int> GetCurrentNFTCounts();
+        void UpsertNFTSaleData(NFTSaleData saleData);
+        List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId);
     }
 }

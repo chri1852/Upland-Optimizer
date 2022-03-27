@@ -1,43 +1,47 @@
-﻿CREATE PROCEDURE [UPL].[UpsertSparkStaking]
+﻿CREATE PROCEDURE [UPL].[UpsertNFTSaleData]
 (
 	@Id              INT,
 	@DGoodId         INT,
-	@EOSAccount	     VARCHAR(12),
-	@Amount          DECIMAL(6,2),
-	@Start           DATETIME,
-	@End             DATETIME
+	@SellerEOS       VARCHAR(12),
+	@BuyerEOS        VARCHAR(12),
+	@Amount          DECIMAL(11,2),
+	@AmountFiat      DECIMAL(11,2),
+	@DateTime        DATETIME
 )
 AS
 BEGIN
 	BEGIN TRY	
-		IF(NOT EXISTS(SELECT * FROM [UPL].[SparkStaking] (NOLOCK) WHERE [Id] = @Id))
+		IF(@Id < 0)
 			BEGIN
-				INSERT INTO [UPL].[SparkStaking]
+				INSERT INTO [UPL].[NFTSaleData]
 				(
 					[DGoodId],
-					[EOSAccount],
+					[SellerEOS],
+					[BuyerEOS],
 					[Amount],
-					[Start],
-					[End]
+					[AmountFiat],
+					[DateTime]
 				)
 				Values
 				(
 					@DGoodId,
-					@EOSAccount,
+					@SellerEOS,
+					@BuyerEOS,
 					@Amount,
-					@Start,
-					@End
+					@AmountFiat,
+					@DateTime
 				)
 			END
 		ELSE
 			BEGIN
-				UPDATE [UPL].[SparkStaking]
+				UPDATE [UPL].[NFTSaleData]
 				SET
 					[DGoodId] = @DGoodId,
-					[EOSAccount] = @EOSAccount,
+					[SellerEOS] = @SellerEOS,
+					[BuyerEOS] = @BuyerEOS,
 					[Amount] = @Amount,
-					[Start] = @Start,
-					[End] = @End
+					[AmountFiat] = @AmountFiat,
+					[DateTime] = @DateTime
 				WHERE [Id] = @Id
 			END
 	END TRY

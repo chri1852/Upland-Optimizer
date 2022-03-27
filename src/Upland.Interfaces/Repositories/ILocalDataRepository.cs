@@ -84,7 +84,7 @@ namespace Upland.Interfaces.Repositories
         void TruncatePropertyStructure();
         List<PropertyStructure> GetPropertyStructures();
         void UpsertSparkStaking(SparkStaking sparkStaking);
-        List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId);
+        List<SparkStaking> GetSparkStakingByEOSAccount(string eosAccount);
         void UpsertNft(NFT nft);
         void UpsertNftMetadata(NFTMetadata nftMetadata);
         void UpsertNftHistory(NFTHistory nftHistory);
@@ -94,5 +94,7 @@ namespace Upland.Interfaces.Repositories
         List<NFTMetadata> GetAllNFTMetadata();
         List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId);
         Dictionary<int, int> GetCurrentNFTCounts();
+        void UpsertNFTSaleData(NFTSaleData saleData);
+        List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId);
     }
 }   

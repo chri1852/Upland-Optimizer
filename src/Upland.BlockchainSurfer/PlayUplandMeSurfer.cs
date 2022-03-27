@@ -194,10 +194,13 @@ namespace Upland.BlockchainSurfer
                         ProcessDeleteVisitorAction(action);
                         break;
                     case "n41":
-                       // ProcessSendAction(action);
+                        ProcessSendAction(action);
                         break;
                     case "n111":
-                        //ProcessSendUPXAction(action);
+                        ProcessSendUPXAction(action);
+                        break;
+                    case "n112":
+                        await ProcessPurchaseNFT(action);
                         break;
                 }
 
@@ -1150,6 +1153,45 @@ namespace Upland.BlockchainSurfer
             {
                 _localDataManager.CreateErrorLog("PlayUplandMeSurfer - Failed Process Send UPX", string.Format("Failed Adding UPX, trxId: {0}", action.action_trace.trx_id));
             }
+        }
+
+        public async Task ProcessPurchaseNFT(PlayUplandMeAction action)
+        {
+            if (action.action_trace.act.data.p14 == null || action.action_trace.act.data.p25 == null || action.action_trace.act.data.p141 == null || action.action_trace.act.data.p142 == null)
+            {
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseNFT", string.Format("p14 (buyer): {0}, p25 (seller): {1}, p141 (amount): {2}, Trx_id: {3}", action.action_trace.act.data.p14, action.action_trace.act.data.p25, action.action_trace.act.data.p141, action.action_trace.trx_id));
+                return;
+            }
+
+            if (action.action_trace.act.data.p135 != null || action.action_trace.act.data.p143 != null)
+            {
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseNFT - p135 or p143 Not Null", string.Format("p135: {0}, p143: {1}, Trx_id: {2}", action.action_trace.act.data.p135, action.action_trace.act.data.p143, action.action_trace.trx_id));
+                return;
+            }
+
+            PlayUplandMeTransactionEntry transactionTrace = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.trx_id);
+
+            if (transactionTrace?.traces == null 
+                || transactionTrace.traces.Count == 0 
+                || !transactionTrace.traces.Any(t => t.act.name == "transfernft")
+                || transactionTrace.traces.Where(t => t.act.name == "transfernft").First().act.data.dgood_ids.Count > 1)
+            {
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseNFT - No Valid Transfer Found", string.Format("Trx_id: {2}", action.action_trace.trx_id));
+                return;
+            }
+
+            NFTSaleData saleData = new NFTSaleData
+            {
+                Id = -1,
+                DGoodId = int.Parse(transactionTrace.traces.Where(t => t.act.name == "transfernft").First().act.data.dgood_ids.First()),
+                SellerEOS = action.action_trace.act.data.p25,
+                BuyerEOS = action.action_trace.act.data.p14,
+                Amount = decimal.Parse(action.action_trace.act.data.p141.Split(" UPX")[0]),
+                AmountFiat = 0,
+                DateTime = action.block_time
+            };
+
+            _localDataManager.UpsertNFTSaleData(saleData);
         }
 
         private async Task<Property> TryToLoadPropertyById(long propertyId)
