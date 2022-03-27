@@ -25,10 +25,11 @@ namespace Upland.Interfaces.Managers
         List<Tuple<int, long>> GetCollectionPropertyTable();
         Property GetProperty(long id);
         List<Property> GetProperties(List<long> ids);
+        List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds);
         List<long> GetPropertyIdsByCollectionId(int collectionId);
         List<Property> GetPropertiesByUplandUsername(string uplandUsername);
         List<Property> GetPropertiesByCityId(int cityId);
-        Property GetPropertyByCityIdAndAddress(int cityId, string address);
+        List<Property> GetPropertyByCityIdAndAddress(int cityId, string address);
         List<Property> GetPropertiesByCollectionId(int collectionId);
         List<Collection> GetCollections();
         Task<List<Property>> GetPropertysByUsername(string username);
@@ -73,8 +74,8 @@ namespace Upland.Interfaces.Managers
         List<UplandForSaleProp> GetPropertiesForSale_Collection(int collectionId, bool onlyBuildings);
         List<UplandForSaleProp> GetPropertiesForSale_Seller(string uplandUsername, bool onlyBuildings);
         string GetConfigurationValue(string name);
-        Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount);
-        string GetEOSAccountByUplandUsername(string uplandUsername);
+        EOSUser GetUplandUsernameByEOSAccount(string eosAccount);
+        EOSUser GetEOSAccountByUplandUsername(string uplandUsername);
         List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts();
         DateTime GetLastHistoricalCityStatusDate();
         DateTime GetLastSaleHistoryDateTime();
@@ -91,9 +92,20 @@ namespace Upland.Interfaces.Managers
         void TruncatePropertyStructure();
         void CreatePropertyStructure(PropertyStructure propertyStructure);
         List<PropertyStructure> GetPropertyStructures();
-        void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined);
+        void UpsertEOSUser(EOSUser eosUser);
         void UpsertSaleHistory(SaleHistoryEntry saleHistory);
         void UpsertConfigurationValue(string name, string value);
         void UpsertProperty(Property property);
+        void UpsertSparkStaking(SparkStaking sparkStaking);
+        List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId);
+        void UpsertNft(NFT nft);
+        void UpsertNftMetadata(NFTMetadata nftMetadata);
+        void UpsertNftHistory(NFTHistory nftHistory);
+        NFT GetNftByDGoodId(int dGoodId);
+        NFTMetadata GetNftMetadataById(int id);
+        NFTMetadata GetNftMetadataByNameAndCategory(string name, string category);
+        List<NFTMetadata> GetAllNFTMetadata();
+        List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId);
+        Dictionary<int, int> GetCurrentNFTCounts();
     }
 }

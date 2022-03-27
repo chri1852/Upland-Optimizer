@@ -4,5 +4,6 @@
     {
         public string Rarity { get; set; }
         public string Subtitle { get; set; }
+        public int DecorationId { get; set; }
     }
 }

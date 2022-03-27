@@ -5,10 +5,20 @@ namespace Upland.Types
     public static class Consts
     {
         // Config Values
-        public static readonly string CONFIG_MAXTIMESTAMPPROCESSED = "MaxTimeStampProcessed";
-        public static readonly string CONFIG_MAXSENDTIMESTAMPPROCESSED = "MaxSendTimeStampProcessed";
-        public static readonly string CONFIG_ENABLEBLOCKCHAINUPDATES = "EnableBlockChainUpdates";
-        public static readonly string CONFIG_PROPIDSTOMONITORFORSENDS = "PropIdsToMonitorForSends";
+        public const string CONFIG_ENABLEBLOCKCHAINUPDATES = "EnableBlockChainUpdates";
+        public const string CONFIG_PROPIDSTOMONITORFORSENDS = "PropIdsToMonitorForSends";
+        public const string CONFIG_MAXUPLANDACTIONSEQNUM = "MaxUplandActionSeqNum";
+        public const string CONFIG_MAXUSPKTOKENACCACTIONSEQNUM = "MaxUSPKTokenAccActionSeqNum";
+        public const string CONFIG_MAXUPLANDNFTACTACTIONSEQNUM = "MaxUplandNFTActActionSeqNum";
+        public const string CONFIG_LATESTANNOUNCEMENT = "LatestAnnouncement";
+
+        // NFT Metadata Types
+        public const string METADATA_TYPE_STRUCTURE = "structure";
+        public const string METADATA_TYPE_STRUCTORNMT = "structornmt";
+        public const string METADATA_TYPE_SPIRITHLWN = "spirithlwn";
+        public const string METADATA_TYPE_MEMENTO = "memento";
+        public const string METADATA_TYPE_ESSENTIAL = "essential";
+        public const string METADATA_TYPE_BLKEXPLORER = "blkexplorer";
 
         public static readonly List<int> StandardCollectionIds = new List<int>
         {
@@ -85,23 +95,23 @@ namespace Upland.Types
             { 5 , "Ultra Rare" }
         };
 
-        public static readonly int WarningRuns = 1;
-        public static readonly int FreeRuns = 6;
-        public static readonly string RunStatusInProgress = "In Progress";
-        public static readonly string RunStatusCompleted = "Completed";
-        public static readonly string RunStatusFailed = "Failed";
-        public static readonly int TestUserId = 33;
-        public static readonly int UPXPricePerRun = 200;
-        public static readonly int SendUpxSupporterThreshold = 8000;
-        public static readonly ulong DiscordSupporterRoleId = 910751643857997824;
-        public static readonly string VERIFYTYPE_DISCORD = "DIS";
-        public static readonly string VERIFYTYPE_WEB = "WEB";
-        public static readonly string VERIFYTYPE_RESET = "WRS";
+        public const int WarningRuns = 1;
+        public const int FreeRuns = 6;
+        public const string RunStatusInProgress = "In Progress";
+        public const string RunStatusCompleted = "Completed";
+        public const string RunStatusFailed = "Failed";
+        public const int TestUserId = 33;
+        public const int UPXPricePerRun = 200;
+        public const int SendUpxSupporterThreshold = 8000;
+        public const ulong DiscordSupporterRoleId = 910751643857997824;
+        public const string VERIFYTYPE_DISCORD = "DIS";
+        public const string VERIFYTYPE_WEB = "WEB";
+        public const string VERIFYTYPE_RESET = "WRS";
 
-        public static readonly int MAX_LINES_TO_RETURN = 25000;
-        //public static readonly double RateOfReturn = 0.1728; //Changed 01/27/2022
-        public static readonly double RateOfReturn = 0.145152;
-        public static readonly int MaxStreetNumber = 55692;
-        public static readonly string HornbrodEOSAccount = "oqtr232h2c23";
+        public const int MAX_LINES_TO_RETURN = 25000;
+        //public const double RateOfReturn = 0.1728; //Changed 01/27/2022
+        public const double RateOfReturn = 0.145152;
+        public const int MaxStreetNumber = 55692;
+        public const string HornbrodEOSAccount = "oqtr232h2c23";
     }
 }

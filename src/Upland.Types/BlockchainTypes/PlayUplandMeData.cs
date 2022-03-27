@@ -1,38 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Upland.Types.BlockchainTypes
 {
-    public class HistoryV2Query
-    {
-        public List<HistoryAction> actions { get; set; }
-    }
-
-    public class HistoryAction
-    {
-        public DateTime timestamp { get; set; }
-        public ActionEntry act { get; set; }
-        public long global_sequence { get; set; }
-        public string trx_id { get; set; }
-    }
-
-    public class GetTransactionEntry
-    {
-        public List<TRANSACTIONENTRY_SUBCLASS> traces { get; set; }
-    }
-
-    public class TRANSACTIONENTRY_SUBCLASS
-    {
-        public ActionEntry act { get; set; }
-    }
-
-    public class ActionEntry
-    {
-        public string name { get; set; }
-        public ActionData data { get; set; }
-    }
-
-    public class ActionData
+    public class PlayUplandMeData
     {
         public string memo { get; set; }
         public string a45 { get; set; }
@@ -56,6 +28,7 @@ namespace Upland.Types.BlockchainTypes
         public string p133 { get; set; }
         public string p134 { get; set; }
 
-        public ActionData data { get; set; }
+        public string id { get; set; }
+        public string data { get; set; }
     }
 }

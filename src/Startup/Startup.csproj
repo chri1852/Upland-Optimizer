@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Upland.BlockchainSurfer\Upland.BlockchainSurfer.csproj" />
     <ProjectReference Include="..\Upland.CollectionOptimizer\Upland.CollectionOptimizer.csproj" />
     <ProjectReference Include="..\Upland.InformationProcessor\Upland.InformationProcessor.csproj" />
     <ProjectReference Include="..\Upland.Infrastructure.Blockchain\Upland.Infrastructure.Blockchain.csproj" />

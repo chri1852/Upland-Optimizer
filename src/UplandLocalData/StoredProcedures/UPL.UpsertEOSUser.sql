@@ -2,26 +2,38 @@
 (
 	@EOSAccount      VARCHAR(12),
 	@UplandUsername  VARCHAR(50),
-	@Joined          DATETIME
+	@Joined          DATETIME,
+	@Spark           DECIMAL(6,2)
 )
 AS
 BEGIN
 	BEGIN TRY	
-		DELETE FROM [UPL].[EOSUser]
-		WHERE [UplandUsername] = @UplandUsername
-
-		INSERT INTO [UPL].[EOSUser]
-		(
-			[EOSAccount],
-			[UplandUsername],
-			[Joined]
-		)
-		Values
-		(
-			@EOSAccount,
-			@UplandUsername,
-			@Joined
-		)
+		IF(NOT EXISTS(SELECT * FROM [UPL].[EOSUser] (NOLOCK) WHERE [UplandUsername] = @UplandUsername))
+			BEGIN
+				INSERT INTO [UPL].[EOSUser]
+				(
+					[EOSAccount],
+					[UplandUsername],
+					[Joined],
+					[Spark]
+				)
+				Values
+				(
+					@EOSAccount,
+					@UplandUsername,
+					@Joined,
+					@Spark
+				)
+			END
+		ELSE
+			BEGIN
+				UPDATE [UPL].[EOSUser]
+				SET
+					[EOSAccount] = @EOSAccount,
+					[Joined] = @Joined,
+					[Spark] = @Spark
+				WHERE [UplandUsername] = @UplandUsername
+			END
 	END TRY
 
 	BEGIN CATCH

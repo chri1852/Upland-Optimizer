@@ -14,50 +14,23 @@ namespace Upland.InformationProcessor
     {
         private readonly ILocalDataManager _localDataManager;
         private readonly IUplandApiManager _uplandApiManager;
+        private readonly ICachingProcessor _cachingProcessor;
 
-        private readonly List<Tuple<int, HashSet<long>>> _collectionProperties;
-        private readonly Dictionary<int, string> _neighborhoods;
-
-        private Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>> _cityForSaleListCache;
-        private Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>> _cityUnmintedCache;
-        private Tuple<DateTime, Dictionary<long, string>> _propertyStructureCache;
-        private Tuple<DateTime, bool> _isBlockchainUpdatesDisabledCache;
-        private Tuple<DateTime, List<CollatedStatsObject>> _cityInfoCache;
-        private Tuple<DateTime, List<CollatedStatsObject>> _neighborhoodInfoCache;
-        private Tuple<DateTime, List<CollatedStatsObject>> _streetInfoCache;
-        private Tuple<DateTime, List<CollatedStatsObject>> _collectionInfoCache;
-
-        private Dictionary<int, bool> _isLoadingCityForSaleListCache;
-        private Dictionary<int, bool> _isLoadingCityUnmintedCache;
-        private bool _isLoadingPropertyStructureCache;
-        private bool _isLoadingCityInfoCache;
-        private bool _isLoadingNeighborhoodInfoCache;
-        private bool _isLoadingStreetInfoCache;
-        private bool _isLoadingCollectionInfoCache;
-
-
-        public WebProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
+        public WebProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, ICachingProcessor cachingProcessor)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;
-
-            InitializeCache();
-
-            _collectionProperties = new List<Tuple<int, HashSet<long>>>();
-            List<Tuple<int, long>> collectionProperties = _localDataManager.GetCollectionPropertyTable();
-
-            _neighborhoods = new Dictionary<int, string>();
-            _neighborhoods = _localDataManager.GetNeighborhoods().ToDictionary(n => n.Id, n => n.Name);
-
-            foreach (int collectionId in collectionProperties.GroupBy(c => c.Item1).Select(g => g.First().Item1))
-            {
-                _collectionProperties.Add(new Tuple<int, HashSet<long>>(collectionId, collectionProperties.Where(c => c.Item1 == collectionId).Select(c => c.Item2).ToHashSet()));
-            }
+            _cachingProcessor = cachingProcessor;
         }
 
         public bool GetIsBlockchainUpdatesDisabled()
         {
-            return GetIsBlockchainUpdatesDisabledFromCache();
+            return _cachingProcessor.GetIsBlockchainUpdatesDisabledFromCache();
+        }
+
+        public string GetLatestAnnouncement()
+        {
+            return _cachingProcessor.GetLatestAnnouncemenFromCache();
         }
 
         public async Task<UserProfile> GetWebUIProfile(string uplandUsername)
@@ -66,13 +39,13 @@ namespace Upland.InformationProcessor
             Dictionary<long, AcquiredInfo> propertyAcquistionInfo = _localDataManager.GetAcquiredOnByPlayer(uplandUsername).ToDictionary(a => a.PropertyId, a => a);
 
             profile.Rank = HelperFunctions.TranslateUserLevel(int.Parse(profile.Rank));
-            profile.EOSAccount = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername);
+            profile.EOSAccount = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername).EOSAccount;
 
             Dictionary<long, Property> userProperties = _localDataManager
                 .GetProperties(profile.Properties.Select(p => p.PropertyId).ToList())
                 .ToDictionary(p => p.Id, p => p);
 
-            Dictionary<long, string> userBuildings = GetPropertyStructuresFromCache();
+            Dictionary<long, string> userBuildings = _cachingProcessor.GetPropertyStructuresFromCache();
 
             Dictionary<int, string> neighborhoods = _localDataManager.GetNeighborhoods()
                 .ToDictionary(n => n.Id, n => n.Name);
@@ -117,7 +90,7 @@ namespace Upland.InformationProcessor
                 {
                     property.Building = userBuildings[property.PropertyId];
                 }
-                property.CollectionIds = GetCollectionIdListForPropertyId(property.PropertyId);
+                property.CollectionIds = _cachingProcessor.GetCollectionIdListForPropertyId(property.PropertyId);
 
                 if (propertyAcquistionInfo.ContainsKey(property.PropertyId))
                 {
@@ -131,14 +104,14 @@ namespace Upland.InformationProcessor
 
         public List<CachedForSaleProperty> GetForSaleProps(WebForSaleFilters filters, bool noPaging)
         {
-            List<CachedForSaleProperty> cityForSaleProps = GetCityForSaleListFromCache(filters.CityId);
+            List<CachedForSaleProperty> cityForSaleProps = _cachingProcessor.GetCityForSaleListFromCache(filters.CityId);
 
             // Apply Filters
             cityForSaleProps = cityForSaleProps.Where(c =>
-                   (filters.Address == null 
+                   (filters.Address == null
                     || filters.Address.Trim() == ""
                     || (filters.Address != null && filters.Address.Trim() != "" && c.Address.ToLower().Contains(filters.Address.ToLower())))
-                && (filters.Owner == null 
+                && (filters.Owner == null
                     || filters.Owner.Trim() == ""
                     || (filters.Owner != null && filters.Owner.Trim() != "" && c.Owner.ToLower().Contains(filters.Owner.ToLower())))
                 && (filters.NeighborhoodIds.Count == 0
@@ -147,7 +120,7 @@ namespace Upland.InformationProcessor
                     || filters.CollectionIds.Any(i => c.CollectionIds.Contains(i)))
                 && (filters.Buildings.Count == 0
                     || filters.Buildings.Contains(c.Building))
-                && (filters.Currency == null 
+                && (filters.Currency == null
                     || filters.Currency == "Any"
                     || c.Currency == filters.Currency)
                 ).ToList();
@@ -202,7 +175,7 @@ namespace Upland.InformationProcessor
 
         public List<CachedUnmintedProperty> GetUnmintedProperties(WebForSaleFilters filters, bool noPaging)
         {
-            List<CachedUnmintedProperty> cityUnmintedProps = GetCityUnmintedFromCache(filters.CityId);
+            List<CachedUnmintedProperty> cityUnmintedProps = _cachingProcessor.GetCityUnmintedFromCache(filters.CityId);
 
             // Apply Filters
             cityUnmintedProps = cityUnmintedProps.Where(c =>
@@ -259,10 +232,10 @@ namespace Upland.InformationProcessor
             // Gather the collections
             foreach (CachedSaleHistoryEntry entry in saleHistoryEntries)
             {
-                entry.Property.CollectionIds = GetCollectionIdListForPropertyId(entry.Property.Id);
+                entry.Property.CollectionIds = _cachingProcessor.GetCollectionIdListForPropertyId(entry.Property.Id);
                 if (entry.OfferProperty != null)
                 {
-                    entry.OfferProperty.CollectionIds = GetCollectionIdListForPropertyId(entry.OfferProperty.Id);
+                    entry.OfferProperty.CollectionIds = _cachingProcessor.GetCollectionIdListForPropertyId(entry.OfferProperty.Id);
                 }
             }
 
@@ -289,23 +262,140 @@ namespace Upland.InformationProcessor
 
         public List<CollatedStatsObject> GetInfoByType(StatsTypes statsType)
         {
-            switch(statsType)
+            switch (statsType)
             {
                 case StatsTypes.City:
-                    return GetCityInfoFromCache();
+                    return _cachingProcessor.GetCityInfoFromCache();
                 case StatsTypes.Neighborhood:
-                    return GetNeighborhoodInfoFromCache();
+                    return _cachingProcessor.GetNeighborhoodInfoFromCache();
                 case StatsTypes.Street:
-                    return GetStreetInfoFromCache();
+                    return _cachingProcessor.GetStreetInfoFromCache();
                 case StatsTypes.Collection:
-                    return GetCollectionInfoFromCache();
+                    return _cachingProcessor.GetCollectionInfoFromCache();
                 default:
-                    return GetCityInfoFromCache();
+                    return _cachingProcessor.GetCityInfoFromCache();
             }
+        }
+
+        public List<WebNFT> SearchNFTs(WebNFTFilters filters)
+        {
+            List<int> matchingMetadata = new List<int>();
+
+            switch (filters.Category)
+            {
+                case Consts.METADATA_TYPE_BLKEXPLORER:
+                    matchingMetadata = _cachingProcessor.GetBlockExplorerMetadataFromCache()
+                        .Where(m =>
+                            (string.IsNullOrWhiteSpace(filters.Filters.Name) || m.Value.DisplayName.IndexOf(filters.Filters.Name, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.SeriesName) || m.Value.SeriesName.IndexOf(filters.Filters.SeriesName, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.Rarity) || m.Value.RarityLevel.IndexOf(filters.Filters.Rarity, StringComparison.OrdinalIgnoreCase) >= 0))
+                        .Select(m => m.Key).ToList();
+                    break;
+                case Consts.METADATA_TYPE_ESSENTIAL:
+                    matchingMetadata = _cachingProcessor.GetEssentialMetadataFromCache()
+                        .Where(m =>
+                            (string.IsNullOrWhiteSpace(filters.Filters.Name) || m.Value.PlayerFullName.IndexOf(filters.Filters.Name, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.Team) || m.Value.TeamName.IndexOf(filters.Filters.Team, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.Position) || m.Value.PlayerPosition.IndexOf(filters.Filters.Position, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.Year) || m.Value.Season == int.Parse(filters.Filters.Year))
+                            && (string.IsNullOrWhiteSpace(filters.Filters.ModelType) || m.Value.ModelType.IndexOf(filters.Filters.ModelType, StringComparison.OrdinalIgnoreCase) >= 0))
+                        .Select(m => m.Key).ToList();
+                    break;
+                case Consts.METADATA_TYPE_MEMENTO:
+                    matchingMetadata = _cachingProcessor.GetMementoMetadataFromCache()
+                        .Where(m =>
+                            (string.IsNullOrWhiteSpace(filters.Filters.Name) || m.Value.PlayerFullName.IndexOf(filters.Filters.Name, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.Team) || m.Value.TeamName.IndexOf(filters.Filters.Team, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.Position) || m.Value.PlayerPosition.IndexOf(filters.Filters.Position, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.Year) || m.Value.Season == int.Parse(filters.Filters.Year))
+                            && (string.IsNullOrWhiteSpace(filters.Filters.ModelType) || m.Value.ModelType.IndexOf(filters.Filters.ModelType, StringComparison.OrdinalIgnoreCase) >= 0))
+                        .Select(m => m.Key).ToList();
+                    break;
+                case Consts.METADATA_TYPE_SPIRITHLWN:
+                    matchingMetadata = _cachingProcessor.GetSpiritHlwnMetadataFromCache()
+                        .Where(m =>
+                            (string.IsNullOrWhiteSpace(filters.Filters.Name) || m.Value.DisplayName.IndexOf(filters.Filters.Name, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.Rarity) || m.Value.RarityLevel.IndexOf(filters.Filters.Rarity, StringComparison.OrdinalIgnoreCase) >= 0))
+                        .Select(m => m.Key).ToList();
+                    break;
+                case Consts.METADATA_TYPE_STRUCTORNMT:
+                    matchingMetadata = _cachingProcessor.GetStructornmtMetadataFromCache()
+                        .Where(m =>
+                            (string.IsNullOrWhiteSpace(filters.Filters.Name) || m.Value.DisplayName.IndexOf(filters.Filters.Name, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.BuildingType) || m.Value.BuildingType.IndexOf(filters.Filters.BuildingType, StringComparison.OrdinalIgnoreCase) >= 0)
+                            && (string.IsNullOrWhiteSpace(filters.Filters.Rarity) || m.Value.RarityLevel.IndexOf(filters.Filters.Rarity, StringComparison.OrdinalIgnoreCase) >= 0))
+                        .Select(m => m.Key).ToList();
+                    break;
+                default:
+                    matchingMetadata = new List<int>();
+                    break;
+            }
+
+            List<NFT> matchingNfts = _localDataManager.GetNFTsByNFTMetadataId(matchingMetadata).Where(n => !n.Burned || filters.IncludeBurned).ToList();
+            List<WebNFT> webNfts = new List<WebNFT>();
+
+            // Build the WebNFTs
+            switch (filters.Category)
+            {
+                case Consts.METADATA_TYPE_BLKEXPLORER:
+                    webNfts = FilterAndSortBlockExplorerNFTs(matchingNfts, filters);
+                    break;
+                case Consts.METADATA_TYPE_ESSENTIAL:
+                    webNfts = FilterAndSortEssentialNFTs(matchingNfts, filters);
+                    break;
+                case Consts.METADATA_TYPE_MEMENTO:
+                    webNfts = FilterAndSortMementosNFTs(matchingNfts, filters);
+                    break;
+                case Consts.METADATA_TYPE_SPIRITHLWN:
+                    webNfts = FilterAndSortSpiritHlwnNFTs(matchingNfts, filters);
+                    break;
+                case Consts.METADATA_TYPE_STRUCTORNMT:
+                    webNfts = FilterAndSortStructureOrnamentNFTs(matchingNfts, filters);
+                    break;
+                default:
+                    webNfts = new List<WebNFT>();
+                    break;
+            }
+
+            if (filters.NoPaging)
+            {
+                return webNfts;
+            }
+
+            return webNfts.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
+        }
+
+        public List<WebNFTHistory> GetNFTHistory(int dGoodId)
+        {
+            List<NFTHistory> nftHistory = _localDataManager.GetNftHistoryByDGoodId(dGoodId).OrderBy(n => n.ObtainedOn).ToList();
+
+            List<WebNFTHistory> webHistory = new List<WebNFTHistory>();
+
+            for (int i = 0; i < nftHistory.Count; i++)
+            {
+                webHistory.Add(new WebNFTHistory
+                {
+                    DateTime = nftHistory[i].ObtainedOn,
+                    Event = string.Format("Obtained By {0}", _localDataManager.GetUplandUsernameByEOSAccount(nftHistory[i].Owner).UplandUsername)
+                });
+
+                if (nftHistory[i].DisposedOn != null)
+                {
+                    webHistory.Add(new WebNFTHistory
+                    {
+                        DateTime = nftHistory[i].DisposedOn.Value,
+                        Event = string.Format("Disposed By {0}", _localDataManager.GetUplandUsernameByEOSAccount(nftHistory[i].Owner).UplandUsername)
+                    });
+                }
+            }
+
+            return webHistory.OrderByDescending(h => h.DateTime).ToList();
         }
 
         public List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties)
         {
+            Dictionary<int, string> neighborhoods = _cachingProcessor.GetNeighborhoodsFromCache();
+
             List<string> csvString = new List<string>();
 
             csvString.Add("City,Address,Neighborhood,Size,Mint,Price,Currency,Markup,Owner,CollectionIds,Building");
@@ -315,7 +405,7 @@ namespace Upland.InformationProcessor
                 string propString = "";
                 propString += Consts.Cities[prop.CityId] + ",";
                 propString += prop.Address.Replace(",", " ") + ","; ;
-                propString += _neighborhoods[prop.NeighborhoodId].Replace(",", "") + ",";
+                propString += neighborhoods[prop.NeighborhoodId].Replace(",", "") + ",";
                 propString += prop.Size + ",";
                 propString += prop.Mint + ",";
                 propString += prop.Price + ",";
@@ -333,6 +423,8 @@ namespace Upland.InformationProcessor
 
         public List<string> ConvertListCachedUnmintedPropertyToCSV(List<CachedUnmintedProperty> cachedUnmintedProperties)
         {
+            Dictionary<int, string> neighborhoods = _cachingProcessor.GetNeighborhoodsFromCache();
+
             List<string> csvString = new List<string>();
 
             csvString.Add("City,Address,Neighborhood,Size,Mint,FSA,CollectionIds");
@@ -342,7 +434,7 @@ namespace Upland.InformationProcessor
                 string propString = "";
                 propString += Consts.Cities[prop.CityId] + ",";
                 propString += prop.Address.Replace(",", " ") + ",";
-                propString += _neighborhoods[prop.NeighborhoodId].Replace(",", "") + ",";
+                propString += neighborhoods[prop.NeighborhoodId].Replace(",", "") + ",";
                 propString += prop.Size + ",";
                 propString += prop.Mint + ",";
                 propString += prop.FSA + ",";
@@ -357,6 +449,8 @@ namespace Upland.InformationProcessor
         public List<string> ConvertListCachedSaleHistoryEntriesToCSV(List<CachedSaleHistoryEntry> cachedSaleHistoryEntries)
         {
             List<string> csvString = new List<string>();
+
+            Dictionary<int, string> neighborhoods = _cachingProcessor.GetNeighborhoodsFromCache();
 
             csvString.Add("TransactionDateTime,Seller,Buyer,Price,Markup,Currency,Offer,City,Address,Neighborhood,Mint,CollectionIds,OfferPropCity,OfferPropAddress,OfferPropNeighborhood,OfferPropMint,OfferPropCollectionIds");
 
@@ -373,7 +467,7 @@ namespace Upland.InformationProcessor
 
                 entryString += Consts.Cities[entry.Property.CityId] + ",";
                 entryString += entry.Property.Address.Replace(",", " ") + ",";
-                entryString += _neighborhoods.ContainsKey(entry.Property.NeighborhoodId) ? _neighborhoods[entry.Property.NeighborhoodId].Replace(",", "") + "," : ",";
+                entryString += neighborhoods.ContainsKey(entry.Property.NeighborhoodId) ? neighborhoods[entry.Property.NeighborhoodId].Replace(",", "") + "," : ",";
                 entryString += entry.Property.Mint + ",";
                 entryString += string.Join(" ", entry.Property.CollectionIds) + ",";
 
@@ -385,7 +479,7 @@ namespace Upland.InformationProcessor
                 {
                     entryString += Consts.Cities[entry.OfferProperty.CityId] + ",";
                     entryString += entry.OfferProperty.Address.Replace(",", " ") + ",";
-                    entryString += _neighborhoods.ContainsKey(entry.OfferProperty.NeighborhoodId) ? _neighborhoods[entry.OfferProperty.NeighborhoodId].Replace(",", "") + "," : ",";
+                    entryString += neighborhoods.ContainsKey(entry.OfferProperty.NeighborhoodId) ? neighborhoods[entry.OfferProperty.NeighborhoodId].Replace(",", "") + "," : ",";
                     entryString += entry.OfferProperty.Mint + ",";
                     entryString += string.Join(" ", entry.OfferProperty.CollectionIds) + ",";
                 }
@@ -396,215 +490,420 @@ namespace Upland.InformationProcessor
             return csvString;
         }
 
-        #region Caching
-
-        private void InitializeCache()
+        public List<string> ConvertListWebNFTSToCSV(List<WebNFT> nfts, string category)
         {
-            _isLoadingPropertyStructureCache = false;
-            _isLoadingCityInfoCache = false;
-            _isLoadingNeighborhoodInfoCache = false;
-            _isLoadingStreetInfoCache = false;
-            _isLoadingCollectionInfoCache = false;
+            List<string> csvString = new List<string>();
 
-            _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(DateTime.UtcNow.AddDays(-1), new Dictionary<long, string>());
-            _isBlockchainUpdatesDisabledCache = new Tuple<DateTime, bool>(DateTime.UtcNow.AddDays(-1), false);
-            _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
-            _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
-            _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
-            _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
-
-            _isLoadingCityForSaleListCache = new Dictionary<int, bool>();
-            _isLoadingCityUnmintedCache = new Dictionary<int, bool>();
-            _cityForSaleListCache = new Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>>();
-            _cityUnmintedCache = new Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>>();
-
-            foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
+            string headerString = "DGoodId,SerialNumber,CurrentSupply,MaxSupply,Name,Owner";
+            switch (category)
             {
-                _isLoadingCityForSaleListCache.Add(cityId, false);
-                _isLoadingCityUnmintedCache.Add(cityId, false);
-                _cityForSaleListCache.Add(cityId, new Tuple<DateTime, List<CachedForSaleProperty>>(DateTime.UtcNow.AddDays(-1), new List<CachedForSaleProperty>()));
-                _cityUnmintedCache.Add(cityId, new Tuple<DateTime, List<CachedUnmintedProperty>>(DateTime.UtcNow.AddDays(-1), new List<CachedUnmintedProperty>()));
+                case Consts.METADATA_TYPE_BLKEXPLORER:
+                    headerString += ",SeriesName,Rarity";
+                    break;
+                case Consts.METADATA_TYPE_ESSENTIAL:
+                    headerString += ",Team,Year,Position,FanPoints,ModelType,IsVariant";
+                    break;
+                case Consts.METADATA_TYPE_MEMENTO:
+                    headerString += ",Team,Year,Position,FanPoints,ModelType,GameDate,Opponent,HomeTeam";
+                    break;
+                case Consts.METADATA_TYPE_SPIRITHLWN:
+                    headerString += ",Rarity";
+                    break;
+                case Consts.METADATA_TYPE_STRUCTORNMT:
+                    headerString += ",BuildingType,Rarity";
+                    break;
+                default:
+                    break;
             }
-        }
+            headerString += ",Link";
+            csvString.Add(headerString);
 
-        private Dictionary<long, string> GetPropertyStructuresFromCache()
-        {
-            if (!_isLoadingPropertyStructureCache && _propertyStructureCache.Item1 < DateTime.UtcNow)
+            foreach (WebNFT nft in nfts)
             {
-                _isLoadingPropertyStructureCache = true;
-                _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(
-                    DateTime.UtcNow.AddMinutes(30),
-                    _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType));
-                _isLoadingPropertyStructureCache = false;
-            }
-
-            return _propertyStructureCache.Item2;
-        }
-
-        private List<CachedForSaleProperty> GetCityForSaleListFromCache(int cityId)
-        {
-            if (!_isLoadingCityForSaleListCache[cityId] && _cityForSaleListCache[cityId].Item1 < DateTime.UtcNow)
-            {
-                _isLoadingCityForSaleListCache[cityId] = true;
-                _cityForSaleListCache[cityId] = new Tuple<DateTime, List<CachedForSaleProperty>>(
-                    DateTime.UtcNow.AddMinutes(5),
-                   _localDataManager.GetCachedForSaleProperties(cityId));
-
-                foreach (CachedForSaleProperty prop in _cityForSaleListCache[cityId].Item2)
+                string entryString = string.Format("{0},{1},{2},{3},{4},{5}", nft.DGoodId, nft.SerialNumber, nft.CurrentSupply, nft.MaxSupply, nft.Name, nft.Owner);
+                switch (category)
                 {
-                    prop.CollectionIds = GetCollectionIdListForPropertyId(prop.Id);
+                    case Consts.METADATA_TYPE_BLKEXPLORER:
+                        entryString += string.Format(",{0},{1}", nft.SeriesName, nft.Rarity);
+                        break;
+                    case Consts.METADATA_TYPE_ESSENTIAL:
+                        entryString += string.Format(",{0},{1},{2},{3},{4},{5}", nft.Team, nft.Year, nft.Position, nft.FanPoints, nft.ModelType, nft.IsVariant);
+                        break;
+                    case Consts.METADATA_TYPE_MEMENTO:
+                        entryString += string.Format(",{0},{1},{2},{3},{4},{5}", nft.Team, nft.Year, nft.Position, nft.FanPoints, nft.ModelType, nft.GameDate.ToString("MMMM dd yyyy"), nft.Opponent, nft.HomeTeam);
+                        break;
+                    case Consts.METADATA_TYPE_SPIRITHLWN:
+                        entryString += string.Format(",{0}", nft.Rarity);
+                        break;
+                    case Consts.METADATA_TYPE_STRUCTORNMT:
+                        entryString += string.Format(",{0},{1}", nft.BuildingType, nft.Rarity);
+                        break;
+                    default:
+                        break;
                 }
+                entryString += string.Format(",{0}", nft.Link);
 
-                _isLoadingCityForSaleListCache[cityId] = false;
+                csvString.Add(entryString);
             }
 
-            RemoveExpiredSalesEntries();
-
-            return _cityForSaleListCache[cityId].Item2;
+            return csvString;
         }
 
-        private List<CachedUnmintedProperty> GetCityUnmintedFromCache(int cityId)
-        {
-            if (!_isLoadingCityUnmintedCache[cityId] && _cityUnmintedCache[cityId].Item1 < DateTime.UtcNow)
-            {
-                _isLoadingCityUnmintedCache[cityId] = true;
-                _cityUnmintedCache[cityId] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
-                    DateTime.UtcNow.AddMinutes(5),
-                   _localDataManager.GetCachedUnmintedProperties(cityId));
+        #region NFT Specific Sorting
 
-                foreach (CachedUnmintedProperty prop in _cityUnmintedCache[cityId].Item2)
+        private List<WebNFT> FilterAndSortBlockExplorerNFTs(List<NFT> matchingNfts, WebNFTFilters filters)
+        {
+            List<WebNFT> webNfts = new List<WebNFT>();
+
+            Dictionary<int, BlockExplorerMetadata> metadataDictionary = _cachingProcessor.GetBlockExplorerMetadataFromCache();
+            Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
+
+            foreach (NFT nft in matchingNfts)
+            {
+                BlockExplorerSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<BlockExplorerSpecificMetadata>(nft.Metadata);
+                webNfts.Add(new WebNFT
                 {
-                    prop.CollectionIds = GetCollectionIdListForPropertyId(prop.Id);
+                    DGoodId = nft.DGoodId,
+                    Image = metadataDictionary[nft.NFTMetadataId].Image,
+                    Link = nftMetadata.Link,
+                    SerialNumber = nft.SerialNumber,
+                    Name = metadataDictionary[nft.NFTMetadataId].DisplayName,
+                    Owner = nft.Owner,
+                    MaxSupply = metadataDictionary[nft.NFTMetadataId].MaxSupply,
+                    CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
+
+                    Description = metadataDictionary[nft.NFTMetadataId].Description,
+                    SeriesId = metadataDictionary[nft.NFTMetadataId].SeriesId,
+                    SeriesName = metadataDictionary[nft.NFTMetadataId].SeriesName,
+                    Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel
+                });
+            }
+
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
+
+            if (filters.SortDescending)
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.SerialNumber).ToList();
                 }
-
-                _isLoadingCityUnmintedCache[cityId] = false;
-            }
-
-            RemoveExpiredUnmintedEntries();
-
-            return _cityUnmintedCache[cityId].Item2;
-        }
-
-        private List<CollatedStatsObject> GetCityInfoFromCache()
-        {
-            if (!_isLoadingCityInfoCache && _cityInfoCache.Item1 < DateTime.UtcNow)
-            {
-                _isLoadingCityInfoCache = true;
-                _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                    DateTime.UtcNow.AddMinutes(1),
-                    _localDataManager.GetCityStats());
-                _isLoadingCityInfoCache = false;
-            }
-
-            return _cityInfoCache.Item2;
-        }
-
-        private List<CollatedStatsObject> GetNeighborhoodInfoFromCache()
-        {
-            if (!_isLoadingNeighborhoodInfoCache && _neighborhoodInfoCache.Item1 < DateTime.UtcNow)
-            {
-                _isLoadingNeighborhoodInfoCache = true;
-                _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                    DateTime.UtcNow.AddMinutes(1),
-                    _localDataManager.GetNeighborhoodStats());
-                _isLoadingNeighborhoodInfoCache = false;
-            }
-
-            return _neighborhoodInfoCache.Item2;
-        }
-
-        private List<CollatedStatsObject> GetStreetInfoFromCache()
-        {
-            if (!_isLoadingStreetInfoCache && _streetInfoCache.Item1 < DateTime.UtcNow)
-            {
-                _isLoadingStreetInfoCache = true;
-                _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                    DateTime.UtcNow.AddMinutes(1),
-                    _localDataManager.GetStreetStats());
-                _isLoadingStreetInfoCache = false;
-            }
-
-            return _streetInfoCache.Item2;
-        }
-
-        private List<CollatedStatsObject> GetCollectionInfoFromCache()
-        {
-            if (!_isLoadingCollectionInfoCache && _collectionInfoCache.Item1 < DateTime.UtcNow)
-            {
-                _isLoadingCollectionInfoCache = true;
-                _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                    DateTime.UtcNow.AddMinutes(1),
-                    _localDataManager.GetCollectionStats());
-                _isLoadingCollectionInfoCache = false;
-            }
-
-            return _collectionInfoCache.Item2;
-        }
-
-        private bool GetIsBlockchainUpdatesDisabledFromCache()
-        {
-            if (_isBlockchainUpdatesDisabledCache.Item1 < DateTime.UtcNow)
-            {
-                _isBlockchainUpdatesDisabledCache = new Tuple<DateTime, bool>(
-                    DateTime.UtcNow.AddMinutes(1),
-                    !bool.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES)));
-            }
-
-            return _isBlockchainUpdatesDisabledCache.Item2;
-        }
-
-        private void RemoveExpiredSalesEntries()
-        {
-            foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
-            {
-                // Make sure its not loading, and the entry is expired, and that there is actually something to expire
-                if (!_isLoadingCityForSaleListCache[cityId] && _cityForSaleListCache[cityId].Item1 < DateTime.UtcNow && _cityForSaleListCache[cityId].Item2.Count > 0)
+                else if (filters.SortBy == "Name")
                 {
-                    _isLoadingCityForSaleListCache[cityId] = true;
-
-                    _cityForSaleListCache[cityId] = new Tuple<DateTime, List<CachedForSaleProperty>>(
-                        DateTime.UtcNow.AddDays(-1),
-                       new List<CachedForSaleProperty>());
-
-                    _isLoadingCityForSaleListCache[cityId] = false;
+                    webNfts = webNfts.OrderByDescending(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Owner).ToList();
                 }
             }
-        }
-
-        private void RemoveExpiredUnmintedEntries()
-        {
-            foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
+            else
             {
-                // Make sure its not loading, and the entry is expired, and that there is actually something to expire
-                if (!_isLoadingCityUnmintedCache[cityId] && _cityUnmintedCache[cityId].Item1 < DateTime.UtcNow && _cityUnmintedCache[cityId].Item2.Count > 0)
+                if (filters.SortBy == "Mint")
                 {
-                    _isLoadingCityUnmintedCache[cityId] = true;
-
-                    _cityUnmintedCache[cityId] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
-                        DateTime.UtcNow.AddDays(-1),
-                       new List<CachedUnmintedProperty>());
-
-                    _isLoadingCityUnmintedCache[cityId] = false;
+                    webNfts = webNfts.OrderBy(m => m.SerialNumber).ToList();
                 }
-            }
-        }
-
-        #endregion Caching
-
-        private List<int> GetCollectionIdListForPropertyId(long propertyId)
-        {
-            List<int> collectionIds = new List<int>();
-
-            foreach (Tuple<int, HashSet<long>> collectionProps in _collectionProperties)
-            {
-                if (collectionProps.Item2.Contains(propertyId))
+                else if (filters.SortBy == "Name")
                 {
-                    collectionIds.Add(collectionProps.Item1);
+                    webNfts = webNfts.OrderBy(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderBy(m => m.Owner).ToList();
                 }
             }
 
-            return collectionIds;
+            return webNfts;
         }
 
+        private List<WebNFT> FilterAndSortStructureOrnamentNFTs(List<NFT> matchingNfts, WebNFTFilters filters)
+        {
+            List<WebNFT> webNfts = new List<WebNFT>();
+
+            Dictionary<int, StructornmtMetadata> metadataDictionary = _cachingProcessor.GetStructornmtMetadataFromCache();
+            Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
+
+            foreach (NFT nft in matchingNfts)
+            {
+                BlockExplorerSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<BlockExplorerSpecificMetadata>(nft.Metadata);
+                webNfts.Add(new WebNFT
+                {
+                    DGoodId = nft.DGoodId,
+                    Image = metadataDictionary[nft.NFTMetadataId].Image,
+                    Link = nftMetadata.Link,
+                    SerialNumber = nft.SerialNumber,
+                    Name = metadataDictionary[nft.NFTMetadataId].DisplayName,
+                    Owner = nft.Owner,
+                    MaxSupply = metadataDictionary[nft.NFTMetadataId].MaxSupply,
+                    CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
+
+                    BuildingType = metadataDictionary[nft.NFTMetadataId].BuildingType,
+                    Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel
+                });
+            }
+
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
+
+            if (filters.SortDescending)
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Owner).ToList();
+                }
+            }
+            else
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderBy(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderBy(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderBy(m => m.Owner).ToList();
+                }
+            }
+
+            return webNfts;
+        }
+
+        private List<WebNFT> FilterAndSortSpiritHlwnNFTs(List<NFT> matchingNfts, WebNFTFilters filters)
+        {
+            List<WebNFT> webNfts = new List<WebNFT>();
+
+            Dictionary<int, SpirithlwnMetadata> metadataDictionary = _cachingProcessor.GetSpiritHlwnMetadataFromCache();
+            Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
+
+            foreach (NFT nft in matchingNfts)
+            {
+                SpirithlwnSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<SpirithlwnSpecificMetadata>(nft.Metadata);
+                webNfts.Add(new WebNFT
+                {
+                    DGoodId = nft.DGoodId,
+                    Image = metadataDictionary[nft.NFTMetadataId].Image,
+                    Link = nftMetadata.Link,
+                    SerialNumber = nft.SerialNumber,
+                    Name = metadataDictionary[nft.NFTMetadataId].DisplayName,
+                    Owner = nft.Owner,
+                    MaxSupply = metadataDictionary[nft.NFTMetadataId].MaxSupply,
+                    CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
+
+                    Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel
+                });
+            }
+
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
+
+            if (filters.SortDescending)
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Owner).ToList();
+                }
+            }
+            else
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderBy(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderBy(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderBy(m => m.Owner).ToList();
+                }
+            }
+
+            return webNfts;
+        }
+
+        private List<WebNFT> FilterAndSortEssentialNFTs(List<NFT> matchingNfts, WebNFTFilters filters)
+        {
+            List<WebNFT> webNfts = new List<WebNFT>();
+
+            Dictionary<int, EssentialMetadata> metadataDictionary = _cachingProcessor.GetEssentialMetadataFromCache();
+            Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
+
+            foreach (NFT nft in matchingNfts)
+            {
+                EssentialSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<EssentialSpecificMetadata>(nft.Metadata);
+                webNfts.Add(new WebNFT
+                {
+                    DGoodId = nft.DGoodId,
+                    Image = metadataDictionary[nft.NFTMetadataId].Image,
+                    Link = nftMetadata.Link,
+                    SerialNumber = nft.SerialNumber,
+                    Name = metadataDictionary[nft.NFTMetadataId].PlayerFullName,
+                    Owner = nft.Owner,
+                    MaxSupply = metadataDictionary[nft.NFTMetadataId].MaxSupply,
+                    CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
+
+                    Team = metadataDictionary[nft.NFTMetadataId]?.TeamName,
+                    IsVariant = nftMetadata.IsVariant,
+                    Year = metadataDictionary[nft.NFTMetadataId].Season.ToString(),
+                    Position = metadataDictionary[nft.NFTMetadataId].PlayerPosition,
+                    FanPoints = metadataDictionary[nft.NFTMetadataId].FanPoints,
+                    ModelType = metadataDictionary[nft.NFTMetadataId].ModelType
+                });
+            }
+
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
+
+            if (filters.SortDescending)
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "FanPoints")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.FanPoints).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Owner).ToList();
+                }
+            }
+            else
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderBy(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "FanPoints")
+                {
+                    webNfts = webNfts.OrderBy(m => m.FanPoints).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderBy(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderBy(m => m.Owner).ToList();
+                }
+            }
+
+            return webNfts;
+        }
+
+        private List<WebNFT> FilterAndSortMementosNFTs(List<NFT> matchingNfts, WebNFTFilters filters)
+        {
+            List<WebNFT> webNfts = new List<WebNFT>();
+
+            Dictionary<int, MementoMetadata> metadataDictionary = _cachingProcessor.GetMementoMetadataFromCache();
+            Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
+
+            foreach (NFT nft in matchingNfts)
+            {
+                MementoSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<MementoSpecificMetadata>(nft.Metadata);
+                webNfts.Add(new WebNFT
+                {
+                    DGoodId = nft.DGoodId,
+                    Image = metadataDictionary[nft.NFTMetadataId].Image,
+                    Link = nftMetadata.Link,
+                    SerialNumber = nft.SerialNumber,
+                    Name = metadataDictionary[nft.NFTMetadataId].PlayerFullName,
+                    Owner = nft.Owner,
+                    MaxSupply = metadataDictionary[nft.NFTMetadataId].MaxSupply,
+                    CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
+
+                    Team = metadataDictionary[nft.NFTMetadataId]?.TeamName,
+                    Year = metadataDictionary[nft.NFTMetadataId].Season.ToString(),
+                    Position = metadataDictionary[nft.NFTMetadataId].PlayerPosition,
+                    FanPoints = metadataDictionary[nft.NFTMetadataId].FanPoints,
+                    ModelType = metadataDictionary[nft.NFTMetadataId].ModelType,
+                    GameDate = nftMetadata.GameDate,
+                    Opponent = nftMetadata.OpponentTeam,
+                    HomeTeam = nftMetadata.HomeTeam
+                });
+            }
+
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Opponent) || n.Opponent.IndexOf(filters.Filters.Opponent, StringComparison.OrdinalIgnoreCase) >= 0)
+                    && (string.IsNullOrWhiteSpace(filters.Filters.HomeTeam) || n.HomeTeam.IndexOf(filters.Filters.HomeTeam, StringComparison.OrdinalIgnoreCase) >= 0)
+                    && (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
+
+            if (filters.SortDescending)
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "FanPoints")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.FanPoints).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Owner).ToList();
+                }
+            }
+            else
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderBy(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "FanPoints")
+                {
+                    webNfts = webNfts.OrderBy(m => m.FanPoints).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderBy(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderBy(m => m.Owner).ToList();
+                }
+            }
+
+            return webNfts;
+        }
+        #endregion
     }
 }

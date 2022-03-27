@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Upland.Infrastructure.UplandApi;
 using Upland.Interfaces.Managers;
@@ -290,7 +291,11 @@ namespace Upland.Infrastructure.LocalData
                         if (newPropIds.Count > 0)
                         {
                             _localDataRepository.CreateCollectionProperties(collection.Id, newPropIds);
-                            await AdjustMintOnCollectionPropertys(collection, newPropIds);
+
+                            if (collection.CityId == 33)
+                            {
+                                await AdjustMintOnCollectionPropertys(collection, newPropIds);
+                            }
                         }
                     }
                 }
@@ -375,12 +380,20 @@ namespace Upland.Infrastructure.LocalData
                 List<Property> properties = _localDataRepository.GetProperties(propIds);
                 foreach (Property prop in properties)
                 {
-                    if (prop.Status == Consts.PROP_STATUS_UNLOCKED)
+                    bool retry = true;
+                    while (retry)
                     {
-                        Property property = UplandMapper.Map(await _uplandApiRepository.GetPropertyById(prop.Id));
-
-                        prop.Mint = property.Mint;
-                        _localDataRepository.UpsertProperty(prop);
+                        try
+                        {
+                            Property property = UplandMapper.Map(await _uplandApiRepository.GetPropertyById(prop.Id));
+                            prop.Mint = property.Mint;
+                            _localDataRepository.UpsertProperty(prop);
+                            retry = false;
+                        }
+                        catch
+                        {
+                            Thread.Sleep(1000);
+                        }
                     }
                 }
             }
@@ -432,6 +445,11 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetCollectionPropertyTable();
         }
 
+        public List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds)
+        {
+            return _localDataRepository.GetNFTsByNFTMetadataId(metadataIds);
+        }
+
         public Property GetProperty(long id)
         {
             return _localDataRepository.GetProperty(id);
@@ -457,7 +475,7 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetPropertiesByCityId(cityId);
         }
 
-        public Property GetPropertyByCityIdAndAddress(int cityId, string address)
+        public List<Property> GetPropertyByCityIdAndAddress(int cityId, string address)
         {
             return _localDataRepository.GetPropertyByCityIdAndAddress(cityId, address);
         }
@@ -834,27 +852,17 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetConfigurationValue(name);
         }
 
-        public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
+        public EOSUser GetUplandUsernameByEOSAccount(string eosAccount)
         {
-            Tuple<string, string> returnTuple;
-            if (eosAccount == null || eosAccount.Trim() == "")
+            if (eosAccount != null)
             {
-                returnTuple = new Tuple<string, string>("", "");
-            }
-            else
-            {
-                returnTuple = _localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
-
-                if (returnTuple == null)
-                {
-                    returnTuple = new Tuple<string, string>("", "");
-                }
+                return _localDataRepository.GetUplandUsernameByEOSAccount(eosAccount);
             }
 
-            return returnTuple;
+            return null;
         }
 
-        public string GetEOSAccountByUplandUsername(string uplandUsername)
+        public EOSUser GetEOSAccountByUplandUsername(string uplandUsername)
         {
             return _localDataRepository.GetEOSAccountByUplandUsername(uplandUsername);
         }
@@ -944,9 +952,9 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetPropertyStructures();
         }
 
-        public void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined)
+        public void UpsertEOSUser(EOSUser eOSUser)
         {
-            _localDataRepository.UpsertEOSUser(eosAccount, uplandUsername, joined);
+            _localDataRepository.UpsertEOSUser(eOSUser);
         }
 
         public void UpsertSaleHistory(SaleHistoryEntry saleHistory)
@@ -962,6 +970,61 @@ namespace Upland.Infrastructure.LocalData
         public void UpsertProperty(Property property)
         {
             _localDataRepository.UpsertProperty(property);
+        }
+
+        public void UpsertSparkStaking(SparkStaking sparkStaking)
+        {
+            _localDataRepository.UpsertSparkStaking(sparkStaking);
+        }
+
+        public List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId)
+        {
+            return _localDataRepository.GetSparkStakingByEOSUserId(eosUserId);
+        }
+
+        public void UpsertNft(NFT nft)
+        {
+            _localDataRepository.UpsertNft(nft);
+        }
+
+        public void UpsertNftMetadata(NFTMetadata nftMetadata)
+        {
+            _localDataRepository.UpsertNftMetadata(nftMetadata);
+        }
+
+        public void UpsertNftHistory(NFTHistory nftHistory)
+        {
+            _localDataRepository.UpsertNftHistory(nftHistory);
+        }
+
+        public NFT GetNftByDGoodId(int dGoodId)
+        {
+            return _localDataRepository.GetNftByDGoodId(dGoodId);
+        }
+
+        public NFTMetadata GetNftMetadataById(int id)
+        {
+            return _localDataRepository.GetNftMetadataById(id);
+        }
+
+        public NFTMetadata GetNftMetadataByNameAndCategory(string name, string category)
+        {
+            return _localDataRepository.GetNftMetadataByNameAndCategory(name, category);
+        }
+
+        public List<NFTMetadata> GetAllNFTMetadata()
+        {
+            return _localDataRepository.GetAllNFTMetadata();
+        }
+
+        public List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId)
+        {
+            return _localDataRepository.GetNftHistoryByDGoodId(dGoodId);
+        }
+
+        public Dictionary<int, int> GetCurrentNFTCounts()
+        {
+            return _localDataRepository.GetCurrentNFTCounts();
         }
     }
 }

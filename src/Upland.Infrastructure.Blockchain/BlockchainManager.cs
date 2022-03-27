@@ -11,17 +11,17 @@ namespace Upland.Infrastructure.Blockchain
 {
     public class BlockchainManager : IBlockchainManager
     {
-        private BlockchainRepository blockchainRepository;
+        private BlockchainRepository _blockchainRepository;
 
         public BlockchainManager()
         {
-            blockchainRepository = new BlockchainRepository();
+            _blockchainRepository = new BlockchainRepository();
         }
 
         public async Task<List<PropertyStructure>> GetPropertyStructures()
         {
-            List<dGood> nfts = await blockchainRepository.GetAllNFTs();
-            List<a21Entry> propStructs = await blockchainRepository.GetNftsRelatedToPropertys();
+            List<dGood> nfts = await _blockchainRepository.GetAllNFTs();
+            List<a21Entry> propStructs = await _blockchainRepository.GetNftsRelatedToPropertys();
             List<PropertyStructure> returnStructures = new List<PropertyStructure>();
 
             nfts = nfts.Where(n => n.category == "structure").ToList();
@@ -40,8 +40,8 @@ namespace Upland.Infrastructure.Blockchain
 
         public async Task<List<long>> GetPropertiesUnderConstruction()
         {
-            List<a21Entry> nftProp = await blockchainRepository.GetNftsRelatedToPropertys();
-            List<a24Entry> stakes = await blockchainRepository.GetSparkStakingTable();
+            List<a21Entry> nftProp = await _blockchainRepository.GetNftsRelatedToPropertys();
+            List<a24Entry> stakes = await _blockchainRepository.GetSparkStakingTable();
             List<long> underConstructionList = new List<long>();
 
             List<int> uniqueDGoodIds = stakes.GroupBy(s => s.f45).Select(g => g.First().f45).ToList();
@@ -51,7 +51,7 @@ namespace Upland.Infrastructure.Blockchain
 
         public async Task<Dictionary<string, double>> GetStakedSpark()
         {
-            List<a24Entry> stakes = await blockchainRepository.GetSparkStakingTable();
+            List<a24Entry> stakes = await _blockchainRepository.GetSparkStakingTable();
 
             Dictionary<string, double> userStakes = new Dictionary<string, double>();
 
@@ -70,19 +70,29 @@ namespace Upland.Infrastructure.Blockchain
             return userStakes;
         }
 
-        public async Task<List<HistoryAction>> GetPropertyActionsFromTime(DateTime timeFrom, int minutesToAdd)
+        public async Task<List<dGood>> GetAllDGoodsFromTable()
         {
-            return (await blockchainRepository.GetPropertyActionsFromTime(timeFrom, minutesToAdd)).actions;
+            return await _blockchainRepository.GetAllNFTs();
         }
 
-        public async Task<List<HistoryAction>> GetSendActionsFromTime(DateTime timeFrom, int minutesToAdd)
+        public async Task<dGood> GetDGoodFromTable(int dGoodId)
         {
-            return (await blockchainRepository.GetSendActionsFromTime(timeFrom, minutesToAdd)).actions;
+            return await _blockchainRepository.GetDGoodFromTable(dGoodId);
         }
 
-        public async Task<GetTransactionEntry> GetSingleTransactionById(string transactionId)
+        public async Task<List<SeriesTableEntry>> GetSeriesTable()
         {
-            return await blockchainRepository.GetSingleTransactionById(transactionId);
+            return await _blockchainRepository.GetSeriesTable();
+        }
+
+        public async Task<T> GetSingleTransactionById<T>(string transactionId)
+        {
+            return await _blockchainRepository.GetSingleTransactionById<T>(transactionId);
+        }
+
+        public async Task<T> GetEOSFlareActions<T>(long position, string accountName)
+        {
+            return await _blockchainRepository.GetEOSFlareActions<T>(position, accountName);
         }
     }
 }

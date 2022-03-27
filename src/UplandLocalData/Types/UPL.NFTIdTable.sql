@@ -1,0 +1,5 @@
+﻿CREATE TYPE [UPL].[NFTIdTable] AS TABLE
+(
+	NFTMetadataId INT
+)
+GO

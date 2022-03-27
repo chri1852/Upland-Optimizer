@@ -1,0 +1,13 @@
+$localNugetFolder = "C:\LocalNuget"
+$OptimizerBase = "C:\Github\Upland-Optimizer\src\"
+$VersionNumber = "1.0.0.39"
+Remove-Item -Path "$($localNugetFolder)\*"
+
+Move-Item -Path "$($OptimizerBase)Upland.CollectionOptimizer\bin\Debug\Upland.CollectionOptimizer.$($VersionNumber).nupkg" -Destination "C:\LocalNuget"
+Move-Item -Path "$($OptimizerBase)Upland.InformationProcessor\bin\Debug\Upland.InformationProcessor.$($VersionNumber).nupkg" -Destination "C:\LocalNuget"
+Move-Item -Path "$($OptimizerBase)Upland.Infrastructure.Blockchain\bin\Debug\Upland.Infrastructure.Blockchain.$($VersionNumber).nupkg" -Destination "C:\LocalNuget"
+Move-Item -Path "$($OptimizerBase)Upland.Infrastructure.LocalData\bin\Debug\Upland.Infrastructure.LocalData.$($VersionNumber).nupkg" -Destination "C:\LocalNuget"
+Move-Item -Path "$($OptimizerBase)Upland.Infrastructure.UplandApi\bin\Debug\Upland.Infrastructure.UplandApi.$($VersionNumber).nupkg" -Destination "C:\LocalNuget"
+Move-Item -Path "$($OptimizerBase)Upland.Types\bin\Debug\Upland.Types.$($VersionNumber).nupkg" -Destination "C:\LocalNuget"
+Move-Item -Path "$($OptimizerBase)Upland.Interfaces\bin\Debug\Upland.Interfaces.$($VersionNumber).nupkg" -Destination "C:\LocalNuget"
+Move-Item -Path "$($OptimizerBase)Upland.BlockchainSurfer\bin\Debug\Upland.BlockchainSurfer.$($VersionNumber).nupkg" -Destination "C:\LocalNuget"

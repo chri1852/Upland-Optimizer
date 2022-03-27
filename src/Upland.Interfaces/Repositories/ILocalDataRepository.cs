@@ -27,10 +27,11 @@ namespace Upland.Interfaces.Repositories
         List<PropertyAppraisalData> GetCurrentMarkupFloorAppraisalData();
         List<Tuple<string, double>> GetBuildingAppraisalData();
         void UpsertProperty(Property property);
-        void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined);
+        void UpsertEOSUser(EOSUser eosUser);
         void UpsertSaleHistory(SaleHistoryEntry saleHistory);
         Property GetProperty(long id);
         List<Property> GetProperties(List<long> propertyIds);
+        List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds);
         List<Property> GetPropertiesByUplandUsername(string uplandUsername);
         List<Property> GetPropertiesByCollectionId(int collectionId);
         List<Property> GetPropertiesByCityId(int cityId);
@@ -39,7 +40,7 @@ namespace Upland.Interfaces.Repositories
         List<UplandForSaleProp> GetPropertiesForSale_Street(int streetId, bool onlyBuildings);
         List<UplandForSaleProp> GetPropertiesForSale_Collection(int collectionId, bool onlyBuildings);
         List<UplandForSaleProp> GetPropertiesForSale_Seller(string uplandUsername, bool onlyBuildings);
-        Property GetPropertyByCityIdAndAddress(int cityId, string address);
+        List<Property> GetPropertyByCityIdAndAddress(int cityId, string address);
         List<PropertySearchEntry> SearchProperties(int cityId, string address);
         void CreateOptimizationRun(OptimizationRun optimizationRun);
         void CreateAppraisalRun(AppraisalRun appraisalRun);
@@ -60,8 +61,8 @@ namespace Upland.Interfaces.Repositories
         void UpdateRegisteredUser(RegisteredUser registeredUser);
         RegisteredUser GetRegisteredUser(decimal discordUserId);
         RegisteredUser GetRegisteredUserByUplandUsername(string uplandUsername);
-        Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount);
-        string GetEOSAccountByUplandUsername(string uplandUsername);
+        EOSUser GetUplandUsernameByEOSAccount(string eosAccount);
+        EOSUser GetEOSAccountByUplandUsername(string uplandUsername);
         List<Tuple<decimal, string, string>> GetRegisteredUsersEOSAccounts();
         List<SaleHistoryQueryEntry> GetSaleHistoryByCityId(int cityId);
         List<SaleHistoryQueryEntry> GetSaleHistoryByNeighborhoodId(int neighborhoodId);
@@ -82,5 +83,16 @@ namespace Upland.Interfaces.Repositories
         void CreatePropertyStructure(PropertyStructure propertyStructure);
         void TruncatePropertyStructure();
         List<PropertyStructure> GetPropertyStructures();
+        void UpsertSparkStaking(SparkStaking sparkStaking);
+        List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId);
+        void UpsertNft(NFT nft);
+        void UpsertNftMetadata(NFTMetadata nftMetadata);
+        void UpsertNftHistory(NFTHistory nftHistory);
+        NFT GetNftByDGoodId(int dGoodId);
+        NFTMetadata GetNftMetadataById(int id);
+        NFTMetadata GetNftMetadataByNameAndCategory(string name, string category);
+        List<NFTMetadata> GetAllNFTMetadata();
+        List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId);
+        Dictionary<int, int> GetCurrentNFTCounts();
     }
 }   

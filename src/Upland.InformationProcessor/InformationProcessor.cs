@@ -1082,7 +1082,7 @@ namespace Upland.InformationProcessor
                     propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
                     propString += string.Format("{0},", property.CityId);
                     propString += string.Format("{0},", property.Status);
-                    propString += string.Format("{0},", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).Item2);
+                    propString += string.Format("{0},", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).UplandUsername);
                     propString += string.Format("{0},", property.FSA);
                     propString += string.Format("{0},", property.Address);
                     propString += string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None");
@@ -1125,7 +1125,7 @@ namespace Upland.InformationProcessor
                         , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
                         , string.Format("{0}", cityId).PadLeft(cityPad)
                         , string.Format("{0}", property.Status).PadLeft(statusPad)
-                        , string.Format("{0}", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).Item2).PadLeft(ownerPad)
+                        , string.Format("{0}", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).UplandUsername).PadLeft(ownerPad)
                         , string.Format("{0}", property.FSA).PadLeft(fsaPad)
                         , property.Address.PadLeft(addressPad)
                         , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(structurePad)
@@ -1407,15 +1407,22 @@ namespace Upland.InformationProcessor
                     return output;
                 }
                 string address = identifier.Substring(identifier.IndexOf(',') + 1).Trim();
-                Property searchProp = _localDataManager.GetPropertyByCityIdAndAddress(intId, address);
 
-                if (searchProp == null || searchProp.Id == 0)
+                List<Property> properties = _localDataManager.GetPropertyByCityIdAndAddress(intId, address);
+
+                if (properties == null || properties.Count == 0)
                 {
                     output.Add(string.Format("I Couldn't find that property in city Id {0} with address {1}", intId, address));
                     return output;
                 }
 
-                propId = searchProp.Id;
+                if (properties.Count > 1)
+                {
+                    output.Add(string.Format("More than one property in city Id {0} with address {1}", intId, address));
+                    return output;
+                }
+
+                propId = properties.First().Id;
             }
 
             switch (type.ToUpper())

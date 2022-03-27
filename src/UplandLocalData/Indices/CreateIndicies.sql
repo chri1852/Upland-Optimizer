@@ -53,3 +53,9 @@ CREATE NONCLUSTERED INDEX [sh_web_sale_history]
 ON [UPL].[SaleHistory] ([SellerEOS],[BuyerEOS])
 INCLUDE ([DateTime],[PropId],[Amount],[AmountFiat],[OfferPropId],[Offer])
 GO
+CREATE NONCLUSTERED INDEX [nh_dgoodId]
+ON [UPL].[NFTHistory] ([DGoodId])
+GO
+CREATE NONCLUSTERED INDEX [nh_disposedDateTime]
+ON [UPL].[NFTHistory] ([DisposedDateTime])
+GO

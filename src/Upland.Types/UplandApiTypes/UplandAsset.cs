@@ -16,6 +16,8 @@ namespace Upland.Types.UplandApiTypes
         public string Description { get; set; }
         public int TotalCount { get; set; }
         public string Name { get; set; }
+        public UplandSeries Series { get; set; }
+        public string Image { get; set; }
     }
 
     public class Stat
@@ -37,10 +39,16 @@ namespace Upland.Types.UplandApiTypes
         public int DecorationId { get; set; }
         public int LegitId { get; set; }
         public string TeamName { get; set; }
-        public int FanPoints { get; set; }
+        public double FanPoints { get; set; }
         public string Season { get; set; }
         public string PlayerPosition { get; set; }
         public string PlayerFullNameUppercase { get; set; }
         public string ModelType { get; set; }
+    }
+
+    public class UplandSeries
+    {
+        public string Name { get; set; }
+        public int Id { get; set; }
     }
 }

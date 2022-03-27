@@ -12,15 +12,18 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
+using Upland.BlockchainSurfer;
 using Upland.CollectionOptimizer;
 using Upland.InformationProcessor;
 using Upland.Infrastructure.Blockchain;
 using Upland.Infrastructure.LocalData;
 using Upland.Infrastructure.UplandApi;
+using Upland.Interfaces.BlockchainSurfers;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
 using Upland.Interfaces.Repositories;
 using Upland.Types;
+using Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
 
 class Program
@@ -32,9 +35,8 @@ class Program
 
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
-    private Timer _sendTimer;
 
-    ///*
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -44,19 +46,22 @@ class Program
 
         LocalDataRepository localDataRepository = new LocalDataRepository(configuration);
         UplandApiRepository uplandApiRepository = new UplandApiRepository(configuration);
+        BlockchainRepository blockchainRepository = new BlockchainRepository();
 
         LocalDataManager localDataManager = new LocalDataManager(uplandApiRepository, localDataRepository);
         UplandApiManager uplandApiManager = new UplandApiManager(uplandApiRepository);
         BlockchainManager blockchainManager = new BlockchainManager();
 
-        BlockchainPropertySurfer blockchainPropertySurfer = new BlockchainPropertySurfer(localDataManager, uplandApiManager, blockchainManager);
-        BlockchainSendFinder blockchainSendFinder = new BlockchainSendFinder(localDataManager, blockchainManager);
+        CachingProcessor cachingProcessor = new CachingProcessor(localDataManager);
+        PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
+        USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager);
+        UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
         //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
-        WebProcessor webProcessor = new WebProcessor(localDataManager, uplandApiManager);
+        WebProcessor webProcessor = new WebProcessor(localDataManager, uplandApiManager, cachingProcessor);
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager, uplandApiRepository);
 
         // Populate City
@@ -69,7 +74,7 @@ class Program
         /// Test Optimizer
         //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
         //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
-        
+
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
@@ -111,29 +116,58 @@ class Program
         //await informationProcessor.RebuildPropertyStructures();
         //await informationProcessor.RunCityStatusUpdate();
         //await informationProcessor.RefreshCityById("PART", 1);
-        //List<HistoryAction> items = await blockchainManager.GetPropertyActionsFromTime(DateTime.Now.AddMinutes(-50), 15);
 
         // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
 
         // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
         //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
 
-        await blockchainPropertySurfer.RunBlockChainUpdate(); // .BuildBlockChainFromDate(startDate);
-        //await blockchainPropertySurfer.BuildBlockChainFromBegining();
-        //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "81369886458957,81369920013374,81369651577913,81369467028575,81369500582974");
-        //await resyncProcessor.ResyncPropsList("ClearDupeForSale", "-1");
+        //await blockchainRepository.GetCleosActions(0, "playuplandme");
+
+        //List<EOSFlareAction> actions = await blockchainManager.GetEOSFlareActions(0);
+        await playUplandMeSurfer.RunBlockChainUpdate();
+        //await uspkTokenAccSurfer.RunBlockChainUpdate();
+        await uplandNFTActSurfer.RunBlockChainUpdate();
+        //await playUplandMeSurfer.BuildBlockChainFromBegining();
+        //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "79534961051253,79521388283491,81837349780461,78004661005426,78888484689652,78904959913211,79511707830036,79511774938900,79511842047764,79511925933844,79511993042708,79512060151572,79512194369300,79512261478163,79512395695891,79512462804755,79512529913619,79513838536647,79514056640437,79521304397411,79530783523022,79534877162987,79534877162990,79534877162992,79535481145672,79535615362618,79548282158203,79549087465212,79549137796863,79549171351295,79555496364296,79565126483166,81311015210304,81315041744633,81315477947821,81327322665662,81328329293407,81328664837833,81343160354735,81347757313096,81365943814126,82055906393018,82070771004481,79530934518624,79506909546712,81302005842934");
+        //await resyncProcessor.ResyncPropsList("SetMinted", "79518905257767,79518989142699,79518703931192,79523250555190,79532444469250,79547644626869,79519526013600,79520213880349,79520146771483,79519509236382,79561905259692,78984920124378,78887310285931,78929068769844,79517227535145,79518133504761,79518318061598,79518401940169,79518401940172,79519073030500,79520012553749,79520029330975,79520062885396,79520062885406,79520113217052,79523468658980,79532209585139,79534273183806,79538266160744,79539138584510,79539725779717,79548718366259,79552057033426,79553214661391,79553264993038,79553533428547,79553600537166,79554338735909,79554909160374,79556670768730,79561385165513,79564220514486,81305646501381,81306888017333,81334973077200,81341197419348,81351179866241,81351565742204,81351699959931,81372017166497,81383140456110,81407685523534,78985004010446");
+        //await resyncProcessor.ResyncPropsList("CheckLocked", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
+        await webProcessor.GetWebUIProfile("hornbrod");
+        
+        WebNFTFilters filters = new WebNFTFilters
+        {
+            IncludeBurned = false,
+            SortBy = "Mint",
+            SortDescending = false,
+            Category = Consts.METADATA_TYPE_MEMENTO,
+            PageSize = 100,
+            Page = 1,
+            NoPaging = false,
+            Filters = new WebNFT
+            {
+                Name = "Aaron",
+                Owner = null,
+                Team = "Green Bay",
+                Year = "2020",
+                Position = null,
+                ModelType = null
+            }
+        };
+
+        //List<WebNFT> nfts = webProcessor.SearchNFTs(filters);
+        
         //AppraisalResults results = await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" });
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\hornbrod.csv", string.Join(Environment.NewLine, profileAppraiser.BuildAppraisalCsvStrings(results)));
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
-    //*/
-    /*
+    */
+    ///*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    //*/
 
     public async Task RunBotAsync()
     {
@@ -149,6 +183,7 @@ class Program
             .AddSingleton<IUplandApiRepository, UplandApiRepository>()
             .AddSingleton<IUplandApiManager, UplandApiManager>()
             .AddSingleton<ILocalDataRepository, LocalDataRepository>()
+            .AddSingleton<ICachingProcessor, CachingProcessor>()
             .AddSingleton<ILocalDataManager, LocalDataManager>()
             .AddSingleton<IBlockChainRepository, BlockchainRepository>()
             .AddSingleton<IBlockchainManager, BlockchainManager>()
@@ -156,8 +191,9 @@ class Program
             .AddSingleton<IMappingProcessor, MappingProcessor>()
             .AddSingleton<IInformationProcessor, InformationProcessor>()
             .AddSingleton<IForSaleProcessor, ForSaleProcessor>()
-            .AddSingleton<IBlockchainSendFinder, BlockchainSendFinder>()
-            .AddSingleton<IBlockchainPropertySurfer, BlockchainPropertySurfer>()
+            .AddSingleton<IPlayUplandMeSurfer, PlayUplandMeSurfer>()
+            .AddSingleton<IUSPKTokenAccSurfer, USPKTokenAccSurfer>()
+            .AddSingleton<IUplandNFTActSurfer, UplandNFTActSurfer>()
             .AddSingleton<IResyncProcessor, ResyncProcessor>()
             .AddSingleton(_client)
             .AddSingleton(_commands)
@@ -168,7 +204,6 @@ class Program
 
         InitializeRefreshTimer();
         InitializeBlockchainUpdateTimer();
-        InitializeSendTimer();
 
         await RegisterCommandsAsync();
 
@@ -316,25 +351,12 @@ class Program
         {
             Task child = Task.Factory.StartNew(async () =>
             {
-                await _services.GetService<IBlockchainPropertySurfer>().RunBlockChainUpdate();
+                await _services.GetService<IPlayUplandMeSurfer>().RunBlockChainUpdate();
+                await _services.GetService<IUplandNFTActSurfer>().RunBlockChainUpdate();
             });
         };
         _blockchainUpdateTimer.Interval = 30000; // Every 30 Seconds
         _blockchainUpdateTimer.Start();
-    }
-
-    private void InitializeSendTimer()
-    {
-        _sendTimer = new Timer();
-        _sendTimer.Elapsed += (sender, e) =>
-        {
-            Task child = Task.Factory.StartNew(async () =>
-            {
-                await _services.GetService<IBlockchainSendFinder>().RunBlockChainUpdate();
-            });
-        };
-        _sendTimer.Interval = 300000; // Every 5 Minutes
-        _sendTimer.Start();
     }
 
     private async Task RunRefreshActions()
@@ -347,6 +369,7 @@ class Program
             {
                 Console.WriteLine(string.Format("{0}: Rebuilding Structures", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
                 await _services.GetService<IInformationProcessor>().RebuildPropertyStructures();
+                await ProcessResyncAction("CheckLocked", "1");
                 Console.WriteLine(string.Format("{0}: Rebuilding Complete", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now)));
             }
             catch (Exception ex)
@@ -357,23 +380,26 @@ class Program
 
             // Run Some Cleanup actions on the properties
 
+            // Check the locked props each night incase they have been unlocked
+            //await ProcessResyncAction("CheckLocked", "1");
+
             // Clear Duplicate For Sale Entries
-            await ProcessResyncAction("ClearDupeForSale", "1");
+            //await ProcessResyncAction("ClearDupeForSale", "1");
 
             // Resync Unminted City
-            await ProcessResyncAction("CityUnmintedResync", "0");
+            //await ProcessResyncAction("CityUnmintedResync", "0");
 
             // Resync Unminted City Non FSA
-            await ProcessResyncAction("CityUnmintedResync", "-1");
+            //await ProcessResyncAction("CityUnmintedResync", "-1");
 
             // Check Buildings For Sale
-            await ProcessResyncAction("BuildingSaleResync", "-1");
+            //await ProcessResyncAction("BuildingSaleResync", "-1");
 
             // Check Neighborhood For Sale
-            await ProcessResyncAction("NeighborhoodSaleResync", "0");
+            //await ProcessResyncAction("NeighborhoodSaleResync", "0");
 
             // Check Collection For Sale
-            await ProcessResyncAction("CollectionSaleResync", "0");
+            //await ProcessResyncAction("CollectionSaleResync", "0");
         }
     }
 

@@ -6,7 +6,7 @@
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT TOP(1) *
+		SELECT *
 		FROM UPL.Property (NOLOCK)
 		WHERE CityId = @CityId
 			AND Address = @Address

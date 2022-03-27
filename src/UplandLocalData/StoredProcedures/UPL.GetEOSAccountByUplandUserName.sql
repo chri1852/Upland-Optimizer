@@ -5,7 +5,7 @@
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT TOP(1) EOSAccount
+		SELECT TOP(1) *
 		FROM [UPL].[EOSUser] (NOLOCK)
 		WHERE UplandUsername = @UplandUsername
 	END TRY

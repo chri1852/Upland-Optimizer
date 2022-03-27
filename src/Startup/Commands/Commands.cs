@@ -265,10 +265,16 @@ namespace Startup.Commands
                     _localDataManager.UpdateRegisteredUser(registeredUser);
 
                     // Add the EOS Account if we dont have it
-                    Tuple<string, string> currentUser = _localDataManager.GetUplandUsernameByEOSAccount(property.owner);
+                    EOSUser currentUser = _localDataManager.GetUplandUsernameByEOSAccount(property.owner);
                     if (currentUser == null)
                     {
-                        _localDataManager.UpsertEOSUser(property.owner, registeredUser.UplandUsername, DateTime.UtcNow);
+                        _localDataManager.UpsertEOSUser(new EOSUser
+                        {
+                            EOSAccount = property.owner, 
+                            UplandUsername = registeredUser.UplandUsername, 
+                            Joined = DateTime.UtcNow,
+                            Spark = 0
+                        });
                     }
 
                     await ReplyAsync(string.Format("You are now Verified {0}! You can remove the property from sale, or don't. I'm not your dad.", HelperFunctions.GetRandomName(_random)));

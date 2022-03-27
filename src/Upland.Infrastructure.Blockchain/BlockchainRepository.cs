@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Upland.Interfaces.Repositories;
 using Upland.Types.BlockchainTypes;
@@ -16,6 +17,7 @@ namespace Upland.Infrastructure.Blockchain
     {
         HttpClient httpClient;
         Eos eos;
+        HttpClient eosFlareClient;
 
         public BlockchainRepository()
         {
@@ -23,11 +25,46 @@ namespace Upland.Infrastructure.Blockchain
             this.httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             this.httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
 
+            this.eosFlareClient = new HttpClient();
+            this.eosFlareClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            this.eosFlareClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+
             this.eos = new Eos(new EosConfigurator()
             {
-                HttpEndpoint = " https://eos.greymass.com", //Mainnet
+                //HttpEndpoint = " https://eos.greymass.com", //Fast 100 limit
+                //HttpEndpoint = "https://api.eosflare.io", // Fast Good
+                //HttpEndpoint = "https://api.eosdetroit.io", // Slow Holes
+                HttpEndpoint = "https://api.eos.wiki",
                 ExpireSeconds = 60,
             });
+        }
+
+        public async Task<dGood> GetDGoodFromTable(int dGoodId)
+        {
+            List<dGood> totalResults = new List<dGood>();
+            GetTableRowsResponse result = new GetTableRowsResponse { more = true };
+
+            result = await this.eos.GetTableRows(new GetTableRowsRequest()
+            {
+                json = true,
+                code = "uplandnftact",
+                scope = "uplandnftact",
+                table = "dgood",
+                lower_bound = dGoodId.ToString(),
+                upper_bound = null,
+                index_position = "0",
+                key_type = "",
+                limit = 1,
+                reverse = false,
+                show_payer = false,
+            });
+
+            foreach (Newtonsoft.Json.Linq.JObject item in result.rows)
+            {
+                totalResults.Add(item.ToObject<dGood>());
+            }
+            
+            return totalResults.Count == 0 ? null : totalResults.First();
         }
 
         public async Task<List<dGood>> GetAllNFTs()
@@ -198,42 +235,82 @@ namespace Upland.Infrastructure.Blockchain
             return totalResults;
         }
 
-        public async Task<GetTransactionEntry> GetSingleTransactionById(string transactionId)
+        public async Task<List<SeriesTableEntry>> GetSeriesTable()
         {
-            GetTransactionEntry transactionEntry;
+            List<SeriesTableEntry> totalResults = new List<SeriesTableEntry>();
+            GetTableRowsResponse result = new GetTableRowsResponse { more = true };
+            long index = 0;
+
+            while (result.more)
+            {
+                result = await this.eos.GetTableRows(new GetTableRowsRequest()
+                {
+                    json = true,
+                    code = "uplandnftact",
+                    scope = "uplandnftact",
+                    table = "series",
+                    lower_bound = index.ToString(),
+                    upper_bound = null,
+                    index_position = "0",
+                    key_type = "",
+                    limit = 5000,
+                    reverse = false,
+                    show_payer = false,
+                });
+
+                foreach (Newtonsoft.Json.Linq.JObject item in result.rows)
+                {
+                    totalResults.Add(item.ToObject<SeriesTableEntry>());
+                }
+                index = totalResults.Max(i => i.id);
+            }
+
+            return totalResults;
+        }
+
+        public async Task GetCleosActions(long position, string accountName)
+        {
+            GetActionsResponse Result = await this.eos.GetActions(accountName, (int)position, 1000);
+           // Result.actions.
+        }
+
+        public async Task<T> GetSingleTransactionById<T>(string transactionId)
+        {
+            T transactionEntry;
 
             string requestUri = @"https://eos.greymass.com/v1/history/get_transaction?id=";
             requestUri += string.Format("{0}&before=", transactionId);
 
-            transactionEntry = await CallApi<GetTransactionEntry>(requestUri);
+            transactionEntry = await CallApi<T>(requestUri);
 
             return transactionEntry;
         }
 
-        public async Task<HistoryV2Query> GetPropertyActionsFromTime(DateTime fromTime, int minutesToAdd)
+        public async Task<T> GetEOSFlareActions<T>(long position, string accountName)
         {
-            HistoryV2Query historyQuery;
+            string requestUri = @"https://api.eosflare.io/v1/eosflare/get_actions";
 
-            string requestUri = @"https://eos.hyperion.eosrio.io/v2/history/get_actions?account=playuplandme&filter=*%3An12,*%3An13,*%3An5,*%3An2,*%3An4,*%3An52,*%3Aa4,*%3An34,*%3An33&skip=0&limit=1000&sort=asc&after=";
-            requestUri += string.Format("{0}&before=", fromTime.ToString("yyyy-MM-ddTHH:mm:ss"));
-            requestUri += string.Format("{0}", fromTime.AddMinutes(minutesToAdd).ToString("yyyy-MM-ddTHH:mm:ss"));
+            HttpContent httpContent = new StringContent(
+                JsonConvert.SerializeObject(new GetEOSFlareActionsRequest
+                {
+                    account_name = accountName,
+                    pos = position,
+                    offset = 1000
+                }), 
+                Encoding.UTF8, 
+                "application/json");
 
-            historyQuery = await CallApi<HistoryV2Query>(requestUri);
+            try
+            {
+                HttpResponseMessage httpResponse = await this.eosFlareClient.PostAsync(requestUri, httpContent);
+                string responseJson = await httpResponse.Content.ReadAsStringAsync();
 
-            return historyQuery;
-        }
-
-        public async Task<HistoryV2Query> GetSendActionsFromTime(DateTime fromTime, int minutesToAdd)
-        {
-            HistoryV2Query historyQuery;
-
-            string requestUri = @"https://eos.hyperion.eosrio.io/v2/history/get_actions?account=playuplandme&filter=*%3An41,*%3An111&skip=0&limit=1000&sort=asc&after=";
-            requestUri += string.Format("{0}&before=", fromTime.ToString("yyyy-MM-ddTHH:mm:ss"));
-            requestUri += string.Format("{0}", fromTime.AddMinutes(minutesToAdd).ToString("yyyy-MM-ddTHH:mm:ss"));
-
-            historyQuery = await CallApi<HistoryV2Query>(requestUri);
-
-            return historyQuery;
+                return JsonConvert.DeserializeObject<T>(responseJson);
+            }
+            catch
+            {
+                return default(T);
+            }
         }
 
         private async Task<T> CallApi<T>(string requestUri)

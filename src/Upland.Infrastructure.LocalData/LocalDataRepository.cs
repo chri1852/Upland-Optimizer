@@ -931,7 +931,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public void UpsertEOSUser(string eosAccount, string uplandUsername, DateTime joined)
+        public void UpsertEOSUser(EOSUser eosUser)
         {
             SqlConnection sqlConnection = GetSQLConnector();
 
@@ -945,9 +945,10 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
                     sqlCmd.CommandText = "[UPL].[UpsertEOSUser]";
-                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", eosAccount));
-                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", uplandUsername));
-                    sqlCmd.Parameters.Add(new SqlParameter("Joined", joined));
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", eosUser.EOSAccount));
+                    sqlCmd.Parameters.Add(new SqlParameter("UplandUsername", eosUser.UplandUsername));
+                    sqlCmd.Parameters.Add(new SqlParameter("Joined", eosUser.Joined));
+                    sqlCmd.Parameters.Add(new SqlParameter("Spark", eosUser.Spark));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -1049,6 +1050,57 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return properties;
+            }
+        }
+
+        public List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds)
+        {
+            List<NFT> nfts = new List<NFT>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTsByNFTMetadataIds]";
+                    sqlCmd.Parameters.Add(new SqlParameter("NFTMetadataIds", CreateNFTIdTable(metadataIds)));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nfts.Add(
+                                new NFT
+                                {
+                                    DGoodId = (int)reader["DGoodId"],
+                                    NFTMetadataId = (int)reader["NFTMetadataId"],
+                                    SerialNumber = (int)reader["SerialNumber"],
+                                    Burned = (bool)reader["Burned"],
+                                    CreatedOn = ReadNullParameterSafe<DateTime>(reader, "CreatedDateTime"),
+                                    BurnedOn = ReadNullParameterSafe<DateTime>(reader, "BurnedDateTime"),
+                                    FullyLoaded = (bool)reader["FullyLoaded"],
+                                    Metadata = (byte[])reader["Metadata"],
+                                    Owner = reader["UplandUsername"] == DBNull.Value ? "" : (string)reader["UplandUsername"]
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nfts;
             }
         }
 
@@ -1402,9 +1454,9 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public Property GetPropertyByCityIdAndAddress(int cityId, string address)
+        public List<Property> GetPropertyByCityIdAndAddress(int cityId, string address)
         {
-            Property property = new Property();
+            List<Property> properties = new List<Property>();
             SqlConnection sqlConnection = GetSQLConnector();
 
             using (sqlConnection)
@@ -1424,7 +1476,7 @@ namespace Upland.Infrastructure.LocalData
                     {
                         while (reader.Read())
                         {
-                            property = ReadPropertyFromReader(reader);
+                            properties.Add(ReadPropertyFromReader(reader));
                         }
                         reader.Close();
                     }
@@ -1438,7 +1490,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlConnection.Close();
                 }
 
-                return property;
+                return properties;
             }
         }
 
@@ -2295,9 +2347,9 @@ namespace Upland.Infrastructure.LocalData
         }
 
 
-        public Tuple<string, string> GetUplandUsernameByEOSAccount(string eosAccount)
+        public EOSUser GetUplandUsernameByEOSAccount(string eosAccount)
         {
-            Tuple<string, string> EOSAccount = null;
+            EOSUser user = null;
             SqlConnection sqlConnection = GetSQLConnector();
 
             using (sqlConnection)
@@ -2315,7 +2367,14 @@ namespace Upland.Infrastructure.LocalData
                     {
                         while (reader.Read())
                         {
-                            EOSAccount = new Tuple<string, string>((string)reader["EOSAccount"], (string)reader["UplandUsername"]);
+                            user = new EOSUser
+                            {
+                                Id = (int)reader["Id"],
+                                EOSAccount = (string)reader["EOSAccount"],
+                                UplandUsername = (string)reader["UplandUsername"],
+                                Joined = (DateTime)reader["Joined"],
+                                Spark = (decimal)reader["Spark"]
+                            };
                         }
                         reader.Close();
                     }
@@ -2329,13 +2388,13 @@ namespace Upland.Infrastructure.LocalData
                     sqlConnection.Close();
                 }
 
-                return EOSAccount;
+                return user;
             }
         }
 
-        public string GetEOSAccountByUplandUsername(string uplandUsername)
+        public EOSUser GetEOSAccountByUplandUsername(string uplandUsername)
         {
-            string EOSAccount = null;
+            EOSUser user = null;
             SqlConnection sqlConnection = GetSQLConnector();
 
             using (sqlConnection)
@@ -2353,7 +2412,14 @@ namespace Upland.Infrastructure.LocalData
                     {
                         while (reader.Read())
                         {
-                            EOSAccount = (string)reader["EOSAccount"];
+                            user = new EOSUser
+                            {
+                                Id = (int)reader["Id"],
+                                EOSAccount = (string)reader["EOSAccount"],
+                                UplandUsername = (string)reader["UplandUsername"],
+                                Joined = (DateTime)reader["Joined"],
+                                Spark = (decimal)reader["Spark"]
+                            };
                         }
                         reader.Close();
                     }
@@ -2367,7 +2433,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlConnection.Close();
                 }
 
-                return EOSAccount;
+                return user;
             }
         }
 
@@ -3094,6 +3160,457 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void UpsertSparkStaking(SparkStaking sparkStaking)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertSparkStaking]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", sparkStaking.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", sparkStaking.DGoodId));
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSUserId", sparkStaking.EOSUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Amount", sparkStaking.Amount));
+                    sqlCmd.Parameters.Add(new SqlParameter("Start", sparkStaking.Start));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("End", sparkStaking.End));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId)
+        {
+            List<SparkStaking> sparkStakings = new List<SparkStaking>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetSparkStakingByEOSUserId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSUserId", eosUserId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            sparkStakings.Add(new SparkStaking
+                            {
+                                Id = (int)reader["Id"],
+                                DGoodId = (int)reader["DGoodId"],
+                                EOSUserId = (int)reader["EOSUserId"],
+                                Amount = (decimal)reader["Amount"],
+                                Start = (DateTime)reader["Start"],
+                                End = ReadNullParameterSafe<DateTime?>(reader, "End")
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return sparkStakings;
+            }
+        }
+
+        public void UpsertNft(NFT nft)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertNFT]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", nft.DGoodId));
+                    sqlCmd.Parameters.Add(new SqlParameter("NFTMetadataId", nft.NFTMetadataId));
+                    sqlCmd.Parameters.Add(new SqlParameter("SerialNumber", nft.SerialNumber));
+                    sqlCmd.Parameters.Add(new SqlParameter("Burned", nft.Burned));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("CreatedDateTime", nft.CreatedOn));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("BurnedDateTime", nft.BurnedOn));
+                    sqlCmd.Parameters.Add(new SqlParameter("FullyLoaded", nft.FullyLoaded));
+                    sqlCmd.Parameters.Add(new SqlParameter("Metadata", nft.Metadata));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void UpsertNftMetadata(NFTMetadata nftMetadata)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertNFTMetadata]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", nftMetadata.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("Name", nftMetadata.Name));
+                    sqlCmd.Parameters.Add(new SqlParameter("Category", nftMetadata.Category));
+                    sqlCmd.Parameters.Add(new SqlParameter("FullyLoaded", nftMetadata.FullyLoaded));
+                    sqlCmd.Parameters.Add(new SqlParameter("Metadata", nftMetadata.Metadata));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public void UpsertNftHistory(NFTHistory nftHistory)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertNFTHistory]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", nftHistory.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", nftHistory.DGoodId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Owner", nftHistory.Owner));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("ObtainedDateTime", nftHistory.ObtainedOn));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("DisposedDateTime", nftHistory.DisposedOn));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public NFT GetNftByDGoodId(int dGoodId)
+        {
+            NFT nft = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTByDGoodId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", dGoodId));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nft = new NFT();
+                            nft.DGoodId = (int)reader["DGoodId"];
+                            nft.NFTMetadataId = (int)reader["NFTMetadataId"];
+                            nft.SerialNumber = (int)reader["SerialNumber"];
+                            nft.Burned = (bool)reader["Burned"];
+                            nft.CreatedOn = (DateTime)reader["CreatedDateTime"];
+                            nft.BurnedOn = ReadNullParameterSafe<DateTime?>(reader, "BurnedDateTime");
+                            nft.FullyLoaded = (bool)reader["FullyLoaded"];
+                            nft.Metadata = (byte[])reader["Metadata"];
+
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nft;
+            }
+        }
+
+        public NFTMetadata GetNftMetadataById(int id)
+        {
+            NFTMetadata nftMetadata = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTMetadataById]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", id));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftMetadata = new NFTMetadata();
+                            nftMetadata.Id = (int)reader["Id"];
+                            nftMetadata.Name = (string)reader["Name"];
+                            nftMetadata.Category = (string)reader["Category"];
+                            nftMetadata.FullyLoaded = (bool)reader["FullyLoaded"];
+                            nftMetadata.Metadata = (byte[])reader["Metadata"];
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftMetadata;
+            }
+        }
+
+        public NFTMetadata GetNftMetadataByNameAndCategory(string name, string category)
+        {
+            NFTMetadata nftMetadata = null;
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTMetadataByNameAndCategory]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Name", name));
+                    sqlCmd.Parameters.Add(new SqlParameter("Category", category));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftMetadata = new NFTMetadata();
+                            nftMetadata.Id = (int)reader["Id"];
+                            nftMetadata.Name = (string)reader["Name"];
+                            nftMetadata.Category = (string)reader["Category"];
+                            nftMetadata.FullyLoaded = (bool)reader["FullyLoaded"];
+                            nftMetadata.Metadata = (byte[])reader["Metadata"];
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftMetadata;
+            }
+        }
+
+        public List<NFTMetadata> GetAllNFTMetadata()
+        {
+            List<NFTMetadata> nftMetadata = new List<NFTMetadata>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetAllNFTMetadata]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftMetadata.Add(new NFTMetadata
+                            {
+                                Id = (int)reader["Id"],
+                                Name = (string)reader["Name"],
+                                Category = (string)reader["Category"],
+                                FullyLoaded = (bool)reader["FullyLoaded"],
+                                Metadata = (byte[])reader["Metadata"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftMetadata;
+            }
+        }
+
+        public List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId)
+        {
+            List<NFTHistory> nftHistory = new List<NFTHistory>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTHistoryByDGoodId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", dGoodId));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftHistory.Add(new NFTHistory
+                            {
+                                Id = (int)reader["Id"],
+                                DGoodId = (int)reader["DGoodId"],
+                                Owner = (string)reader["Owner"],
+                                ObtainedOn = (DateTime)reader["ObtainedDateTime"],
+                                DisposedOn = ReadNullParameterSafe<DateTime?>(reader, "DisposedDateTime")
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftHistory;
+            }
+        }
+
+        public Dictionary<int, int> GetCurrentNFTCounts()
+        {
+            Dictionary<int, int> nftCounts = new Dictionary<int, int>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCurrentNFTCounts]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nftCounts.Add(
+                            
+                                (int)reader["Id"],
+                                (int)reader["Count"]
+                            );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nftCounts;
+            }
+        }
+
         private SqlParameter AddNullParmaterSafe<T>(string parameterName, T value)
         {
             if (value == null)
@@ -3106,11 +3623,35 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        private T ReadNullParameterSafe<T>(SqlDataReader reader, string parameter)
+        {
+            if (reader[parameter] != DBNull.Value)
+            {
+                return (T)reader[parameter];
+            }
+            else
+            {
+                return default(T);
+            }
+        }
+
         private DataTable CreatePropertyIdTable(List<long> propertyIds)
         {
             DataTable table = new DataTable();
             table.Columns.Add("PropertyId", typeof(long));
             foreach (long id in propertyIds)
+            {
+                table.Rows.Add(id);
+            }
+
+            return table;
+        }
+
+        private DataTable CreateNFTIdTable (List<int> nftIds)
+        {
+            DataTable table = new DataTable();
+            table.Columns.Add("NFTMetadataId", typeof(int));
+            foreach (int id in nftIds)
             {
                 table.Rows.Add(id);
             }
