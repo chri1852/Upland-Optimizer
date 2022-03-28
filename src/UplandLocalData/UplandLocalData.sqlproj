@@ -172,5 +172,6 @@
     <Build Include="Tables\UPL.NFTSaleData.sql" />
     <Build Include="StoredProcedures\UPL.UpsertNFTSaleData.sql" />
     <Build Include="StoredProcedures\UPL.GetNFTSaleDataByDGoodId.sql" />
+    <Build Include="StoredProcedures\UPL.GetNFTsByOwnerEOS.sql" />
   </ItemGroup>
 </Project>

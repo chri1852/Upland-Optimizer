@@ -450,6 +450,11 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetNFTsByNFTMetadataId(metadataIds);
         }
 
+        public List<NFT> GetNFTsByOwnerEOS(string EOSAccount)
+        {
+            return _localDataRepository.GetNFTsByOwnerEOS(EOSAccount);
+        }
+
         public Property GetProperty(long id)
         {
             return _localDataRepository.GetProperty(id);

@@ -99,6 +99,25 @@ namespace Upland.InformationProcessor
                 }
             }
 
+            // Now Lets get the Profile's NFTs
+            List<NFT> ownerNFTs = _localDataManager.GetNFTsByOwnerEOS(profile.EOSAccount);
+            profile.ProfileNFTs = new List<WebNFT>();
+            WebNFTFilters blankFilters = new WebNFTFilters();
+            blankFilters.Filters = new WebNFT();
+            blankFilters.SortBy = null;
+            blankFilters.SortDescending = false;
+            blankFilters.Filters.Owner = "";
+            blankFilters.Filters.IsVariantFilter = 0;
+            blankFilters.Filters.HomeTeam = "";
+            blankFilters.Filters.Opponent = "";
+
+            profile.ProfileNFTs.AddRange(FilterAndSortBlockExplorerNFTs(ownerNFTs, blankFilters));
+            profile.ProfileNFTs.AddRange(FilterAndSortStructureOrnamentNFTs(ownerNFTs, blankFilters));
+            profile.ProfileNFTs.AddRange(FilterAndSortSpiritHlwnNFTs(ownerNFTs, blankFilters));
+            profile.ProfileNFTs.AddRange(FilterAndSortEssentialNFTs(ownerNFTs, blankFilters));
+            profile.ProfileNFTs.AddRange(FilterAndSortMementosNFTs(ownerNFTs, blankFilters));
+            profile.ProfileNFTs.AddRange(FilterAndSortStructureNFTs(ownerNFTs, blankFilters));
+
             return profile;
         }
 
@@ -558,6 +577,8 @@ namespace Upland.InformationProcessor
             Dictionary<int, BlockExplorerMetadata> metadataDictionary = _cachingProcessor.GetBlockExplorerMetadataFromCache();
             Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
 
+            matchingNfts = matchingNfts.Where(n => metadataDictionary.ContainsKey(n.NFTMetadataId)).ToList();
+
             foreach (NFT nft in matchingNfts)
             {
                 BlockExplorerSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<BlockExplorerSpecificMetadata>(nft.Metadata);
@@ -575,7 +596,9 @@ namespace Upland.InformationProcessor
                     Description = metadataDictionary[nft.NFTMetadataId].Description,
                     SeriesId = metadataDictionary[nft.NFTMetadataId].SeriesId,
                     SeriesName = metadataDictionary[nft.NFTMetadataId].SeriesName,
-                    Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel
+                    Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel,
+
+                    Category = Consts.METADATA_TYPE_BLKEXPLORER
                 });
             }
 
@@ -625,6 +648,8 @@ namespace Upland.InformationProcessor
             Dictionary<int, StructornmtMetadata> metadataDictionary = _cachingProcessor.GetStructornmtMetadataFromCache();
             Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
 
+            matchingNfts = matchingNfts.Where(n => metadataDictionary.ContainsKey(n.NFTMetadataId)).ToList();
+
             foreach (NFT nft in matchingNfts)
             {
                 BlockExplorerSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<BlockExplorerSpecificMetadata>(nft.Metadata);
@@ -640,7 +665,9 @@ namespace Upland.InformationProcessor
                     CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
 
                     BuildingType = metadataDictionary[nft.NFTMetadataId].BuildingType,
-                    Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel
+                    Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel,
+
+                    Category = Consts.METADATA_TYPE_STRUCTORNMT
                 });
             }
 
@@ -690,6 +717,8 @@ namespace Upland.InformationProcessor
             Dictionary<int, SpirithlwnMetadata> metadataDictionary = _cachingProcessor.GetSpiritHlwnMetadataFromCache();
             Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
 
+            matchingNfts = matchingNfts.Where(n => metadataDictionary.ContainsKey(n.NFTMetadataId)).ToList();
+
             foreach (NFT nft in matchingNfts)
             {
                 SpirithlwnSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<SpirithlwnSpecificMetadata>(nft.Metadata);
@@ -704,7 +733,9 @@ namespace Upland.InformationProcessor
                     MaxSupply = metadataDictionary[nft.NFTMetadataId].MaxSupply,
                     CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
 
-                    Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel
+                    Rarity = metadataDictionary[nft.NFTMetadataId]?.RarityLevel == null ? "" : metadataDictionary[nft.NFTMetadataId].RarityLevel,
+
+                    Category = Consts.METADATA_TYPE_SPIRITHLWN
                 });
             }
 
@@ -754,6 +785,8 @@ namespace Upland.InformationProcessor
             Dictionary<int, EssentialMetadata> metadataDictionary = _cachingProcessor.GetEssentialMetadataFromCache();
             Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
 
+            matchingNfts = matchingNfts.Where(n => metadataDictionary.ContainsKey(n.NFTMetadataId)).ToList();
+
             foreach (NFT nft in matchingNfts)
             {
                 EssentialSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<EssentialSpecificMetadata>(nft.Metadata);
@@ -773,13 +806,16 @@ namespace Upland.InformationProcessor
                     Year = metadataDictionary[nft.NFTMetadataId].Season.ToString(),
                     Position = metadataDictionary[nft.NFTMetadataId].PlayerPosition,
                     FanPoints = metadataDictionary[nft.NFTMetadataId].FanPoints,
-                    ModelType = metadataDictionary[nft.NFTMetadataId].ModelType
+                    ModelType = metadataDictionary[nft.NFTMetadataId].ModelType,
+
+                    Category = Consts.METADATA_TYPE_ESSENTIAL
                 });
             }
 
             webNfts = webNfts
                 .Where(n =>
-                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0)
+                    && (filters.Filters.IsVariantFilter == 0 || filters.Filters.IsVariantFilter == 1 && n.IsVariant || filters.Filters.IsVariantFilter == 2 && !n.IsVariant))
                 .ToList();
 
             if (filters.SortDescending)
@@ -831,6 +867,8 @@ namespace Upland.InformationProcessor
             Dictionary<int, MementoMetadata> metadataDictionary = _cachingProcessor.GetMementoMetadataFromCache();
             Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
 
+            matchingNfts = matchingNfts.Where(n => metadataDictionary.ContainsKey(n.NFTMetadataId)).ToList();
+
             foreach (NFT nft in matchingNfts)
             {
                 MementoSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<MementoSpecificMetadata>(nft.Metadata);
@@ -852,7 +890,9 @@ namespace Upland.InformationProcessor
                     ModelType = metadataDictionary[nft.NFTMetadataId].ModelType,
                     GameDate = nftMetadata.GameDate,
                     Opponent = nftMetadata.OpponentTeam,
-                    HomeTeam = nftMetadata.HomeTeam
+                    HomeTeam = nftMetadata.HomeTeam,
+
+                    Category = Consts.METADATA_TYPE_MEMENTO
                 });
             }
 
@@ -891,6 +931,72 @@ namespace Upland.InformationProcessor
                 else if (filters.SortBy == "FanPoints")
                 {
                     webNfts = webNfts.OrderBy(m => m.FanPoints).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderBy(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderBy(m => m.Owner).ToList();
+                }
+            }
+
+            return webNfts;
+        }
+
+        private List<WebNFT> FilterAndSortStructureNFTs(List<NFT> matchingNfts, WebNFTFilters filters)
+        {
+            List<WebNFT> webNfts = new List<WebNFT>();
+
+            Dictionary<int, StructureMetadata> metadataDictionary = _cachingProcessor.GetStructureMetadataFromCache();
+            Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
+
+            matchingNfts = matchingNfts.Where(n => metadataDictionary.ContainsKey(n.NFTMetadataId)).ToList();
+
+            foreach (NFT nft in matchingNfts)
+            {
+                StructureSpecificMetaData nftMetadata = HelperFunctions.DecodeMetadata<StructureSpecificMetaData>(nft.Metadata);
+                webNfts.Add(new WebNFT
+                {
+                    DGoodId = nft.DGoodId,
+                    Image = metadataDictionary[nft.NFTMetadataId].Image,
+                    Link = string.Format("https://play.upland.me/?prop_id={0}", nftMetadata.PropertyId),
+                    SerialNumber = 0,
+                    Name = metadataDictionary[nft.NFTMetadataId].DisplayName,
+                    Owner = nft.Owner,
+                    MaxSupply = 0,
+                    CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
+
+                    Category = Consts.METADATA_TYPE_STRUCTURE
+                });
+            }
+
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
+
+            if (filters.SortDescending)
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Owner).ToList();
+                }
+            }
+            else
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderBy(m => m.SerialNumber).ToList();
                 }
                 else if (filters.SortBy == "Name")
                 {

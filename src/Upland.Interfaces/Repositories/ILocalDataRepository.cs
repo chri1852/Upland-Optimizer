@@ -32,6 +32,7 @@ namespace Upland.Interfaces.Repositories
         Property GetProperty(long id);
         List<Property> GetProperties(List<long> propertyIds);
         List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds);
+        List<NFT> GetNFTsByOwnerEOS(string EOSAccount);
         List<Property> GetPropertiesByUplandUsername(string uplandUsername);
         List<Property> GetPropertiesByCollectionId(int collectionId);
         List<Property> GetPropertiesByCityId(int cityId);

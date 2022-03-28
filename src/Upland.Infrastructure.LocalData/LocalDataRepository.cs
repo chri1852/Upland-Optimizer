@@ -1105,6 +1105,57 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<NFT> GetNFTsByOwnerEOS(string EOSAccount)
+        {
+            List<NFT> nfts = new List<NFT>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTsByOwnerEOS]";
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", EOSAccount));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nfts.Add(
+                                new NFT
+                                {
+                                    DGoodId = (int)reader["DGoodId"],
+                                    NFTMetadataId = (int)reader["NFTMetadataId"],
+                                    SerialNumber = (int)reader["SerialNumber"],
+                                    Burned = (bool)reader["Burned"],
+                                    CreatedOn = ReadNullParameterSafe<DateTime>(reader, "CreatedDateTime"),
+                                    BurnedOn = ReadNullParameterSafe<DateTime>(reader, "BurnedDateTime"),
+                                    FullyLoaded = (bool)reader["FullyLoaded"],
+                                    Metadata = (byte[])reader["Metadata"],
+                                    Owner = reader["UplandUsername"] == DBNull.Value ? "" : (string)reader["UplandUsername"]
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nfts;
+            }
+        }
+
         public List<Property> GetPropertiesByUplandUsername(string uplandUsername)
         {
             List<Property> properties = new List<Property>();

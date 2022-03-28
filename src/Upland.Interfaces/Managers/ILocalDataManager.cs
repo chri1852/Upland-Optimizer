@@ -26,6 +26,7 @@ namespace Upland.Interfaces.Managers
         Property GetProperty(long id);
         List<Property> GetProperties(List<long> ids);
         List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds);
+        List<NFT> GetNFTsByOwnerEOS(string EOSAccount);
         List<long> GetPropertyIdsByCollectionId(int collectionId);
         List<Property> GetPropertiesByUplandUsername(string uplandUsername);
         List<Property> GetPropertiesByCityId(int cityId);
