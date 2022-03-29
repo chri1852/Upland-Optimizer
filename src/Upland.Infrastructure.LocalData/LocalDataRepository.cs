@@ -219,6 +219,9 @@ namespace Upland.Infrastructure.LocalData
                     else
                         sqlCmd.Parameters.Add(new SqlParameter("Username", filters.Username.ToLower()));
 
+                    sqlCmd.Parameters.Add(new SqlParameter("FromDate", filters.FromDate));
+                    sqlCmd.Parameters.Add(new SqlParameter("ToDate", filters.ToDate));
+
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
                         while (reader.Read())

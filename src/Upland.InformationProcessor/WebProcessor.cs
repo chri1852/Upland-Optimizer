@@ -243,7 +243,11 @@ namespace Upland.InformationProcessor
 
         public List<CachedSaleHistoryEntry> GetSaleHistoryEntries(WebSaleHistoryFilters filters, bool noPaging)
         {
-            List<CachedSaleHistoryEntry> saleHistoryEntries = _localDataManager.GetCachedSaleHistoryEntries(filters)
+            // Smooth the From and To Date
+            filters.FromDate = new DateTime(filters.FromDate.Year, filters.FromDate.Month, filters.FromDate.Day, 0, 0, 0);
+            filters.ToDate = new DateTime(filters.ToDate.Year, filters.ToDate.Month, filters.ToDate.Day, 23, 59, 59);
+
+            List <CachedSaleHistoryEntry> saleHistoryEntries = _localDataManager.GetCachedSaleHistoryEntries(filters)
                 .Where(c => (filters.NeighborhoodIds.Count == 0
                     || filters.NeighborhoodIds.Contains(c.Property.NeighborhoodId)
                     || (c.OfferProperty != null && filters.NeighborhoodIds.Contains(c.OfferProperty.NeighborhoodId)))).ToList();
