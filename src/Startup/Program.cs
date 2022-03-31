@@ -37,7 +37,7 @@ class Program
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
 
-    ///*
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -82,12 +82,13 @@ class Program
         //await localDataManager.PopulateStreets();
 
         // Test Information Processing Functions
+        //List<string> output;
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
         //output = forSaleProcessor.GetCityPropertiesForSale(17, "Price", "All", "TXT");
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
         //output = forSaleProcessor.GetBuildingPropertiesForSale("City", 7, "price", "all", "CSV");
         //output = informationProcessor.GetCityInformation("TXT"); 
-        //output = informationProcessor.GetAllProperties("Neighborhood", 397, "CSV");
+        //output = informationProcessor.GetAllProperties("Neighborhood", 1482, "CSV");
         //output = await informationProcessor.GetStreetPropertiesForSale(28029, "MARKUP", "ALL", "CSV");
         //output = await informationProcessor.GetAssetsByTypeAndUserName("NFLPA", "stoney300", "txt");
         //output = await informationProcessor.GetPropertyInfo("loyldoyl", "TXT");
@@ -101,7 +102,7 @@ class Program
         //output = informationProcessor.GetUnmintedProperties("CITY", 15, "NONFSA", "TXT");
         //output = forSaleProcessor.GetUsernamePropertiesForSale("sothbys", "Price", "all", "txt");
         //output = forSaleProcessor.GetCollectionPropertiesForSale(223, "Price", "all", "txt");
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\Upland\OptimizerBot\test.txt", string.Join(Environment.NewLine, output));
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\venic.csv", string.Join(Environment.NewLine, output));
 
         // Test Repo Actions
         //List<NFLPALegit> nflpaLegits = await uplandApiManager.GetNFLPALegitsByUsername("teeem");
@@ -163,12 +164,12 @@ class Program
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\hornbrod.csv", string.Join(Environment.NewLine, profileAppraiser.BuildAppraisalCsvStrings(results)));
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
-    }
-    //*/
-    /*
+   }
+    */
+    ///*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    //*/
 
     public async Task RunBotAsync()
     {

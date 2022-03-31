@@ -137,12 +137,29 @@ namespace Upland.InformationProcessor
                     || filters.NeighborhoodIds.Contains(c.NeighborhoodId))
                 && (filters.CollectionIds.Count == 0
                     || filters.CollectionIds.Any(i => c.CollectionIds.Contains(i)))
-                && (filters.Buildings.Count == 0
-                    || filters.Buildings.Contains(c.Building))
                 && (filters.Currency == null
                     || filters.Currency == "Any"
                     || c.Currency == filters.Currency)
                 ).ToList();
+
+            Dictionary<long, string> userBuildings = _cachingProcessor.GetPropertyStructuresFromCache();
+
+            foreach (CachedForSaleProperty prop in cityForSaleProps)
+            {
+                if (userBuildings.ContainsKey(prop.Id))
+                {
+                    prop.Building = userBuildings[prop.Id];
+                }
+                else
+                {
+                    prop.Building = "";
+                }
+            }
+
+            if (filters.Buildings.Count > 0)
+            {
+                cityForSaleProps = cityForSaleProps.Where(c => filters.Buildings.Contains(c.Building)).ToList();
+            }
 
             // Sort
             if (filters.Asc)
@@ -385,7 +402,7 @@ namespace Upland.InformationProcessor
                 return webNfts;
             }
 
-            return webNfts.Skip(filters.PageSize * (filters.Page - 1)).Take(filters.PageSize).ToList();
+            return webNfts.Take(10000).ToList();
         }
 
         public List<WebNFTHistory> GetNFTHistory(int dGoodId)

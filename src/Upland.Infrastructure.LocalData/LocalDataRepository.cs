@@ -134,6 +134,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 60;
                     sqlCmd.CommandText = "[UPL].[GetCachedForSalePropertiesByCityId]";
                     sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
@@ -155,7 +156,6 @@ namespace Upland.Infrastructure.LocalData
                                     Owner = (string)reader["Owner"],
                                     Mint = decimal.ToDouble((decimal)reader["Mint"]),
                                     Markup = decimal.ToDouble((decimal)reader["Markup"]),
-                                    Building = (string)reader["Building"],
                                     CollectionIds = new List<int>()
                                 }
                              );
@@ -1253,6 +1253,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 60;
                     sqlCmd.CommandText = "[UPL].[GetPropertiesByCityId]";
                     sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
@@ -3746,6 +3747,44 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return saleData;
+            }
+        }
+
+        public List<Tuple<byte[], byte[]>> GetPropertyBuildingsMetadata()
+        {
+            List<Tuple<byte[], byte[]>> propertyStructureMetadata = new List<Tuple<byte[], byte[]>>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertyBuildingsMetadata]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            propertyStructureMetadata.Add(new Tuple<byte[], byte[]>((byte[])reader["NFTMetadata"], (byte[])reader["Metadata"]));
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return propertyStructureMetadata;
             }
         }
 

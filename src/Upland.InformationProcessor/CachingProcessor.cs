@@ -123,6 +123,13 @@ namespace Upland.InformationProcessor
                     DateTime.UtcNow.AddMinutes(5),
                    _localDataManager.GetCachedForSaleProperties(cityId));
 
+                if (_cityForSaleListCache[cityId].Item2.Count == 0)
+                {
+                    _cityForSaleListCache[cityId] = new Tuple<DateTime, List<CachedForSaleProperty>>(
+                        DateTime.UtcNow.AddMinutes(-5),
+                        new List<CachedForSaleProperty>());
+                }
+
                 foreach (CachedForSaleProperty prop in _cityForSaleListCache[cityId].Item2)
                 {
                     prop.CollectionIds = GetCollectionIdListForPropertyId(prop.Id);
@@ -145,6 +152,13 @@ namespace Upland.InformationProcessor
                     DateTime.UtcNow.AddMinutes(5),
                    _localDataManager.GetCachedUnmintedProperties(cityId));
 
+                if (_cityUnmintedCache[cityId].Item2.Count == 0)
+                {
+                    _cityUnmintedCache[cityId] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
+                        DateTime.UtcNow.AddMinutes(-5),
+                        new List<CachedUnmintedProperty>());
+                }
+
                 foreach (CachedUnmintedProperty prop in _cityUnmintedCache[cityId].Item2)
                 {
                     prop.CollectionIds = GetCollectionIdListForPropertyId(prop.Id);
@@ -166,6 +180,14 @@ namespace Upland.InformationProcessor
                 _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
                     DateTime.UtcNow.AddMinutes(5),
                     _localDataManager.GetCityStats());
+
+                if (_cityInfoCache.Item2.Count == 0)
+                {
+                    _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                    DateTime.UtcNow.AddMinutes(-5),
+                    new List<CollatedStatsObject>());
+                }
+
                 _isLoadingCityInfoCache = false;
             }
 
@@ -180,6 +202,14 @@ namespace Upland.InformationProcessor
                 _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
                     DateTime.UtcNow.AddMinutes(5),
                     _localDataManager.GetNeighborhoodStats());
+
+                if (_neighborhoodInfoCache.Item2.Count == 0)
+                {
+                    _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                    DateTime.UtcNow.AddMinutes(-5),
+                    new List<CollatedStatsObject>());
+                }
+
                 _isLoadingNeighborhoodInfoCache = false;
             }
 
@@ -194,6 +224,14 @@ namespace Upland.InformationProcessor
                 _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
                     DateTime.UtcNow.AddMinutes(5),
                     _localDataManager.GetStreetStats());
+
+                if (_streetInfoCache.Item2.Count == 0)
+                {
+                    _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                    DateTime.UtcNow.AddMinutes(-5),
+                    new List<CollatedStatsObject>());
+                }
+
                 _isLoadingStreetInfoCache = false;
             }
 
@@ -208,6 +246,14 @@ namespace Upland.InformationProcessor
                 _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
                     DateTime.UtcNow.AddMinutes(5),
                     _localDataManager.GetCollectionStats());
+
+                if (_collectionInfoCache.Item2.Count == 0)
+                {
+                    _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                    DateTime.UtcNow.AddMinutes(-5),
+                    new List<CollatedStatsObject>());
+                }
+
                 _isLoadingCollectionInfoCache = false;
             }
 

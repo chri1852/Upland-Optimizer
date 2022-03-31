@@ -97,5 +97,6 @@ namespace Upland.Interfaces.Repositories
         Dictionary<int, int> GetCurrentNFTCounts();
         void UpsertNFTSaleData(NFTSaleData saleData);
         List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId);
+        List<Tuple<byte[], byte[]>> GetPropertyBuildingsMetadata();
     }
 }   

@@ -106,12 +106,6 @@ namespace Upland.BlockchainSurfer
 
                 try
                 {
-                    // DEBUG
-                    if (actions.Last().block_time > new DateTime(2022, 3, 10))
-                    {
-                        continueLoad = false;
-                        break;
-                    }
                     await ProcessActions(actions);
                 }
                 catch (Exception ex)
@@ -135,12 +129,6 @@ namespace Upland.BlockchainSurfer
                 {
                     // We've already processed this event
                     _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessActions", string.Format("Skipping Action {0} < {1}", action.account_action_seq, maxActionSeqNum));
-                    continue;
-                }
-
-                // DEBUG
-                if (action.block_time > new DateTime(2022, 3, 10))
-                {
                     continue;
                 }
 

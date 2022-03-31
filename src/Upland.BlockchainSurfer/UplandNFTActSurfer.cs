@@ -309,17 +309,17 @@ namespace Upland.BlockchainSurfer
 
             NFT existingNft = _localDataManager.GetNftByDGoodId(dGoodId);
 
-            if (existingNft != null)
-            {
-               _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("NFT Already Exists, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
-               return;
-            }
-
             NFTMetadata nftMetadata = _localDataManager.GetNftMetadataByNameAndCategory(action.action_trace.act.data.token_name, action.action_trace.act.data.category);
 
             if (nftMetadata == null)
             {
                 _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("No NFT Metadata Found, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
+
+            if (existingNft != null && nftMetadata.Category != Consts.METADATA_TYPE_STRUCTURE)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("NFT Already Exists, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
                 return;
             }
 
@@ -336,9 +336,12 @@ namespace Upland.BlockchainSurfer
 
             if (nftMetadata.Category == Consts.METADATA_TYPE_STRUCTURE)
             {
-                // Need to wait for the transfer action to process these
-                newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new StructureSpecificMetaData());
-                _localDataManager.UpsertNft(newNft);
+                if (existingNft == null)
+                {
+                    // Need to wait for the transfer action to process these
+                    newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new StructureSpecificMetaData());
+                    _localDataManager.UpsertNft(newNft);
+                }
             }
             else
             {
