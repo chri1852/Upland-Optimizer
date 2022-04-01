@@ -96,17 +96,10 @@ namespace Upland.BlockchainSurfer
                     }
                     catch (Exception ex)
                     {
-                        //_localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - BuildBlockChainFromDate - Loop", ex.Message);
                         Thread.Sleep(5000);
                     }
                 }
 
-                /*
-                if (actions.Any(a => !a.irreversible))
-                {
-                    continueLoad = false;
-                }
-                */
                 if (actions.Count < 10)
                 {
                     continueLoad = false;

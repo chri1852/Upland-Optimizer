@@ -59,9 +59,9 @@ class Program
         UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
-        //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
+        ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager);
-        //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
+        MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser);
         WebProcessor webProcessor = new WebProcessor(localDataManager, uplandApiManager, cachingProcessor);
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager, uplandApiRepository);
 
@@ -136,6 +136,8 @@ class Program
         //await resyncProcessor.ResyncPropsList("CheckLocked", "-1");
         //await blockchainSendFinder.RunBlockChainUpdate();
 
+        //mappingProcessor.CreateMap(9, "BUILDINGS", 1, false, new List<string>());
+
         //await webProcessor.GetWebUIProfile("hornbrod");
 
         WebNFTFilters filters = new WebNFTFilters
@@ -164,7 +166,7 @@ class Program
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\hornbrod.csv", string.Join(Environment.NewLine, profileAppraiser.BuildAppraisalCsvStrings(results)));
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
-   }
+    }
     */
     ///*
     static void Main(string[] args) 
@@ -355,6 +357,7 @@ class Program
             {
                 await _services.GetService<IPlayUplandMeSurfer>().RunBlockChainUpdate();
                 await _services.GetService<IUplandNFTActSurfer>().RunBlockChainUpdate();
+                await _services.GetService<IUSPKTokenAccSurfer>().RunBlockChainUpdate();
             });
         };
         _blockchainUpdateTimer.Interval = 30000; // Every 30 Seconds

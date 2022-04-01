@@ -118,12 +118,6 @@ namespace Upland.BlockchainSurfer
                     }
                 }
 
-                /*
-                if (actions.Any(a => !a.irreversible))
-                {
-                    continueLoad = false;
-                }
-                */
                 if (actions.Count < 100)
                 {
                     continueLoad = false;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -88,17 +87,10 @@ namespace Upland.BlockchainSurfer
                     }
                     catch (Exception ex)
                     {
-                        _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - BuildBlockChainFromDate - Loop", ex.Message);
                         Thread.Sleep(5000);
                     }
                 }
 
-                /*
-                if (actions.Any(a => !a.irreversible))
-                {
-                    continueLoad = false;
-                }
-                */
                 if (actions.Count < 10)
                 {
                     continueLoad = false;
@@ -110,7 +102,7 @@ namespace Upland.BlockchainSurfer
                 }
                 catch (Exception ex)
                 {
-                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", string.Format("message: {0}, trace: {1}", ex.Message, ex.StackTrace));
                     _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
                 }
 
@@ -156,6 +148,7 @@ namespace Upland.BlockchainSurfer
             }
 
             decimal amount;
+
             if (!decimal.TryParse(action.action_trace.act.data.quantity.Split(" USPK")[0], out amount))
             {
                 _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Could Not Parse Amount", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
@@ -164,57 +157,63 @@ namespace Upland.BlockchainSurfer
 
             if (action.action_trace.act.data.to == _playuplandme)
             {
-                EOSUser user = _localDataManager.GetUplandUsernameByEOSAccount(action.action_trace.act.data.from);
-
-                if (user == null)
+                try
                 {
-                    user = new EOSUser
-                    {
-                        EOSAccount = action.action_trace.act.data.a54,
-                        UplandUsername = "",
-                        Joined = action.block_time,
-                        Spark = 0
-                    };
+                    HandleTransferToPlayUplandMe(action, amount);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Transfer To Upland Catch", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    throw ex;
+                }
+                return;
+            }
+
+            if (action.action_trace.act.data.from == _playuplandme)
+            {
+                try
+                {
+                    await HandleTransferFromPlayUplandMe(action, amount);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Transfer From Upland Catch", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    throw ex;
+                }
+                return;
+            }
+        }
+
+        private void HandleTransferToPlayUplandMe(UspkTokenAccAction action, decimal amount)
+        {
+            EOSUser user = _localDataManager.GetUplandUsernameByEOSAccount(action.action_trace.act.data.from);
+
+            if (user == null)
+            {
+                user = new EOSUser
+                {
+                    EOSAccount = action.action_trace.act.data.a54,
+                    UplandUsername = "",
+                    Joined = action.block_time,
+                    Spark = 0
+                };
+            }
+
+            if (Regex.Match(action.action_trace.act.data.memo, "^STAKE,").Success)
+            {
+                List<SparkStaking> stakedSpark = _localDataManager.GetSparkStakingByEOSAccount(user.EOSAccount);
+                int dGoodId = int.Parse(action.action_trace.act.data.memo.Split("STAKE,")[1]);
+
+                if (stakedSpark == null)
+                {
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - Null Stake 1", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    throw new Exception();
                 }
 
-                if (Regex.Match(action.action_trace.act.data.memo, "^STAKE,").Success)
+                SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == dGoodId).FirstOrDefault();
+
+                if (stake == null)
                 {
-                    List<SparkStaking> stakedSpark = _localDataManager.GetSparkStakingByEOSAccount(user.EOSAccount);
-                    int dGoodId = int.Parse(action.action_trace.act.data.memo.Split("STAKE,")[1]);
-
-                    SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == dGoodId).FirstOrDefault();
-
-                    if (stake == null)
-                    {
-                        _localDataManager.UpsertSparkStaking(new SparkStaking
-                        {
-                            Id = -1,
-                            DGoodId = dGoodId,
-                            EOSAccount = user.EOSAccount,
-                            Amount = amount,
-                            Start = action.block_time,
-                            End = null
-                        });
-                    }
-                    else
-                    {
-                        stake.End = action.block_time;
-                        _localDataManager.UpsertSparkStaking(stake);
-
-                        _localDataManager.UpsertSparkStaking(new SparkStaking
-                        {
-                            Id = -1,
-                            DGoodId = dGoodId,
-                            EOSAccount = user.EOSAccount,
-                            Amount = stake.Amount + amount,
-                            Start = action.block_time,
-                            End = null
-                        });
-                    }
-                }
-                else if (Regex.Match(action.action_trace.act.data.memo, "^BUILD,").Success)
-                {
-                    int dGoodId = int.Parse(action.action_trace.act.data.memo.Split("BUILD,")[1].Split(",")[0]);
                     _localDataManager.UpsertSparkStaking(new SparkStaking
                     {
                         Id = -1,
@@ -224,127 +223,236 @@ namespace Upland.BlockchainSurfer
                         Start = action.block_time,
                         End = null
                     });
-
-                    HandleStructureDGoodCreation(dGoodId, action);
                 }
                 else
                 {
-                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Unknown Memo String", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
-                    return;
+                    stake.End = action.block_time;
+                    _localDataManager.UpsertSparkStaking(stake);
+
+                    _localDataManager.UpsertSparkStaking(new SparkStaking
+                    {
+                        Id = -1,
+                        DGoodId = dGoodId,
+                        EOSAccount = user.EOSAccount,
+                        Amount = stake.Amount + amount,
+                        Start = action.block_time,
+                        End = null
+                    });
                 }
+            }
+            else if (Regex.Match(action.action_trace.act.data.memo, "^BUILD,").Success)
+            {
+                int dGoodId = int.Parse(action.action_trace.act.data.memo.Split("BUILD,")[1].Split(",")[0]);
+                _localDataManager.UpsertSparkStaking(new SparkStaking
+                {
+                    Id = -1,
+                    DGoodId = dGoodId,
+                    EOSAccount = user.EOSAccount,
+                    Amount = amount,
+                    Start = action.block_time,
+                    End = null
+                });
 
-                user.Spark -= amount;
-                _localDataManager.UpsertEOSUser(user);
-
+                HandleStructureDGoodCreation(dGoodId, action);
+            }
+            else
+            {
+                _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Unknown Memo String", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
                 return;
             }
 
-            if (action.action_trace.act.data.from == _playuplandme)
+            user.Spark -= amount;
+            _localDataManager.UpsertEOSUser(user);
+
+            return;
+        }
+
+        private async Task HandleTransferFromPlayUplandMe(UspkTokenAccAction action, decimal amount)
+        {
+            EOSUser user = _localDataManager.GetUplandUsernameByEOSAccount(action.action_trace.act.data.to);
+
+            if (user == null)
             {
-                EOSUser user = _localDataManager.GetUplandUsernameByEOSAccount(action.action_trace.act.data.to);
-
-                if (user == null)
+                user = new EOSUser
                 {
-                    user = new EOSUser
-                    {
-                        EOSAccount = action.action_trace.act.data.to,
-                        UplandUsername = "",
-                        Joined = action.block_time,
-                        Spark = 0
-                    };
-                }
+                    EOSAccount = action.action_trace.act.data.to,
+                    UplandUsername = "",
+                    Joined = action.block_time,
+                    Spark = 0
+                };
+            }
 
-                List<SparkStaking> stakedSpark = _localDataManager.GetSparkStakingByEOSAccount(user.EOSAccount);
+            List<SparkStaking> stakedSpark = _localDataManager.GetSparkStakingByEOSAccount(user.EOSAccount);
 
-                if (stakedSpark == null
-                    || stakedSpark.Count == 0
-                    || stakedSpark.All(s => s.End != null))
+            if (stakedSpark == null
+                || stakedSpark.Count == 0
+                || stakedSpark.All(s => s.End != null))
+            {
+                // Issued Spark
+                user.Spark += amount;
+                _localDataManager.UpsertEOSUser(user);
+                return;
+            }
+
+
+            UspkTokenAccTransactionEntry transaction = await GetTransactionWithRetry(action.action_trace.trx_id, 5);
+
+            if (transaction == null)
+            {
+                _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - Could Not Load Transaction Traces", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                throw new Exception();
+            }
+
+            if (stakedSpark == null)
+            {
+                _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - Null Stake 3", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                throw new Exception();
+            }
+
+            if (transaction.traces.Any(t => t.act.name == "n512"))
+            {
+                try
                 {
-                    // Issued Spark
-                    user.Spark += amount;
-                    _localDataManager.UpsertEOSUser(user);
+                    ProcessN512(action, amount, user, stakedSpark, transaction);
                     return;
                 }
-
-                UspkTokenAccTransactionEntry transaction = await _blockchainManager.GetSingleTransactionById<UspkTokenAccTransactionEntry>(action.action_trace.trx_id);
-
-                if (transaction.traces.Any(t => t.act.name == "n512"))
+                catch (Exception ex)
                 {
-                    SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "n512").First().act.data.p113)).FirstOrDefault();
-
-                    if (stake == null)
-                    {
-                        _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Could Not Find Stake For n512", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
-                        return;
-                    }
-
-                    if ((stake.Amount - amount) > 0)
-                    {
-                        _localDataManager.UpsertSparkStaking(new SparkStaking
-                        {
-                            Id = -1,
-                            DGoodId = stake.DGoodId,
-                            EOSAccount = stake.EOSAccount,
-                            Amount = stake.Amount - amount,
-                            Start = action.block_time,
-                            End = null
-                        });
-                    }
-
-                    stake.End = action.block_time;
-                    _localDataManager.UpsertSparkStaking(stake);
-
-                    user.Spark += amount;
-                    _localDataManager.UpsertEOSUser(user);
-                }
-                else if (transaction.traces.Any(t => t.act.name == "n511"))
-                {
-                    SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "n511").First().act.data.p113)).FirstOrDefault();
-
-                    if (stake == null)
-                    {
-                        // Check to see if it is already closed
-                        stake = stakedSpark.Where(s => s.End != null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "n511").First().act.data.p113)).FirstOrDefault();
-
-                        if (stake.Amount == amount)
-                        {
-                            _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - n511 Stake Already Closed", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
-                            return;
-                        }
-
-                        _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Could Not Find Stake For n511", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
-                        return;
-                    }
-
-                    stake.End = action.block_time;
-                    _localDataManager.UpsertSparkStaking(stake);
-
-                    user.Spark += amount;
-                    _localDataManager.UpsertEOSUser(user);
-                }
-                else if (transaction.traces.Any(t => t.act.name == "a32"))
-                {
-                    SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "a32").First().act.data.p115.First())).FirstOrDefault();
-
-                    if (stake == null)
-                    {
-                        _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Could Not Find Stake For a32", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
-                        return;
-                    }
-
-                    stake.End = action.block_time;
-                    _localDataManager.UpsertSparkStaking(stake);
-
-                    user.Spark += amount;
-                    _localDataManager.UpsertEOSUser(user);
-                }
-                else
-                {
-                    user.Spark += amount;
-                    _localDataManager.UpsertEOSUser(user);
-                    return;
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Process N512", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    throw ex;
                 }
             }
+            else if (transaction.traces.Any(t => t.act.name == "n511"))
+            {
+                try
+                {
+                    ProcessN511(action, amount, user, stakedSpark, transaction);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Process N511", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    throw ex;
+                }
+            }
+            else if (transaction.traces.Any(t => t.act.name == "a32"))
+            {
+                try
+                {
+                    ProcessA32(action, amount, user, stakedSpark, transaction);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Process A32", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    throw ex;
+                }
+            }
+            else
+            {
+                user.Spark += amount;
+                _localDataManager.UpsertEOSUser(user);
+                return;
+            }
+        }
+
+        private void ProcessN512(UspkTokenAccAction action, decimal amount, EOSUser user, List<SparkStaking> stakedSpark, UspkTokenAccTransactionEntry transaction)
+        {
+            SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "n512").First().act.data.p113)).FirstOrDefault();
+
+            if (stake == null)
+            {
+                _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Could Not Find Stake For n512", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                return;
+            }
+
+            if ((stake.Amount - amount) > 0)
+            {
+                _localDataManager.UpsertSparkStaking(new SparkStaking
+                {
+                    Id = -1,
+                    DGoodId = stake.DGoodId,
+                    EOSAccount = stake.EOSAccount,
+                    Amount = stake.Amount - amount,
+                    Start = action.block_time,
+                    End = null
+                });
+            }
+
+            stake.End = action.block_time;
+            _localDataManager.UpsertSparkStaking(stake);
+
+            user.Spark += amount;
+            _localDataManager.UpsertEOSUser(user);
+        }
+
+        private void ProcessN511(UspkTokenAccAction action, decimal amount, EOSUser user, List<SparkStaking> stakedSpark, UspkTokenAccTransactionEntry transaction)
+        {
+            SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "n511").First().act.data.p113)).FirstOrDefault();
+
+            if (stake == null)
+            {
+                // Check to see if it is already closed
+                stake = stakedSpark.Where(s => s.End != null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "n511").First().act.data.p113)).FirstOrDefault();
+
+                if (stake.Amount == amount)
+                {
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - n511 Stake Already Closed", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    return;
+                }
+
+                _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Could Not Find Stake For n511", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                return;
+            }
+
+            stake.End = action.block_time;
+            _localDataManager.UpsertSparkStaking(stake);
+
+            user.Spark += amount;
+            _localDataManager.UpsertEOSUser(user);
+        }
+
+        private void ProcessA32(UspkTokenAccAction action, decimal amount, EOSUser user, List<SparkStaking> stakedSpark, UspkTokenAccTransactionEntry transaction)
+        {
+            SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "a32").First().act.data.p115.First())).FirstOrDefault();
+
+            if (stake == null)
+            {
+                _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessTransferAction - Could Not Find Stake For a32", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                return;
+            }
+
+            stake.End = action.block_time;
+            _localDataManager.UpsertSparkStaking(stake);
+
+            user.Spark += amount;
+            _localDataManager.UpsertEOSUser(user);
+        }
+
+        private async Task<UspkTokenAccTransactionEntry> GetTransactionWithRetry(string transactionId, int retryCount)
+        {
+            int loop = 0;
+            while (loop < retryCount)
+            {
+                try
+                {
+                    UspkTokenAccTransactionEntry transaction = await _blockchainManager.GetSingleTransactionById<UspkTokenAccTransactionEntry>(transactionId);
+                    
+                    if (!(transaction == null || transaction.traces == null || transaction.traces.Count == 0))
+                    {
+                        return transaction;
+                    }
+                
+                }
+                catch (Exception ex)
+                {
+                    Thread.Sleep(5000);
+                }
+
+                loop++;
+            }
+
+            return null;
         }
 
         private void HandleStructureDGoodCreation(int dGoodId, UspkTokenAccAction action)

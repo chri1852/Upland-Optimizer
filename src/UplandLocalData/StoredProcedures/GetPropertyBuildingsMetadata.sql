@@ -2,7 +2,7 @@
 AS
 BEGIN
 	BEGIN TRY		
-		SELECT N.Metadata AS 'NFTMetadata', M.Metadata
+		SELECT DISTINCT N.Metadata AS 'NFTMetadata', M.Metadata
 		FROM UPL.NFTMetadata M (NOLOCK)
 			JOIN UPL.NFT N (NOLOCK)
 				ON M.Id = N.NFTMetadataId
@@ -12,7 +12,7 @@ BEGIN
 			LEFT JOIN UPL.SparkStaking H (NOLOCK)
 				ON N.DGoodId = H.DGoodId
 					AND H.[End] IS NOT NULL
-		WHERE H.[Start] IS NULL
+		WHERE H.[Start] IS NOT NULL
 	END TRY
 
 	BEGIN CATCH
