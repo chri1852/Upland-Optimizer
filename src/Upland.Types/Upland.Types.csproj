@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Authors>Alex Christensen</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.39</Version>
+    <Version>1.0.0.41</Version>
   </PropertyGroup>
 
 </Project>

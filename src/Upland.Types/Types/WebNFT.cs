@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Upland.Types.Types
 {
@@ -38,5 +36,12 @@ namespace Upland.Types.Types
         public DateTime GameDate { get; set; }
         public string Opponent { get; set; }
         public string HomeTeam { get; set; }
+
+
+        // Form Filters
+        public int IsVariantFilter { get; set; }
+
+        // Profile Filters 
+        public string Category { get; set; }
     }
 }

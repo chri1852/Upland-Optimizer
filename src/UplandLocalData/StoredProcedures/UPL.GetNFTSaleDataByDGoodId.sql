@@ -1,13 +1,13 @@
-﻿CREATE PROCEDURE [UPL].[GetSparkStakingByEOSUserId]
+﻿CREATE PROCEDURE [UPL].[GetNFTSaleDataByDGoodId]
 (
-	@EOSUserId INT
+	@DGoodId INT
 )
 AS
 BEGIN
 	BEGIN TRY	
-		SELECT *
-		FROM [UPL].[SparkStaking] (NOLOCK)
-		WHERE [EOSUserId] = @EOSUserId
+	SELECT * 
+	FROM [UPL].[NFTSaleData]
+	WHERE [DGoodId] = @DGoodId
 	END TRY
 
 	BEGIN CATCH
@@ -22,4 +22,3 @@ BEGIN
 		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
 	END CATCH
 END
-GO

@@ -20,6 +20,8 @@ namespace Upland.Types.Types
         public List<UserProfileBadge> Badges { get; set; }
         public List<UserProfileProperty> Properties { get; set; }
 
+        public List<WebNFT> ProfileNFTs { get; set; }
+
         // Only for registeredUsers
         public bool RegisteredUser { get; set; }
         public bool Supporter { get; set; }

@@ -268,12 +268,6 @@ namespace Upland.Infrastructure.Blockchain
             return totalResults;
         }
 
-        public async Task GetCleosActions(long position, string accountName)
-        {
-            GetActionsResponse Result = await this.eos.GetActions(accountName, (int)position, 1000);
-           // Result.actions.
-        }
-
         public async Task<T> GetSingleTransactionById<T>(string transactionId)
         {
             T transactionEntry;
@@ -284,6 +278,17 @@ namespace Upland.Infrastructure.Blockchain
             transactionEntry = await CallApi<T>(requestUri);
 
             return transactionEntry;
+        }
+
+        private async Task<GetPlayUplandMeActionsResponse> GetPropertyActionsFromTime(DateTime fromTime, int minutesToAdd)
+        {
+            GetPlayUplandMeActionsResponse historyQuery;
+
+            string requestUri = @"https://eos.hyperion.eosrio.io/v2/history/get_actions?account=playuplandme&limit=1000&act.name=n112";
+
+            historyQuery = await CallApi<GetPlayUplandMeActionsResponse>(requestUri);
+
+            return historyQuery;
         }
 
         public async Task<T> GetEOSFlareActions<T>(long position, string accountName)

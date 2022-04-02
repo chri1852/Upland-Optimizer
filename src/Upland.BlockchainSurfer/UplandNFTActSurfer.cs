@@ -96,17 +96,10 @@ namespace Upland.BlockchainSurfer
                     }
                     catch (Exception ex)
                     {
-                        //_localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - BuildBlockChainFromDate - Loop", ex.Message);
                         Thread.Sleep(5000);
                     }
                 }
 
-                /*
-                if (actions.Any(a => !a.irreversible))
-                {
-                    continueLoad = false;
-                }
-                */
                 if (actions.Count < 10)
                 {
                     continueLoad = false;
@@ -309,17 +302,17 @@ namespace Upland.BlockchainSurfer
 
             NFT existingNft = _localDataManager.GetNftByDGoodId(dGoodId);
 
-            if (existingNft != null)
-            {
-               _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("NFT Already Exists, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
-               return;
-            }
-
             NFTMetadata nftMetadata = _localDataManager.GetNftMetadataByNameAndCategory(action.action_trace.act.data.token_name, action.action_trace.act.data.category);
 
             if (nftMetadata == null)
             {
                 _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("No NFT Metadata Found, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
+                return;
+            }
+
+            if (existingNft != null && nftMetadata.Category != Consts.METADATA_TYPE_STRUCTURE)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessIssueAction", string.Format("NFT Already Exists, ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
                 return;
             }
 
@@ -334,30 +327,18 @@ namespace Upland.BlockchainSurfer
                 FullyLoaded = false,
             };
 
-            switch (nftMetadata.Category)
+            if (nftMetadata.Category == Consts.METADATA_TYPE_STRUCTURE)
             {
-                case "blkexplorer":
-                    await PopulateBlkexplorerNFT(newNft, nftMetadata);
-                    break;
-                case "essential":
-                    await PopulateEssentialNFT(newNft, nftMetadata);
-                    break;
-                case "memento":
-                    await PopulateMementoNFT(newNft, nftMetadata);
-                    break;
-                case "spirithlwn":
-                    await PopulateSpirithlwnNFT(newNft, nftMetadata);
-                    break;
-                case "structornmt":
-                    await PopulateStructornmtNFT(newNft, nftMetadata);
-                    break;
-                case "structure":
+                if (existingNft == null)
+                {
                     // Need to wait for the transfer action to process these
                     newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new StructureSpecificMetaData());
                     _localDataManager.UpsertNft(newNft);
-                    break;
-                default:
-                    throw new Exception("Unknown NFT Category Detected Stoping Updates");
+                }
+            }
+            else
+            {
+                await PopulateNFTAndNFTMetadata(newNft, nftMetadata);
             }
 
             if (action.action_trace.act.data.to != _playuplandme)
@@ -374,7 +355,7 @@ namespace Upland.BlockchainSurfer
             }
         }
 
-        private void ProcessTransferNFTAction(UplandNFTActAction action)
+        private async Task ProcessTransferNFTAction(UplandNFTActAction action)
         {
             if (action.action_trace.act.data.dGood_Ids.Count > 1)
             {
@@ -384,7 +365,6 @@ namespace Upland.BlockchainSurfer
 
             foreach (int dGoodId in action.action_trace.act.data.dGood_Ids)
             {
-
                 NFT transferingNft = _localDataManager.GetNftByDGoodId(dGoodId);
 
                 if (transferingNft == null && Regex.Match(action.action_trace.act.data.memo, "^BUILD,").Success)
@@ -450,6 +430,10 @@ namespace Upland.BlockchainSurfer
                     _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessTransferNFTAction", string.Format("History Between Two EOS Accounts (Unexpected), ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
                     continue;
                 }
+
+                // Check to make sure the nft is fully loaded
+                NFTMetadata nftMetadata = _localDataManager.GetNftMetadataById(transferingNft.NFTMetadataId);
+                await PopulateNFTAndNFTMetadata(transferingNft, nftMetadata);
             }
         }
 
@@ -881,6 +865,37 @@ namespace Upland.BlockchainSurfer
 
             return _currentdGoodTable.FirstOrDefault(d => d.id == dGoodId);
             */
+        }
+
+        private async Task PopulateNFTAndNFTMetadata(NFT nft, NFTMetadata metadata)
+        {
+            if (nft.FullyLoaded && metadata.FullyLoaded)
+            {
+                return;
+            }
+
+            switch (metadata.Category)
+            {
+                case "blkexplorer":
+                    await PopulateBlkexplorerNFT(nft, metadata);
+                    break;
+                case "essential":
+                    await PopulateEssentialNFT(nft, metadata);
+                    break;
+                case "memento":
+                    await PopulateMementoNFT(nft, metadata);
+                    break;
+                case "spirithlwn":
+                    await PopulateSpirithlwnNFT(nft, metadata);
+                    break;
+                case "structornmt":
+                    await PopulateStructornmtNFT(nft, metadata);
+                    break;
+                case "structure":
+                    break;
+                default:
+                    throw new Exception("Unknown NFT Category Detected Stoping Updates");
+            }
         }
     }
 }

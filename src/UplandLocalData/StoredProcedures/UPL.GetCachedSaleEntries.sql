@@ -10,7 +10,10 @@
 
 	@Currency VARCHAR(3),
 	@Address VARCHAR(200),
-	@Username VARCHAR(50)
+	@Username VARCHAR(50),
+
+	@FromDate DATETIME,
+    @ToDate DATETIME
 )
 AS
 BEGIN
@@ -49,6 +52,8 @@ BEGIN
 			JOIN UPL.EOSUser Buyer (NOLOCK)
 				ON SH.BuyerEOS = Buyer.EOSAccount
 		WHERE (SH.SellerEOS IS NOT NULL AND SH.BuyerEOS IS NOT NULL)
+			AND SH.[DateTime] > @FromDate
+			AND SH.[DateTime] < @ToDate
 			AND ((@NoSales = 0) OR (@NoSales = 1 AND SH.Offer = 1))
 			AND ((@NoSwaps = 0) OR (@NoSwaps = 1 AND SH.OfferPropId IS NULL))
 			AND ((@NoOffers = 0) OR (@NoOffers = 1 AND (SH.Offer = 0 OR SH.OfferPropId IS NOT NULL)))

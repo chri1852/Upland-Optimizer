@@ -18,6 +18,9 @@ namespace Upland.Types.Types
         public string Address { get; set; }
         public string Username { get; set; }
 
+        public DateTime FromDate { get; set; }
+        public DateTime ToDate { get; set; }
+
         public List<int> NeighborhoodIds { get; set; }
         public List<int> CollectionIds { get; set; }
 

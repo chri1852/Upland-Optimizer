@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -448,6 +449,11 @@ namespace Upland.Infrastructure.LocalData
         public List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds)
         {
             return _localDataRepository.GetNFTsByNFTMetadataId(metadataIds);
+        }
+
+        public List<NFT> GetNFTsByOwnerEOS(string EOSAccount)
+        {
+            return _localDataRepository.GetNFTsByOwnerEOS(EOSAccount);
         }
 
         public Property GetProperty(long id)
@@ -947,9 +953,36 @@ namespace Upland.Infrastructure.LocalData
             _localDataRepository.CreatePropertyStructure(propertyStructure);
         }
 
+        public static byte[] EncodeMetadata<T>(T metadata)
+        {
+            return Encoding.UTF8.GetBytes(JsonSerializer.Serialize<T>(metadata));
+        }
+
+        public static T DecodeMetadata<T>(byte[] metadata)
+        {
+            return JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(metadata));
+        }
+
         public List<PropertyStructure> GetPropertyStructures()
         {
-            return _localDataRepository.GetPropertyStructures();
+            //return _localDataRepository.GetPropertyStructures();
+
+            List<PropertyStructure> propStructures = new List<PropertyStructure>();
+            List<Tuple<byte[], byte[]>> propStructureMetadatas = _localDataRepository.GetPropertyBuildingsMetadata();
+            int i = 0;
+            foreach(Tuple<byte[], byte[]> tuple in propStructureMetadatas)
+            {
+                propStructures.Add(new PropertyStructure
+                {
+                    Id = i,
+                    PropertyId = JsonSerializer.Deserialize<StructureSpecificMetaData>(Encoding.UTF8.GetString(tuple.Item1)).PropertyId,
+                    StructureType = JsonSerializer.Deserialize<StructureMetadata>(Encoding.UTF8.GetString(tuple.Item2)).DisplayName,
+                });
+
+                i++;
+            }
+
+            return propStructures;
         }
 
         public void UpsertEOSUser(EOSUser eOSUser)
@@ -977,9 +1010,9 @@ namespace Upland.Infrastructure.LocalData
             _localDataRepository.UpsertSparkStaking(sparkStaking);
         }
 
-        public List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId)
+        public List<SparkStaking> GetSparkStakingByEOSAccount(string eosAccount)
         {
-            return _localDataRepository.GetSparkStakingByEOSUserId(eosUserId);
+            return _localDataRepository.GetSparkStakingByEOSAccount(eosAccount);
         }
 
         public void UpsertNft(NFT nft)
@@ -1025,6 +1058,16 @@ namespace Upland.Infrastructure.LocalData
         public Dictionary<int, int> GetCurrentNFTCounts()
         {
             return _localDataRepository.GetCurrentNFTCounts();
+        }
+
+        public void UpsertNFTSaleData(NFTSaleData saleData)
+        {
+            _localDataRepository.UpsertNFTSaleData(saleData);
+        }
+
+        public List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId)
+        {
+            return _localDataRepository.GetNFTSaleDataByDGoodId(dGoodId);
         }
     }
 }

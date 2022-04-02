@@ -1070,7 +1070,7 @@ namespace Upland.InformationProcessor
 
             if (fileType == "CSV")
             {
-                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Status,Owner,FSA,Address,Structure");
+                output.Add("PropertyId,Size,Mint,NeighborhoodId,CityId,Status,FSA,Address,Structure");
 
                 foreach (Property property in properties.Values)
                 {
@@ -1082,7 +1082,7 @@ namespace Upland.InformationProcessor
                     propString += string.Format("{0},", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1");
                     propString += string.Format("{0},", property.CityId);
                     propString += string.Format("{0},", property.Status);
-                    propString += string.Format("{0},", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).UplandUsername);
+                    //propString += string.Format("{0},", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).UplandUsername);
                     propString += string.Format("{0},", property.FSA);
                     propString += string.Format("{0},", property.Address);
                     propString += string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None");
@@ -1104,14 +1104,14 @@ namespace Upland.InformationProcessor
 
                 output.Add(string.Format("Properties For {0} {1}", type, Id));
                 output.Add("");
-                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8} - {9}"
+                output.Add(string.Format("{0} - {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}"
                     , "Id".PadLeft(idPad)
                     , "Size".PadLeft(sizePad)
                     , "Mint".PadLeft(mintPad)
                     , "NeighborhoodId".PadLeft(neighborhoodPad)
                     , "CityId".PadLeft(cityPad)
                     , "Status".PadLeft(statusPad)
-                    , "Owner".PadLeft(ownerPad)
+                   // , "Owner".PadLeft(ownerPad)
                     , "FSA".PadLeft(fsaPad)
                     , "Address".PadLeft(addressPad)
                     , "Structure".PadLeft(structurePad)));
@@ -1125,7 +1125,7 @@ namespace Upland.InformationProcessor
                         , string.Format("{0}", property.NeighborhoodId.HasValue ? property.NeighborhoodId.Value.ToString() : "-1").PadLeft(neighborhoodPad)
                         , string.Format("{0}", cityId).PadLeft(cityPad)
                         , string.Format("{0}", property.Status).PadLeft(statusPad)
-                        , string.Format("{0}", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).UplandUsername).PadLeft(ownerPad)
+                       // , string.Format("{0}", _localDataManager.GetUplandUsernameByEOSAccount(property.Owner).UplandUsername).PadLeft(ownerPad)
                         , string.Format("{0}", property.FSA).PadLeft(fsaPad)
                         , property.Address.PadLeft(addressPad)
                         , string.Format("{0}", propertyStructures.ContainsKey(property.Id) ? propertyStructures[property.Id] : "None").PadLeft(structurePad)

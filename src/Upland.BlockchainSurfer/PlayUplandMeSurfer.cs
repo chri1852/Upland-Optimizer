@@ -118,12 +118,6 @@ namespace Upland.BlockchainSurfer
                     }
                 }
 
-                /*
-                if (actions.Any(a => !a.irreversible))
-                {
-                    continueLoad = false;
-                }
-                */
                 if (actions.Count < 100)
                 {
                     continueLoad = false;
@@ -194,10 +188,13 @@ namespace Upland.BlockchainSurfer
                         ProcessDeleteVisitorAction(action);
                         break;
                     case "n41":
-                       // ProcessSendAction(action);
+                        ProcessSendAction(action);
                         break;
                     case "n111":
-                        //ProcessSendUPXAction(action);
+                        ProcessSendUPXAction(action);
+                        break;
+                    case "n112":
+                        await ProcessPurchaseNFT(action);
                         break;
                 }
 
@@ -1108,16 +1105,6 @@ namespace Upland.BlockchainSurfer
 
         private void ProcessSendUPXAction(PlayUplandMeAction action)
         {
-            PlayUplandMeData subData = null;
-            try
-            {
-                subData = JsonConvert.DeserializeObject<PlayUplandMeData>(action.action_trace.act.data.data);
-            }
-            catch
-            {
-                // Eat it
-            }
-
             if (action.action_trace.act.data.p2 != null && action.action_trace.act.data.p2 == Consts.HornbrodEOSAccount && _registeredUserEOSAccounts.Any(e => e.Item3 == action.action_trace.act.data.p1))
             {
                 try
@@ -1132,24 +1119,45 @@ namespace Upland.BlockchainSurfer
                     _localDataManager.CreateErrorLog("PlayUplandMeSurfer - Process Send UPX", string.Format("Failed Adding UPX, p1: {0}, p133: {1}, p134: {2}, p2: {3}, p45: {4}, ex: {5}", action.action_trace.act.data.p1, action.action_trace.act.data.p133, action.action_trace.act.data.p134, action.action_trace.act.data.p2, action.action_trace.act.data.p45, ex.Message));
                 }
             }
-            else if (subData != null && subData.p2 != null && subData.p2 == Consts.HornbrodEOSAccount && _registeredUserEOSAccounts.Any(e => e.Item3 == subData.p1))
+        }
+
+        public async Task ProcessPurchaseNFT(PlayUplandMeAction action)
+        {
+            if (action.action_trace.act.data.p14 == null || action.action_trace.act.data.p25 == null || action.action_trace.act.data.p141 == null || action.action_trace.act.data.p142 == null)
             {
-                try
-                {
-                    string uplandUsername = _registeredUserEOSAccounts.Where(e => e.Item3 == subData.p1).First().Item2;
-                    RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUsername);
-                    registeredUser.SendUPX += int.Parse(subData.p45.Split(".00 UP")[0]) - (int)Math.Floor(double.Parse(subData.p134.Split("UP")[0]));
-                    _localDataManager.UpdateRegisteredUser(registeredUser);
-                }
-                catch (Exception ex)
-                {
-                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer - Process Send UPX Sub", string.Format("Failed Adding UPX, p1: {0}, p133: {1}, p134: {2}, p2: {3}, p45: {4}, ex: {5}", subData.p1, subData.p133, subData.p134, subData.p2, subData.p45, ex.Message));
-                }
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseNFT", string.Format("p14 (buyer): {0}, p25 (seller): {1}, p141 (amount): {2}, Trx_id: {3}", action.action_trace.act.data.p14, action.action_trace.act.data.p25, action.action_trace.act.data.p141, action.action_trace.trx_id));
+                return;
             }
-            else
+
+            if (action.action_trace.act.data.p135 != null || action.action_trace.act.data.p143 != null)
             {
-                _localDataManager.CreateErrorLog("PlayUplandMeSurfer - Failed Process Send UPX", string.Format("Failed Adding UPX, trxId: {0}", action.action_trace.trx_id));
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseNFT - p135 or p143 Not Null", string.Format("p135: {0}, p143: {1}, Trx_id: {2}", action.action_trace.act.data.p135, action.action_trace.act.data.p143, action.action_trace.trx_id));
+                return;
             }
+
+            PlayUplandMeTransactionEntry transactionTrace = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.trx_id);
+
+            if (transactionTrace?.traces == null 
+                || transactionTrace.traces.Count == 0 
+                || !transactionTrace.traces.Any(t => t.act.name == "transfernft")
+                || transactionTrace.traces.Where(t => t.act.name == "transfernft").First().act.data.dgood_ids.Count > 1)
+            {
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseNFT - No Valid Transfer Found", string.Format("Trx_id: {2}", action.action_trace.trx_id));
+                return;
+            }
+
+            NFTSaleData saleData = new NFTSaleData
+            {
+                Id = -1,
+                DGoodId = int.Parse(transactionTrace.traces.Where(t => t.act.name == "transfernft").First().act.data.dgood_ids.First()),
+                SellerEOS = action.action_trace.act.data.p25,
+                BuyerEOS = action.action_trace.act.data.p14,
+                Amount = decimal.Parse(action.action_trace.act.data.p141.Split(" UPX")[0]),
+                AmountFiat = 0,
+                DateTime = action.block_time
+            };
+
+            _localDataManager.UpsertNFTSaleData(saleData);
         }
 
         private async Task<Property> TryToLoadPropertyById(long propertyId)

@@ -32,6 +32,7 @@ namespace Upland.Interfaces.Repositories
         Property GetProperty(long id);
         List<Property> GetProperties(List<long> propertyIds);
         List<NFT> GetNFTsByNFTMetadataId(List<int> metadataIds);
+        List<NFT> GetNFTsByOwnerEOS(string EOSAccount);
         List<Property> GetPropertiesByUplandUsername(string uplandUsername);
         List<Property> GetPropertiesByCollectionId(int collectionId);
         List<Property> GetPropertiesByCityId(int cityId);
@@ -84,7 +85,7 @@ namespace Upland.Interfaces.Repositories
         void TruncatePropertyStructure();
         List<PropertyStructure> GetPropertyStructures();
         void UpsertSparkStaking(SparkStaking sparkStaking);
-        List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId);
+        List<SparkStaking> GetSparkStakingByEOSAccount(string eosAccount);
         void UpsertNft(NFT nft);
         void UpsertNftMetadata(NFTMetadata nftMetadata);
         void UpsertNftHistory(NFTHistory nftHistory);
@@ -94,5 +95,8 @@ namespace Upland.Interfaces.Repositories
         List<NFTMetadata> GetAllNFTMetadata();
         List<NFTHistory> GetNftHistoryByDGoodId(int dGoodId);
         Dictionary<int, int> GetCurrentNFTCounts();
+        void UpsertNFTSaleData(NFTSaleData saleData);
+        List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId);
+        List<Tuple<byte[], byte[]>> GetPropertyBuildingsMetadata();
     }
 }   

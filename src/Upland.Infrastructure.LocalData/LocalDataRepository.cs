@@ -134,6 +134,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 60;
                     sqlCmd.CommandText = "[UPL].[GetCachedForSalePropertiesByCityId]";
                     sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
@@ -155,7 +156,6 @@ namespace Upland.Infrastructure.LocalData
                                     Owner = (string)reader["Owner"],
                                     Mint = decimal.ToDouble((decimal)reader["Mint"]),
                                     Markup = decimal.ToDouble((decimal)reader["Markup"]),
-                                    Building = (string)reader["Building"],
                                     CollectionIds = new List<int>()
                                 }
                              );
@@ -190,6 +190,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 60;
                     sqlCmd.CommandText = "[UPL].[GetCachedSaleEntries]";
                     sqlCmd.Parameters.Add(new SqlParameter("CityIdSearch", filters.CityIdSearch));
                     sqlCmd.Parameters.Add(new SqlParameter("SearchByCityId", filters.SearchByCityId));
@@ -217,6 +218,9 @@ namespace Upland.Infrastructure.LocalData
                         sqlCmd.Parameters.Add(new SqlParameter("Username", DBNull.Value));
                     else
                         sqlCmd.Parameters.Add(new SqlParameter("Username", filters.Username.ToLower()));
+
+                    sqlCmd.Parameters.Add(new SqlParameter("FromDate", filters.FromDate));
+                    sqlCmd.Parameters.Add(new SqlParameter("ToDate", filters.ToDate));
 
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -1104,6 +1108,57 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<NFT> GetNFTsByOwnerEOS(string EOSAccount)
+        {
+            List<NFT> nfts = new List<NFT>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTsByOwnerEOS]";
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", EOSAccount));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nfts.Add(
+                                new NFT
+                                {
+                                    DGoodId = (int)reader["DGoodId"],
+                                    NFTMetadataId = (int)reader["NFTMetadataId"],
+                                    SerialNumber = (int)reader["SerialNumber"],
+                                    Burned = (bool)reader["Burned"],
+                                    CreatedOn = ReadNullParameterSafe<DateTime>(reader, "CreatedDateTime"),
+                                    BurnedOn = ReadNullParameterSafe<DateTime>(reader, "BurnedDateTime"),
+                                    FullyLoaded = (bool)reader["FullyLoaded"],
+                                    Metadata = (byte[])reader["Metadata"],
+                                    Owner = reader["UplandUsername"] == DBNull.Value ? "" : (string)reader["UplandUsername"]
+                                }
+                             );
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nfts;
+            }
+        }
+
         public List<Property> GetPropertiesByUplandUsername(string uplandUsername)
         {
             List<Property> properties = new List<Property>();
@@ -1198,6 +1253,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 60;
                     sqlCmd.CommandText = "[UPL].[GetPropertiesByCityId]";
                     sqlCmd.Parameters.Add(new SqlParameter("CityId", cityId));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
@@ -3176,7 +3232,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.CommandText = "[UPL].[UpsertSparkStaking]";
                     sqlCmd.Parameters.Add(new SqlParameter("Id", sparkStaking.Id));
                     sqlCmd.Parameters.Add(new SqlParameter("DGoodId", sparkStaking.DGoodId));
-                    sqlCmd.Parameters.Add(new SqlParameter("EOSUserId", sparkStaking.EOSUserId));
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", sparkStaking.EOSAccount));
                     sqlCmd.Parameters.Add(new SqlParameter("Amount", sparkStaking.Amount));
                     sqlCmd.Parameters.Add(new SqlParameter("Start", sparkStaking.Start));
                     sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("End", sparkStaking.End));
@@ -3194,7 +3250,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public List<SparkStaking> GetSparkStakingByEOSUserId(int eosUserId)
+        public List<SparkStaking> GetSparkStakingByEOSAccount(string eosAccount)
         {
             List<SparkStaking> sparkStakings = new List<SparkStaking>();
             SqlConnection sqlConnection = GetSQLConnector();
@@ -3208,8 +3264,8 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandText = "[UPL].[GetSparkStakingByEOSUserId]";
-                    sqlCmd.Parameters.Add(new SqlParameter("EOSUserId", eosUserId));
+                    sqlCmd.CommandText = "[UPL].[GetSparkStakingByEOSAccount]";
+                    sqlCmd.Parameters.Add(new SqlParameter("EOSAccount", eosAccount));
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -3218,7 +3274,7 @@ namespace Upland.Infrastructure.LocalData
                             {
                                 Id = (int)reader["Id"],
                                 DGoodId = (int)reader["DGoodId"],
-                                EOSUserId = (int)reader["EOSUserId"],
+                                EOSAccount = (string)reader["EOSAccount"],
                                 Amount = (decimal)reader["Amount"],
                                 Start = (DateTime)reader["Start"],
                                 End = ReadNullParameterSafe<DateTime?>(reader, "End")
@@ -3608,6 +3664,127 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return nftCounts;
+            }
+        }
+
+        public void UpsertNFTSaleData(NFTSaleData saleData)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertNFTSaleData]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", saleData.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", saleData.DGoodId));
+                    sqlCmd.Parameters.Add(new SqlParameter("SellerEOS", saleData.SellerEOS));
+                    sqlCmd.Parameters.Add(new SqlParameter("BuyerEOS", saleData.BuyerEOS));
+                    sqlCmd.Parameters.Add(new SqlParameter("Amount", saleData.Amount));
+                    sqlCmd.Parameters.Add(new SqlParameter("AmountFiat", saleData.AmountFiat));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("DateTime", saleData.DateTime));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId)
+        {
+            List<NFTSaleData> saleData = new List<NFTSaleData>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTSaleDataByDGoodId]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodId", dGoodId));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            saleData.Add(new NFTSaleData
+                            {
+                                Id = (int)reader["Id"],
+                                DGoodId = (int)reader["DGoodId"],
+                                SellerEOS = (string)reader["SellerEOS"],
+                                BuyerEOS = (string)reader["BuyerEOS"],
+                                Amount = (decimal)reader["Amount"],
+                                AmountFiat = (decimal)reader["AmountFiat"],
+                                DateTime = (DateTime)reader["DateTime"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return saleData;
+            }
+        }
+
+        public List<Tuple<byte[], byte[]>> GetPropertyBuildingsMetadata()
+        {
+            List<Tuple<byte[], byte[]>> propertyStructureMetadata = new List<Tuple<byte[], byte[]>>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetPropertyBuildingsMetadata]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            propertyStructureMetadata.Add(new Tuple<byte[], byte[]>((byte[])reader["NFTMetadata"], (byte[])reader["Metadata"]));
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return propertyStructureMetadata;
             }
         }
 

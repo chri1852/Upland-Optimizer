@@ -27,8 +27,13 @@ namespace Upland.Types.BlockchainTypes
         public string p54 { get; set; }
         public string p133 { get; set; }
         public string p134 { get; set; }
+        public string p135 { get; set; }
+        public string p141 { get; set; }
+        public string p142 { get; set; }
+        public string p143 { get; set; }
 
         public string id { get; set; }
         public string data { get; set; }
+        public List<string> dgood_ids { get; set; }
     }
 }

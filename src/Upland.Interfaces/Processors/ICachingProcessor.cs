@@ -17,6 +17,7 @@ namespace Upland.InformationProcessor
         Dictionary<int, BlockExplorerMetadata> GetBlockExplorerMetadataFromCache();
         Dictionary<int, EssentialMetadata> GetEssentialMetadataFromCache();
         Dictionary<int, MementoMetadata> GetMementoMetadataFromCache();
+        Dictionary<int, StructureMetadata> GetStructureMetadataFromCache();
         bool GetIsBlockchainUpdatesDisabledFromCache();
         string GetLatestAnnouncemenFromCache();
         List<int> GetCollectionIdListForPropertyId(long propertyId);
