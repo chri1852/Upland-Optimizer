@@ -129,9 +129,10 @@ namespace Upland.BlockchainSurfer
                 }
                 catch (Exception ex)
                 {
-                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
-                    _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
-                    continueLoad = false;
+                    _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessActions - Exception Bubbled Up", ex.Message);
+                    Thread.Sleep(5000);
+                    //_localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
+                    //continueLoad = false;
                 }
 
                 lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDACTIONSEQNUM));

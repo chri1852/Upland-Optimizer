@@ -264,7 +264,7 @@ namespace Startup.Commands
 
             try
             {
-                await _informationProcessor.RebuildPropertyStructures();
+                _informationProcessor.RebuildPropertyStructures();
                 await ReplyAsync(string.Format("PropertyStructures Rebuilt."));
             }
             catch (Exception ex)

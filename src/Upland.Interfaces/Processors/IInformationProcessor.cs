@@ -20,7 +20,7 @@ namespace Upland.Interfaces.Processors
         Task<List<string>> GetAssetsByTypeAndUserName(string type, string userName, string fileType);
         List<string> GetSaleHistoryByType(string type, string identifier, string fileType);
         void ClearSalesCache();
-        Task RebuildPropertyStructures();
+        void RebuildPropertyStructures();
         Task LoadMissingCityProperties(int cityId);
         Task ResetLockedPropsToLocked(int cityId);
         Task<List<string>> GetBuildingsUnderConstruction(int userLevel);

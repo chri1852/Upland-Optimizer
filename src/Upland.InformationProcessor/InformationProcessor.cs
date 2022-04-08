@@ -1538,10 +1538,12 @@ namespace Upland.InformationProcessor
             _uplandApiManager.ClearSalesCache();
         }
 
-        public async Task RebuildPropertyStructures()
+        public void RebuildPropertyStructures()
         {
-            List<PropertyStructure> propertyStructures = await _blockchainManager.GetPropertyStructures();
-            List<long> underConstructionProps = await _blockchainManager.GetPropertiesUnderConstruction();
+            // this gets them from the database (updated by the blockchain)
+            // set them for the ease of some stored procedures
+            List<PropertyStructure> propertyStructures = _localDataManager.GetPropertyStructures();
+
             _localDataManager.TruncatePropertyStructure();
 
             List<long> savedIds = new List<long>();
@@ -1549,11 +1551,6 @@ namespace Upland.InformationProcessor
 
             foreach (PropertyStructure propertyStructure in propertyStructures)
             {
-                if (underConstructionProps.Contains(propertyStructure.PropertyId))
-                {
-                    continue;
-                }
-
                 if (!savedIds.Contains(propertyStructure.PropertyId))
                 {
                     if (!uniqueBuildings.Contains(propertyStructure.StructureType))
@@ -1563,7 +1560,6 @@ namespace Upland.InformationProcessor
 
                     try
                     {
-                        propertyStructure.StructureType = HelperFunctions.TranslateStructureType(propertyStructure.StructureType);
                         _localDataManager.CreatePropertyStructure(propertyStructure);
                     }
                     catch (Exception ex)

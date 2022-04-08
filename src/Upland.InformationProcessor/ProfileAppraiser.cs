@@ -18,25 +18,25 @@ namespace Upland.InformationProcessor
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _currentFloorData;
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _currentMarkupFloorData;
         private Dictionary<string, double> _buildingData;
-        private Dictionary<long, string> _propertyStructures;
 
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _newPreviousSalesData;
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _newCurrentFloorData;
         private Dictionary<Tuple<string, int, string>, PropertyAppraisalData> _newCurrentMarkupFloorData;
         private Dictionary<string, double> _newBuildingData;
-        private Dictionary<long, string> _newPropertyStructures;
 
         private DateTime? _expirationDate;
 
         private ILocalDataManager _localDataManager;
         private IUplandApiManager _uplandApiManager;
+        private ICachingProcessor _cachingProcessor;
 
         private List<Collection> _collections;
 
-        public ProfileAppraiser(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
+        public ProfileAppraiser(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, ICachingProcessor cachingProcessor)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;
+            _cachingProcessor = cachingProcessor;
 
             _collections = _localDataManager.GetCollections();
 
@@ -79,6 +79,7 @@ namespace Upland.InformationProcessor
             UplandUserProfile userProfile = await _uplandApiManager.GetUplandUserProfile(username.ToLower());
             List<Property> properties = _localDataManager.GetProperties(userProfile.propertyList);
             List<PropertyAppraisal> propertyAppraisals = new List<PropertyAppraisal>();
+            Dictionary<long, string> propertyStructures = _cachingProcessor.GetPropertyStructuresFromCache();
 
             RefreshData();
 
@@ -284,19 +285,19 @@ namespace Upland.InformationProcessor
                     propertyAppraisal.UPX_Mid = property.Mint;
                 }
 
-                if (_propertyStructures.ContainsKey(property.Id))
+                if (propertyStructures.ContainsKey(property.Id))
                 {
-                    if (_buildingData.ContainsKey(_propertyStructures[property.Id]))
+                    if (_buildingData.ContainsKey(propertyStructures[property.Id]))
                     {
-                        propertyAppraisal.UPX_Lower += _buildingData[_propertyStructures[property.Id]];
-                        propertyAppraisal.UPX_Mid += _buildingData[_propertyStructures[property.Id]];
-                        propertyAppraisal.UPX_Upper += _buildingData[_propertyStructures[property.Id]];
-                        propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Building Value Added", (decimal)_buildingData[_propertyStructures[property.Id]]));
-                        propertyAppraisal.Notes.Add(string.Format("{0}", _propertyStructures[property.Id]));
+                        propertyAppraisal.UPX_Lower += _buildingData[propertyStructures[property.Id]];
+                        propertyAppraisal.UPX_Mid += _buildingData[propertyStructures[property.Id]];
+                        propertyAppraisal.UPX_Upper += _buildingData[propertyStructures[property.Id]];
+                        propertyAppraisal.Figures.Add(new PropertyAppraisalFigure("Building Value Added", (decimal)_buildingData[propertyStructures[property.Id]]));
+                        propertyAppraisal.Notes.Add(string.Format("{0}", propertyStructures[property.Id]));
                     }
                     else
                     {
-                        propertyAppraisal.Notes.Add(string.Format("Not Enough Sales Data to Appraise a {0}", _propertyStructures[property.Id]));
+                        propertyAppraisal.Notes.Add(string.Format("Not Enough Sales Data to Appraise a {0}", propertyStructures[property.Id]));
                     }
                 }
 
@@ -444,8 +445,6 @@ namespace Upland.InformationProcessor
                     .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                 _buildingData = _localDataManager.GetBuildingAppraisalData()
                     .ToDictionary(d => d.Item1, d => d.Item2);
-                _propertyStructures = _localDataManager.GetPropertyStructures()
-                    .ToDictionary(d => d.PropertyId, d => d.StructureType);
 
                 _expirationDate = DateTime.Now.AddHours(24);
             }
@@ -463,14 +462,11 @@ namespace Upland.InformationProcessor
                         .ToDictionary(d => new Tuple<string, int, string>(d.Type, d.Id, d.Currency), d => d);
                     _newBuildingData = _localDataManager.GetBuildingAppraisalData()
                         .ToDictionary(d => d.Item1, d => d.Item2);
-                    _newPropertyStructures = _localDataManager.GetPropertyStructures()
-                        .ToDictionary(d => d.PropertyId, d => d.StructureType);
 
                     _previousSalesData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newPreviousSalesData);
                     _currentFloorData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newCurrentFloorData);
                     _currentMarkupFloorData = new Dictionary<Tuple<string, int, string>, PropertyAppraisalData>(_newCurrentMarkupFloorData);
                     _buildingData = new Dictionary<string, double>(_newBuildingData);
-                    _propertyStructures = new Dictionary<long, string>(_newPropertyStructures);
                 });
             }
         }

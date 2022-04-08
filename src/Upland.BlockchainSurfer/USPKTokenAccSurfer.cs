@@ -102,11 +102,13 @@ namespace Upland.BlockchainSurfer
                 }
                 catch (Exception ex)
                 {
-                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", string.Format("message: {0}, trace: {1}", ex.Message, ex.StackTrace));
-                    _localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - ProcessActions - Exception Bubbled Up", string.Format("message: {0}, trace: {1}", ex.Message, ex.StackTrace));
+                    Thread.Sleep(5000);
+                    //_localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
+                    continueLoad = false;
                 }
 
-                lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUSPKTOKENACCACTIONSEQNUM));   
+                lastActionProcessed = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUSPKTOKENACCACTIONSEQNUM));
             }
 
             _isProcessing = false;

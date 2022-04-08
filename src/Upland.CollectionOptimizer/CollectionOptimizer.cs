@@ -454,7 +454,7 @@ namespace Upland.CollectionOptimizer
             foreach (KeyValuePair<int, Collection> entry in conflictingCollections)
             {
                 Dictionary<int, Collection> copiedCollections = HelperFunctions.DeepCollectionClone(conflictingCollections);
-                double collectionMax = RecursiveMaxUpxFinder(copiedCollections, entry.Value, ignorePropertyIds);
+                double collectionMax = Math.Round(RecursiveMaxUpxFinder(copiedCollections, entry.Value, ignorePropertyIds));
 
                 if (collectionMax > maxMonthly
                     || (collectionMax == maxMonthly && (Consts.StandardCollectionIds.Contains(maxCollectionId) || isMaxCityCollection)))
