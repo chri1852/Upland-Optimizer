@@ -190,7 +190,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
-                    sqlCmd.CommandTimeout = 60;
+                    sqlCmd.CommandTimeout = 120;
                     sqlCmd.CommandText = "[UPL].[GetCachedSaleEntries]";
                     sqlCmd.Parameters.Add(new SqlParameter("CityIdSearch", filters.CityIdSearch));
                     sqlCmd.Parameters.Add(new SqlParameter("SearchByCityId", filters.SearchByCityId));

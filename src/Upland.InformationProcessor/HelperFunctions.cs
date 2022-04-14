@@ -77,7 +77,7 @@ namespace Upland.InformationProcessor
                 case 3:
                     return new List<double> { 40.882824, 40.680972, -73.902522, -74.052383 };
                 case 4:
-                    return new List<double> { 40.659563, 40.627391, -73.757297, -73.813173 };
+                    return new List<double> { 40.808595, 40.538835, -73.696619, -73.970590 };
                 case 5:
                     return new List<double> { 36.953982, 36.648627, -119.592434, -119.941636 };
                 case 6:

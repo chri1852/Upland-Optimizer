@@ -41,49 +41,52 @@ namespace Upland.Types
         public static readonly Dictionary<int, string> Cities = new Dictionary<int, string>
         {
             // Main Cities
-            { 1    , "San Francisco"  },
-            { 3    , "Manhattan"      },
-            { 4    , "Queens"         },
-            { 5    , "Fresno"         },
-            { 6    , "Brooklyn"       },
-            { 7    , "Oakland"        },
-            { 8    , "Staten Island"  },
-            { 9    , "Bakersfield"    },
-            { 10   , "Chicago"        },
-            { 11   , "Cleveland"      },
-            { 12   , "Santa Clara"    },
-            { 13   , "Rutherford"     },
-            { 14   , "Kansas City"    },
-            { 15   , "New Orleans"    },
-            { 16   , "Nashville"      },
-            { 29   , "Bronx"          },
-            { 32   , "Los Angeles"    },
-            { 33   , "Detroit"        },
+            { 1    , "San Francisco"    },
+            { 3    , "Manhattan"        },
+            { 4    , "Queens"           },
+            { 5    , "Fresno"           },
+            { 6    , "Brooklyn"         },
+            { 7    , "Oakland"          },
+            { 8    , "Staten Island"    },
+            { 9    , "Bakersfield"      },
+            { 10   , "Chicago"          },
+            { 11   , "Cleveland"        },
+            { 12   , "Santa Clara"      },
+            { 13   , "Rutherford"       },
+            { 14   , "Kansas City"      },
+            { 15   , "New Orleans"      },
+            { 16   , "Nashville"        },
+            { 29   , "Bronx"            },
+            { 32   , "Los Angeles"      },
+            { 33   , "Detroit"          },
 
             // NYC Subcities
-            { 17   , "New York"       },
+            { 17   , "New York"         },
 
             // Fresno Subcities
-            { 18   , "Clovis"         },
+            { 18   , "Clovis"           },
 
             // Oakland Subcities
-            { 19   , "Piedmont"       },
-            { 30   , "Alameda"        },
-            { 31   , "Berkeley"       },
+            { 19   , "Piedmont"         },
+            { 30   , "Alameda"          },
+            { 31   , "Berkeley"         },
 
             // Nashville Subcities
-            { 20   , "Joelton"        },
-            { 21   , "Goodlettsville" },
-            { 22   , "Ashland City"   },
-            { 23   , "Madison"        },
-            { 24   , "Old Hickory"    },
-            { 25   , "Hermitage"      },
-            { 26   , "Antioch"        },
-            { 27   , "Nolensville"    },
-            { 28   , "Whites Creek"   },
+            { 20   , "Joelton"          },
+            { 21   , "Goodlettsville"   },
+            { 22   , "Ashland City"     },
+            { 23   , "Madison"          },
+            { 24   , "Old Hickory"      },
+            { 25   , "Hermitage"        },
+            { 26   , "Antioch"          },
+            { 27   , "Nolensville"      },
+            { 28   , "Whites Creek"     },
 
             // Los Angeles Subcities
-            { -1   , "Inglewood"      },
+            { -1   , "Inglewood"        },
+
+            // Queens Bus Stops
+            { 34   , "Queens Bus Stops" }
         };
 
         public static readonly Dictionary<int, string> CollectionCategories = new Dictionary<int, string>
@@ -111,7 +114,7 @@ namespace Upland.Types
         public const int MAX_LINES_TO_RETURN = 25000;
         //public const double RateOfReturn = 0.1728; //Changed 01/27/2022
         public const double RateOfReturn = 0.145152;
-        public const int MaxStreetNumber = 55692;
+        public const int MaxStreetNumber = 58560;
         public const string HornbrodEOSAccount = "oqtr232h2c23";
     }
 }
