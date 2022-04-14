@@ -211,6 +211,28 @@ namespace Startup.Commands
             }
         }
 
+        [Command("GrantRuns")]
+        public async Task GrantRuns(string uplandUsername, int runCount)
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                RegisteredUser registeredUser = _localDataManager.GetRegisteredUserByUplandUsername(uplandUsername);
+                registeredUser.RunCount -= runCount;
+                _localDataManager.UpdateRegisteredUser(registeredUser);
+                await ReplyAsync(string.Format("Granted {0} {1} runs.", uplandUsername, runCount));
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("AdminCommands - GrantRuns", ex.Message);
+                await ReplyAsync(string.Format("Failed: {0}", ex.Message));
+            }
+        }
+
         [Command("SetUserPaid")]
         public async Task SetUserPaid(string uplandUsername)
         {

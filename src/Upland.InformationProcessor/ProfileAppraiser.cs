@@ -359,7 +359,7 @@ namespace Upland.InformationProcessor
                 property.City = Consts.Cities[appraisal.Property.CityId];
                 property.Address = appraisal.Property.Address;
                 property.Size = appraisal.Property.Size;
-                property.Collections = new List<int>();
+                property.Collections = _collections.Where(c => c.MatchingPropertyIds.Contains(appraisal.Property.Id)).Select(c => c.Id).ToList();
                 property.Mint = appraisal.Property.Mint;
                 property.LowerValue = appraisal.UPX_Lower;
                 property.MiddleValue = appraisal.UPX_Mid;

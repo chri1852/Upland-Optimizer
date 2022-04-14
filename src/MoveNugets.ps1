@@ -1,6 +1,6 @@
 $localNugetFolder = "C:\LocalNuget"
 $OptimizerBase = "C:\Github\Upland-Optimizer\src\"
-$VersionNumber = "1.0.0.41"
+$VersionNumber = "1.0.0.42"
 Remove-Item -Path "$($localNugetFolder)\*"
 
 Move-Item -Path "$($OptimizerBase)Upland.CollectionOptimizer\bin\Debug\Upland.CollectionOptimizer.$($VersionNumber).nupkg" -Destination "C:\LocalNuget"

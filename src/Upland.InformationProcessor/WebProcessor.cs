@@ -317,6 +317,79 @@ namespace Upland.InformationProcessor
             }
         }
 
+        public List<UIPropertyHistory> GetPropertyHistory(long propertyId)
+        {
+            List<UIPropertyHistory> history = new List<UIPropertyHistory>();
+
+            Property property = _localDataManager.GetProperty(propertyId);
+            if (property != null)
+            {
+                if (property.MintedBy != null && property.MintedOn != null)
+                {
+                    EOSUser minter = _localDataManager.GetUplandUsernameByEOSAccount(property.MintedBy);
+
+                    history.Add(new UIPropertyHistory
+                    {
+                        DateTime = property.MintedOn.Value,
+                        Price = string.Format("{0:N2} UPX", property.Mint),
+                        Action = "Minted",
+                        NewOwner = minter.UplandUsername
+                    });
+                }
+
+                List<CachedSaleHistoryEntry> propRawHistory = _localDataManager.GetCachedSaleHistoryEntriesByPropertyId(propertyId);
+
+                foreach (CachedSaleHistoryEntry entry in propRawHistory)
+                {
+                    if (entry.Offer && entry.OfferProperty == null)
+                    {
+                        history.Add(new UIPropertyHistory
+                        {
+                            DateTime = entry.TransactionDateTime,
+                            Price = entry.Currency == "USD" ? string.Format("{0:N2} USD", entry.Price) : string.Format("{0:N2} UPX", entry.Price),
+                            Action = "Accepted Offer",
+                            NewOwner = entry.Buyer
+                        });
+                    }
+                    else if (entry.Offer && entry.OfferProperty != null)
+                    {
+                        if (entry.Property.Id == propertyId)
+                        {
+                            history.Add(new UIPropertyHistory
+                            {
+                                DateTime = entry.TransactionDateTime,
+                                Price = string.Format("{0}, {1}", entry.OfferProperty.Address, Consts.Cities[entry.OfferProperty.CityId]),
+                                Action = "Swap",
+                                NewOwner = entry.Buyer
+                            });
+                        }
+                        else
+                        {
+                            history.Add(new UIPropertyHistory
+                            {
+                                DateTime = entry.TransactionDateTime,
+                                Price = string.Format("{0}, {1}", entry.Property.Address, Consts.Cities[entry.Property.CityId]),
+                                Action = "Swap",
+                                NewOwner = entry.Seller
+                            });
+                        }    
+                    }
+                    else if (!entry.Offer)
+                    {
+                        history.Add(new UIPropertyHistory
+                        {
+                            DateTime = entry.TransactionDateTime,
+                            Price = entry.Currency == "USD" ? string.Format("{0:N2} USD", entry.Price) : string.Format("{0:N2} UPX", entry.Price),
+                            Action = "Bought",
+                            NewOwner = entry.Buyer
+                        });
+                    }
+                }
+            }
+
+            return history.OrderByDescending(h => h.DateTime).ToList();
+        }
+
         public List<WebNFT> SearchNFTs(WebNFTFilters filters)
         {
             List<int> matchingMetadata = new List<int>();

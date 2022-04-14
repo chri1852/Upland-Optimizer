@@ -13,6 +13,7 @@ namespace Upland.Interfaces.Repositories
         void CreateErrorLog(string location, string message);
         List<CachedForSaleProperty> GetCachedForSaleProperties(int cityId);
         List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntries(WebSaleHistoryFilters filters);
+        List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntriesByPropertyId(long propertyId);
         List<Tuple<string, double>> CatchWhales();
         List<Tuple<int, long>> GetCollectionPropertyTable();
         List<long> GetCollectionPropertyIds(int collectionId);

@@ -436,6 +436,11 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetCachedSaleHistoryEntries(filters);
         }
 
+        public List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntriesByPropertyId(long propertyId)
+        {
+            return _localDataRepository.GetCachedSaleHistoryEntriesByPropertyId(propertyId);
+        }
+
         public List<Tuple<string, double>> CatchWhales()
         {
             return _localDataRepository.CatchWhales();

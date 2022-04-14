@@ -2,6 +2,16 @@
 AS
 BEGIN
 	BEGIN TRY		
+		DECLARE @BuildingsInProgress TABLE
+		(
+			DGoodId INT
+		)
+
+		INSERT INTO @BuildingsInProgress
+		SELECT DISTINCT DGoodId
+		FROM UPL.SparkStaking H (NOLOCK)
+		WHERE H.[End] IS NULL
+		
 		SELECT DISTINCT N.Metadata AS 'NFTMetadata', M.Metadata
 		FROM UPL.NFTMetadata M (NOLOCK)
 			JOIN UPL.NFT N (NOLOCK)
@@ -9,10 +19,9 @@ BEGIN
 					AND M.Category = 'structure'
 					AND N.Burned = 0
 					AND N.FullyLoaded = 1
-			LEFT JOIN UPL.SparkStaking H (NOLOCK)
+			LEFT JOIN @BuildingsInProgress H
 				ON N.DGoodId = H.DGoodId
-					AND H.[End] IS NOT NULL
-		WHERE H.[Start] IS NOT NULL
+		WHERE H.DGoodId IS NULL
 	END TRY
 
 	BEGIN CATCH

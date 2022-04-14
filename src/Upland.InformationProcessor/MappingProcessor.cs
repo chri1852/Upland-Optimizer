@@ -23,6 +23,7 @@ namespace Upland.InformationProcessor
     {
         private ILocalDataManager _localDataManager;
         private IProfileAppraiser _profileAppraiser;
+        private ICachingProcessor _cachingProcessor;
 
         private List<Color> _standardKey;
         private List<Color> _colorBlindKey;
@@ -32,10 +33,11 @@ namespace Upland.InformationProcessor
         private readonly Font _smallFont;
         private readonly Font _largeFont;
 
-        public MappingProcessor(ILocalDataManager localDataManager, IProfileAppraiser profileAppraiser)
+        public MappingProcessor(ILocalDataManager localDataManager, IProfileAppraiser profileAppraiser, ICachingProcessor cachingProcessor)
         {
             _localDataManager = localDataManager;
             _profileAppraiser = profileAppraiser;
+            _cachingProcessor = cachingProcessor;
 
             BuildStandardKey();
             BuildColorBlindKey();
@@ -614,7 +616,7 @@ namespace Upland.InformationProcessor
                 colorKeys = colorBlind ? _colorBlindKey : _standardKey;
             };
 
-            Dictionary<int, CollatedStatsObject> neighborhoodStats = _localDataManager.GetNeighborhoodStats()
+            Dictionary<int, CollatedStatsObject> neighborhoodStats = _cachingProcessor.GetNeighborhoodInfoFromCache()
                 .ToDictionary(n => n.Id, n => n);
 
             Dictionary<Color, Neighborhood> colorDictionary = _localDataManager.GetNeighborhoods()

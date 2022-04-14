@@ -21,6 +21,7 @@ namespace Upland.Interfaces.Managers
         List<CachedForSaleProperty> GetCachedForSaleProperties(int cityId);
         List<CachedUnmintedProperty> GetCachedUnmintedProperties(int cityId);
         List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntries(WebSaleHistoryFilters filters);
+        List<CachedSaleHistoryEntry> GetCachedSaleHistoryEntriesByPropertyId(long propertyId);
         List<Tuple<string, double>> CatchWhales();
         List<Tuple<int, long>> GetCollectionPropertyTable();
         Property GetProperty(long id);

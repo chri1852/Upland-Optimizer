@@ -173,6 +173,7 @@
     <Build Include="StoredProcedures\UPL.UpsertNFTSaleData.sql" />
     <Build Include="StoredProcedures\UPL.GetNFTSaleDataByDGoodId.sql" />
     <Build Include="StoredProcedures\UPL.GetNFTsByOwnerEOS.sql" />
-    <Build Include="StoredProcedures\GetPropertyBuildingsMetadata.sql" />
+    <Build Include="StoredProcedures\UPL.GetPropertyBuildingsMetadata.sql" />
+    <Build Include="StoredProcedures\UPL.GetCachedSaleEntriesByPropertyId.sql" />
   </ItemGroup>
 </Project>

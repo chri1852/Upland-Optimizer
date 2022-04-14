@@ -32,5 +32,7 @@ namespace Upland.Interfaces.Processors
         List<string> ConvertListCachedSaleHistoryEntriesToCSV(List<CachedSaleHistoryEntry> cachedSaleHistoryEntries);
 
         List<string> ConvertListWebNFTSToCSV(List<WebNFT> nfts, string category);
+
+        List<UIPropertyHistory> GetPropertyHistory(long propertyId);
     }
 }
