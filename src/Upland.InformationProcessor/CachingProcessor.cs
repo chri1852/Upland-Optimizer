@@ -105,9 +105,11 @@ namespace Upland.InformationProcessor
             if (!_isLoadingPropertyStructureCache && _propertyStructureCache.Item1 < DateTime.UtcNow)
             {
                 _isLoadingPropertyStructureCache = true;
+
                 _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(
                     DateTime.UtcNow.AddMinutes(30),
                     _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType));
+
                 _isLoadingPropertyStructureCache = false;
             }
 
@@ -119,11 +121,20 @@ namespace Upland.InformationProcessor
             if (!_isLoadingCityForSaleListCache[cityId] && _cityForSaleListCache[cityId].Item1 < DateTime.UtcNow)
             {
                 _isLoadingCityForSaleListCache[cityId] = true;
-                _cityForSaleListCache[cityId] = new Tuple<DateTime, List<CachedForSaleProperty>>(
-                    DateTime.UtcNow.AddMinutes(5),
-                   _localDataManager.GetCachedForSaleProperties(cityId));
+                bool setAsExpired = false;
 
-                if (_cityForSaleListCache[cityId].Item2.Count == 0)
+                try
+                {
+                    _cityForSaleListCache[cityId] = new Tuple<DateTime, List<CachedForSaleProperty>>(
+                        DateTime.UtcNow.AddMinutes(5),
+                       _localDataManager.GetCachedForSaleProperties(cityId));
+                }
+                catch
+                {
+                    setAsExpired = true;
+                }
+
+                if (setAsExpired || _cityForSaleListCache[cityId].Item2.Count == 0)
                 {
                     _cityForSaleListCache[cityId] = new Tuple<DateTime, List<CachedForSaleProperty>>(
                         DateTime.UtcNow.AddMinutes(-5),
@@ -148,11 +159,20 @@ namespace Upland.InformationProcessor
             if (!_isLoadingCityUnmintedCache[cityId] && _cityUnmintedCache[cityId].Item1 < DateTime.UtcNow)
             {
                 _isLoadingCityUnmintedCache[cityId] = true;
-                _cityUnmintedCache[cityId] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
-                    DateTime.UtcNow.AddMinutes(5),
-                   _localDataManager.GetCachedUnmintedProperties(cityId));
+                bool setAsExpired = false;
 
-                if (_cityUnmintedCache[cityId].Item2.Count == 0)
+                try
+                {
+                    _cityUnmintedCache[cityId] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
+                        DateTime.UtcNow.AddMinutes(5),
+                       _localDataManager.GetCachedUnmintedProperties(cityId));
+                }
+                catch
+                {
+                    setAsExpired = true;
+                }
+
+                if (setAsExpired || _cityUnmintedCache[cityId].Item2.Count == 0)
                 {
                     _cityUnmintedCache[cityId] = new Tuple<DateTime, List<CachedUnmintedProperty>>(
                         DateTime.UtcNow.AddMinutes(-5),
@@ -177,11 +197,20 @@ namespace Upland.InformationProcessor
             if (!_isLoadingCityInfoCache && _cityInfoCache.Item1 < DateTime.UtcNow)
             {
                 _isLoadingCityInfoCache = true;
-                _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                    DateTime.UtcNow.AddMinutes(5),
-                    _localDataManager.GetCityStats());
+                bool setAsExpired = false;
 
-                if (_cityInfoCache.Item2.Count == 0)
+                try
+                {
+                    _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                        DateTime.UtcNow.AddMinutes(5),
+                        _localDataManager.GetCityStats());
+                }
+                catch
+                {
+                    setAsExpired = true;
+                }
+
+                if (setAsExpired || _cityInfoCache.Item2.Count == 0)
                 {
                     _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
                     DateTime.UtcNow.AddMinutes(-5),
@@ -199,11 +228,20 @@ namespace Upland.InformationProcessor
             if (!_isLoadingNeighborhoodInfoCache && _neighborhoodInfoCache.Item1 < DateTime.UtcNow)
             {
                 _isLoadingNeighborhoodInfoCache = true;
-                _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                    DateTime.UtcNow.AddMinutes(5),
-                    _localDataManager.GetNeighborhoodStats());
+                bool setAsExpired = false;
 
-                if (_neighborhoodInfoCache.Item2.Count == 0)
+                try
+                {
+                    _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                        DateTime.UtcNow.AddMinutes(5),
+                        _localDataManager.GetNeighborhoodStats());
+                }
+                catch
+                {
+                    setAsExpired = true;
+                }
+
+                if (setAsExpired || _neighborhoodInfoCache.Item2.Count == 0)
                 {
                     _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
                     DateTime.UtcNow.AddMinutes(-5),
@@ -221,11 +259,20 @@ namespace Upland.InformationProcessor
             if (!_isLoadingStreetInfoCache && _streetInfoCache.Item1 < DateTime.UtcNow)
             {
                 _isLoadingStreetInfoCache = true;
-                _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                    DateTime.UtcNow.AddMinutes(5),
-                    _localDataManager.GetStreetStats());
+                bool setAsExpired = false;
 
-                if (_streetInfoCache.Item2.Count == 0)
+                try
+                {
+                    _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                       DateTime.UtcNow.AddMinutes(5),
+                       _localDataManager.GetStreetStats());
+                }
+                catch
+                {
+                    setAsExpired = true;
+                }
+
+                if (setAsExpired || _streetInfoCache.Item2.Count == 0)
                 {
                     _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
                     DateTime.UtcNow.AddMinutes(-5),
@@ -233,6 +280,7 @@ namespace Upland.InformationProcessor
                 }
 
                 _isLoadingStreetInfoCache = false;
+
             }
 
             return _streetInfoCache.Item2;
@@ -243,11 +291,20 @@ namespace Upland.InformationProcessor
             if (!_isLoadingCollectionInfoCache && _collectionInfoCache.Item1 < DateTime.UtcNow)
             {
                 _isLoadingCollectionInfoCache = true;
-                _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                    DateTime.UtcNow.AddMinutes(5),
-                    _localDataManager.GetCollectionStats());
+                bool setAsExpired = false;
 
-                if (_collectionInfoCache.Item2.Count == 0)
+                try
+                {
+                    _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
+                        DateTime.UtcNow.AddMinutes(5),
+                        _localDataManager.GetCollectionStats());
+                }
+                catch
+                {
+                    setAsExpired = true;
+                }
+
+                if (setAsExpired || _collectionInfoCache.Item2.Count == 0)
                 {
                     _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
                     DateTime.UtcNow.AddMinutes(-5),

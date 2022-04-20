@@ -261,7 +261,7 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
-        public async Task PopulateDatabaseCollectionInfo()
+        public async Task PopulateDatabaseCollectionInfo(int cityId)
         {
             List<Collection> collections = UplandMapper.Map((await _uplandApiRepository.GetCollections()).Where(c => c.Name != "Not Available").ToList());
             List<Collection> existingCollections = GetCollections();
@@ -284,7 +284,10 @@ namespace Upland.Infrastructure.LocalData
                     {
                         _localDataRepository.CreateCollectionProperties(collection.Id, propIds);
 
-                        await AdjustMintOnCollectionPropertys(collection, propIds);
+                        if (cityId == 0 || cityId == collection.CityId)
+                        {
+                            await AdjustMintOnCollectionPropertys(collection, propIds);
+                        }
                     }
                     else
                     {
@@ -293,7 +296,7 @@ namespace Upland.Infrastructure.LocalData
                         {
                             _localDataRepository.CreateCollectionProperties(collection.Id, newPropIds);
 
-                            if (collection.CityId == 33)
+                            if (cityId == 0 || cityId == collection.CityId)
                             {
                                 await AdjustMintOnCollectionPropertys(collection, newPropIds);
                             }

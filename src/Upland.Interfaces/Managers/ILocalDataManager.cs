@@ -15,7 +15,7 @@ namespace Upland.Interfaces.Managers
         Task PopulateIndividualPropertyById(long propertyId, List<Neighborhood> neighborhoods);
         Task PopulateNeighborhoods();
         Task PopulateStreets();
-        Task PopulateDatabaseCollectionInfo();
+        Task PopulateDatabaseCollectionInfo(int cityId);
         void DetermineNeighborhoodIdsForCity(int cityId);
         bool IsPropertyInNeighborhood(Neighborhood neighborhood, Property property);
         List<CachedForSaleProperty> GetCachedForSaleProperties(int cityId);

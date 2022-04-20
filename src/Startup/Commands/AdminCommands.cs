@@ -150,7 +150,7 @@ namespace Startup.Commands
         }
 
         [Command("AdminPopulateCollections")]
-        public async Task AdminPopulateCollections()
+        public async Task AdminPopulateCollections(int cityId)
         {
             if (!await checkIfAdmin(Context.User.Id))
             {
@@ -160,7 +160,8 @@ namespace Startup.Commands
             try
             {
                 await ReplyAsync(string.Format("Running Collection Update in Child Task"));
-                await _localDataManager.PopulateDatabaseCollectionInfo();
+                await _localDataManager.PopulateDatabaseCollectionInfo(cityId);
+                await ReplyAsync(string.Format("Collection Update Complete"));
             }
             catch (Exception ex)
             {
