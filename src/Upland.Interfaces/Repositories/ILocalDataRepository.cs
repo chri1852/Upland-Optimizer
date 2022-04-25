@@ -99,5 +99,6 @@ namespace Upland.Interfaces.Repositories
         void UpsertNFTSaleData(NFTSaleData saleData);
         List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId);
         List<Tuple<byte[], byte[]>> GetPropertyBuildingsMetadata();
+        void SetPropertyBoost(long propertyId, decimal boost);
     }
 }   

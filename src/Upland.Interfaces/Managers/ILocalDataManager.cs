@@ -111,5 +111,6 @@ namespace Upland.Interfaces.Managers
         Dictionary<int, int> GetCurrentNFTCounts();
         void UpsertNFTSaleData(NFTSaleData saleData);
         List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId);
+        void SetPropertyBoost(long propertyId, decimal boost);
     }
 }

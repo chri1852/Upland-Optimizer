@@ -197,6 +197,9 @@ namespace Upland.BlockchainSurfer
                     case "n112":
                         await ProcessPurchaseNFT(action);
                         break;
+                    case "n21":
+                        ProcessCollectionAction(action);
+                        break;
                 }
 
                 if (action.account_action_seq > maxActionSeqNum)
@@ -1159,6 +1162,20 @@ namespace Upland.BlockchainSurfer
             };
 
             _localDataManager.UpsertNFTSaleData(saleData);
+        }
+
+        public void ProcessCollectionAction(PlayUplandMeAction action)
+        {
+            if (action.action_trace.act.data.p35 == null || action.action_trace.act.data.p55 == null)
+            {
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessCollectionAction", string.Format("p35 (Boost): {0}, p55 (PropIds): {1}, Trx_id: {2}", action.action_trace.act.data.p35, action.action_trace.act.data.p55, action.action_trace.trx_id));
+                return;
+            }
+
+            foreach (string propId in action.action_trace.act.data.p55)
+            {
+                _localDataManager.SetPropertyBoost(long.Parse(propId), Math.Round(decimal.Parse(action.action_trace.act.data.p35), 2));
+            }
         }
 
         private async Task<Property> TryToLoadPropertyById(long propertyId)

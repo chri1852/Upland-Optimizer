@@ -13,6 +13,7 @@ namespace Upland.Interfaces.Repositories
         Task<List<a24Entry>> GetSparkStakingTable();
         Task<List<a21Entry>> GetNftsRelatedToPropertys();
         Task<List<t2Entry>> GetForSaleProps();
+        Task<List<a15Entry>> GetPropertyTable();
         Task<List<t3Entry>> GetActiveOffers();
         Task<List<SeriesTableEntry>> GetSeriesTable();
         Task<T> GetSingleTransactionById<T>(string transactionId);

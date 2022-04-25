@@ -90,7 +90,7 @@ namespace Upland.InformationProcessor
                 _cityUnmintedCache.Add(cityId, new Tuple<DateTime, List<CachedUnmintedProperty>>(DateTime.UtcNow.AddDays(-1), new List<CachedUnmintedProperty>()));
             }
 
-            _isLoadingNFTMetadataCache = false; ;
+            _isLoadingNFTMetadataCache = false;
             _spiritHlwnMetadataCache = new Tuple<DateTime, Dictionary<int, SpirithlwnMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, SpirithlwnMetadata>());
             _structornmtMetadataCache = new Tuple<DateTime, Dictionary<int, StructornmtMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, StructornmtMetadata>());
             _blockExplorerMetadataCache = new Tuple<DateTime, Dictionary<int, BlockExplorerMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, BlockExplorerMetadata>());

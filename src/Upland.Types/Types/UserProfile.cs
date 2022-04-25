@@ -22,6 +22,11 @@ namespace Upland.Types.Types
 
         public List<WebNFT> ProfileNFTs { get; set; }
 
+        public DateTime Joined { get; set; }
+        public decimal UnstakedSpark { get; set; }
+        public decimal StakedSpark { get; set; }
+        public double MonthlyEarnings { get; set; }
+
         // Only for registeredUsers
         public bool RegisteredUser { get; set; }
         public bool Supporter { get; set; }
@@ -58,6 +63,7 @@ namespace Upland.Types.Types
         public string Status { get; set; }
         public string Building { get; set; }
         public List<int> CollectionIds { get; set; }
+        public decimal Boost { get; set; }
 
         public bool Minted { get; set; }
         public DateTime? AcquiredOn { get; set; }

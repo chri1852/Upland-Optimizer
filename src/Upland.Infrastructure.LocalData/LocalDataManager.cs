@@ -921,6 +921,11 @@ namespace Upland.Infrastructure.LocalData
             _localDataRepository.UpdateRegisteredUser(registeredUser);
         }
 
+        public void SetPropertyBoost(long propertyId, decimal boost)
+        {
+            _localDataRepository.SetPropertyBoost(propertyId, boost);
+        }
+
         public void DeleteRegisteredUser(int id)
         {
             _localDataRepository.DeleteRegisteredUser(id);

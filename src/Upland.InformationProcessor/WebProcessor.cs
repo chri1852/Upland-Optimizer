@@ -37,13 +37,18 @@ namespace Upland.InformationProcessor
         {
             UserProfile profile = await _uplandApiManager.GetUserProfile(uplandUsername);
             Dictionary<long, AcquiredInfo> propertyAcquistionInfo = _localDataManager.GetAcquiredOnByPlayer(uplandUsername).ToDictionary(a => a.PropertyId, a => a);
-
-            profile.Rank = HelperFunctions.TranslateUserLevel(int.Parse(profile.Rank));
-            profile.EOSAccount = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername).EOSAccount;
-
+            EOSUser eosUserProfile = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername);
+            List<SparkStaking> sparkHistory = _localDataManager.GetSparkStakingByEOSAccount(eosUserProfile.EOSAccount);
             Dictionary<long, Property> userProperties = _localDataManager
                 .GetProperties(profile.Properties.Select(p => p.PropertyId).ToList())
                 .ToDictionary(p => p.Id, p => p);
+
+            profile.Rank = HelperFunctions.TranslateUserLevel(int.Parse(profile.Rank));
+            profile.EOSAccount = eosUserProfile.EOSAccount;
+            profile.Joined = eosUserProfile.Joined;
+            profile.UnstakedSpark = eosUserProfile.Spark;
+            profile.StakedSpark = sparkHistory.Where(h => h.End == null).Sum(h => h.Amount);
+            profile.MonthlyEarnings = Math.Round(userProperties.Sum(p => p.Value.Mint * (double)p.Value.Boost) * Consts.RateOfReturn / 12.0, 2);
 
             Dictionary<long, string> userBuildings = _cachingProcessor.GetPropertyStructuresFromCache();
 
@@ -71,6 +76,8 @@ namespace Upland.InformationProcessor
             {
                 property.Address = userProperties[property.PropertyId].Address;
                 property.City = Consts.Cities[userProperties[property.PropertyId].CityId];
+                property.Boost = userProperties[property.PropertyId].Boost;
+
                 if (userProperties[property.PropertyId].NeighborhoodId == null)
                 {
                     property.Neighborhood = "Unknown";

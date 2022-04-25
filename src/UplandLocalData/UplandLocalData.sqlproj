@@ -175,5 +175,6 @@
     <Build Include="StoredProcedures\UPL.GetNFTsByOwnerEOS.sql" />
     <Build Include="StoredProcedures\UPL.GetPropertyBuildingsMetadata.sql" />
     <Build Include="StoredProcedures\UPL.GetCachedSaleEntriesByPropertyId.sql" />
+    <Build Include="StoredProcedures\UPL.SetPropertyBoost.sql" />
   </ItemGroup>
 </Project>

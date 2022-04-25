@@ -34,7 +34,8 @@ namespace Upland.Infrastructure.Blockchain
                 //HttpEndpoint = " https://eos.greymass.com", //Fast 100 limit
                 //HttpEndpoint = "https://api.eosflare.io", // Fast Good
                 //HttpEndpoint = "https://api.eosdetroit.io", // Slow Holes
-                HttpEndpoint = "https://api.eos.wiki",
+                //HttpEndpoint = "https://api.eos.wiki",
+                HttpEndpoint = "https://eos-node.upland.me",
                 ExpireSeconds = 60,
             });
         }
@@ -200,6 +201,46 @@ namespace Upland.Infrastructure.Blockchain
             }
 
             return totalResults;
+        }
+
+        public async Task<List<a15Entry>> GetPropertyTable()
+        {
+            List<a15Entry> results = new List<a15Entry>();
+            GetTableRowsResponse result = new GetTableRowsResponse { more = true };
+            long index = 74637239924708;
+
+            while (result.more)
+            {
+                try
+                {
+                    result = await this.eos.GetTableRows(new GetTableRowsRequest()
+                    {
+                        json = true,
+                        code = "playuplandme",
+                        scope = "playuplandme",
+                        table = "a15",
+                        lower_bound = index.ToString(),
+                        upper_bound = null,
+                        index_position = "0",
+                        key_type = "",
+                        limit = 1000,
+                        reverse = false,
+                        show_payer = false,
+                    });
+                }
+                catch (Exception ex)
+                {
+                    int i = 1;
+                }
+
+                foreach (Newtonsoft.Json.Linq.JObject item in result.rows)
+                {
+                    results.Add(item.ToObject<a15Entry>());
+                }
+                index = results.Max(i => i.a34) + 1;
+            }
+
+            return results;
         }
 
         public async Task<List<t3Entry>> GetActiveOffers()

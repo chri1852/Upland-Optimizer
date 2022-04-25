@@ -554,6 +554,13 @@ namespace Upland.CollectionOptimizer
             this.Properties = new Dictionary<long, Property>();
             foreach (Property property in userProperties)
             {
+                // Queens Terminals Fix
+                // JFK Neighborhood is not technically in Queens and ineligible for the Queens Collection
+                if (property.NeighborhoodId == 1753)
+                {
+                    property.CityId = 34;
+                }
+
                 this.Properties.Add(property.Id, property);
             }
         }

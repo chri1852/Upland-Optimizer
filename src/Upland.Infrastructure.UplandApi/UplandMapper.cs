@@ -70,6 +70,7 @@ namespace Upland.Infrastructure.UplandApi
             property.Status = udProperty.status;
             property.FSA = udProperty.labels.fsa_allow;
             property.Owner = udProperty.owner;
+            property.Boost = 1;
 
             return property;
         }
