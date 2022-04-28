@@ -26,6 +26,7 @@ namespace Upland.Types.Types
         public decimal UnstakedSpark { get; set; }
         public decimal StakedSpark { get; set; }
         public double MonthlyEarnings { get; set; }
+        public List<WebSparkHistory> SparkHistory { get; set; }
 
         // Only for registeredUsers
         public bool RegisteredUser { get; set; }

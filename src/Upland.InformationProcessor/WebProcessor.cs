@@ -39,6 +39,8 @@ namespace Upland.InformationProcessor
             Dictionary<long, AcquiredInfo> propertyAcquistionInfo = _localDataManager.GetAcquiredOnByPlayer(uplandUsername).ToDictionary(a => a.PropertyId, a => a);
             EOSUser eosUserProfile = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername);
             List<SparkStaking> sparkHistory = _localDataManager.GetSparkStakingByEOSAccount(eosUserProfile.EOSAccount);
+            Dictionary<int, NFT> sparkHistoryNFTs = _localDataManager.GetNftByDGoodIds(sparkHistory.Select(s => s.DGoodId).Distinct().ToList()).ToDictionary(e => e.DGoodId, e => e);
+            Dictionary<int, StructureMetadata> structureMetadataDictionary = _cachingProcessor.GetStructureMetadataFromCache();
             Dictionary<long, Property> userProperties = _localDataManager
                 .GetProperties(profile.Properties.Select(p => p.PropertyId).ToList())
                 .ToDictionary(p => p.Id, p => p);
@@ -49,6 +51,37 @@ namespace Upland.InformationProcessor
             profile.UnstakedSpark = eosUserProfile.Spark;
             profile.StakedSpark = sparkHistory.Where(h => h.End == null).Sum(h => h.Amount);
             profile.MonthlyEarnings = Math.Round(userProperties.Sum(p => p.Value.Mint * (double)p.Value.Boost) * Consts.RateOfReturn / 12.0, 2);
+            profile.SparkHistory = new List<WebSparkHistory>();
+
+            List<long> sparkPropIds = new List<long>();
+            foreach (SparkStaking entry in sparkHistory)
+            {
+                StructureSpecificMetaData nftMetadata = HelperFunctions.DecodeMetadata<StructureSpecificMetaData>(sparkHistoryNFTs[entry.DGoodId].Metadata);
+                sparkPropIds.Add(nftMetadata.PropertyId);
+
+                profile.SparkHistory.Add(new WebSparkHistory
+                {
+                    Id = entry.Id,
+                    DGoodId = entry.DGoodId,
+                    PropertyId = nftMetadata.PropertyId,
+                    Name = structureMetadataDictionary[sparkHistoryNFTs[entry.DGoodId].NFTMetadataId].DisplayName,
+                    Address = "",
+                    Amount = entry.Amount,
+                    Start = entry.Start,
+                    End = entry.End,
+                    SparkHours = !entry.End.HasValue ? Math.Round((DateTime.UtcNow - entry.Start).TotalHours * (double)entry.Amount, 2) : Math.Round((entry.End - entry.Start).Value.TotalHours * (double)entry.Amount, 2)
+                });
+            }
+
+            // get the properties and update the NFTs
+             Dictionary<long, Property> sparkHistroyProperties = _localDataManager.GetProperties(sparkPropIds.Distinct().ToList()).ToDictionary(p => p.Id, p => p);
+
+            foreach (WebSparkHistory entry in profile.SparkHistory)
+            {
+                entry.Address = string.Format("{0}, {1}", sparkHistroyProperties[entry.PropertyId].Address, Consts.Cities[sparkHistroyProperties[entry.PropertyId].CityId]);
+            }
+
+            profile.SparkHistory = profile.SparkHistory.OrderByDescending(s => s.Start).ToList();
 
             Dictionary<long, string> userBuildings = _cachingProcessor.GetPropertyStructuresFromCache();
 
@@ -1053,11 +1086,14 @@ namespace Upland.InformationProcessor
             Dictionary<int, StructureMetadata> metadataDictionary = _cachingProcessor.GetStructureMetadataFromCache();
             Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
 
+            List<long> propertyIds = new List<long>();
+
             matchingNfts = matchingNfts.Where(n => metadataDictionary.ContainsKey(n.NFTMetadataId)).ToList();
 
             foreach (NFT nft in matchingNfts)
             {
                 StructureSpecificMetaData nftMetadata = HelperFunctions.DecodeMetadata<StructureSpecificMetaData>(nft.Metadata);
+                propertyIds.Add(nftMetadata.PropertyId);
                 webNfts.Add(new WebNFT
                 {
                     DGoodId = nft.DGoodId,
@@ -1069,8 +1105,18 @@ namespace Upland.InformationProcessor
                     MaxSupply = 0,
                     CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
 
+                    PropertyId = nftMetadata.PropertyId,
+
                     Category = Consts.METADATA_TYPE_STRUCTURE
                 });
+            }
+
+            // get the properties and update the NFTs
+            Dictionary<long, Property> properties = _localDataManager.GetProperties(propertyIds).ToDictionary(p => p.Id, p => p);
+
+            foreach (WebNFT nft in webNfts)
+            {
+                nft.FullAddress = string.Format("{0}, {1}", properties[nft.PropertyId].Address, Consts.Cities[properties[nft.PropertyId].CityId]);
             }
 
             webNfts = webNfts

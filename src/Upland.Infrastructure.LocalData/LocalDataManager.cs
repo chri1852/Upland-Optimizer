@@ -1048,6 +1048,11 @@ namespace Upland.Infrastructure.LocalData
             return _localDataRepository.GetNftByDGoodId(dGoodId);
         }
 
+        public List<NFT> GetNftByDGoodIds(List<int> dGoodIds)
+        {
+            return _localDataRepository.GetNftByDGoodIds(dGoodIds);
+        }
+
         public NFTMetadata GetNftMetadataById(int id)
         {
             return _localDataRepository.GetNftMetadataById(id);

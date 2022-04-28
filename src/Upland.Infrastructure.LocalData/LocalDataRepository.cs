@@ -3569,6 +3569,54 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public List<NFT> GetNftByDGoodIds(List<int> dGoodIds)
+        {
+            List<NFT> nfts = new List<NFT>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTs]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodIds", CreateNFTIdTable(dGoodIds)));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nfts.Add(new NFT
+                            {
+                                DGoodId = (int)reader["DGoodId"],
+                                NFTMetadataId = (int)reader["NFTMetadataId"],
+                                SerialNumber = (int)reader["SerialNumber"],
+                                Burned = (bool)reader["Burned"],
+                                CreatedOn = (DateTime)reader["CreatedDateTime"],
+                                BurnedOn = ReadNullParameterSafe<DateTime?>(reader, "BurnedDateTime"),
+                                FullyLoaded = (bool)reader["FullyLoaded"],
+                                Metadata = (byte[])reader["Metadata"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nfts;
+            }
+        }
+
         public NFTMetadata GetNftMetadataById(int id)
         {
             NFTMetadata nftMetadata = null;

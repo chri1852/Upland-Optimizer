@@ -37,6 +37,9 @@ namespace Upland.Types.Types
         public string Opponent { get; set; }
         public string HomeTeam { get; set; }
 
+        // Structure
+        public long PropertyId { get; set; }
+        public string FullAddress { get; set; }
 
         // Form Filters
         public int IsVariantFilter { get; set; }
