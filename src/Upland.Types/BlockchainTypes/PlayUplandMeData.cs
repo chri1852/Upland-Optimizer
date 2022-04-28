@@ -19,12 +19,14 @@ namespace Upland.Types.BlockchainTypes
         public string p23 { get; set; }
         public string p24 { get; set; }
         public string p25 { get; set; }
+        public string p35 { get; set; }
         public string p44 { get; set; }
         public string p45 { get; set; }
         public string p51 { get; set; }
         public string p52 { get; set; }
         public string p53 { get; set; }
         public string p54 { get; set; }
+        public List<string> p55 { get; set; }
         public string p133 { get; set; }
         public string p134 { get; set; }
         public string p135 { get; set; }

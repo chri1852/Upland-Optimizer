@@ -91,6 +91,7 @@ namespace Upland.Interfaces.Repositories
         void UpsertNftMetadata(NFTMetadata nftMetadata);
         void UpsertNftHistory(NFTHistory nftHistory);
         NFT GetNftByDGoodId(int dGoodId);
+        List<NFT> GetNftByDGoodIds(List<int> dGoodIds);
         NFTMetadata GetNftMetadataById(int id);
         NFTMetadata GetNftMetadataByNameAndCategory(string name, string category);
         List<NFTMetadata> GetAllNFTMetadata();
@@ -99,5 +100,6 @@ namespace Upland.Interfaces.Repositories
         void UpsertNFTSaleData(NFTSaleData saleData);
         List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId);
         List<Tuple<byte[], byte[]>> GetPropertyBuildingsMetadata();
+        void SetPropertyBoost(long propertyId, decimal boost);
     }
 }   

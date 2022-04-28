@@ -13,7 +13,8 @@
 	[FSA]             BIT,
 	[Owner]           VARCHAR(12),
 	[MintedOn]        DATETIME,
-	[MintedBy]        VARCHAR(12)
+	[MintedBy]        VARCHAR(12),
+	[Boost]           DECIMAL(3,2)
 
 	CONSTRAINT pk_PropertyId PRIMARY KEY(Id)
 )

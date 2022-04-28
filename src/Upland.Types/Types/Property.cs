@@ -18,6 +18,7 @@ namespace Upland.Types
         public string Owner { get; set; }
         public DateTime? MintedOn { get; set; }
         public string MintedBy { get; set; }
+        public decimal Boost { get; set; }
 
         public bool Equals(Property other)
         {

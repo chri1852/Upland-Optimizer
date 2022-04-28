@@ -13,7 +13,8 @@
 	@FSA             BIT,
 	@Owner           VARCHAR(12) = NULL,
 	@MintedOn        DATETIME = NULL,
-	@MintedBy        VARCHAR(12) = NULL
+	@MintedBy        VARCHAR(12) = NULL,
+	@Boost           DECIMAL(3,2)
 
 )
 AS
@@ -35,7 +36,8 @@ BEGIN
 					[FSA] = @FSA,
 					[Owner] = @Owner,
 					[MintedOn] = @MintedOn,
-					[MintedBy] = @MintedBy
+					[MintedBy] = @MintedBy,
+					[Boost] = @Boost
 				WHERE [Id] = @Id
 			END
 		ELSE
@@ -55,7 +57,8 @@ BEGIN
 					[FSA],
 					[Owner],
 					[MintedOn],
-					[MintedBy]
+					[MintedBy],
+					[Boost]
 				)
 				Values
 				(
@@ -72,7 +75,8 @@ BEGIN
 					@FSA,
 					@Owner,
 					@MintedOn,
-					@MintedBy
+					@MintedBy,
+					@Boost
 				)
 			END
 	END TRY

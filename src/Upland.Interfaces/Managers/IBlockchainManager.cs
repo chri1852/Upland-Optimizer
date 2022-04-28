@@ -14,6 +14,7 @@ namespace Upland.Interfaces.Managers
         Task<List<dGood>> GetAllDGoodsFromTable();
         Task<dGood> GetDGoodFromTable(int dGoodId);
         Task<List<SeriesTableEntry>> GetSeriesTable();
+        Task<List<a15Entry>> GetPropertyTable();
         Task<T> GetSingleTransactionById<T>(string transactionId);
         Task<T> GetEOSFlareActions<T>(long position, string accountName);
     }

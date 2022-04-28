@@ -1015,7 +1015,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("Owner", property.Owner));
                     sqlCmd.Parameters.Add(new SqlParameter("MintedOn", property.MintedOn));
                     sqlCmd.Parameters.Add(new SqlParameter("MintedBy", property.MintedBy));
-
+                    sqlCmd.Parameters.Add(new SqlParameter("Boost", property.Boost));
                     sqlCmd.ExecuteNonQuery();
                 }
                 catch
@@ -2942,7 +2942,8 @@ namespace Upland.Infrastructure.LocalData
                 FSA = (bool)reader["FSA"],
                 Owner = reader["Owner"] != DBNull.Value ? (string)reader["Owner"] : null,
                 MintedOn = reader["MintedOn"] != DBNull.Value ? (DateTime?)reader["MintedOn"] : null,
-                MintedBy = reader["MintedBy"] != DBNull.Value ? (string)reader["MintedBy"] : null
+                MintedBy = reader["MintedBy"] != DBNull.Value ? (string)reader["MintedBy"] : null,
+                Boost = (decimal)reader["Boost"]
             };
         }
 
@@ -3063,6 +3064,35 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void SetPropertyBoost(long propertyId, decimal boost)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[SetPropertyBoost]";
+                    sqlCmd.Parameters.Add(new SqlParameter("PropertyId", propertyId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Boost", boost));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
 
         public void DeleteSaleHistoryById(int id)
         {
@@ -3536,6 +3566,54 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return nft;
+            }
+        }
+
+        public List<NFT> GetNftByDGoodIds(List<int> dGoodIds)
+        {
+            List<NFT> nfts = new List<NFT>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetNFTs]";
+                    sqlCmd.Parameters.Add(new SqlParameter("DGoodIds", CreateNFTIdTable(dGoodIds)));
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            nfts.Add(new NFT
+                            {
+                                DGoodId = (int)reader["DGoodId"],
+                                NFTMetadataId = (int)reader["NFTMetadataId"],
+                                SerialNumber = (int)reader["SerialNumber"],
+                                Burned = (bool)reader["Burned"],
+                                CreatedOn = (DateTime)reader["CreatedDateTime"],
+                                BurnedOn = ReadNullParameterSafe<DateTime?>(reader, "BurnedDateTime"),
+                                FullyLoaded = (bool)reader["FullyLoaded"],
+                                Metadata = (byte[])reader["Metadata"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return nfts;
             }
         }
 

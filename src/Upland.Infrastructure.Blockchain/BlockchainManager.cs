@@ -85,6 +85,11 @@ namespace Upland.Infrastructure.Blockchain
             return await _blockchainRepository.GetSeriesTable();
         }
 
+        public async Task<List<a15Entry>> GetPropertyTable()
+        {
+            return await _blockchainRepository.GetPropertyTable();
+        }
+
         public async Task<T> GetSingleTransactionById<T>(string transactionId)
         {
             return await _blockchainRepository.GetSingleTransactionById<T>(transactionId);
