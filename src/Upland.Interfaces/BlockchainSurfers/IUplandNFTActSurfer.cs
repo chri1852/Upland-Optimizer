@@ -7,5 +7,6 @@ namespace Upland.Interfaces.BlockchainSurfers
         Task RunBlockChainUpdate();
         Task BuildBlockChainFromBegining();
         Task ProcessBlockchainFromAction(long lastActionProcessed);
+        Task TryLoadNFTByDGoodId(int dGoodId);
     }
 }

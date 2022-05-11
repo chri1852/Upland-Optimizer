@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Upland.Interfaces.BlockchainSurfers;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
 using Upland.Types;
@@ -14,14 +15,16 @@ namespace Upland.InformationProcessor
     {
         private readonly ILocalDataManager _localDataManager;
         private readonly IUplandApiManager _uplandApiManager;
+        private readonly IUplandNFTActSurfer _uplandNFTActSurfer;
 
-        public ResyncProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
+        public ResyncProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IUplandNFTActSurfer uplandNFTActSurfer)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;
+            _uplandNFTActSurfer = uplandNFTActSurfer;
         }
 
-        public async Task ResyncPropsList(string action, string propList)
+        public async Task ResyncPropsList(string action, string propList = "-10")
         {
             List<long> propIds = new List<long>();
             foreach (string id in propList.Split(","))
@@ -86,6 +89,10 @@ namespace Upland.InformationProcessor
             else if (action == "CheckLocked")
             {
                 await Process_CheckLocked();
+            }
+            else if (action == "ReloadMissingNFTs")
+            {
+                await Process_ReloadMissingNFTs();
             }
         }
 
@@ -721,6 +728,25 @@ namespace Upland.InformationProcessor
                         break;
                     }
                 }
+            }
+        }
+
+        private async Task Process_ReloadMissingNFTs()
+        {
+            List<int> unloadedNFTMetadataIds = _localDataManager.GetAllNFTMetadata()
+                .Where(m => !m.FullyLoaded && m.Category != Consts.METADATA_TYPE_STRUCTURE)
+                .Select(m => m.Id)
+                .ToList();
+
+            List<int> unloadedOwnedDistinctNFTIds = _localDataManager.GetNFTsByNFTMetadataId(unloadedNFTMetadataIds)
+                .Where(n => n.Owner != null && n.Owner != "")
+                .GroupBy(n => n.NFTMetadataId)
+                .Select(g => g.First().DGoodId)
+                .ToList();
+
+            foreach (int dGoodId in unloadedOwnedDistinctNFTIds)
+            {
+                await _uplandNFTActSurfer.TryLoadNFTByDGoodId(dGoodId);
             }
         }
     }

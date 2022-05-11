@@ -123,6 +123,13 @@ namespace Upland.BlockchainSurfer
             _isProcessing = false;
         }
 
+        public async Task TryLoadNFTByDGoodId(int dGoodId)
+        {
+            NFT nft = _localDataManager.GetNftByDGoodId(dGoodId);
+            NFTMetadata nftMetadata = _localDataManager.GetNftMetadataById(nft.NFTMetadataId);
+            await PopulateNFTAndNFTMetadata(nft, nftMetadata);
+        }
+
         private async Task ProcessActions(List<UplandNFTActAction> actions)
         {
             long maxActionSeqNum = long.Parse(_localDataManager.GetConfigurationValue(Consts.CONFIG_MAXUPLANDNFTACTACTIONSEQNUM));
