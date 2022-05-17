@@ -6,7 +6,9 @@
 	@BuyerEOS        VARCHAR(12),
 	@Amount          DECIMAL(11,2),
 	@AmountFiat      DECIMAL(11,2),
-	@DateTime        DATETIME
+	@DateTime        DATETIME,
+	@SubMerchant     VARCHAR(12),
+	@SubMerchantFee  DECIMAL(11,2)
 )
 AS
 BEGIN
@@ -20,7 +22,9 @@ BEGIN
 					[BuyerEOS],
 					[Amount],
 					[AmountFiat],
-					[DateTime]
+					[DateTime],
+					[SubMerchant],
+					[SubMerchantFee]
 				)
 				Values
 				(
@@ -29,7 +33,9 @@ BEGIN
 					@BuyerEOS,
 					@Amount,
 					@AmountFiat,
-					@DateTime
+					@DateTime,
+					@SubMerchant,
+					@SubMerchantFee
 				)
 			END
 		ELSE
@@ -41,7 +47,9 @@ BEGIN
 					[BuyerEOS] = @BuyerEOS,
 					[Amount] = @Amount,
 					[AmountFiat] = @AmountFiat,
-					[DateTime] = @DateTime
+					[DateTime] = @DateTime,
+					[SubMerchant] = @SubMerchant,
+					[SubMerchantFee] = @SubMerchantFee
 				WHERE [Id] = @Id
 			END
 	END TRY

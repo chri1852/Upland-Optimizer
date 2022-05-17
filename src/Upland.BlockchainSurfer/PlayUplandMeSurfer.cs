@@ -1133,12 +1133,6 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
-            if (action.action_trace.act.data.p135 != null || action.action_trace.act.data.p143 != null)
-            {
-                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseNFT - p135 or p143 Not Null", string.Format("p135: {0}, p143: {1}, Trx_id: {2}", action.action_trace.act.data.p135, action.action_trace.act.data.p143, action.action_trace.trx_id));
-                return;
-            }
-
             PlayUplandMeTransactionEntry transactionTrace = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.trx_id);
 
             if (transactionTrace?.traces == null 
@@ -1150,6 +1144,13 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
+            decimal? subMerchantFee = null;
+
+            if (action.action_trace.act.data.p135 != null)
+            {
+                subMerchantFee = decimal.Parse(action.action_trace.act.data.p143.Split(" UPX")[0]);
+            }
+
             NFTSaleData saleData = new NFTSaleData
             {
                 Id = -1,
@@ -1158,7 +1159,9 @@ namespace Upland.BlockchainSurfer
                 BuyerEOS = action.action_trace.act.data.p14,
                 Amount = decimal.Parse(action.action_trace.act.data.p141.Split(" UPX")[0]),
                 AmountFiat = 0,
-                DateTime = action.block_time
+                DateTime = action.block_time,
+                SubMerchant = action.action_trace.act.data.p135 ?? null,
+                SubMerchantFee = subMerchantFee
             };
 
             _localDataManager.UpsertNFTSaleData(saleData);

@@ -7,6 +7,8 @@
 	[Amount]           DECIMAL(11,2),
 	[AmountFiat]       DECIMAL(11,2),
 	[DateTime]         DATETIME,
+	[SubMerchant]      VARCHAR(12),
+	[SubMerchantFee]   DECIMAL(11,2)
 
 	CONSTRAINT pk_NFTSaleDataId PRIMARY KEY(Id)
 )

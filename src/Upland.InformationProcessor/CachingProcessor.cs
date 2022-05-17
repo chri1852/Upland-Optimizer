@@ -107,7 +107,7 @@ namespace Upland.InformationProcessor
                 _isLoadingPropertyStructureCache = true;
 
                 _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(
-                    DateTime.UtcNow.AddMinutes(30),
+                    DateTime.UtcNow.AddMinutes(10),
                     _localDataManager.GetPropertyStructures().ToDictionary(p => p.PropertyId, p => p.StructureType));
 
                 _isLoadingPropertyStructureCache = false;

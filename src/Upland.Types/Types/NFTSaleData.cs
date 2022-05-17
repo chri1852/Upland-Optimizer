@@ -11,5 +11,7 @@ namespace Upland.Types.Types
         public decimal Amount { get; set; }
         public decimal AmountFiat { get; set; }
         public DateTime DateTime { get; set; }
+        public string? SubMerchant { get; set; }
+        public decimal? SubMerchantFee { get; set; }
     }
 }

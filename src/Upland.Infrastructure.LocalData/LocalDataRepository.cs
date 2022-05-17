@@ -674,6 +674,7 @@ namespace Upland.Infrastructure.LocalData
                     SqlCommand sqlCmd = new SqlCommand();
                     sqlCmd.Connection = sqlConnection;
                     sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandTimeout = 120;
                     sqlCmd.CommandText = "[UPL].[GetStreetStats]";
                     using (SqlDataReader reader = sqlCmd.ExecuteReader())
                     {
@@ -3860,6 +3861,8 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("Amount", saleData.Amount));
                     sqlCmd.Parameters.Add(new SqlParameter("AmountFiat", saleData.AmountFiat));
                     sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("DateTime", saleData.DateTime));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("SubMerchant", saleData.SubMerchant));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<decimal?>("SubMerchantFee", saleData.SubMerchantFee));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -3903,7 +3906,9 @@ namespace Upland.Infrastructure.LocalData
                                 BuyerEOS = (string)reader["BuyerEOS"],
                                 Amount = (decimal)reader["Amount"],
                                 AmountFiat = (decimal)reader["AmountFiat"],
-                                DateTime = (DateTime)reader["DateTime"]
+                                DateTime = (DateTime)reader["DateTime"],
+                                SubMerchant = (string)reader["SubMerchant"],
+                                SubMerchantFee = (decimal)reader["SubMerchantFee"]
                             });
                         }
                         reader.Close();
