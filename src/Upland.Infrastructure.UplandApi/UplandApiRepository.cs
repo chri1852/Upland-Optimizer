@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Upland.Interfaces.Repositories;
 using Upland.Types.Types;
@@ -14,6 +15,7 @@ namespace Upland.Infrastructure.UplandApi
     {
         private HttpClient httpClient;
         private HttpClient authHttpClient;
+        private HttpClient changingAuthHttpClient;
         private readonly IConfiguration _configuration;
 
         public UplandApiRepository(IConfiguration configuration)
@@ -27,6 +29,11 @@ namespace Upland.Infrastructure.UplandApi
             this.authHttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             this.authHttpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
             this.authHttpClient.DefaultRequestHeaders.Add("Authorization", _configuration.GetSection("AppSettings")["UplandAuthToken"]);
+
+            this.changingAuthHttpClient = new HttpClient();
+            this.changingAuthHttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            this.changingAuthHttpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+            this.changingAuthHttpClient.DefaultRequestHeaders.Add("Authorization", _configuration.GetSection("AppSettings")["UplandAuthToken"]);
         }
 
         public async Task<List<UplandCollection>> GetCollections()
@@ -261,6 +268,41 @@ namespace Upland.Infrastructure.UplandApi
             return profile;
         }
 
+        public async Task<UplandExplorerCoordinates> GetExplorerCoordinates(string authToken = null)
+        {
+            UplandExplorerCoordinates coordinates;
+            string requestUri = @"https://explorers.upland.me/explorer/coordinates";
+
+            if (authToken == null)
+            {
+                coordinates = await CallApi<UplandExplorerCoordinates>(requestUri, true);
+            }
+            else
+            {
+                coordinates = await CallApiChangingHeader<UplandExplorerCoordinates>(requestUri, authToken);
+            }
+
+            return coordinates;
+        }
+
+        public async Task<UplandTreasureDirection> GetUplandTreasureDirection(long propId, string authToken = null)
+        {
+            UplandTreasureDirection directions;
+
+            string requestUri = @"https://treasures.upland.me/treasures/direction/" + propId;
+
+            if (authToken == null)
+            {
+                directions = await CallApi<UplandTreasureDirection>(requestUri, true);
+            }
+            else
+            {
+                directions = await CallApiChangingHeader<UplandTreasureDirection>(requestUri, authToken);
+            }
+
+            return directions;
+        }
+
         private async Task<T> CallApi<T>(string requestUri, bool useAuth = false)
         {
             HttpResponseMessage httpResponse;
@@ -288,6 +330,31 @@ namespace Upland.Infrastructure.UplandApi
             {
                 return (T)Activator.CreateInstance(typeof(T));
             }    
+        }
+
+        private async Task<T> CallApiChangingHeader<T>(string requestUri, string authToken)
+        {
+            HttpResponseMessage httpResponse;
+            string responseJson;
+
+            this.changingAuthHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+
+            httpResponse = await this.changingAuthHttpClient.GetAsync(requestUri);
+
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                responseJson = await httpResponse.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<T>(responseJson);
+            }
+            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return (T)Activator.CreateInstance(typeof(T));
+            }
+            else
+            {
+                return (T)Activator.CreateInstance(typeof(T));
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Upland.Types.Enums;
 
 namespace Upland.Interfaces.Processors
 {
@@ -24,5 +25,6 @@ namespace Upland.Interfaces.Processors
         Task LoadMissingCityProperties(int cityId);
         Task ResetLockedPropsToLocked(int cityId);
         Task<List<string>> GetBuildingsUnderConstruction(int userLevel);
+        Task HuntTreasures(int cityId, string owner, TreasureTypeEnum treasureType);
     }
 }

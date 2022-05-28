@@ -23,6 +23,8 @@ namespace Upland.Interfaces.Managers
         Task<UplandUserProfile> GetUplandUserProfile(string userName);
         Task<UserProfile> GetUserProfile(string userName);
         Task<UplandProperty> GetUplandPropertyById(long Id);
+        Task<UplandExplorerCoordinates> GetExplorerCoordinates(string authToken = null);
+        Task<UplandTreasureDirection> GetUplandTreasureDirection(long propId, string authToken = null);
     }
 }
         

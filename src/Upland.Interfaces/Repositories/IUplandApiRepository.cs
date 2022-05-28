@@ -30,5 +30,7 @@ namespace Upland.Interfaces.Repositories
         Task<UplandAsset> GetBlockExplorersByDGoodId(int dGoodId);
         Task<NFLPALegitMintInfo> GetEssentialMintInfo(int legitId);
         Task<NFLPALegitMintInfo> GetMementoMintInfo(int legitId);
+        Task<UplandExplorerCoordinates> GetExplorerCoordinates(string authToken = null);
+        Task<UplandTreasureDirection> GetUplandTreasureDirection(long propId, string authToken = null);
     }
 }  

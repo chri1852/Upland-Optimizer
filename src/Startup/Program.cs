@@ -25,7 +25,9 @@ using Upland.Interfaces.Processors;
 using Upland.Interfaces.Repositories;
 using Upland.Types;
 using Upland.Types.BlockchainTypes;
+using Upland.Types.Enums;
 using Upland.Types.Types;
+using Upland.Types.UplandApiTypes;
 
 class Program
 {
@@ -37,7 +39,7 @@ class Program
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
 
-    /*
+    ///*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -70,7 +72,9 @@ class Program
         //await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], 16, false);
         //localDataManager.DetermineNeighborhoodIdsForCity(16);
         //await localDataManager.PopulateCollectionPropertiesByCityId(16);
-
+        //await informationProcessor.LoadMissingCityProperties(10);
+        //await resyncProcessor.ResyncPropsList("EnclaveFix", "1");
+        //await localDataManager.PopulateDatabaseCollectionInfo(10);
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
@@ -81,16 +85,24 @@ class Program
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
-
+        
+        string continueHunt = "Y";
+        while (continueHunt == "Y")
+        {
+            await informationProcessor.HuntTreasures(4, "oqtr232h2c23", TreasureTypeEnum.Standard);
+            Console.WriteLine("Continue?");
+            continueHunt = Console.ReadLine();
+        }
+        
         // Run Blockchain Updates
         //await playUplandMeSurfer.RunBlockChainUpdate();
         //await uplandNFTActSurfer.RunBlockChainUpdate();
         //await uspkTokenAccSurfer.RunBlockChainUpdate();
         //informationProcessor.RebuildPropertyStructures();
-        await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
+        //await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
 
         // Test Information Processing Functions
-        //List<string> output;
+        List<string> output;
         //output = webProcessor.GetFanPointsLeaders();
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
         //output = forSaleProcessor.GetCityPropertiesForSale(17, "Price", "All", "TXT");
@@ -159,19 +171,18 @@ class Program
             }
         };
 
-        List<WebNFT> nfts = webProcessor.SearchNFTs(filters);
+        //List<WebNFT> nfts = webProcessor.SearchNFTs(filters);
         
-
         //AppraisalResults results = await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" });
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\hornbrod.csv", string.Join(Environment.NewLine, profileAppraiser.BuildAppraisalCsvStrings(results)));
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
-    }
-    */
-    ///*
+     }
+    //*/
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    //*/
+    */
 
     public async Task RunBotAsync()
     {

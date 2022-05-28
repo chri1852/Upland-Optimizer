@@ -132,6 +132,16 @@ namespace Upland.Infrastructure.UplandApi
             return await _uplandApiRepository.GetPropertyById(Id);
         }
 
+        public async Task<UplandExplorerCoordinates> GetExplorerCoordinates(string authToken = null)
+        {
+            return await _uplandApiRepository.GetExplorerCoordinates(authToken);
+        }
+
+        public async Task<UplandTreasureDirection> GetUplandTreasureDirection(long propId, string authToken = null)
+        {
+            return await _uplandApiRepository.GetUplandTreasureDirection(propId, authToken);
+        }
+
         private async Task RefreshCache(int cityId)
         {
             List<UplandForSaleProp> cityProps = await CallApiForSalePropsByArea(cityId);
