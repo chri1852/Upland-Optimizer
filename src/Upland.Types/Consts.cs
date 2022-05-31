@@ -11,6 +11,7 @@ namespace Upland.Types
         public const string CONFIG_MAXUSPKTOKENACCACTIONSEQNUM = "MaxUSPKTokenAccActionSeqNum";
         public const string CONFIG_MAXUPLANDNFTACTACTIONSEQNUM = "MaxUplandNFTActActionSeqNum";
         public const string CONFIG_LATESTANNOUNCEMENT = "LatestAnnouncement";
+        public const string CONFIG_MAXSTREETNUMBER = "MaxStreetNumber";
 
         // NFT Metadata Types
         public const string METADATA_TYPE_STRUCTURE = "structure";
@@ -35,7 +36,7 @@ namespace Upland.Types
 
         public static readonly List<int> NON_BULLSHIT_CITY_IDS = new List<int>
         {
-            1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 29, 32, 33
+            1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 29, 32, 33, 35
         };
 
         public static readonly Dictionary<int, string> Cities = new Dictionary<int, string>
@@ -59,6 +60,7 @@ namespace Upland.Types
             { 29   , "Bronx"            },
             { 32   , "Los Angeles"      },
             { 33   , "Detroit"          },
+            { 35   , "Las Vegas"        },
 
             // NYC Subcities
             { 17   , "New York"         },
@@ -114,7 +116,6 @@ namespace Upland.Types
         public const int MAX_LINES_TO_RETURN = 25000;
         //public const double RateOfReturn = 0.1728; //Changed 01/27/2022
         public const double RateOfReturn = 0.145152;
-        public const int MaxStreetNumber = 58560;
         public const string HornbrodEOSAccount = "oqtr232h2c23";
     }
 }

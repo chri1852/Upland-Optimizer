@@ -39,7 +39,7 @@ class Program
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
 
-    ///*
+    /*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -84,15 +84,15 @@ class Program
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
-        //await localDataManager.PopulateStreets();
+        await localDataManager.PopulateStreets();
         
-        string continueHunt = "Y";
-        while (continueHunt == "Y")
-        {
-            await informationProcessor.HuntTreasures(4, "oqtr232h2c23", TreasureTypeEnum.Standard);
-            Console.WriteLine("Continue?");
-            continueHunt = Console.ReadLine();
-        }
+        //string continueHunt = "Y";
+        //while (continueHunt == "Y")
+        //{
+            //await informationProcessor.HuntTreasures(4, "oqtr232h2c23", TreasureTypeEnum.Standard);
+            //Console.WriteLine("Continue?");
+            //continueHunt = Console.ReadLine();
+        //}
         
         // Run Blockchain Updates
         //await playUplandMeSurfer.RunBlockChainUpdate();
@@ -178,11 +178,11 @@ class Program
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
      }
-    //*/
-    /*
+    */
+    ///*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    */
+    //*/
 
     public async Task RunBotAsync()
     {

@@ -229,9 +229,10 @@ namespace Upland.Infrastructure.LocalData
         public async Task PopulateStreets()
         {
             List<Street> existingStreets = GetStreets();
+            int maxStreetNumber = Int32.Parse(GetConfigurationValue(Consts.CONFIG_MAXSTREETNUMBER));
             List<int> failedIds = new List<int>();
 
-            for (int i = existingStreets.Max(s => s.Id); i <= Consts.MaxStreetNumber; i++)
+            for (int i = existingStreets.Max(s => s.Id); i <= maxStreetNumber; i++)
             {
                 if (!existingStreets.Any(s => s.Id == i))
                 {

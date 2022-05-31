@@ -318,6 +318,27 @@ namespace Startup.Commands
             }
         }
 
+        [Command("AdminLoadStreets")]
+        public async Task AdminLoadStreets()
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                await ReplyAsync(string.Format("Loading Streets..."));
+                await _localDataManager.PopulateStreets();
+                await ReplyAsync(string.Format("Loading Streets Complete."));
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("AdminCommands - AdminLoadStreets", ex.Message);
+                await ReplyAsync(string.Format("Failed Loading Streets: {0}", ex.Message));
+            }
+        }
+
         [Command("AdminResetLockedProps")]
         public async Task AdminResetLockedProps(int cityId)
         {
