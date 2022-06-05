@@ -26,5 +26,7 @@ namespace Upland.Interfaces.Processors
         Task ResetLockedPropsToLocked(int cityId);
         Task<List<string>> GetBuildingsUnderConstruction(int userLevel);
         Task HuntTreasures(int cityId, string owner, TreasureTypeEnum treasureType);
+
+        void DebugLOADCITIESINTABLE();
     }
 }

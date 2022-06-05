@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Upland.Interfaces.Managers;
 using Upland.Types;
 using Upland.Types.Types;
@@ -11,11 +12,13 @@ namespace Upland.InformationProcessor
     public class CachingProcessor : ICachingProcessor
     {
         private readonly ILocalDataManager _localDataManager;
+        private readonly IUplandApiManager _uplandApiManager;
 
         private Dictionary<int, Tuple<DateTime, List<CachedForSaleProperty>>> _cityForSaleListCache;
         private Dictionary<int, Tuple<DateTime, List<CachedUnmintedProperty>>> _cityUnmintedCache;
         private Tuple<DateTime, Dictionary<long, string>> _propertyStructureCache;
         private Tuple<DateTime, bool> _isBlockchainUpdatesDisabledCache;
+        private Tuple<DateTime, bool> _uplandMaintenanceStatusCache;
         private Tuple<DateTime, string> _latestAnnouncementString;
         private Tuple<DateTime, List<CollatedStatsObject>> _cityInfoCache;
         private Tuple<DateTime, List<CollatedStatsObject>> _neighborhoodInfoCache;
@@ -43,9 +46,10 @@ namespace Upland.InformationProcessor
         private readonly List<Tuple<int, HashSet<long>>> _collectionProperties;
         private readonly Dictionary<int, string> _neighborhoods;
 
-        public CachingProcessor(ILocalDataManager localDataManager)
+        public CachingProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
         {
             _localDataManager = localDataManager;
+            _uplandApiManager = uplandApiManager;
 
             InitializeCache();
 
@@ -71,6 +75,7 @@ namespace Upland.InformationProcessor
 
             _propertyStructureCache = new Tuple<DateTime, Dictionary<long, string>>(DateTime.UtcNow.AddDays(-1), new Dictionary<long, string>());
             _isBlockchainUpdatesDisabledCache = new Tuple<DateTime, bool>(DateTime.UtcNow.AddDays(-1), false);
+            _uplandMaintenanceStatusCache = new Tuple<DateTime, bool>(DateTime.UtcNow.AddDays(-1), false);
             _latestAnnouncementString = new Tuple<DateTime, string>(DateTime.UtcNow.AddDays(-1), "");
             _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
             _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(DateTime.UtcNow.AddDays(-1), new List<CollatedStatsObject>());
@@ -202,7 +207,7 @@ namespace Upland.InformationProcessor
                 try
                 {
                     _cityInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                        DateTime.UtcNow.AddMinutes(5),
+                        DateTime.UtcNow.AddMinutes(10),
                         _localDataManager.GetCityStats());
                 }
                 catch
@@ -233,7 +238,7 @@ namespace Upland.InformationProcessor
                 try
                 {
                     _neighborhoodInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                        DateTime.UtcNow.AddMinutes(5),
+                        DateTime.UtcNow.AddMinutes(10),
                         _localDataManager.GetNeighborhoodStats());
                 }
                 catch
@@ -264,7 +269,7 @@ namespace Upland.InformationProcessor
                 try
                 {
                     _streetInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                       DateTime.UtcNow.AddMinutes(5),
+                       DateTime.UtcNow.AddMinutes(10),
                        _localDataManager.GetStreetStats());
                 }
                 catch
@@ -296,7 +301,7 @@ namespace Upland.InformationProcessor
                 try
                 {
                     _collectionInfoCache = new Tuple<DateTime, List<CollatedStatsObject>>(
-                        DateTime.UtcNow.AddMinutes(5),
+                        DateTime.UtcNow.AddMinutes(10),
                         _localDataManager.GetCollectionStats());
                 }
                 catch
@@ -445,6 +450,18 @@ namespace Upland.InformationProcessor
             }
 
             return _isBlockchainUpdatesDisabledCache.Item2;
+        }
+
+        public async Task<bool> GetUplandMaintenanceStatusFromCache()
+        {
+            if (_uplandMaintenanceStatusCache.Item1 < DateTime.UtcNow)
+            {
+                _uplandMaintenanceStatusCache = new Tuple<DateTime, bool>(
+                    DateTime.UtcNow.AddMinutes(5),
+                    await _uplandApiManager.GetIsInMaintenance());
+            }
+
+            return _uplandMaintenanceStatusCache.Item2;
         }
 
         public string GetLatestAnnouncemenFromCache()

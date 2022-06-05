@@ -1088,5 +1088,15 @@ namespace Upland.Infrastructure.LocalData
         {
             return _localDataRepository.GetNFTSaleDataByDGoodId(dGoodId);
         }
+
+        public void UpsertCity(City city)
+        {
+            _localDataRepository.UpsertCity(city);
+        }
+
+        public List<City> GetCities()
+        {
+            return _localDataRepository.GetCities();
+        }
     }
 }

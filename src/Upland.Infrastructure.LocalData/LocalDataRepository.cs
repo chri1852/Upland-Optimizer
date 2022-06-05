@@ -3965,6 +3965,84 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void UpsertCity(City city)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertCity]";
+                    sqlCmd.Parameters.Add(new SqlParameter("CityId", city.CityId));
+                    sqlCmd.Parameters.Add(new SqlParameter("Name", city.Name));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<string>("SquareCoordinates", city.SquareCoordinates));
+                    sqlCmd.Parameters.Add(new SqlParameter("StateCode", city.StateCode));
+                    sqlCmd.Parameters.Add(new SqlParameter("CountryCode", city.CountryCode));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public List<City> GetCities()
+        {
+            List<City> cities = new List<City>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetCities]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            cities.Add(new City
+                            {
+                                CityId = (int)reader["CityId"],
+                                Name = (string)reader["Name"],
+                                SquareCoordinates = (string)reader["SquareCoordinates"],
+                                StateCode = (string)reader["StateCode"],
+                                CountryCode = (string)reader["CountryCode"]
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return cities;
+            }
+        }
+
         private SqlParameter AddNullParmaterSafe<T>(string parameterName, T value)
         {
             if (value == null)

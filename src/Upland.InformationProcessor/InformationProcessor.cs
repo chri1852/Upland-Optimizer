@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Upland.Interfaces.Managers;
@@ -1572,6 +1573,21 @@ namespace Upland.InformationProcessor
 
                     savedIds.Add(propertyStructure.PropertyId);
                 }
+            }
+        }
+
+        public void DebugLOADCITIESINTABLE()
+        {
+            foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
+            {
+                City newCity = new City();
+                newCity.CityId = cityId;
+                newCity.Name = Consts.Cities[cityId];
+                newCity.SquareCoordinates = JsonSerializer.Serialize(HelperFunctions.GetCityAreaCoordinates(cityId));
+                newCity.StateCode = "NY";
+                newCity.CountryCode = "USA";
+
+                _localDataManager.UpsertCity(newCity);
             }
         }
 

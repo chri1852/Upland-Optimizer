@@ -25,6 +25,7 @@ namespace Upland.Interfaces.Managers
         Task<UplandProperty> GetUplandPropertyById(long Id);
         Task<UplandExplorerCoordinates> GetExplorerCoordinates(string authToken = null);
         Task<UplandTreasureDirection> GetUplandTreasureDirection(long propId, string authToken = null);
+        Task<bool> GetIsInMaintenance();
     }
 }
         

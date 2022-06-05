@@ -27,7 +27,6 @@ namespace Upland.CollectionOptimizer
         private Dictionary<int, Collection> MissingCollections;
         private ILocalDataManager LocalDataManager;
         private bool DebugMode;
-        private IUplandApiRepository UplandApiRepository;
 
         private Stopwatch timer;
 
@@ -36,7 +35,7 @@ namespace Upland.CollectionOptimizer
         private const int CityProId = 21;
         private const int KingOfTheStreetId = 1;
 
-        public CollectionOptimizer(ILocalDataManager localDataManager, IUplandApiRepository uplandApiRepository)
+        public CollectionOptimizer(ILocalDataManager localDataManager)
         {
             this.Properties = new Dictionary<long, Property>();
             this.Collections = new Dictionary<int, Collection>();
@@ -51,7 +50,6 @@ namespace Upland.CollectionOptimizer
             this.MissingCollections = new Dictionary<int, Collection>();
 
             this.LocalDataManager = localDataManager;
-            this.UplandApiRepository = uplandApiRepository;
             this.DebugMode = false;
 
             this.timer = new Stopwatch();

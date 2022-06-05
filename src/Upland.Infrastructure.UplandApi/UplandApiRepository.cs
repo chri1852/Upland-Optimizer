@@ -303,6 +303,16 @@ namespace Upland.Infrastructure.UplandApi
             return directions;
         }
 
+        public async Task<bool> GetIsInMaintenance()
+        {
+            UplandMaintenance uplandMaintenance;
+            string requestUri = @"https://api.upland.me/settings/maintenance";
+
+            uplandMaintenance = await CallApi<UplandMaintenance>(requestUri, false);
+
+            return uplandMaintenance.is_under_maintenance;
+        }
+
         private async Task<T> CallApi<T>(string requestUri, bool useAuth = false)
         {
             HttpResponseMessage httpResponse;

@@ -35,9 +35,28 @@ namespace Upland.InformationProcessor
 
         public async Task<UserProfile> GetWebUIProfile(string uplandUsername)
         {
-            UserProfile profile = await _uplandApiManager.GetUserProfile(uplandUsername);
-            Dictionary<long, AcquiredInfo> propertyAcquistionInfo = _localDataManager.GetAcquiredOnByPlayer(uplandUsername).ToDictionary(a => a.PropertyId, a => a);
+            UserProfile profile = new UserProfile();
             EOSUser eosUserProfile = _localDataManager.GetEOSAccountByUplandUsername(uplandUsername);
+
+            if (!(await _cachingProcessor.GetUplandMaintenanceStatusFromCache()))
+            {
+                profile = await _uplandApiManager.GetUserProfile(uplandUsername);
+                profile.Rank = HelperFunctions.TranslateUserLevel(int.Parse(profile.Rank));
+                profile.UplandInMaintenance = false;
+            }
+            else
+            {
+                profile.Username = uplandUsername;
+                profile.AvatarLink = "https://static.upland.me/avatars/exclusive/hornbrod.svg";
+                profile.AvatarColor = "#FFA34D";
+                profile.Rank = "Unknown";
+                profile.Networth = 0;
+                profile.Jailed = false;
+                profile.Properties = _localDataManager.GetPropertiesByUplandUsername(eosUserProfile.EOSAccount).Select(p => new UserProfileProperty { PropertyId = p.Id }).ToList();
+                profile.UplandInMaintenance = true;
+            }
+
+            Dictionary<long, AcquiredInfo> propertyAcquistionInfo = _localDataManager.GetAcquiredOnByPlayer(uplandUsername).ToDictionary(a => a.PropertyId, a => a);
             List<SparkStaking> sparkHistory = _localDataManager.GetSparkStakingByEOSAccount(eosUserProfile.EOSAccount);
             Dictionary<int, NFT> sparkHistoryNFTs = _localDataManager.GetNftByDGoodIds(sparkHistory.Select(s => s.DGoodId).Distinct().ToList()).ToDictionary(e => e.DGoodId, e => e);
             Dictionary<int, StructureMetadata> structureMetadataDictionary = _cachingProcessor.GetStructureMetadataFromCache();
@@ -45,7 +64,6 @@ namespace Upland.InformationProcessor
                 .GetProperties(profile.Properties.Select(p => p.PropertyId).ToList())
                 .ToDictionary(p => p.Id, p => p);
 
-            profile.Rank = HelperFunctions.TranslateUserLevel(int.Parse(profile.Rank));
             profile.EOSAccount = eosUserProfile.EOSAccount;
             profile.Joined = eosUserProfile.Joined;
             profile.UnstakedSpark = eosUserProfile.Spark;

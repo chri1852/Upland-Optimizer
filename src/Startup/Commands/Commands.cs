@@ -329,7 +329,7 @@ namespace Startup.Commands
 
             try
             {
-                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager);
                 await ReplyAsync(string.Format("Got it {0}! I have started your optimization run.", HelperFunctions.GetRandomName(_random)));
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower());
                 await optimizer.RunAutoOptimization(registeredUser, runRequest);

@@ -142,6 +142,11 @@ namespace Upland.Infrastructure.UplandApi
             return await _uplandApiRepository.GetUplandTreasureDirection(propId, authToken);
         }
 
+        public async Task<bool> GetIsInMaintenance()
+        {
+            return await _uplandApiRepository.GetIsInMaintenance();
+        }
+
         private async Task RefreshCache(int cityId)
         {
             List<UplandForSaleProp> cityProps = await CallApiForSalePropsByArea(cityId);

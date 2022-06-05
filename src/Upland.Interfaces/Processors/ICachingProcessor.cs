@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Upland.Types.Types;
 
 namespace Upland.InformationProcessor
@@ -19,6 +20,7 @@ namespace Upland.InformationProcessor
         Dictionary<int, MementoMetadata> GetMementoMetadataFromCache();
         Dictionary<int, StructureMetadata> GetStructureMetadataFromCache();
         bool GetIsBlockchainUpdatesDisabledFromCache();
+        Task<bool> GetUplandMaintenanceStatusFromCache();
         string GetLatestAnnouncemenFromCache();
         List<int> GetCollectionIdListForPropertyId(long propertyId);
         Dictionary<int, string> GetNeighborhoodsFromCache();
