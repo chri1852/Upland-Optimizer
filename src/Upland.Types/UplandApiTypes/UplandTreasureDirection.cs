@@ -130,8 +130,12 @@ namespace Upland.Types.UplandApiTypes
                         return TreasureTypeEnum.Exclusive;
                     case "#76379D":
                         return TreasureTypeEnum.Limited;
+                    case "#":
+                        return TreasureTypeEnum.Rare;
                     case "#5F65FE":
                         return TreasureTypeEnum.Spark;
+                    case "#FF7A00":
+                        return TreasureTypeEnum.Rush;
                     default:
                         throw new Exception("Unknown Treasure Type");
                 }

@@ -45,6 +45,7 @@ namespace Upland.InformationProcessor
 
         private readonly List<Tuple<int, HashSet<long>>> _collectionProperties;
         private readonly Dictionary<int, string> _neighborhoods;
+        private readonly Dictionary<int, City> _cities;
 
         public CachingProcessor(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager)
         {
@@ -58,6 +59,9 @@ namespace Upland.InformationProcessor
 
             _neighborhoods = new Dictionary<int, string>();
             _neighborhoods = _localDataManager.GetNeighborhoods().ToDictionary(n => n.Id, n => n.Name);
+
+            _cities = new Dictionary<int, City>();
+            _cities = _localDataManager.GetCities().ToDictionary(c => c.CityId, c => c);
 
             foreach (int collectionId in collectionProperties.GroupBy(c => c.Item1).Select(g => g.First().Item1))
             {
@@ -494,6 +498,11 @@ namespace Upland.InformationProcessor
         public Dictionary<int, string> GetNeighborhoodsFromCache()
         {
             return _neighborhoods;
+        }
+
+        public Dictionary<int, City> GetCitiesFromCache()
+        {
+            return _cities;
         }
 
         private void RemoveExpiredSalesEntries()

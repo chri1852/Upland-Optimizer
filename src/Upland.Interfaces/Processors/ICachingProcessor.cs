@@ -25,5 +25,6 @@ namespace Upland.InformationProcessor
         List<int> GetCollectionIdListForPropertyId(long propertyId);
         Dictionary<int, string> GetNeighborhoodsFromCache();
         Dictionary<int, int> GetCurrentNFTCountsFromCache();
+        Dictionary<int, City> GetCitiesFromCache();
     }
 }
