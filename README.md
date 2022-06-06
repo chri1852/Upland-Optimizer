@@ -3,7 +3,7 @@
 ### Add New City
 
 1. Add New City to UPL.City Table
-2. `*Update GetCityIdByName and SusOutCityNameByMemoString (Optional Only needed if Blockchain throws Errors)
+2. *Update GetCityIdByName and SusOutCityNameByMemoString (Optional Only needed if Blockchain throws Errors)
 3. Add Neighborhoods via AdminLoadNeighborhoods;
 4. Update Max Street ID in Configuration Values.
 5. Add Streets via AdminLoadStreets; 
