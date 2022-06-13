@@ -16,6 +16,8 @@ namespace Upland.Types.Types
         public double Networth { get; set; }
         public bool Jailed { get; set; }
 
+        public bool UplandInMaintenance { get; set; }
+
         public List<UserProfileCollection> Collections { get; set; }
         public List<UserProfileBadge> Badges { get; set; }
         public List<UserProfileProperty> Properties { get; set; }

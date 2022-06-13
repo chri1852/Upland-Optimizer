@@ -658,16 +658,16 @@ namespace Upland.InformationProcessor
 
         private void Process_EnclaveFix()
         {
-            Neighborhood boystown = _localDataManager.GetNeighborhoods().Where(n => n.Id == 295).First();
-            Neighborhood lakeView = _localDataManager.GetNeighborhoods().Where(n => n.Id == 294).First();
+            Neighborhood university = _localDataManager.GetNeighborhoods().Where(n => n.Id == 1844).First();
+            Neighborhood paradise = _localDataManager.GetNeighborhoods().Where(n => n.Id == 1818).First();
 
-            List<Property> lakeViewProperties = _localDataManager.GetPropertiesByCityId(5).Where(p => p.NeighborhoodId == lakeView.Id).ToList();
+            List<Property> paradiseProperties = _localDataManager.GetPropertiesByCityId(5).Where(p => p.NeighborhoodId == paradise.Id).ToList();
 
-            foreach (Property prop in lakeViewProperties)
+            foreach (Property prop in paradiseProperties)
             {
-                if (_localDataManager.IsPropertyInNeighborhood(boystown, prop))
+                if (_localDataManager.IsPropertyInNeighborhood(university, prop))
                 {
-                    prop.NeighborhoodId = boystown.Id;
+                    prop.NeighborhoodId = university.Id;
                     _localDataManager.UpsertProperty(prop);
                 }
             }

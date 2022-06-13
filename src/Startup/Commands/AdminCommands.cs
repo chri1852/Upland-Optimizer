@@ -72,7 +72,7 @@ namespace Startup.Commands
             {
                 await ReplyAsync(string.Format("Test Run Has Started For: {0}", uplandUsername.ToUpper()));
 
-                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager);
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(uplandUsername.ToLower(), qualityLevel);
                 RegisteredUser registeredUser = _localDataManager.GetRegisteredUser(1);
                 registeredUser.UplandUsername = uplandUsername.ToLower();
@@ -294,6 +294,27 @@ namespace Startup.Commands
             {
                 _localDataManager.CreateErrorLog("AdminCommands - AdminRebuildPropertyStructures", ex.Message);
                 await ReplyAsync(string.Format("Failed Rebuilding PropertyStructures: {0}", ex.Message));
+            }
+        }
+
+        [Command("AdminLoadNeighborhoods")]
+        public async Task AdminLoadNeighborhoods()
+        {
+            if (!await checkIfAdmin(Context.User.Id))
+            {
+                return;
+            }
+
+            try
+            {
+                await ReplyAsync(string.Format("Performing Load of Neighborhoods"));
+                await _localDataManager.PopulateNeighborhoods();
+                await ReplyAsync(string.Format("Neighborhoods Loaded."));
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("AdminCommands - AdminLoadNeighborhoods", ex.Message);
+                await ReplyAsync(string.Format("Failed Loading Neighborhoods: {0}", ex.Message));
             }
         }
 

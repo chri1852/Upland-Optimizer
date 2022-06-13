@@ -58,7 +58,7 @@ namespace Startup.Commands
 
             try
             {
-                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager);
                 await ReplyAsync(string.Format("Got it {0}! I have started your level {1} optimization run.", HelperFunctions.GetRandomName(_random), qualityLevel));
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower(), qualityLevel);
                 await optimizer.RunAutoOptimization(registeredUser, runRequest);
@@ -101,7 +101,7 @@ namespace Startup.Commands
 
             try
             {
-                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager);
                 await ReplyAsync(string.Format("Bingo {0}! I have started your What If optimization run.", HelperFunctions.GetRandomName(_random)));
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower(), collectionId, numberOfProps, averageMonthlyUpx);
                 await optimizer.RunAutoOptimization(registeredUser, runRequest);
@@ -160,7 +160,7 @@ namespace Startup.Commands
 
             try
             {
-                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager, _uplandApiRepository);
+                CollectionOptimizer optimizer = new CollectionOptimizer(_localDataManager);
                 await ReplyAsync(string.Format("Bingo {0}! I have started your exclude optimization run.", HelperFunctions.GetRandomName(_random)));
                 OptimizerRunRequest runRequest = new OptimizerRunRequest(registeredUser.UplandUsername.ToLower(), excludeCollectionIds);
                 await optimizer.RunAutoOptimization(registeredUser, runRequest);

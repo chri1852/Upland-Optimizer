@@ -18,13 +18,16 @@ namespace Upland.Interfaces.Managers
         Task<SpiritLegit> GetSpiritLegitsByDGoodId(int dGoodId);
         Task<Decoration> GetDecorationsByDGoodId(int dGoodId);
         Task<BlockExplorer> GetBlockExplorersByDGoodId(int dGoodId);
+        Task<LandVehicle> GetLandVehicleByDGoodId(int dGoodId);
         Task<NFLPALegitMintInfo> GetEssentialMintInfo(int legitId);
         Task<NFLPALegitMintInfo> GetMementoMintInfo(int legitId);
+        Task<LandVehicleFinishInfo> GetLandVehicleFinishInfo(int finishId);
         Task<UplandUserProfile> GetUplandUserProfile(string userName);
         Task<UserProfile> GetUserProfile(string userName);
         Task<UplandProperty> GetUplandPropertyById(long Id);
         Task<UplandExplorerCoordinates> GetExplorerCoordinates(string authToken = null);
         Task<UplandTreasureDirection> GetUplandTreasureDirection(long propId, string authToken = null);
+        Task<bool> GetIsInMaintenance();
     }
 }
         

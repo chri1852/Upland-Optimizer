@@ -101,5 +101,10 @@ namespace Upland.Interfaces.Repositories
         List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId);
         List<Tuple<byte[], byte[]>> GetPropertyBuildingsMetadata();
         void SetPropertyBoost(long propertyId, decimal boost);
+        void UpsertCity(City city);
+        List<City> GetCities();
+        void UpsertLandVehicleFinish(LandVehicleFinishInfo finishInfo);
+        LandVehicleFinishInfo GetLandVehicleFinishInfoById(int finishId);
+        List<LandVehicleFinishInfo> GetAllLandVehicleFinishInfos();
     }
 }   

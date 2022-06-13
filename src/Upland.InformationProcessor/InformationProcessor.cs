@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Upland.Interfaces.Managers;
@@ -1577,13 +1578,17 @@ namespace Upland.InformationProcessor
 
         public async Task LoadMissingCityProperties(int cityId)
         {
-            List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            //List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            City city = _localDataManager.GetCities().First(c => c.CityId == cityId);
+            List<double> cityCoordinates = city.GetCityCoordinates();
             await _localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId);
         }
 
         public async Task ResetLockedPropsToLocked(int cityId)
         {
-            List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            //List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            City city = _localDataManager.GetCities().First(c => c.CityId == cityId);
+            List<double> cityCoordinates = city.GetCityCoordinates();
             await _localDataManager.ResetLockedProps(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId);
         }
 
@@ -1731,14 +1736,15 @@ namespace Upland.InformationProcessor
                 // Find the average coordinate, and get a close prop to it
                 decimal latitude = possibleTreasureProps.Sum(p => p.Latitude.Value) / possibleTreasureProps.Count;
                 decimal longitude = possibleTreasureProps.Sum(p => p.Longitude.Value) / possibleTreasureProps.Count;
-
+                /*
                 ownerProps = ownerProps.OrderBy(p => GetDistance((double)longitude, (double)latitude, (double)p.Longitude, (double)p.Latitude)).Where(p => !usedPropIds.Contains(p.Id)).ToList();
                 Property propToUse = ownerProps[0];
                 if (possibleTreasureProps.Count < 500 || GetDistance((double)longitude, (double)latitude, (double)propToUse.Longitude, (double)propToUse.Latitude) > treasure.maximumDistance)
                 {
+                */
                     possibleTreasureProps = possibleTreasureProps.OrderBy(p => GetDistance((double)longitude, (double)latitude, (double)p.Longitude, (double)p.Latitude)).Where(p => !usedPropIds.Contains(p.Id)).ToList();
-                    propToUse = possibleTreasureProps[0];
-                }
+                    Property propToUse = possibleTreasureProps[0];
+                //}
                 Console.WriteLine(string.Format("PropCount: {0} : {3} - {4} : {1}, {2}", possibleTreasureProps.Count, propToUse.Address, Consts.Cities[cityId], treasure.TextDirection, GetDistance((double)longitude, (double)latitude, (double)propToUse.Longitude, (double)propToUse.Latitude)));
 
                 usedPropIds.Add(propToUse.Id);

@@ -44,6 +44,8 @@ namespace Upland.Types.UplandApiTypes
         public string PlayerPosition { get; set; }
         public string PlayerFullNameUppercase { get; set; }
         public string ModelType { get; set; }
+        public int FinishId { get; set; }
+        public string ModelUrl { get; set; }
     }
 
     public class UplandSeries

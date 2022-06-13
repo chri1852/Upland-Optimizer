@@ -287,6 +287,50 @@ namespace Upland.Infrastructure.UplandApi
             return blockExplorer;
         }
 
+        public static LandVehicle MapLandVehicle(UplandAsset asset)
+        {
+            LandVehicle landVehicle = new LandVehicle();
+
+            landVehicle.FinishId = asset.Metadata.FinishId;
+
+            landVehicle.DGoodId = asset.DGoodId;
+            landVehicle.DisplayName = asset.Metadata.DisplayName;
+            landVehicle.Mint = asset.SerialNumber;
+            landVehicle.CurrentSupply = asset.Stat.CurrentSupply;
+            landVehicle.MaxSupply = asset.Stat.MaxSupply;
+            landVehicle.Link = @"https://play.upland.me/car-preview/" + asset.DGoodId;
+            landVehicle.Image = @"https://static.upland.me/" + asset.Metadata.Image;
+            landVehicle.ModelUrl = @"https://static.upland.me/" + asset.Metadata.ModelUrl;
+
+            return landVehicle;
+        }
+
+        public static LandVehicleFinishInfo MapLandVehicleFinishInfo(UplandLandVehicleFinishInfo uplandInfo)
+        {
+            LandVehicleFinishInfo finishInfo = new LandVehicleFinishInfo();
+
+            finishInfo.Id = uplandInfo.FinishId;
+            finishInfo.Title = uplandInfo.Title;
+            finishInfo.Wheels = uplandInfo.NumWheels;
+            finishInfo.DriveTrain = uplandInfo.DriveTrain;
+            finishInfo.MintingEnd = uplandInfo.MintingEnd;
+            finishInfo.CarClassId = uplandInfo.CarClass.Id;
+            finishInfo.CarClassName = uplandInfo.CarClass.Name;
+            finishInfo.CarClassNumber = uplandInfo.CarClass.Number;
+            finishInfo.Horsepower = uplandInfo.Stats.Where(s => s.Label == "Horsepower").Select(s => s.Value).First();
+            finishInfo.Weight = uplandInfo.Stats.Where(s => s.Label == "Weight").Select(s => s.Value).First();
+            finishInfo.Speed = uplandInfo.Stats.Where(s => s.Label == "Speed Rating").Select(s => s.Value).First();
+            finishInfo.Acceleration = uplandInfo.Stats.Where(s => s.Label == "Acceleration").Select(s => s.Value).First();
+            finishInfo.Braking = uplandInfo.Stats.Where(s => s.Label == "Braking").Select(s => s.Value).First();
+            finishInfo.Handling = uplandInfo.Stats.Where(s => s.Label == "Handling").Select(s => s.Value).First();
+            finishInfo.EnergyEfficiency = uplandInfo.Stats.Where(s => s.Label == "Energy Efficiency Rating").Select(s => s.Value).First();
+            finishInfo.Reliability = uplandInfo.Stats.Where(s => s.Label == "Reliability Rating").Select(s => s.Value).First();
+            finishInfo.Durability = uplandInfo.Stats.Where(s => s.Label == "Durability Rating").Select(s => s.Value).First();
+            finishInfo.Offroad = uplandInfo.Stats.Where(s => s.Label == "Offroad Rating").Select(s => s.Value).First();
+
+            return finishInfo;
+        }
+
         private static bool IsCollectionCityCollection(UplandCollection uplandCollection)
         {
             if (uplandCollection.Tags_Address_Common == null || uplandCollection.Tags_Address_Common.Count == 0)

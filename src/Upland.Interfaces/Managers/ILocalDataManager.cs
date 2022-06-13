@@ -113,5 +113,10 @@ namespace Upland.Interfaces.Managers
         void UpsertNFTSaleData(NFTSaleData saleData);
         List<NFTSaleData> GetNFTSaleDataByDGoodId(int dGoodId);
         void SetPropertyBoost(long propertyId, decimal boost);
+        void UpsertCity(City city);
+        List<City> GetCities();
+        void UpsertLandVehicleFinish(LandVehicleFinishInfo finishInfo);
+        LandVehicleFinishInfo GetLandVehicleFinishInfoById(int finishId);
+        List<LandVehicleFinishInfo> GetAllLandVehicleFinishInfos();
     }
 }

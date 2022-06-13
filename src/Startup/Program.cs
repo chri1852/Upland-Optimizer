@@ -55,7 +55,7 @@ class Program
         UplandApiManager uplandApiManager = new UplandApiManager(uplandApiRepository);
         BlockchainManager blockchainManager = new BlockchainManager();
 
-        CachingProcessor cachingProcessor = new CachingProcessor(localDataManager);
+        CachingProcessor cachingProcessor = new CachingProcessor(localDataManager, uplandApiManager);
         PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
         USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager);
         UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager);
@@ -65,14 +65,15 @@ class Program
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager, uplandNFTActSurfer);
         //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser, cachingProcessor);
         WebProcessor webProcessor = new WebProcessor(localDataManager, uplandApiManager, cachingProcessor);
-        CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager, uplandApiRepository);
+        CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager);
 
         // Populate City
         //List<double> cityCoordinates = Upland.InformationProcessor.HelperFunctions.GetCityAreaCoordinates(16);
         //await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], 16, false);
         //localDataManager.DetermineNeighborhoodIdsForCity(16);
         //await localDataManager.PopulateCollectionPropertiesByCityId(16);
-        //await informationProcessor.LoadMissingCityProperties(10);
+        //await informationProcessor.LoadMissingCityProperties(35);
+
         //await resyncProcessor.ResyncPropsList("EnclaveFix", "1");
         //await localDataManager.PopulateDatabaseCollectionInfo(10);
         //new Program().InitializeRefreshTimer();
@@ -84,20 +85,21 @@ class Program
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
-        await localDataManager.PopulateStreets();
-        
-        //string continueHunt = "Y";
-        //while (continueHunt == "Y")
-        //{
-            //await informationProcessor.HuntTreasures(4, "oqtr232h2c23", TreasureTypeEnum.Standard);
-            //Console.WriteLine("Continue?");
-            //continueHunt = Console.ReadLine();
-        //}
-        
+        //await localDataManager.PopulateStreets();
+        //await informationProcessor.LoadMissingCityProperties(35);
+
+        string continueHunt = "Y";
+        while (continueHunt == "Y")
+        {
+            await informationProcessor.HuntTreasures(3, "oqtr232h2c23", TreasureTypeEnum.Rush);
+            Console.WriteLine("Continue?");
+            continueHunt = Console.ReadLine();
+        }
+
         // Run Blockchain Updates
-        //await playUplandMeSurfer.RunBlockChainUpdate();
-        //await uplandNFTActSurfer.RunBlockChainUpdate();
-        //await uspkTokenAccSurfer.RunBlockChainUpdate();
+        await playUplandMeSurfer.RunBlockChainUpdate();
+        await uplandNFTActSurfer.RunBlockChainUpdate();
+        await uspkTokenAccSurfer.RunBlockChainUpdate();
         //informationProcessor.RebuildPropertyStructures();
         //await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
 

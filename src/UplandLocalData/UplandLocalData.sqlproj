@@ -177,5 +177,12 @@
     <Build Include="StoredProcedures\UPL.GetCachedSaleEntriesByPropertyId.sql" />
     <Build Include="StoredProcedures\UPL.SetPropertyBoost.sql" />
     <Build Include="StoredProcedures\UPL.GetNFTs.sql" />
+    <Build Include="Tables\UPL.City.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertCity.sql" />
+    <Build Include="StoredProcedures\UPL.GetCities.sql" />
+    <Build Include="Tables\UPL.LandVehicleFinish.sql" />
+    <Build Include="StoredProcedures\UPL.UpsertLandVehicleFinish.sql" />
+    <Build Include="StoredProcedures\UPL.GetLandVehicleFinishById.sql" />
+    <Build Include="StoredProcedures\UPL.GetAllLandVehicleFinishes.sql" />
   </ItemGroup>
 </Project>
