@@ -72,7 +72,8 @@ class Program
         //await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], 16, false);
         //localDataManager.DetermineNeighborhoodIdsForCity(16);
         //await localDataManager.PopulateCollectionPropertiesByCityId(16);
-        //await informationProcessor.LoadMissingCityProperties(10);
+        //await informationProcessor.LoadMissingCityProperties(35);
+
         //await resyncProcessor.ResyncPropsList("EnclaveFix", "1");
         //await localDataManager.PopulateDatabaseCollectionInfo(10);
         //new Program().InitializeRefreshTimer();
@@ -85,21 +86,22 @@ class Program
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
+        //await informationProcessor.LoadMissingCityProperties(35);
 
-        //string continueHunt = "Y";
-        //while (continueHunt == "Y")
-        //{
-        //await informationProcessor.HuntTreasures(4, "oqtr232h2c23", TreasureTypeEnum.Standard);
-        //Console.WriteLine("Continue?");
-        //continueHunt = Console.ReadLine();
-        //}
+        string continueHunt = "Y";
+        while (continueHunt == "Y")
+        {
+            await informationProcessor.HuntTreasures(3, "oqtr232h2c23", TreasureTypeEnum.Rush);
+            Console.WriteLine("Continue?");
+            continueHunt = Console.ReadLine();
+        }
 
         // Run Blockchain Updates
         await playUplandMeSurfer.RunBlockChainUpdate();
         await uplandNFTActSurfer.RunBlockChainUpdate();
         await uspkTokenAccSurfer.RunBlockChainUpdate();
-        informationProcessor.RebuildPropertyStructures();
-        await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
+        //informationProcessor.RebuildPropertyStructures();
+        //await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
 
         // Test Information Processing Functions
         List<string> output;

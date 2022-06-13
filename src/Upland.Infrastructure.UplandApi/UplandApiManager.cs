@@ -102,6 +102,13 @@ namespace Upland.Infrastructure.UplandApi
             return UplandMapper.MapBlockExplorer(await _uplandApiRepository.GetBlockExplorersByDGoodId(dGoodId));
         }
 
+        public async Task<LandVehicle> GetLandVehicleByDGoodId(int dGoodId)
+        {
+            // Fucking Upland Rate Limiting
+            Thread.Sleep(3000);
+            return UplandMapper.MapLandVehicle(await _uplandApiRepository.GetLandVehicleByDGoodId(dGoodId));
+        }
+
         public async Task<NFLPALegitMintInfo> GetEssentialMintInfo(int legitId)
         {
             return await _uplandApiRepository.GetEssentialMintInfo(legitId);
@@ -110,6 +117,11 @@ namespace Upland.Infrastructure.UplandApi
         public async Task<NFLPALegitMintInfo> GetMementoMintInfo(int legitId)
         {
             return await _uplandApiRepository.GetMementoMintInfo(legitId);
+        }
+
+        public async Task<LandVehicleFinishInfo> GetLandVehicleFinishInfo(int finishId)
+        {
+            return UplandMapper.MapLandVehicleFinishInfo(await _uplandApiRepository.GetLandVehicleFinishInfo(finishId));
         }
 
         public async Task<UplandUserProfile> GetUplandUserProfile(string userName)

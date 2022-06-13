@@ -154,7 +154,7 @@ namespace Upland.BlockchainSurfer
                         await ProcessIssueAction(action);
                         break;
                     case "transfernft":
-                        ProcessTransferNFTAction(action);
+                        await ProcessTransferNFTAction(action);
                         break;
                 }
 
@@ -290,6 +290,15 @@ namespace Upland.BlockchainSurfer
                         SparkHours = 0,
                         MinimumSpark = 0,
                         MaximumSpark = 0,
+                    });
+                    break;
+                case "landvehicle":
+                    newMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new LandVehicleMetadata
+                    {
+                        DisplayName = action.action_trace.act.data.display_name,
+                        MaxSupply = int.Parse(action.action_trace.act.data.max_supply.Split(" UNFT")[0]),
+                        MaxIssueDays = action.action_trace.act.data.max_issue_days > int.MaxValue ? int.MaxValue : (int)action.action_trace.act.data.max_issue_days,
+                        ModelUrl = "",
                     });
                     break;
                 default:
@@ -862,6 +871,107 @@ namespace Upland.BlockchainSurfer
             }
         }
 
+        private async Task PopulateLandVehicleNFT(NFT newNft, NFTMetadata metadata)
+        {
+            if (newNft.FullyLoaded && metadata.FullyLoaded)
+            {
+                return;
+            }
+
+            LandVehicle landVehicle = null;
+
+            try
+            {
+                landVehicle = await _uplandApiManager.GetLandVehicleByDGoodId(newNft.DGoodId);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateLandVehicleNFT", string.Format("Could Not Load Land Vehicle By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+
+            if (!newNft.FullyLoaded)
+            {
+                newNft.SerialNumber = landVehicle.Mint;
+                newNft.FullyLoaded = true;
+                newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new LandVehicleSpecificMetadata
+                {
+                    FinishId = landVehicle.FinishId,
+                    Image = landVehicle.Image,
+                    Link = landVehicle.Link
+                });
+
+                try
+                {
+                    _localDataManager.UpsertNft(newNft);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateLandVehicleNFT", string.Format("Failed Saving LandVechicle NFT, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+
+            if (!metadata.FullyLoaded)
+            {
+                if (landVehicle == null || landVehicle.FinishId <= 0)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateLandVehicleNFT", string.Format("Missing Metadata, DGoodId: {0}", newNft.DGoodId));
+                    return;
+                }
+
+                LandVehicleMetadata currentMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<LandVehicleMetadata>(metadata.Metadata);
+                currentMetadata.ModelUrl = landVehicle.ModelUrl;
+                metadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(currentMetadata);
+                metadata.FullyLoaded = true;
+
+                try
+                {
+                    _localDataManager.UpsertNftMetadata(metadata);
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateLandVehicleNFT", string.Format("Failed Saving LandVechicle Metadata, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
+            }
+
+            // At this point Lets see if the finish info is populated
+            // TODO: CREATE DB TABLES + SPs
+            // RUN CHECK TO SEE IF IT EXISTS
+            // IF NOT CREATE
+
+            LandVehicleFinishInfo existingFinishInfo = _localDataManager.GetLandVehicleFinishInfoById(landVehicle.FinishId);
+
+            if (existingFinishInfo.Title != null && existingFinishInfo.Title != "")
+            {
+                // We have the finish info, return
+                return;
+            }
+
+            LandVehicleFinishInfo finishInfo = null;
+
+            try
+            {
+                finishInfo = await _uplandApiManager.GetLandVehicleFinishInfo(landVehicle.FinishId);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateLandVehicleNFT", string.Format("Could Not Load LandVechicle Finish Info By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+
+            try
+            {
+                _localDataManager.UpsertLandVehicleFinish(finishInfo);
+            }
+            catch (Exception ex)
+            {
+                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateLandVehicleNFT", string.Format("Could Not Commit LandVehicleFinishInfo, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                return;
+            }
+        }
+
         private async Task<dGood> GetDGoodFromTable(int dGoodId)
         {
             // IN Prod Get the DGoods Individually
@@ -903,6 +1013,9 @@ namespace Upland.BlockchainSurfer
                     await PopulateStructornmtNFT(nft, metadata);
                     break;
                 case "structure":
+                    break;
+                case "landvehicle":
+                    await PopulateLandVehicleNFT(nft, metadata);
                     break;
                 default:
                     throw new Exception("Unknown NFT Category Detected Stoping Updates");

@@ -4043,6 +4043,169 @@ namespace Upland.Infrastructure.LocalData
             }
         }
 
+        public void UpsertLandVehicleFinish(LandVehicleFinishInfo finishInfo)
+        {
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[UpsertLandVehicleFinish]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", finishInfo.Id));
+                    sqlCmd.Parameters.Add(new SqlParameter("Title", finishInfo.Title));
+                    sqlCmd.Parameters.Add(new SqlParameter("Wheels", finishInfo.Wheels));
+                    sqlCmd.Parameters.Add(new SqlParameter("DriveTrain", finishInfo.DriveTrain));
+                    sqlCmd.Parameters.Add(new SqlParameter("MintingEnd", finishInfo.MintingEnd));
+                    sqlCmd.Parameters.Add(new SqlParameter("CarClassId", finishInfo.CarClassId));
+                    sqlCmd.Parameters.Add(new SqlParameter("CarClassName", finishInfo.CarClassName));
+                    sqlCmd.Parameters.Add(new SqlParameter("CarClassNumber", finishInfo.CarClassNumber));
+                    sqlCmd.Parameters.Add(new SqlParameter("Horsepower", finishInfo.Horsepower));
+                    sqlCmd.Parameters.Add(new SqlParameter("Weight", finishInfo.Weight));
+                    sqlCmd.Parameters.Add(new SqlParameter("Speed", finishInfo.Speed));
+                    sqlCmd.Parameters.Add(new SqlParameter("Acceleration", finishInfo.Acceleration));
+                    sqlCmd.Parameters.Add(new SqlParameter("Braking", finishInfo.Braking));
+                    sqlCmd.Parameters.Add(new SqlParameter("Handling", finishInfo.Handling));
+                    sqlCmd.Parameters.Add(new SqlParameter("EnergyEfficiency", finishInfo.EnergyEfficiency));
+                    sqlCmd.Parameters.Add(new SqlParameter("Reliability", finishInfo.Reliability));
+                    sqlCmd.Parameters.Add(new SqlParameter("Durability", finishInfo.Durability));
+                    sqlCmd.Parameters.Add(new SqlParameter("Offroad", finishInfo.Offroad));
+
+                    sqlCmd.ExecuteNonQuery();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        public LandVehicleFinishInfo GetLandVehicleFinishInfoById(int finishId)
+        {
+            LandVehicleFinishInfo finishInfo = new LandVehicleFinishInfo();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetLandVehicleFinishById]";
+                    sqlCmd.Parameters.Add(new SqlParameter("Id", finishId));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            finishInfo = new LandVehicleFinishInfo
+                            {
+                                Id = (int)reader["Id"],
+                                Title = (string)reader["Title"],
+                                Wheels = (short)reader["Wheels"],
+                                DriveTrain = (string)reader["DriveTrain"],
+                                MintingEnd = (DateTime)reader["MintingEnd"],
+                                CarClassId = (int)reader["CarClassId"],
+                                CarClassName = (string)reader["CarClassName"],
+                                CarClassNumber = (int)reader["CarClassNumber"],
+                                Horsepower = (int)reader["Horsepower"],
+                                Weight = (int)reader["Weight"],
+                                Speed = (short)reader["Speed"],
+                                Acceleration = (short)reader["Acceleration"],
+                                Braking = (short)reader["Braking"],
+                                Handling = (short)reader["Handling"],
+                                EnergyEfficiency = (short)reader["EnergyEfficiency"],
+                                Reliability = (short)reader["Reliability"],
+                                Durability = (short)reader["Durability"],
+                                Offroad = (short)reader["Offroad"],
+                            };
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return finishInfo;
+            }
+        }
+
+        public List<LandVehicleFinishInfo> GetAllLandVehicleFinishInfos()
+        {
+            List<LandVehicleFinishInfo> finishInfos = new List<LandVehicleFinishInfo>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetAllLandVehicleFinishes]";
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            finishInfos.Add(new LandVehicleFinishInfo
+                            {
+                                Id = (int)reader["Id"],
+                                Title = (string)reader["Title"],
+                                Wheels = (short)reader["Wheels"],
+                                DriveTrain = (string)reader["DriveTrain"],
+                                MintingEnd = (DateTime)reader["MintingEnd"],
+                                CarClassId = (int)reader["CarClassId"],
+                                CarClassName = (string)reader["CarClassName"],
+                                CarClassNumber = (int)reader["CarClassNumber"],
+                                Horsepower = (int)reader["Horsepower"],
+                                Weight = (int)reader["Weight"],
+                                Speed = (short)reader["Speed"],
+                                Acceleration = (short)reader["Acceleration"],
+                                Braking = (short)reader["Braking"],
+                                Handling = (short)reader["Handling"],
+                                EnergyEfficiency = (short)reader["EnergyEfficiency"],
+                                Reliability = (short)reader["Reliability"],
+                                Durability = (short)reader["Durability"],
+                                Offroad = (short)reader["Offroad"],
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return finishInfos;
+            }
+        }
+
         private SqlParameter AddNullParmaterSafe<T>(string parameterName, T value)
         {
             if (value == null)

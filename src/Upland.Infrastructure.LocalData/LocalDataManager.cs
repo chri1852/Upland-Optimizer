@@ -1098,5 +1098,20 @@ namespace Upland.Infrastructure.LocalData
         {
             return _localDataRepository.GetCities();
         }
+
+        public void UpsertLandVehicleFinish(LandVehicleFinishInfo finishInfo)
+        {
+            _localDataRepository.UpsertLandVehicleFinish(finishInfo);
+        }
+
+        public LandVehicleFinishInfo GetLandVehicleFinishInfoById(int finishId)
+        {
+            return _localDataRepository.GetLandVehicleFinishInfoById(finishId);
+        }
+
+        public List<LandVehicleFinishInfo> GetAllLandVehicleFinishInfos()
+        {
+            return _localDataRepository.GetAllLandVehicleFinishInfos();
+        }
     }
 }

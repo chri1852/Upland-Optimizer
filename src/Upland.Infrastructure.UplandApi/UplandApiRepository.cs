@@ -238,6 +238,16 @@ namespace Upland.Infrastructure.UplandApi
             return assets;
         }
 
+        public async Task<UplandAsset> GetLandVehicleByDGoodId(int dGoodId)
+        {
+            UplandAsset assets;
+            string requestUri = @"https://nft.upland.me/assets/cars/nft-id/" + dGoodId;
+
+            assets = await CallApi<UplandAsset>(requestUri, false);
+
+            return assets;
+        }
+
         public async Task<NFLPALegitMintInfo> GetEssentialMintInfo(int legitId)
         {
             NFLPALegitMintInfo asset;
@@ -256,6 +266,18 @@ namespace Upland.Infrastructure.UplandApi
             asset = await CallApi<NFLPALegitMintInfo>(requestUri, false);
 
             return asset;
+        }
+
+        public async Task<UplandLandVehicleFinishInfo> GetLandVehicleFinishInfo(int finishId)
+        {
+            UplandLandVehicleFinishInfo finishInfo;
+            string requestUri = @"https://cars.upland.me/cars/" + finishId;
+
+            finishInfo = await CallApi<UplandLandVehicleFinishInfo>(requestUri, false);
+
+            finishInfo.FinishId = finishId;
+
+            return finishInfo;
         }
 
         public async Task<UplandUserProfile> GetProfileByUsername(string username)

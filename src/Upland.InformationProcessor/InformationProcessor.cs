@@ -1576,30 +1576,19 @@ namespace Upland.InformationProcessor
             }
         }
 
-        public void DebugLOADCITIESINTABLE()
-        {
-            foreach (int cityId in Consts.NON_BULLSHIT_CITY_IDS)
-            {
-                City newCity = new City();
-                newCity.CityId = cityId;
-                newCity.Name = Consts.Cities[cityId];
-                newCity.SquareCoordinates = JsonSerializer.Serialize(HelperFunctions.GetCityAreaCoordinates(cityId));
-                newCity.StateCode = "NY";
-                newCity.CountryCode = "USA";
-
-                _localDataManager.UpsertCity(newCity);
-            }
-        }
-
         public async Task LoadMissingCityProperties(int cityId)
         {
-            List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            //List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            City city = _localDataManager.GetCities().First(c => c.CityId == cityId);
+            List<double> cityCoordinates = city.GetCityCoordinates();
             await _localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId);
         }
 
         public async Task ResetLockedPropsToLocked(int cityId)
         {
-            List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            //List<double> cityCoordinates = HelperFunctions.GetCityAreaCoordinates(cityId);
+            City city = _localDataManager.GetCities().First(c => c.CityId == cityId);
+            List<double> cityCoordinates = city.GetCityCoordinates();
             await _localDataManager.ResetLockedProps(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], cityId);
         }
 
