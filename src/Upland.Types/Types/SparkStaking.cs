@@ -10,5 +10,6 @@ namespace Upland.Types.Types
         public decimal Amount { get; set; }
         public DateTime Start { get; set; }
         public DateTime? End { get; set; }
+        public bool Manufacturing { get; set; }
     }
 }

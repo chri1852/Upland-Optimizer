@@ -5,7 +5,8 @@
 	[EOSAccount]		 VARCHAR(12)       NOT NULL,
 	[Amount]             DECIMAL(6,2)      NOT NULL,
 	[Start]              DATETIME	       NOT NULL,
-	[End]                DATETIME
+	[End]                DATETIME                  ,
+	[Manufacturing]     BIT
 
 
 	CONSTRAINT pk_SparkStakingId PRIMARY KEY(Id)

@@ -11,6 +11,7 @@ BEGIN
 		SELECT DISTINCT DGoodId
 		FROM UPL.SparkStaking H (NOLOCK)
 		WHERE H.[End] IS NULL
+			AND H.Manufacturing = 0
 		
 		SELECT DISTINCT N.Metadata AS 'NFTMetadata', M.Metadata
 		FROM UPL.NFTMetadata M (NOLOCK)

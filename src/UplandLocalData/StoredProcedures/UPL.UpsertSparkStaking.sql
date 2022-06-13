@@ -5,7 +5,8 @@
 	@EOSAccount	     VARCHAR(12),
 	@Amount          DECIMAL(6,2),
 	@Start           DATETIME,
-	@End             DATETIME
+	@End             DATETIME,
+	@Manufacturing   BIT
 )
 AS
 BEGIN
@@ -18,7 +19,8 @@ BEGIN
 					[EOSAccount],
 					[Amount],
 					[Start],
-					[End]
+					[End],
+					[Manufacturing]
 				)
 				Values
 				(
@@ -26,7 +28,8 @@ BEGIN
 					@EOSAccount,
 					@Amount,
 					@Start,
-					@End
+					@End,
+					@Manufacturing
 				)
 			END
 		ELSE
@@ -37,7 +40,8 @@ BEGIN
 					[EOSAccount] = @EOSAccount,
 					[Amount] = @Amount,
 					[Start] = @Start,
-					[End] = @End
+					[End] = @End,
+					[Manufacturing] = @Manufacturing
 				WHERE [Id] = @Id
 			END
 	END TRY

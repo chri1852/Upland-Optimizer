@@ -223,7 +223,8 @@ namespace Upland.BlockchainSurfer
                         EOSAccount = user.EOSAccount,
                         Amount = amount,
                         Start = action.block_time,
-                        End = null
+                        End = null,
+                        Manufacturing = false
                     });
                 }
                 else
@@ -238,7 +239,8 @@ namespace Upland.BlockchainSurfer
                         EOSAccount = user.EOSAccount,
                         Amount = stake.Amount + amount,
                         Start = action.block_time,
-                        End = null
+                        End = null,
+                        Manufacturing = false
                     });
                 }
             }
@@ -252,7 +254,24 @@ namespace Upland.BlockchainSurfer
                     EOSAccount = user.EOSAccount,
                     Amount = amount,
                     Start = action.block_time,
-                    End = null
+                    End = null,
+                    Manufacturing = false
+                });
+
+                HandleStructureDGoodCreation(dGoodId, action);
+            }
+            else if (Regex.Match(action.action_trace.act.data.memo, "^PLANT,").Success)
+            {
+                int dGoodId = int.Parse(action.action_trace.act.data.memo.Split("PLANT,")[1].Split(",")[0]);
+                _localDataManager.UpsertSparkStaking(new SparkStaking
+                {
+                    Id = -1,
+                    DGoodId = dGoodId,
+                    EOSAccount = user.EOSAccount,
+                    Amount = amount,
+                    Start = action.block_time,
+                    End = null,
+                    Manufacturing = true
                 });
 
                 HandleStructureDGoodCreation(dGoodId, action);

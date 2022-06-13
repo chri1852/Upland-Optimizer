@@ -3361,6 +3361,7 @@ namespace Upland.Infrastructure.LocalData
                     sqlCmd.Parameters.Add(new SqlParameter("Amount", sparkStaking.Amount));
                     sqlCmd.Parameters.Add(new SqlParameter("Start", sparkStaking.Start));
                     sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime?>("End", sparkStaking.End));
+                    sqlCmd.Parameters.Add(new SqlParameter("Manufacturing", sparkStaking.Manufacturing));
 
                     sqlCmd.ExecuteNonQuery();
                 }
@@ -3402,7 +3403,8 @@ namespace Upland.Infrastructure.LocalData
                                 EOSAccount = (string)reader["EOSAccount"],
                                 Amount = (decimal)reader["Amount"],
                                 Start = (DateTime)reader["Start"],
-                                End = ReadNullParameterSafe<DateTime?>(reader, "End")
+                                End = ReadNullParameterSafe<DateTime?>(reader, "End"),
+                                Manufacturing = (bool)reader["Manufacturing"]
                             });
                         }
                         reader.Close();
