@@ -19,6 +19,7 @@ namespace Upland.InformationProcessor
         Dictionary<int, EssentialMetadata> GetEssentialMetadataFromCache();
         Dictionary<int, MementoMetadata> GetMementoMetadataFromCache();
         Dictionary<int, StructureMetadata> GetStructureMetadataFromCache();
+        Dictionary<int, LandVehicleMetadata> GetLandVehicleMetadataFromCache();
         bool GetIsBlockchainUpdatesDisabledFromCache();
         Task<bool> GetUplandMaintenanceStatusFromCache();
         string GetLatestAnnouncemenFromCache();

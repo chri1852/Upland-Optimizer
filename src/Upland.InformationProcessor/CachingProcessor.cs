@@ -33,6 +33,7 @@ namespace Upland.InformationProcessor
         private Tuple<DateTime, Dictionary<int, EssentialMetadata>> _essentialMetadataCache;
         private Tuple<DateTime, Dictionary<int, MementoMetadata>> _mementoMetadataCache;
         private Tuple<DateTime, Dictionary<int, StructureMetadata>> _structureMetadataCache;
+        private Tuple<DateTime, Dictionary<int, LandVehicleMetadata>> _landvehicleMetadataCache;
         private Tuple<DateTime, Dictionary<int, int>> _nftCountsCache;
 
         private Dictionary<int, bool> _isLoadingCityForSaleListCache;
@@ -106,6 +107,7 @@ namespace Upland.InformationProcessor
             _essentialMetadataCache = new Tuple<DateTime, Dictionary<int, EssentialMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, EssentialMetadata>());
             _mementoMetadataCache = new Tuple<DateTime, Dictionary<int, MementoMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, MementoMetadata>());
             _structureMetadataCache = new Tuple<DateTime, Dictionary<int, StructureMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, StructureMetadata>());
+            _landvehicleMetadataCache = new Tuple<DateTime, Dictionary<int, LandVehicleMetadata>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, LandVehicleMetadata>());
             _nftCountsCache = new Tuple<DateTime, Dictionary<int, int>>(DateTime.UtcNow.AddDays(-1), new Dictionary<int, int>());
         }
 
@@ -386,6 +388,16 @@ namespace Upland.InformationProcessor
             return _structureMetadataCache.Item2;
         }
 
+        public Dictionary<int, LandVehicleMetadata> GetLandVehicleMetadataFromCache()
+        {
+            if (!_isLoadingNFTMetadataCache && _landvehicleMetadataCache.Item1 < DateTime.UtcNow)
+            {
+                ReloadNFTMetaDataCache();
+            }
+
+            return _landvehicleMetadataCache.Item2;
+        }
+
         public Dictionary<int, int> GetCurrentNFTCountsFromCache()
         {
             if (!_isLoadingNFTMetadataCache && _nftCountsCache.Item1 < DateTime.UtcNow)
@@ -436,6 +448,11 @@ namespace Upland.InformationProcessor
                 DateTime.UtcNow.AddHours(1),
                 newMetada.Where(m => m.Category == Consts.METADATA_TYPE_STRUCTURE)
                     .ToDictionary(m => m.Id, m => HelperFunctions.DecodeMetadata<StructureMetadata>(m.Metadata)));
+
+            _landvehicleMetadataCache = new Tuple<DateTime, Dictionary<int, LandVehicleMetadata>>(
+                DateTime.UtcNow.AddHours(1),
+                newMetada.Where(m => m.Category == Consts.METADATA_TYPE_LANDVEHICLE)
+                    .ToDictionary(m => m.Id, m => HelperFunctions.DecodeMetadata<LandVehicleMetadata>(m.Metadata)));
 
             _nftCountsCache = new Tuple<DateTime, Dictionary<int, int>>(
                 DateTime.UtcNow.AddHours(1),

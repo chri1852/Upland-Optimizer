@@ -13,5 +13,6 @@ namespace Upland.Types.Types
         public DateTime Start { get; set; }
         public DateTime? End { get; set; }
         public double SparkHours { get; set; }
+        public bool Manufacturing { get; set; }
     }
 }

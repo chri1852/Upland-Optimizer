@@ -87,7 +87,7 @@ class Program
         //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
         //await informationProcessor.LoadMissingCityProperties(35);
-
+        
         string continueHunt = "Y";
         while (continueHunt == "Y")
         {
@@ -95,8 +95,11 @@ class Program
             Console.WriteLine("Continue?");
             continueHunt = Console.ReadLine();
         }
-
+        
         // Run Blockchain Updates
+
+        //await localDataManager.PopulateDatabaseCollectionInfo(35);
+
         await playUplandMeSurfer.RunBlockChainUpdate();
         await uplandNFTActSurfer.RunBlockChainUpdate();
         await uspkTokenAccSurfer.RunBlockChainUpdate();

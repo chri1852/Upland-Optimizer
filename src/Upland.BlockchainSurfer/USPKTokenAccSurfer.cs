@@ -262,19 +262,46 @@ namespace Upland.BlockchainSurfer
             }
             else if (Regex.Match(action.action_trace.act.data.memo, "^PLANT,").Success)
             {
-                int dGoodId = int.Parse(action.action_trace.act.data.memo.Split("PLANT,")[1].Split(",")[0]);
-                _localDataManager.UpsertSparkStaking(new SparkStaking
-                {
-                    Id = -1,
-                    DGoodId = dGoodId,
-                    EOSAccount = user.EOSAccount,
-                    Amount = amount,
-                    Start = action.block_time,
-                    End = null,
-                    Manufacturing = true
-                });
+                List<SparkStaking> stakedSpark = _localDataManager.GetSparkStakingByEOSAccount(user.EOSAccount);
+                int dGoodId = int.Parse(action.action_trace.act.data.memo.Split("PLANT,")[1]);
 
-                HandleStructureDGoodCreation(dGoodId, action);
+                if (stakedSpark == null)
+                {
+                    _localDataManager.CreateErrorLog("USPKTokenAccSurfer.cs - Null PLANT Stake 1", string.Format("To: {0}, From: {1}, Quantity: {2}, Memo: {3} Trx_id: {4}", action.action_trace.act.data.to, action.action_trace.act.data.from, action.action_trace.act.data.quantity, action.action_trace.act.data.memo, action.action_trace.trx_id));
+                    throw new Exception();
+                }
+
+                SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == dGoodId && s.Manufacturing == true).FirstOrDefault();
+
+                if (stake == null)
+                {
+                    _localDataManager.UpsertSparkStaking(new SparkStaking
+                    {
+                        Id = -1,
+                        DGoodId = dGoodId,
+                        EOSAccount = user.EOSAccount,
+                        Amount = amount,
+                        Start = action.block_time,
+                        End = null,
+                        Manufacturing = true
+                    });
+                }
+                else
+                {
+                    stake.End = action.block_time;
+                    _localDataManager.UpsertSparkStaking(stake);
+
+                    _localDataManager.UpsertSparkStaking(new SparkStaking
+                    {
+                        Id = -1,
+                        DGoodId = dGoodId,
+                        EOSAccount = user.EOSAccount,
+                        Amount = stake.Amount + amount,
+                        Start = action.block_time,
+                        End = null,
+                        Manufacturing = true
+                    });
+                }
             }
             else
             {

@@ -41,6 +41,8 @@ namespace Upland.Types.Types
         public long PropertyId { get; set; }
         public string FullAddress { get; set; }
 
+        // Land Vehicle
+
         // Form Filters
         public int IsVariantFilter { get; set; }
 

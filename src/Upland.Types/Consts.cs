@@ -20,6 +20,7 @@ namespace Upland.Types
         public const string METADATA_TYPE_MEMENTO = "memento";
         public const string METADATA_TYPE_ESSENTIAL = "essential";
         public const string METADATA_TYPE_BLKEXPLORER = "blkexplorer";
+        public const string METADATA_TYPE_LANDVEHICLE = "landvehicle";
 
         public static readonly List<int> StandardCollectionIds = new List<int>
         {

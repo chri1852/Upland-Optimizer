@@ -87,7 +87,8 @@ namespace Upland.InformationProcessor
                     Amount = entry.Amount,
                     Start = entry.Start,
                     End = entry.End,
-                    SparkHours = !entry.End.HasValue ? Math.Round((DateTime.UtcNow - entry.Start).TotalHours * (double)entry.Amount, 2) : Math.Round((entry.End - entry.Start).Value.TotalHours * (double)entry.Amount, 2)
+                    SparkHours = !entry.End.HasValue ? Math.Round((DateTime.UtcNow - entry.Start).TotalHours * (double)entry.Amount, 2) : Math.Round((entry.End - entry.Start).Value.TotalHours * (double)entry.Amount, 2),
+                    Manufacturing = entry.Manufacturing
                 });
             }
 
@@ -175,6 +176,7 @@ namespace Upland.InformationProcessor
             profile.ProfileNFTs.AddRange(FilterAndSortEssentialNFTs(ownerNFTs, blankFilters));
             profile.ProfileNFTs.AddRange(FilterAndSortMementosNFTs(ownerNFTs, blankFilters));
             profile.ProfileNFTs.AddRange(FilterAndSortStructureNFTs(ownerNFTs, blankFilters));
+            profile.ProfileNFTs.AddRange(FilterAndSortLandVehicleNFTs(ownerNFTs, blankFilters));
 
             return profile;
         }
@@ -497,6 +499,12 @@ namespace Upland.InformationProcessor
                             && (string.IsNullOrWhiteSpace(filters.Filters.Rarity) || m.Value.RarityLevel.IndexOf(filters.Filters.Rarity, StringComparison.OrdinalIgnoreCase) >= 0))
                         .Select(m => m.Key).ToList();
                     break;
+                case Consts.METADATA_TYPE_LANDVEHICLE:
+                    matchingMetadata = _cachingProcessor.GetLandVehicleMetadataFromCache()
+                        .Where(m =>
+                            (string.IsNullOrWhiteSpace(filters.Filters.Name) || m.Value.DisplayName.IndexOf(filters.Filters.Name, StringComparison.OrdinalIgnoreCase) >= 0))
+                             .Select(m => m.Key).ToList();
+                    break;
                 default:
                     matchingMetadata = new List<int>();
                     break;
@@ -522,6 +530,9 @@ namespace Upland.InformationProcessor
                     break;
                 case Consts.METADATA_TYPE_STRUCTORNMT:
                     webNfts = FilterAndSortStructureOrnamentNFTs(matchingNfts, filters);
+                    break;
+                case Consts.METADATA_TYPE_LANDVEHICLE:
+                    webNfts = FilterAndSortLandVehicleNFTs(matchingNfts, filters);
                     break;
                 default:
                     webNfts = new List<WebNFT>();
@@ -1182,6 +1193,73 @@ namespace Upland.InformationProcessor
             foreach (WebNFT nft in webNfts)
             {
                 nft.FullAddress = string.Format("{0}, {1}", properties[nft.PropertyId].Address, Consts.Cities[properties[nft.PropertyId].CityId]);
+            }
+
+            webNfts = webNfts
+                .Where(n =>
+                    (string.IsNullOrWhiteSpace(filters.Filters.Owner) || n.Owner.IndexOf(filters.Filters.Owner, StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToList();
+
+            if (filters.SortDescending)
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderByDescending(m => m.Owner).ToList();
+                }
+            }
+            else
+            {
+                if (filters.SortBy == "Mint")
+                {
+                    webNfts = webNfts.OrderBy(m => m.SerialNumber).ToList();
+                }
+                else if (filters.SortBy == "Name")
+                {
+                    webNfts = webNfts.OrderBy(m => m.Name).ToList();
+                }
+                else
+                {
+                    webNfts = webNfts.OrderBy(m => m.Owner).ToList();
+                }
+            }
+
+            return webNfts;
+        }
+
+        private List<WebNFT> FilterAndSortLandVehicleNFTs(List<NFT> matchingNfts, WebNFTFilters filters)
+        {
+            List<WebNFT> webNfts = new List<WebNFT>();
+
+            Dictionary<int, LandVehicleMetadata> metadataDictionary = _cachingProcessor.GetLandVehicleMetadataFromCache();
+            Dictionary<int, int> nftCountDictionary = _cachingProcessor.GetCurrentNFTCountsFromCache();
+
+
+            matchingNfts = matchingNfts.Where(n => metadataDictionary.ContainsKey(n.NFTMetadataId)).ToList();
+
+            foreach (NFT nft in matchingNfts)
+            {
+                LandVehicleSpecificMetadata nftMetadata = HelperFunctions.DecodeMetadata<LandVehicleSpecificMetadata>(nft.Metadata);
+                webNfts.Add(new WebNFT
+                {
+                    DGoodId = nft.DGoodId,
+                    Image = nftMetadata.Image,
+                    Link = nftMetadata.Link,
+                    SerialNumber = nft.SerialNumber,
+                    Name = metadataDictionary[nft.NFTMetadataId].DisplayName,
+                    Owner = nft.Owner,
+                    MaxSupply = metadataDictionary[nft.NFTMetadataId].MaxSupply,
+                    CurrentSupply = nftCountDictionary[nft.NFTMetadataId],
+
+                    Category = Consts.METADATA_TYPE_LANDVEHICLE
+                });
             }
 
             webNfts = webNfts
