@@ -28,6 +28,7 @@ using Upland.Types.BlockchainTypes;
 using Upland.Types.Enums;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
+using HelperFunctions = Upland.InformationProcessor.HelperFunctions;
 
 class Program
 {
@@ -79,8 +80,8 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        //OptimizerRunRequest runRequest = new OptimizerRunRequest("marsbuggy", 7, true);
-        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
+        await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -100,14 +101,16 @@ class Program
 
         //await localDataManager.PopulateDatabaseCollectionInfo(35);
 
-        await playUplandMeSurfer.RunBlockChainUpdate();
-        await uplandNFTActSurfer.RunBlockChainUpdate();
-        await uspkTokenAccSurfer.RunBlockChainUpdate();
+        //List<PropertyStructure> test = localDataManager.GetPropertyStructures();
+
+        //await playUplandMeSurfer.RunBlockChainUpdate();
+        //await uplandNFTActSurfer.RunBlockChainUpdate();
+        //await uspkTokenAccSurfer.RunBlockChainUpdate();
         //informationProcessor.RebuildPropertyStructures();
-        //await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
+       // await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
 
         // Test Information Processing Functions
-        List<string> output;
+        List<string> output = new List<string>();
         //output = webProcessor.GetFanPointsLeaders();
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
         //output = forSaleProcessor.GetCityPropertiesForSale(17, "Price", "All", "TXT");
@@ -176,13 +179,14 @@ class Program
             }
         };
 
+
         //List<WebNFT> nfts = webProcessor.SearchNFTs(filters);
-        
+
         //AppraisalResults results = await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" });
         //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\hornbrod.csv", string.Join(Environment.NewLine, profileAppraiser.BuildAppraisalCsvStrings(results)));
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
-     }
+    }
     */
     ///*
     static void Main(string[] args) 

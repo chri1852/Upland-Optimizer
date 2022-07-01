@@ -8,6 +8,7 @@ namespace Upland.Types.BlockchainTypes
     {
         public string memo { get; set; }
         public string a45 { get; set; }
+        public string a51 { get; set; }
         public string a54 { get; set; }
         public string p1 { get; set; }
         public string p2 { get; set; }

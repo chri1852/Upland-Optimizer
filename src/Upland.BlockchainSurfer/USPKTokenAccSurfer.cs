@@ -520,7 +520,7 @@ namespace Upland.BlockchainSurfer
                 metadata.MinimumSpark = decimal.Parse(action.action_trace.act.data.memo.Split(",")[6]) / 100;
                 metadata.MaximumSpark = decimal.Parse(action.action_trace.act.data.memo.Split(",")[7]) / 100;
                 structureMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(metadata);
-                structureMetadata.FullyLoaded = true;
+                structureMetadata.FullyLoaded = false;
 
                 _localDataManager.UpsertNftMetadata(structureMetadata);
             }

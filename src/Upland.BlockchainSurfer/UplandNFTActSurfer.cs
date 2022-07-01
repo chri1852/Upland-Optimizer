@@ -655,7 +655,7 @@ namespace Upland.BlockchainSurfer
             }
             catch (Exception ex)
             {
-                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Could Not Load Memento By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                //_localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Could Not Load Memento By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
                 return;
             }
 
@@ -665,7 +665,7 @@ namespace Upland.BlockchainSurfer
             }
             catch (Exception ex)
             {
-                _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Could Not Load Memento Mint Info By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                //_localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Could Not Load Memento Mint Info By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
                 return;
             }
 

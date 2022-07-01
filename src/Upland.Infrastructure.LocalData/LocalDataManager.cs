@@ -514,9 +514,11 @@ namespace Upland.Infrastructure.LocalData
 
         public async Task<List<Property>> GetPropertysByUsername(string username)
         {
-            List<UplandAuthProperty> userPropIds = await _uplandApiRepository.GetPropertysByUsername(username);
+            //List<UplandAuthProperty> userPropIds = await _uplandApiRepository.GetPropertysByUsername(username);
+            //List<Property> userProperties = _localDataRepository.GetProperties(userPropIds.Select(p => p.Prop_Id).ToList());
 
-            List<Property> userProperties = _localDataRepository.GetProperties(userPropIds.Select(p => p.Prop_Id).ToList());
+            EOSUser user = _localDataRepository.GetEOSAccountByUplandUsername(username);
+            List<Property> userProperties = _localDataRepository.GetPropertiesByUplandUsername(user.EOSAccount);
 
             return userProperties;
         }

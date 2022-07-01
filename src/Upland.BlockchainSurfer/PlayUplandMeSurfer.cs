@@ -164,6 +164,9 @@ namespace Upland.BlockchainSurfer
                     case "a4":
                         await ProcessMintingAction(action);
                         break;
+                    case "a25":
+                        ProcessBurnPropertyAction(action);
+                        break;
                     case "n12":
                         ProcessOfferAction(action);
                         break;
@@ -1158,6 +1161,33 @@ namespace Upland.BlockchainSurfer
             foreach (string propId in action.action_trace.act.data.p55)
             {
                 _localDataManager.SetPropertyBoost(long.Parse(propId), Math.Round(decimal.Parse(action.action_trace.act.data.p35), 2));
+            }
+        }
+
+        public void ProcessBurnPropertyAction(PlayUplandMeAction action)
+        {
+            if (action.action_trace.act.data.a51 == null || action.action_trace.act.data.p55 == null)
+            {
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessBurnPropertyAction", string.Format("a51 (Owning EOS): {0}, Trx_id: {1}", action.action_trace.act.data.a51, action.action_trace.trx_id));
+                return;
+            }
+
+            if (action.action_trace.act.data.p55.Count == 0)
+            {
+                _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessBurnPropertyAction - No Properties To Burn", string.Format("a51 (Owning EOS): {0}, Trx_id: {1}", action.action_trace.act.data.a51, action.action_trace.trx_id));
+                return;
+            }
+
+            foreach (string propIdString in action.action_trace.act.data.p55)
+            {
+                Property property = _localDataManager.GetProperty(long.Parse(propIdString));
+
+                property.Owner = null;
+                property.Status = Consts.PROP_STATUS_LOCKED;
+                property.MintedBy = null;
+                property.MintedOn = null;
+                _localDataManager.DeleteSaleHistoryByPropertyId(property.Id);
+                _localDataManager.UpsertProperty(property);
             }
         }
 
