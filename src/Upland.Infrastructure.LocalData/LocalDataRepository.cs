@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.Json;
 using Upland.Interfaces.Repositories;
 using Upland.Types;
+using Upland.Types.Enums;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
@@ -4205,6 +4206,52 @@ namespace Upland.Infrastructure.LocalData
                 }
 
                 return finishInfos;
+            }
+        }
+
+        public List<LeaderboardListItem> GetLeaderboardByType(LeaderboardTypeEnum leaderboardType, DateTime fromDate)
+        {
+            List<LeaderboardListItem> leaderboardList = new List<LeaderboardListItem>();
+            SqlConnection sqlConnection = GetSQLConnector();
+
+            using (sqlConnection)
+            {
+                sqlConnection.Open();
+
+                try
+                {
+                    SqlCommand sqlCmd = new SqlCommand();
+                    sqlCmd.Connection = sqlConnection;
+                    sqlCmd.CommandType = CommandType.StoredProcedure;
+                    sqlCmd.CommandText = "[UPL].[GetLeaderboardByType]";
+                    sqlCmd.Parameters.Add(new SqlParameter("LeaderboardType", leaderboardType));
+                    sqlCmd.Parameters.Add(AddNullParmaterSafe<DateTime>("AfterDateTime", fromDate));
+
+                    using (SqlDataReader reader = sqlCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            leaderboardList.Add(new LeaderboardListItem
+                            {
+                                Rank = -1,
+                                UplandUsername = (string)reader["UplandUsername"],
+                                Value = double.Parse(reader["Total"].ToString()),
+                                AdditionalInformation = ""
+                            });
+                        }
+                        reader.Close();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+
+                return leaderboardList;
             }
         }
 

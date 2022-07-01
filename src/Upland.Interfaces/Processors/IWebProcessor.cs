@@ -23,8 +23,6 @@ namespace Upland.Interfaces.Processors
 
         List<WebNFT> SearchNFTs(WebNFTFilters filters);
 
-        List<string> GetFanPointsLeaders();
-
         List<WebNFTHistory> GetNFTHistory(int dGoodId);
 
         List<string> ConvertListCachedForSalePropertyToCSV(List<CachedForSaleProperty> cachedForSaleProperties);

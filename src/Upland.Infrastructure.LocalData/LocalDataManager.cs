@@ -9,6 +9,7 @@ using Upland.Infrastructure.UplandApi;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Repositories;
 using Upland.Types;
+using Upland.Types.Enums;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
@@ -1114,6 +1115,40 @@ namespace Upland.Infrastructure.LocalData
         public List<LandVehicleFinishInfo> GetAllLandVehicleFinishInfos()
         {
             return _localDataRepository.GetAllLandVehicleFinishInfos();
+        }
+
+        public List<LeaderboardListItem> GetLeaderboardByType(LeaderboardTypeEnum leaderboardType, DateTime fromDate)
+        {
+            if (fromDate == null)
+            {
+                fromDate = DateTime.UtcNow;
+            }
+
+            List<LeaderboardListItem> leaderboardList = _localDataRepository.GetLeaderboardByType(leaderboardType, fromDate);
+
+            return CalculateLeaderboardListRanks(leaderboardList);
+        }
+
+        public List<LeaderboardListItem> CalculateLeaderboardListRanks(List<LeaderboardListItem> leaderboard)
+        {
+            int rank = 1;
+            int nextNum = 0;
+            double lastValue = -1;
+
+            foreach (LeaderboardListItem item in leaderboard)
+            {
+                if (lastValue != item.Value)
+                {
+                    rank = rank + nextNum;
+                    lastValue = item.Value;
+                    nextNum = 0;
+                }
+
+                item.Rank = rank;
+                nextNum++;
+            }
+
+            return leaderboard;
         }
     }
 }

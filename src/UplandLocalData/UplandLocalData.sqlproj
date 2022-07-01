@@ -184,5 +184,6 @@
     <Build Include="StoredProcedures\UPL.UpsertLandVehicleFinish.sql" />
     <Build Include="StoredProcedures\UPL.GetLandVehicleFinishById.sql" />
     <Build Include="StoredProcedures\UPL.GetAllLandVehicleFinishes.sql" />
+    <Build Include="StoredProcedures\UPL.GetLeaderboardByType.sql" />
   </ItemGroup>
 </Project>

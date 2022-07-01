@@ -67,6 +67,7 @@ class Program
         //MappingProcessor mappingProcessor = new MappingProcessor(localDataManager, profileAppraiser, cachingProcessor);
         WebProcessor webProcessor = new WebProcessor(localDataManager, uplandApiManager, cachingProcessor);
         CollectionOptimizer collectionOptimizer = new CollectionOptimizer(localDataManager);
+        LeaderboardProcessor leaderboardProcessor = new LeaderboardProcessor(localDataManager, cachingProcessor);
 
         // Populate City
         //List<double> cityCoordinates = Upland.InformationProcessor.HelperFunctions.GetCityAreaCoordinates(16);
@@ -80,8 +81,8 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
-        await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
+        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
@@ -101,17 +102,17 @@ class Program
 
         //await localDataManager.PopulateDatabaseCollectionInfo(35);
 
+        //string teams = string.Join("....", leaderboardProcessor.GetLeaderboardByType(LeaderboardTypeEnum.NFLPALegitFanPoints, DateTime.UtcNow, "All").GroupBy(i => i.AdditionalInformation).Select(g => g.First().AdditionalInformation).OrderBy(i => i).Select(i => string.Format("{0} key: 1, value: \"{1}\" {2},","{", i, "}")).ToList());
+        List<LeaderboardListItem> leaders = leaderboardProcessor.GetLeaderboardByType(LeaderboardTypeEnum.NFTCount, DateTime.UtcNow, "structure");
         //List<PropertyStructure> test = localDataManager.GetPropertyStructures();
-
-        //await playUplandMeSurfer.RunBlockChainUpdate();
-        //await uplandNFTActSurfer.RunBlockChainUpdate();
-        //await uspkTokenAccSurfer.RunBlockChainUpdate();
+        await playUplandMeSurfer.RunBlockChainUpdate();
+        await uplandNFTActSurfer.RunBlockChainUpdate();
+        await uspkTokenAccSurfer.RunBlockChainUpdate();
         //informationProcessor.RebuildPropertyStructures();
-       // await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
+        //await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
 
         // Test Information Processing Functions
         List<string> output = new List<string>();
-        //output = webProcessor.GetFanPointsLeaders();
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
         //output = forSaleProcessor.GetCityPropertiesForSale(17, "Price", "All", "TXT");
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
@@ -188,6 +189,7 @@ class Program
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
     */
+
     ///*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();

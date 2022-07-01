@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Upland.Types;
+using Upland.Types.Enums;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
@@ -106,5 +107,6 @@ namespace Upland.Interfaces.Repositories
         void UpsertLandVehicleFinish(LandVehicleFinishInfo finishInfo);
         LandVehicleFinishInfo GetLandVehicleFinishInfoById(int finishId);
         List<LandVehicleFinishInfo> GetAllLandVehicleFinishInfos();
+        List<LeaderboardListItem> GetLeaderboardByType(LeaderboardTypeEnum leaderboardType, DateTime fromDate);
     }
 }   

@@ -547,53 +547,6 @@ namespace Upland.InformationProcessor
             return webNfts.Take(10000).ToList();
         }
 
-        public List<string> GetFanPointsLeaders()
-        {
-            Dictionary<int, EssentialMetadata> essentialMetadataDictionary = _cachingProcessor.GetEssentialMetadataFromCache();
-            Dictionary<int, MementoMetadata> mementoMetadataDictionary = _cachingProcessor.GetMementoMetadataFromCache();
-
-            List<NFT> matchingEssentialsNfts = _localDataManager.GetNFTsByNFTMetadataId(essentialMetadataDictionary
-                .Select(m => m.Key).ToList()
-            ).Where(n => !n.Burned && n.Owner != null && n.Owner != "").ToList();
-            List<NFT> matchingMementosNfts = _localDataManager.GetNFTsByNFTMetadataId(mementoMetadataDictionary
-                .Select(m => m.Key).ToList()
-            ).Where(n => !n.Burned && n.Owner != null && n.Owner != "").ToList();
-
-            Dictionary<Tuple<string, string>, double> fanPointsDictionary = new Dictionary<Tuple<string, string>, double>();
-
-            foreach (NFT nft in matchingEssentialsNfts)
-            {
-                Tuple<string, string> key = new Tuple<string, string>(essentialMetadataDictionary[nft.NFTMetadataId].TeamName, nft.Owner);
-                if (fanPointsDictionary.ContainsKey(key))
-                {
-                    fanPointsDictionary[key] += essentialMetadataDictionary[nft.NFTMetadataId].FanPoints;
-                }
-                else
-                {
-                    fanPointsDictionary.Add(key, essentialMetadataDictionary[nft.NFTMetadataId].FanPoints);
-                }    
-            }
-
-            foreach (NFT nft in matchingMementosNfts)
-            {
-                Tuple<string, string> key = new Tuple<string, string>(mementoMetadataDictionary[nft.NFTMetadataId].TeamName, nft.Owner);
-                if (fanPointsDictionary.ContainsKey(key))
-                {
-                    fanPointsDictionary[key] += mementoMetadataDictionary[nft.NFTMetadataId].FanPoints;
-                }
-                else
-                {
-                    fanPointsDictionary.Add(key, mementoMetadataDictionary[nft.NFTMetadataId].FanPoints);
-                }
-            }
-
-            List<string> csv = new List<string>();
-            csv.Add("TeamName,FanPoints,Owner");
-            csv.AddRange(fanPointsDictionary.Where(f => f.Value != 0).OrderByDescending(e => e.Value).Select(n => string.Format("{0},{1},{2}", n.Key.Item1, n.Value, n.Key.Item2)).ToList());
-
-            return csv;
-        }
-
         public List<WebNFTHistory> GetNFTHistory(int dGoodId)
         {
             List<NFTHistory> nftHistory = _localDataManager.GetNftHistoryByDGoodId(dGoodId).OrderBy(n => n.ObtainedOn).ToList();
