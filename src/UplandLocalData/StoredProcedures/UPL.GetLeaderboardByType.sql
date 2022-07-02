@@ -83,6 +83,66 @@ BEGIN
 				ORDER BY SUM(H.Amount) DESC
 			END
 
+		ELSE IF @LeaderboardType = 10
+			BEGIN
+				SELECT U.UplandUsername, COUNT(*) AS 'Total'
+				FROM UPL.Property P (NOLOCK)
+					JOIN UPL.EOSUser U (NOLOCK)
+						ON P.MintedBy = U.EOSAccount
+				WHERE P.MintedOn > @AfterDateTime
+				GROUP BY U.UplandUsername
+				ORDER BY 'Total' DESC
+			END
+
+		ELSE IF @LeaderboardType = 11
+			BEGIN
+				SELECT U.UplandUsername, SUM(P.Mint) AS 'Total'
+				FROM UPL.Property P (NOLOCK)
+					JOIN UPL.EOSUser U (NOLOCK)
+						ON P.MintedBy = U.EOSAccount
+				WHERE P.MintedOn > @AfterDateTime
+				GROUP BY U.UplandUsername
+				ORDER BY 'Total' DESC
+			END
+
+		ELSE IF @LeaderboardType = 12
+			BEGIN
+				SELECT U.UplandUserName, COUNT(*) AS 'Total'
+				FROM UPL.Property P (NOLOCK)
+					JOIN (SELECT DISTINCT PropertyId FROM UPL.CollectionProperty (NOLOCK)) CP
+						ON P.Id = CP.PropertyId
+					JOIN UPL.EOSUser U (NOLOCK)
+						ON P.Owner = U.EOSAccount
+				GROUP BY U.UplandUsername
+				ORDER BY 'Total' DESC 
+			END
+
+		ELSE IF @LeaderboardType = 13
+			BEGIN
+				SELECT U.UplandUsername, SUM(H.AmountFiat) AS 'Total'
+				FROM UPL.SaleHistory H (NOLOCK)
+					JOIN UPL.EOSUser U (NOLOCK)
+						ON H.BuyerEOS = U.EOSAccount
+				WHERE H.SellerEOS IS NOT NULL
+					AND H.DateTime > @AfterDateTime
+				GROUP BY U.UplandUsername
+				HAVING SUM(H.AmountFiat) > 0
+				ORDER BY SUM(H.AmountFiat) DESC
+			END
+
+		ELSE IF @LeaderboardType = 14
+			BEGIN
+				SELECT U.UplandUsername, SUM(H.Amount) AS 'Total'
+				FROM UPL.SaleHistory H (NOLOCK)
+					JOIN UPL.EOSUser U (NOLOCK)
+						ON H.BuyerEOS = U.EOSAccount
+				WHERE H.SellerEOS IS NOT NULL
+					AND H.DateTime > @AfterDateTime
+				GROUP BY U.UplandUsername
+				HAVING SUM(H.Amount) > 0
+				ORDER BY SUM(H.Amount) DESC
+			END
+
 	END TRY
 	BEGIN CATCH
 		DECLARE @ErrorMessage NVARCHAR(4000);

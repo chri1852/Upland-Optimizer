@@ -29,27 +29,32 @@ namespace Upland.InformationProcessor
         {
             _leaderboardCache = new Dictionary<LeaderboardTypeEnum, Tuple<DateTime, List<LeaderboardListItem>>>();
 
+            _leaderboardCache.Add(LeaderboardTypeEnum.Spark, new Tuple<DateTime, List<LeaderboardListItem>>(DateTime.UtcNow.AddDays(-1), new List<LeaderboardListItem>()));
             _leaderboardCache.Add(LeaderboardTypeEnum.PropCount, new Tuple<DateTime, List<LeaderboardListItem>>(DateTime.UtcNow.AddDays(-1), new List<LeaderboardListItem>()));
             _leaderboardCache.Add(LeaderboardTypeEnum.MonthlyEarnings, new Tuple<DateTime, List<LeaderboardListItem>>(DateTime.UtcNow.AddDays(-1), new List<LeaderboardListItem>()));
             _leaderboardCache.Add(LeaderboardTypeEnum.Size, new Tuple<DateTime, List<LeaderboardListItem>>(DateTime.UtcNow.AddDays(-1), new List<LeaderboardListItem>()));
             _leaderboardCache.Add(LeaderboardTypeEnum.Mint, new Tuple<DateTime, List<LeaderboardListItem>>(DateTime.UtcNow.AddDays(-1), new List<LeaderboardListItem>()));
+            _leaderboardCache.Add(LeaderboardTypeEnum.CollectionProps, new Tuple<DateTime, List<LeaderboardListItem>>(DateTime.UtcNow.AddDays(-1), new List<LeaderboardListItem>()));
         }
 
         public List<LeaderboardListItem> GetLeaderboardByType(LeaderboardTypeEnum type, DateTime fromTime, string additionalInfo = null)
         {
             switch(type)
             {
-                case LeaderboardTypeEnum.Spark:
-                    return _localDataManager.GetLeaderboardByType(type, DateTime.UtcNow);
-
                 case LeaderboardTypeEnum.USDSale:
                 case LeaderboardTypeEnum.UPXSale:
+                case LeaderboardTypeEnum.PropsMinted:
+                case LeaderboardTypeEnum.MintedUpx:
+                case LeaderboardTypeEnum.SpentUPX:
+                case LeaderboardTypeEnum.SpentUSD:
                     return _localDataManager.GetLeaderboardByType(type, fromTime);
 
+                case LeaderboardTypeEnum.Spark:
                 case LeaderboardTypeEnum.PropCount:
                 case LeaderboardTypeEnum.MonthlyEarnings:
                 case LeaderboardTypeEnum.Size:
                 case LeaderboardTypeEnum.Mint:
+                case LeaderboardTypeEnum.CollectionProps:
                     return GetLeaderboardListFromCache(type);
 
                 case LeaderboardTypeEnum.NFLPALegitFanPoints:

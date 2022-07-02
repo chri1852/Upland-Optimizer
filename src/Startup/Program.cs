@@ -89,7 +89,7 @@ class Program
         //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
         //await informationProcessor.LoadMissingCityProperties(35);
-        
+
         string continueHunt = "Y";
         while (continueHunt == "Y")
         {
@@ -97,17 +97,18 @@ class Program
             Console.WriteLine("Continue?");
             continueHunt = Console.ReadLine();
         }
-        
+
         // Run Blockchain Updates
 
         //await localDataManager.PopulateDatabaseCollectionInfo(35);
 
         //string teams = string.Join("....", leaderboardProcessor.GetLeaderboardByType(LeaderboardTypeEnum.NFLPALegitFanPoints, DateTime.UtcNow, "All").GroupBy(i => i.AdditionalInformation).Select(g => g.First().AdditionalInformation).OrderBy(i => i).Select(i => string.Format("{0} key: 1, value: \"{1}\" {2},","{", i, "}")).ToList());
-        List<LeaderboardListItem> leaders = leaderboardProcessor.GetLeaderboardByType(LeaderboardTypeEnum.NFTCount, DateTime.UtcNow, "structure");
+        //List<LeaderboardListItem> leaders = leaderboardProcessor.GetLeaderboardByType(LeaderboardTypeEnum.SpentUPX, DateTime.UtcNow.AddMonths(-1), "structure");
         //List<PropertyStructure> test = localDataManager.GetPropertyStructures();
-        await playUplandMeSurfer.RunBlockChainUpdate();
-        await uplandNFTActSurfer.RunBlockChainUpdate();
-        await uspkTokenAccSurfer.RunBlockChainUpdate();
+
+        //await playUplandMeSurfer.RunBlockChainUpdate();
+        //await uplandNFTActSurfer.RunBlockChainUpdate();
+        //await uspkTokenAccSurfer.RunBlockChainUpdate();
         //informationProcessor.RebuildPropertyStructures();
         //await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
 

@@ -59,3 +59,7 @@ GO
 CREATE NONCLUSTERED INDEX [nh_disposedDateTime]
 ON [UPL].[NFTHistory] ([DisposedDateTime])
 GO
+CREATE NONCLUSTERED INDEX [prop_mint_by]
+ON [UPL].[Property] ([MintedOn])
+INCLUDE ([MintedBy],[Mint])
+GO

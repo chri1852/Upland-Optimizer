@@ -10,6 +10,11 @@
         Mint = 6,
         USDSale = 7,
         UPXSale = 8,
-        NFTCount = 9
+        NFTCount = 9,
+        PropsMinted = 10,
+        MintedUpx = 11,
+        CollectionProps = 12,
+        SpentUSD = 13,
+        SpentUPX = 14
     }
 }
