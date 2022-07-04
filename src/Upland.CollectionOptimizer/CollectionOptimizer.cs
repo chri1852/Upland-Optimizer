@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -98,6 +99,15 @@ namespace Upland.CollectionOptimizer
                     Results = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(results))
                 }); ;
 
+            // Check to see if the optimizer has return worse results than the current earning
+            // If yes log an error.
+            EOSUser EOSAccount = LocalDataManager.GetEOSAccountByUplandUsername(registeredUser.UplandUsername);
+            double currentEarnings = Math.Round(LocalDataManager.GetPropertiesByUplandUsername(EOSAccount.EOSAccount).Sum(p => p.Mint * (double)p.Boost) * Consts.RateOfReturn / 12.0, 2);
+            if (Math.Floor(currentEarnings) > Math.Floor(results.BoostedTotalIncome))
+            {
+                LocalDataManager.CreateErrorLog("CollectionOptimizer - Results Less than Current Earnings", string.Format("Current: {0}, OptimizedEarnings: {1}, RunId: {2}", currentEarnings, results.BoostedTotalIncome, optimizationRun.Id));
+            }
+
             if (!runRequest.AdminRun)
             {
                 registeredUser.RunCount++;
@@ -112,6 +122,8 @@ namespace Upland.CollectionOptimizer
             RunOptimization(runRequest.Username, runRequest.Level);
 
             OptimizerResults results = BuildOptimizerResults(runRequest.Username, runRequest.Level);
+
+            //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\rejinx.txt", string.Join(Environment.NewLine, BuildTextOutput(results)));
 
             if (this.DebugMode)
             {
@@ -350,7 +362,20 @@ namespace Upland.CollectionOptimizer
                 return conflictingCollections;
             }
 
-            // We now have one collection lets loop through all collections til we have all the conflicts.
+            // Find Collections that Directly Conflict with the first collection
+            foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.TotalMint))
+            {
+                // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
+                if (!conflictingCollections.ContainsKey(entry.Value.Id)
+                    && (Consts.StandardCollectionIds.Contains(entry.Value.Id) ||
+                        conflictingCollections.First().Value.EligablePropertyIds.Any(p => entry.Value.EligablePropertyIds.Contains(p)))
+                    && conflictingCollections.Count < qualityLevel)
+                {
+                    conflictingCollections.Add(entry.Key, entry.Value.Clone());
+                }
+            }
+
+            // If we have not hit the quality limit, lets add other collections that conflict with any of the direct conflicts.
             foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.TotalMint))
             {
                 // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections
@@ -362,7 +387,7 @@ namespace Upland.CollectionOptimizer
                 }
             }
 
-            // Now lets top off the conflicts with the chonkers
+            // If there is any space left lets top off the conflicts with the chonkers to avoid a miss slot
             foreach (KeyValuePair<int, Collection> entry in this.Collections.OrderByDescending(c => c.Value.TotalMint))
             {
                 // if its city pro or King of the street, or any eligable props on collection match eligable props on another collections

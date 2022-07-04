@@ -40,7 +40,7 @@ class Program
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
 
-    /*
+    ///*
     static async Task Main(string[] args) // DEBUG FUNCTION
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -81,7 +81,7 @@ class Program
         //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
-        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("betz25", 7, true);
         //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Populate initial City Data
@@ -89,7 +89,7 @@ class Program
         //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
         //await informationProcessor.LoadMissingCityProperties(35);
-
+        /*
         string continueHunt = "Y";
         while (continueHunt == "Y")
         {
@@ -97,7 +97,7 @@ class Program
             Console.WriteLine("Continue?");
             continueHunt = Console.ReadLine();
         }
-
+        */
         // Run Blockchain Updates
 
         //await localDataManager.PopulateDatabaseCollectionInfo(35);
@@ -106,9 +106,9 @@ class Program
         //List<LeaderboardListItem> leaders = leaderboardProcessor.GetLeaderboardByType(LeaderboardTypeEnum.SpentUPX, DateTime.UtcNow.AddMonths(-1), "structure");
         //List<PropertyStructure> test = localDataManager.GetPropertyStructures();
 
-        //await playUplandMeSurfer.RunBlockChainUpdate();
-        //await uplandNFTActSurfer.RunBlockChainUpdate();
-        //await uspkTokenAccSurfer.RunBlockChainUpdate();
+        await playUplandMeSurfer.RunBlockChainUpdate();
+        await uplandNFTActSurfer.RunBlockChainUpdate();
+        await uspkTokenAccSurfer.RunBlockChainUpdate();
         //informationProcessor.RebuildPropertyStructures();
         //await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
 
@@ -189,12 +189,12 @@ class Program
         //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
         //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
-    */
+    //*/
 
-    ///*
+    /*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    //*/
+    */
 
     public async Task RunBotAsync()
     {
