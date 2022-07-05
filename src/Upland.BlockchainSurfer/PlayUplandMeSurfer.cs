@@ -827,7 +827,7 @@ namespace Upland.BlockchainSurfer
                         return;
                     }
                 }
-                if (properties.Count > 1)
+                else if (properties.Count > 1)
                 {
                     prop = await GetPropertyFromTransactionId(action.action_trace.act.data.memo.Split("Initial minting transaction: ")[1]);
                     
