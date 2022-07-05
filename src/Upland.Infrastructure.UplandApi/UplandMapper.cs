@@ -151,6 +151,11 @@ namespace Upland.Infrastructure.UplandApi
         {
             NFLPALegit legit = new NFLPALegit();
 
+            if (asset.Metadata == null)
+            {
+                return null;
+            }
+
             legit.TeamName = asset.Metadata.TeamName;
             legit.Category = asset.Category;
 

@@ -1681,86 +1681,101 @@ namespace Upland.InformationProcessor
 
         public async Task HuntTreasures(int cityId, string owner, TreasureTypeEnum treasureType)
         {
-            List<Property> cityProps = _localDataManager.GetPropertiesByCityId(cityId).Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_UNLOCKED && p.Latitude.HasValue && p.Longitude.HasValue).ToList();
-            List<Property> possibleTreasureProps = _localDataManager.GetPropertiesByCityId(cityId).Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_UNLOCKED && p.Latitude.HasValue && p.Longitude.HasValue).ToList();
-            List<Property> ownerProps = _localDataManager.GetPropertiesByCityId(cityId).Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_UNLOCKED && p.Latitude.HasValue && p.Longitude.HasValue && p.Owner == owner).ToList();
-            long lastPropInRangeId = 0;
-            int waitTime = 500;
-            bool foundTreasure = false;
-            List<long> usedPropIds = new List<long>();
-
-            while (true)
+            string continueHunt = "Y";
+            while (continueHunt == "Y")
             {
-                // Get The location of the Explorer
-                UplandExplorerCoordinates coordinates = await _uplandApiManager.GetExplorerCoordinates();
 
-                // Find the first valid prop in range
-                Property propInRange = cityProps.OrderBy(p => GetDistance((double)coordinates.longitude, (double)coordinates.latitude, (double)p.Longitude, (double)p.Latitude)).ToList()[0];
+          
+                List<Property> cityProps = _localDataManager.GetPropertiesByCityId(cityId).Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_UNLOCKED && p.Latitude.HasValue && p.Longitude.HasValue).ToList();
+                List<Property> possibleTreasureProps = _localDataManager.GetPropertiesByCityId(cityId).Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_UNLOCKED && p.Latitude.HasValue && p.Longitude.HasValue).ToList();
+                List<Property> ownerProps = _localDataManager.GetPropertiesByCityId(cityId).Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_UNLOCKED && p.Latitude.HasValue && p.Longitude.HasValue && p.Owner == owner).ToList();
+                long lastPropInRangeId = 0;
+                int waitTime = 500;
+                bool foundTreasure = false;
+                List<long> usedPropIds = new List<long>();
 
-                if (propInRange == null || (propInRange.Id == lastPropInRangeId && foundTreasure))
+                while (true)
                 {
-                    Thread.Sleep(waitTime);
-                    continue;
-                }
-                else
-                {
-                    lastPropInRangeId = propInRange.Id;
-                }
+                    // Get The location of the Explorer
+                    UplandExplorerCoordinates coordinates = await _uplandApiManager.GetExplorerCoordinates();
 
-                // Get the Direction of the treasure
-                UplandTreasureArrow treasure = null;
-                UplandTreasureDirection direction = await _uplandApiManager.GetUplandTreasureDirection(propInRange.Id);
+                    // Find the first valid prop in range
+                    Property propInRange = cityProps.OrderBy(p => GetDistance((double)coordinates.longitude, (double)coordinates.latitude, (double)p.Longitude, (double)p.Latitude)).ToList()[0];
 
-                if (direction != null && direction.arrows != null && direction.arrows.Count > 0)
-                {
-                    treasure = direction.arrows.FirstOrDefault(a => a.treasureType == treasureType);
-                }
-
-                // If we see the asked for treasure winnow down the valid props
-                if (treasure != null)
-                {
-                    possibleTreasureProps = possibleTreasureProps.Where(p => this.IsPropValid(p, propInRange, treasure)).ToList();
-                    foundTreasure = true;
-                }
-                else
-                {
-                    break;
-                }
-
-                // You are on top of the treasure, end the hunt
-                if (possibleTreasureProps.Count == 0)
-                {
-                    break;
-                }
-
-                // Find the average coordinate, and get a close prop to it
-                decimal latitude = possibleTreasureProps.Sum(p => p.Latitude.Value) / possibleTreasureProps.Count;
-                decimal longitude = possibleTreasureProps.Sum(p => p.Longitude.Value) / possibleTreasureProps.Count;
-                /*
-                ownerProps = ownerProps.OrderBy(p => GetDistance((double)longitude, (double)latitude, (double)p.Longitude, (double)p.Latitude)).Where(p => !usedPropIds.Contains(p.Id)).ToList();
-                Property propToUse = ownerProps[0];
-                if (possibleTreasureProps.Count < 500 || GetDistance((double)longitude, (double)latitude, (double)propToUse.Longitude, (double)propToUse.Latitude) > treasure.maximumDistance)
-                {
-                */
-                    possibleTreasureProps = possibleTreasureProps.OrderBy(p => GetDistance((double)longitude, (double)latitude, (double)p.Longitude, (double)p.Latitude)).Where(p => !usedPropIds.Contains(p.Id)).ToList();
-                    Property propToUse = possibleTreasureProps[0];
-                //}
-                Console.WriteLine(string.Format("PropCount: {0} : {3} - {4} : {1}, {2}", possibleTreasureProps.Count, propToUse.Address, Consts.Cities[cityId], treasure.TextDirection, GetDistance((double)longitude, (double)latitude, (double)propToUse.Longitude, (double)propToUse.Latitude)));
-
-                usedPropIds.Add(propToUse.Id);
-
-                // Some Hacky Shit to paste the Address to the clipboard
-                var powershell = new Process
-                {
-                    StartInfo = new ProcessStartInfo
+                    if (propInRange == null || (propInRange.Id == lastPropInRangeId && foundTreasure))
                     {
-                        FileName = "powershell",
-                        Arguments = $"-command \"Set-Clipboard -Value \\\"{string.Format("{0}, {1}", propToUse.Address, Consts.Cities[cityId])}\\\"\""
+                        Thread.Sleep(waitTime);
+                        continue;
                     }
-                };
-                powershell.Start();
-                powershell.WaitForExit();
-                Thread.Sleep(waitTime);
+                    else
+                    {
+                        lastPropInRangeId = propInRange.Id;
+                    }
+
+                    // Get the Direction of the treasure
+                    UplandTreasureArrow treasure = null;
+                    UplandTreasureDirection direction = await _uplandApiManager.GetUplandTreasureDirection(propInRange.Id);
+
+                    if (direction != null && direction.arrows != null && direction.arrows.Count > 0)
+                    {
+                        if (direction.arrows.FirstOrDefault().rings.Count == 8)
+                        {
+                            // We are on top of the treasure break.
+                            break;
+                        }
+
+                        treasure = direction.arrows.FirstOrDefault(a => a.treasureType == treasureType);
+                    }
+
+                    // If we see the asked for treasure winnow down the valid props
+                    if (treasure != null)
+                    {
+                        possibleTreasureProps = possibleTreasureProps.Where(p => this.IsPropValid(p, propInRange, treasure)).ToList();
+                        foundTreasure = true;
+                    }
+                    else
+                    {
+                        break;
+                    }
+
+                    // You are on top of the treasure, end the hunt
+                    if (possibleTreasureProps.Count == 0)
+                    {
+                        break;
+                    }
+
+                    // Find the average coordinate, and get a close prop to it
+                    decimal latitude = possibleTreasureProps.Sum(p => p.Latitude.Value) / possibleTreasureProps.Count;
+                    decimal longitude = possibleTreasureProps.Sum(p => p.Longitude.Value) / possibleTreasureProps.Count;
+                
+                    ownerProps = ownerProps.OrderBy(p => GetDistance((double)longitude, (double)latitude, (double)p.Longitude, (double)p.Latitude)).Where(p => !usedPropIds.Contains(p.Id)).ToList();
+                    Property propToUse = ownerProps[0];
+                    if (possibleTreasureProps.Count < 500 || GetDistance((double)longitude, (double)latitude, (double)propToUse.Longitude, (double)propToUse.Latitude) > treasure.maximumDistance)
+                    {
+                
+                        possibleTreasureProps = possibleTreasureProps.OrderBy(p => GetDistance((double)longitude, (double)latitude, (double)p.Longitude, (double)p.Latitude)).Where(p => !usedPropIds.Contains(p.Id)).ToList();
+                        propToUse = possibleTreasureProps[0];
+                    }
+                    Console.WriteLine(string.Format("PropCount: {0} : {3} - {4} : {1}, {2}", possibleTreasureProps.Count, propToUse.Address, Consts.Cities[cityId], treasure.TextDirection, GetDistance((double)longitude, (double)latitude, (double)propToUse.Longitude, (double)propToUse.Latitude)));
+
+                    usedPropIds.Add(propToUse.Id);
+
+                    // Some Hacky Shit to paste the Address to the clipboard
+                    var powershell = new Process
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = "powershell",
+                            Arguments = $"-command \"Set-Clipboard -Value \\\"{string.Format("{0}, {1}", propToUse.Address, Consts.Cities[cityId])}\\\"\""
+                        }
+                    };
+                    powershell.Start();
+                    powershell.WaitForExit();
+                    Thread.Sleep(waitTime);
+                }
+
+                Console.WriteLine("Continue?");
+                continueHunt = Console.ReadLine();
             }
         }
 

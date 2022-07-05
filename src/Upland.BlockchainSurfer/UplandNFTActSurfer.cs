@@ -571,7 +571,15 @@ namespace Upland.BlockchainSurfer
                 if (!metadata.FullyLoaded || dGood == null)
                 {
                     legit = await _uplandApiManager.GetNFLPALegitsByDGoodId(newNft.DGoodId);
-                    useLegit = true;
+
+                    if (legit == null)
+                    {
+                        useLegit = false;
+                    }
+                    else
+                    {
+                        useLegit = true;
+                    }
                 }
             }
             catch (Exception ex)

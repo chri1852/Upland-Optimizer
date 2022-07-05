@@ -40,8 +40,8 @@ class Program
     private Timer _refreshTimer;
     private Timer _blockchainUpdateTimer;
 
-    /*
-    static async Task Main(string[] args) // DEBUG FUNCTION
+    
+    private static async Task DebugFunction()
     {
         IConfiguration configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -78,39 +78,23 @@ class Program
 
         //await resyncProcessor.ResyncPropsList("EnclaveFix", "1");
         //await localDataManager.PopulateDatabaseCollectionInfo(10);
-        //new Program().InitializeRefreshTimer();
 
         /// Test Optimizer
         //OptimizerRunRequest runRequest = new OptimizerRunRequest("betz25", 7, true);
         //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+
+        // Test Appraiser
+        //AppraisalResults results = await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" });
+        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\hornbrod.csv", string.Join(Environment.NewLine, profileAppraiser.BuildAppraisalCsvStrings(results)));
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo();
         //await localDataManager.PopulateStreets();
         //await informationProcessor.LoadMissingCityProperties(35);
-        
-        string continueHunt = "Y";
-        while (continueHunt == "Y")
-        {
-            await informationProcessor.HuntTreasures(3, "oqtr232h2c23", TreasureTypeEnum.Rush);
-            Console.WriteLine("Continue?");
-            continueHunt = Console.ReadLine();
-        }
-        
-        // Run Blockchain Updates
 
-        //await localDataManager.PopulateDatabaseCollectionInfo(35);
-
-        //string teams = string.Join("....", leaderboardProcessor.GetLeaderboardByType(LeaderboardTypeEnum.NFLPALegitFanPoints, DateTime.UtcNow, "All").GroupBy(i => i.AdditionalInformation).Select(g => g.First().AdditionalInformation).OrderBy(i => i).Select(i => string.Format("{0} key: 1, value: \"{1}\" {2},","{", i, "}")).ToList());
-        //List<LeaderboardListItem> leaders = leaderboardProcessor.GetLeaderboardByType(LeaderboardTypeEnum.SpentUPX, DateTime.UtcNow.AddMonths(-1), "structure");
-        //List<PropertyStructure> test = localDataManager.GetPropertyStructures();
-
-        //await playUplandMeSurfer.RunBlockChainUpdate();
-        //await uplandNFTActSurfer.RunBlockChainUpdate();
-        //await uspkTokenAccSurfer.RunBlockChainUpdate();
-        //informationProcessor.RebuildPropertyStructures();
-        //await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
+        // Hunt Treasures
+        //await informationProcessor.HuntTreasures(4, "oqtr232h2c23", TreasureTypeEnum.Standard);
 
         // Test Information Processing Functions
         List<string> output = new List<string>();
@@ -144,60 +128,20 @@ class Program
         //await informationProcessor.RunCityStatusUpdate();
         //await informationProcessor.RefreshCityById("PART", 1);
 
-        // Dictionary<string, double> stakes = await blockchainManager.GetStakedSpark();
-
-        // List<KeyValuePair<string, double>> list = stakes.ToList().OrderByDescending(s => s.Value).ToList();
-        //localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, true.ToString());
-
-        //await blockchainRepository.GetCleosActions(0, "playuplandme");
-        //await localDataManager.PopulateDatabaseCollectionInfo(4);
-        //List<EOSFlareAction> actions = await blockchainManager.GetEOSFlareActions(0);
-        //await informationProcessor.LoadMissingCityProperties(4);
-        //informationProcessor.RebuildPropertyStructures();
-        //List<UIPropertyHistory> history = webProcessor.GetPropertyHistory(82363818741988);
-        //await playUplandMeSurfer.BuildBlockChainFromBegining();
-        //await resyncProcessor.ResyncPropsList("SetMonthlyEarnings", "79534961051253,79521388283491,81837349780461,78004661005426,78888484689652,78904959913211,79511707830036,79511774938900,79511842047764,79511925933844,79511993042708,79512060151572,79512194369300,79512261478163,79512395695891,79512462804755,79512529913619,79513838536647,79514056640437,79521304397411,79530783523022,79534877162987,79534877162990,79534877162992,79535481145672,79535615362618,79548282158203,79549087465212,79549137796863,79549171351295,79555496364296,79565126483166,81311015210304,81315041744633,81315477947821,81327322665662,81328329293407,81328664837833,81343160354735,81347757313096,81365943814126,82055906393018,82070771004481,79530934518624,79506909546712,81302005842934");
-        //await resyncProcessor.ResyncPropsList("SetMinted", "79518905257767,79518989142699,79518703931192,79523250555190,79532444469250,79547644626869,79519526013600,79520213880349,79520146771483,79519509236382,79561905259692,78984920124378,78887310285931,78929068769844,79517227535145,79518133504761,79518318061598,79518401940169,79518401940172,79519073030500,79520012553749,79520029330975,79520062885396,79520062885406,79520113217052,79523468658980,79532209585139,79534273183806,79538266160744,79539138584510,79539725779717,79548718366259,79552057033426,79553214661391,79553264993038,79553533428547,79553600537166,79554338735909,79554909160374,79556670768730,79561385165513,79564220514486,81305646501381,81306888017333,81334973077200,81341197419348,81351179866241,81351565742204,81351699959931,81372017166497,81383140456110,81407685523534,78985004010446");
-        //await resyncProcessor.ResyncPropsList("CheckLocked", "-1");
-
-        //mappingProcessor.CreateMap(9, "BUILDINGS", 1, false, new List<string>());
-
         //UserProfile profile = await webProcessor.GetWebUIProfile("hornbrod");
-        
-        WebNFTFilters filters = new WebNFTFilters
-        {
-            IncludeBurned = false,
-            SortBy = "Mint",
-            SortDescending = false,
-            Category = Consts.METADATA_TYPE_ESSENTIAL,
-            PageSize = 100,
-            Page = 1,
-            NoPaging = false,
-            Filters = new WebNFT
-            {
-                Year = "2021",
-                Team = "Green Bay",
-                Name = ""
-            }
-        };
-
-
-        //List<WebNFT> nfts = webProcessor.SearchNFTs(filters);
-
-        //AppraisalResults results = await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" });
-        //await File.WriteAllTextAsync(@"C:\Users\chri1\Desktop\hornbrod.csv", string.Join(Environment.NewLine, profileAppraiser.BuildAppraisalCsvStrings(results)));
-        //mappingProcessor.SaveMap(mappingProcessor.CreateMap(13, "PERUP2", false), "test123");
-        //mappingProcessor.CreateMap(12, "Buildings", 1, false);
     }
-    */
 
-    ///*
     static void Main(string[] args) 
         => new Program().RunBotAsync().GetAwaiter().GetResult();
-    //*/
-
+    
     public async Task RunBotAsync()
     {
+        // DEBUG FUNCTION Uncomment to run local debug actions
+        //await DebugFunction(); return;
+
+        //DEBUG FUNCTION Sync Local Database to the Blockchain
+        await ResyncLocalDatabase(); return;
+
         _configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true)
@@ -437,5 +381,32 @@ class Program
             _services.GetService<ILocalDataManager>().CreateErrorLog(string.Format("Program.cs - {0}", actionType), ex.Message);
             Console.WriteLine(string.Format("{0}: {1} Resync: {2}", string.Format("{0:MM/dd/yy H:mm:ss}", DateTime.Now), actionType, ex.Message));
         }
+    }
+
+    private static async Task ResyncLocalDatabase()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+
+        LocalDataRepository localDataRepository = new LocalDataRepository(configuration);
+        UplandApiRepository uplandApiRepository = new UplandApiRepository(configuration);
+
+        LocalDataManager localDataManager = new LocalDataManager(uplandApiRepository, localDataRepository);
+        UplandApiManager uplandApiManager = new UplandApiManager(uplandApiRepository);
+        BlockchainManager blockchainManager = new BlockchainManager();
+
+        PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
+        USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager);
+        UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager);
+        InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
+        ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager, uplandNFTActSurfer);
+
+        await playUplandMeSurfer.RunBlockChainUpdate();
+        await uplandNFTActSurfer.RunBlockChainUpdate();
+        await uspkTokenAccSurfer.RunBlockChainUpdate();
+        informationProcessor.RebuildPropertyStructures();
+        await resyncProcessor.ResyncPropsList("ReloadMissingNFTs", "1");
     }
 }
