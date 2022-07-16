@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Upland.Types.Types;
 
 namespace Upland.Interfaces.BlockchainSurfers
 {

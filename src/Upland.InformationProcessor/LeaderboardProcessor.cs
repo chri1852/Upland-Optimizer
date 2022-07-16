@@ -47,6 +47,7 @@ namespace Upland.InformationProcessor
                 case LeaderboardTypeEnum.MintedUpx:
                 case LeaderboardTypeEnum.SpentUPX:
                 case LeaderboardTypeEnum.SpentUSD:
+                case LeaderboardTypeEnum.NetUSD:
                     return _localDataManager.GetLeaderboardByType(type, fromTime);
 
                 case LeaderboardTypeEnum.Spark:

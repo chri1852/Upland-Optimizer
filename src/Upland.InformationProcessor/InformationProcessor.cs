@@ -1685,7 +1685,6 @@ namespace Upland.InformationProcessor
             while (continueHunt == "Y")
             {
 
-          
                 List<Property> cityProps = _localDataManager.GetPropertiesByCityId(cityId).Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_UNLOCKED && p.Latitude.HasValue && p.Longitude.HasValue).ToList();
                 List<Property> possibleTreasureProps = _localDataManager.GetPropertiesByCityId(cityId).Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_UNLOCKED && p.Latitude.HasValue && p.Longitude.HasValue).ToList();
                 List<Property> ownerProps = _localDataManager.GetPropertiesByCityId(cityId).Where(p => p.Status != Consts.PROP_STATUS_LOCKED && p.Status != Consts.PROP_STATUS_UNLOCKED && p.Latitude.HasValue && p.Longitude.HasValue && p.Owner == owner).ToList();

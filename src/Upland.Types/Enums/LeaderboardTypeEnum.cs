@@ -15,6 +15,7 @@
         MintedUpx = 11,
         CollectionProps = 12,
         SpentUSD = 13,
-        SpentUPX = 14
+        SpentUPX = 14,
+        NetUSD = 15,
     }
 }

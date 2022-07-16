@@ -83,6 +83,9 @@ BEGIN
 				ORDER BY SUM(H.Amount) DESC
 			END
 
+
+
+
 		ELSE IF @LeaderboardType = 10
 			BEGIN
 				SELECT U.UplandUsername, COUNT(*) AS 'Total'
@@ -141,6 +144,38 @@ BEGIN
 				GROUP BY U.UplandUsername
 				HAVING SUM(H.Amount) > 0
 				ORDER BY SUM(H.Amount) DESC
+			END
+
+		ELSE IF @LeaderboardType = 15
+			BEGIN
+				DROP TABLE IF EXISTS #Totals
+				CREATE TABLE #Totals
+				(
+					UplandUsername VARCHAR(25),
+					Total DECIMAL(11,2)
+				)
+
+				INSERT INTO #Totals
+				SELECT U.UplandUsername, CASE WHEN (SUM(H.AmountFiat) IS NULL) THEN 0 ELSE SUM(H.AmountFiat) END AS 'Total'
+				FROM UPL.SaleHistory H (NOLOCK)
+					JOIN UPL.EOSUser U (NOLOCK)
+						ON H.SellerEOS = U.EOSAccount
+				WHERE H.BuyerEOS IS NOT NULL
+					AND H.DateTime > @AfterDateTime
+				GROUP BY U.UplandUsername
+				ORDER BY SUM(H.AmountFiat) DESC
+
+				SELECT U.UplandUsername, T.Total - SUM(H.AmountFiat) AS 'Total'
+				FROM UPL.SaleHistory H (NOLOCK)
+					JOIN UPL.EOSUser U (NOLOCK)
+						ON H.BuyerEOS = U.EOSAccount
+					JOIN #Totals T
+						ON U.UplandUsername = T.UplandUsername
+				WHERE H.SellerEOS IS NOT NULL
+					AND H.DateTime > @AfterDateTime
+				GROUP BY U.UplandUsername, T.Total
+				HAVING T.Total - SUM(H.AmountFiat) IS NOT NULL
+				ORDER BY T.Total - SUM(H.AmountFiat) DESC
 			END
 
 	END TRY

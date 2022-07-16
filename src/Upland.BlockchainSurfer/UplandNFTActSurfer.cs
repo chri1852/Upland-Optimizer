@@ -449,8 +449,25 @@ namespace Upland.BlockchainSurfer
                     _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessTransferNFTAction", string.Format("History Between Two EOS Accounts (Unexpected), ActionSeq: {0}, Timestamp: {1}", action.account_action_seq, action.block_time));
                     continue;
                 }
-                
+
                 // Check to make sure the nft is fully loaded
+                if (transferingNft == null)
+                {
+                    dGood dGood = await GetDGoodFromTable(dGoodId);
+                    NFTMetadata metadata = _localDataManager.GetNftMetadataByNameAndCategory(dGood.token_name, dGood.category);
+
+                    transferingNft = new NFT
+                    {
+                        DGoodId = dGoodId,
+                        NFTMetadataId = metadata.Id,
+                        SerialNumber = 0,
+                        Burned = false,
+                        CreatedOn = action.block_time,
+                        BurnedOn = null,
+                        FullyLoaded = false,
+                    };
+
+                }
                 NFTMetadata nftMetadata = _localDataManager.GetNftMetadataById(transferingNft.NFTMetadataId);
                 await PopulateNFTAndNFTMetadata(transferingNft, nftMetadata);
                 
@@ -660,21 +677,29 @@ namespace Upland.BlockchainSurfer
             try
             {
                 legit = await _uplandApiManager.GetNFLPALegitsByDGoodId(newNft.DGoodId);
+                if (legit != null)
+                {
+                    legitMintInfo = await _uplandApiManager.GetMementoMintInfo(legit.LegitId);
+                }
             }
             catch (Exception ex)
             {
-                //_localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Could Not Load Memento By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
-                return;
+                // Just Eat it
             }
 
-            try
+            if (legit == null || legitMintInfo == null)
             {
-                legitMintInfo = await _uplandApiManager.GetMementoMintInfo(legit.LegitId);
-            }
-            catch (Exception ex)
-            {
-                //_localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Could Not Load Memento Mint Info By DGoodId From Upland, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
-                return;
+                try
+                {
+                    newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new MementoSpecificMetadata());
+                    _localDataManager.UpsertNft(newNft);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateMementoNFT", string.Format("Failed Saving Empty Memento NFT, DGoodId: {0}, EX: {1}", newNft.DGoodId, ex.Message));
+                    return;
+                }
             }
 
             if (!newNft.FullyLoaded)

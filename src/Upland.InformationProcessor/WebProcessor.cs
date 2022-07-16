@@ -147,7 +147,7 @@ namespace Upland.InformationProcessor
                 }
                 else
                 {
-                    property.Building = userBuildings[property.PropertyId];
+                    property.Building = userBuildings[property.PropertyId].Split(",")[0];
                 }
                 property.CollectionIds = _cachingProcessor.GetCollectionIdListForPropertyId(property.PropertyId);
 
