@@ -16,6 +16,7 @@ namespace Upland.Types.UplandApiTypes
 
         public string username { get; set; }
         public List<long> propertyList { get; set; }
+        public UplandHomeAddress home_address { get; set; }
     }
 
     public class UplandUserProfileAvatar
@@ -51,5 +52,16 @@ namespace Upland.Types.UplandApiTypes
         public string Image { get; set; }
         public string Help_Type { get; set; }
         public string User_Id { get; set; }
+    }
+
+    public class UplandHomeAddress
+    {
+        public long? property_id { get; set; }
+        public int? neighborhood_id { get; set; }
+        public string? address { get; set; }
+        public string? neighborhood_name { get; set; }
+        public string? city_name { get; set; }
+        public string? state_name { get; set; }
+        public string? building_image { get; set; }
     }
 }

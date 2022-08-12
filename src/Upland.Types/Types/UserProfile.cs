@@ -30,6 +30,10 @@ namespace Upland.Types.Types
         public double MonthlyEarnings { get; set; }
         public List<WebSparkHistory> SparkHistory { get; set; }
 
+        public string? HomeAddress { get; set; }
+        public long? HomePropertyId { get; set; }
+        public string? HomePropertyImage { get; set; }
+
         // Only for registeredUsers
         public bool RegisteredUser { get; set; }
         public bool Supporter { get; set; }

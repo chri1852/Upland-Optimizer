@@ -72,15 +72,15 @@ class Program
         // Populate City
         //List<double> cityCoordinates = Upland.InformationProcessor.HelperFunctions.GetCityAreaCoordinates(16);
         //await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], 16, false);
-        //localDataManager.DetermineNeighborhoodIdsForCity(16);
-        //await localDataManager.PopulateCollectionPropertiesByCityId(16);
-        //await informationProcessor.LoadMissingCityProperties(35);
+        //await localDataManager.PopulateNeighborhoods();
+        //await informationProcessor.LoadMissingCityProperties(36);
+        //await localDataManager.PopulateDatabaseCollectionInfo(36);
 
         //await resyncProcessor.ResyncPropsList("EnclaveFix", "1");
         //await localDataManager.PopulateDatabaseCollectionInfo(10);
 
         /// Test Optimizer
-        //OptimizerRunRequest runRequest = new OptimizerRunRequest("betz25", 7, true);
+        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
         //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Test Appraiser
@@ -89,8 +89,8 @@ class Program
 
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
-        //await localDataManager.PopulateDatabaseCollectionInfo();
-        //await localDataManager.PopulateStreets();
+        //await localDataManager.PopulateDatabaseCollectionInfo(36);
+        await localDataManager.PopulateStreets();
         //await informationProcessor.LoadMissingCityProperties(35);
 
         // Hunt Treasures
@@ -129,6 +129,12 @@ class Program
         //await informationProcessor.RefreshCityById("PART", 1);
 
         //UserProfile profile = await webProcessor.GetWebUIProfile("hornbrod");
+
+        List<NFTMetadata> meta = localDataManager.GetAllNFTMetadata().Where(m => m.Category == "structure").ToList();
+        foreach (NFTMetadata m in meta)
+        {
+            StructureMetadata s = JsonSerializer.Deserialize<StructureMetadata>(Encoding.UTF8.GetString(m.Metadata));
+        }
     }
 
     static void Main(string[] args) 
@@ -140,8 +146,8 @@ class Program
         //await DebugFunction(); return;
 
         //DEBUG FUNCTION Sync Local Database to the Blockchain
-        await ResyncLocalDatabase(); return;
-
+        //await ResyncLocalDatabase(); return;
+        
         _configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true)

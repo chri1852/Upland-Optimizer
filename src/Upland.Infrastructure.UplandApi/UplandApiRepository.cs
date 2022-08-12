@@ -39,7 +39,7 @@ namespace Upland.Infrastructure.UplandApi
         public async Task<List<UplandCollection>> GetCollections()
         {
             List<UplandCollection> collections;
-            string requestUri = @"https://api.upland.me/collections";
+            string requestUri = @"https://api.upland.me/collections/";
 
             collections = await CallApi<List<UplandCollection>>(requestUri);
 

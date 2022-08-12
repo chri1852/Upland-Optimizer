@@ -132,6 +132,13 @@ namespace Upland.Infrastructure.UplandApi
                 });
             }
 
+            if (uplandUserProfile.home_address?.address != null)
+            {
+                profile.HomeAddress = string.Format("{0}, {1}, {2}", uplandUserProfile.home_address.address, uplandUserProfile.home_address.city_name, uplandUserProfile.home_address.state_name);
+                profile.HomePropertyId = uplandUserProfile.home_address.property_id;
+                profile.HomePropertyImage = uplandUserProfile.home_address.building_image;
+            }
+
             return profile;
         }
 
