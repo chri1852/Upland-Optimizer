@@ -13,4 +13,9 @@
     <ProjectReference Include="..\Upland.Interfaces\Upland.Interfaces.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="BlockchainStoreApi\Messages\" />
+    <Folder Include="BlockchainStoreApi\Types\" />
+  </ItemGroup>
+
 </Project>
