@@ -1,15 +1,19 @@
-﻿using Newtonsoft.Json;
+﻿using BlockchainStoreApi.Types;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Upland.BlockchainSurfer.BlockchainStoreApi;
 using Upland.Infrastructure.UplandApi;
 using Upland.Interfaces.Managers;
 using Upland.Interfaces.Processors;
 using Upland.Types;
-using Upland.Types.BlockchainTypes;
+using BCT = Upland.Types.BlockchainTypes;
+//using Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
 using Upland.Types.UplandApiTypes;
 
@@ -20,6 +24,8 @@ namespace Upland.BlockchainSurfer
         private readonly ILocalDataManager _localDataManager;
         private readonly IBlockchainManager _blockchainManager;
         private readonly IUplandApiManager _uplandApiManager;
+        private readonly IConfiguration _configuration;
+        private readonly BlockchainStoreApiRepository _storeRepository;
         private readonly string _playuplandme;
 
         private List<string> _propertyIdsToWatch;
@@ -28,11 +34,13 @@ namespace Upland.BlockchainSurfer
         private List<Neighborhood> _neighborhoods;
         private bool _isProcessing;
 
-        public PlayUplandMeSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
+        public PlayUplandMeSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager, IConfiguration configuration)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;
             _blockchainManager = blockchainManager;
+            _configuration = configuration;
+            _storeRepository = new BlockchainStoreApiRepository(_configuration);
             _playuplandme = "playuplandme";
 
             _neighborhoods = new List<Neighborhood>();
@@ -98,12 +106,16 @@ namespace Upland.BlockchainSurfer
                 {
                     try
                     {
-                        Thread.Sleep(2000);
-                        GetPlayUplandMeActionsResponse response = await _blockchainManager.GetEOSFlareActions<GetPlayUplandMeActionsResponse>(lastActionProcessed + 1, _playuplandme);
-                        
-                        if (response != null && response.actions != null)
+                        //Thread.Sleep(2000);
+                        //GetPlayUplandMeActionsResponse response = await _blockchainManager.GetEOSFlareActions<GetPlayUplandMeActionsResponse>(lastActionProcessed + 1, _playuplandme);
+
+                        List<PlayUplandMeAction> newResponse = await _storeRepository.GetActionsFromSequenceNumber<PlayUplandMeAction>(_playuplandme, lastActionProcessed);
+
+                        //if (response != null && response.actions != null)
+                        if (newResponse != null && newResponse.Count > 0)
                         {
-                            actions = response.actions;
+                            //actions = response.actions;
+                            actions = newResponse;
                             retry = false;
                         }
                         else
@@ -268,11 +280,12 @@ namespace Upland.BlockchainSurfer
         {
             if (action.action_trace.act.data.a45 == null || action.action_trace.act.data.p14 == null)
             {
-                PlayUplandMeTransactionEntry transactionEntry = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.trx_id);
+               // PlayUplandMeTransactionEntry transactionEntry = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.trx_id);
+                List<PlayUplandMeAction> transactionEntry = await _storeRepository.GetActionsByTransactionId<PlayUplandMeAction>(_playuplandme, action.action_trace.trx_id);
 
-                if (transactionEntry.traces.Where(t => t.act.name == "n52").ToList().Count == 1)
+                if (transactionEntry.Where(t => t.action_trace.act.name == "n52").ToList().Count == 1)
                 {
-                    PlayUplandMeData traceData = transactionEntry.traces.Where(t => t.act.name == "n52").First().act.data;
+                    BCT.PlayUplandMeData traceData = transactionEntry.Where(t => t.action_trace.act.name == "n52").First().action_trace.act.data;
                     action.action_trace.act.data.a45 = traceData.a45;
                     action.action_trace.act.data.p14 = traceData.p14;
                 }
@@ -518,7 +531,8 @@ namespace Upland.BlockchainSurfer
             {
                 string ogMinttx = action.action_trace.act.data.memo.Split("transaction: ")[1];
 
-                PlayUplandMeTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.act.data.memo.Split("transaction: ")[1]);
+                //PlayUplandMeTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.act.data.memo.Split("transaction: ")[1]);
+                List<PlayUplandMeAction> mintTransaction = await _storeRepository.GetActionsByTransactionId<PlayUplandMeAction>(_playuplandme, action.action_trace.act.data.memo.Split("transaction: ")[1]);
 
                 if (mintTransaction == null)
                 {
@@ -529,8 +543,8 @@ namespace Upland.BlockchainSurfer
                 else
                 {
                     _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseAction - Never Minted - Got Mint Transaction", string.Format("p14 (Buyer EOS): {0}, a45 (PropId): {1}, p24 (Amount): {2}, memo: {3}, Trx_id: {4}", action.action_trace.act.data.p14, action.action_trace.act.data.a45, action.action_trace.act.data.p24, action.action_trace.act.data.memo, action.action_trace.trx_id));
-                    property.MintedBy = mintTransaction.traces[0].act.data.a54;
-                    property.MintedOn = mintTransaction.block_time;
+                    property.MintedBy = mintTransaction[0].action_trace.act.data.a54;
+                    property.MintedOn = mintTransaction[0].block_time;
                 }
             }
 
@@ -944,14 +958,14 @@ namespace Upland.BlockchainSurfer
                 Offer = true
             };
 
-            if (action.action_trace.act.data.p21[0] == "asset")
+            if (Regex.Match(action.action_trace.act.data.p21, " UP").Success)
             {
-                historyEntry.Amount = double.Parse(action.action_trace.act.data.p21[1].Split(" UP")[0]);
+                historyEntry.Amount = double.Parse(action.action_trace.act.data.p21.Split(" UP")[0]);
                 historyEntry.AmountFiat = null;
             }
-            else if (action.action_trace.act.data.p21[0] == "uint64")
+            else if (Regex.Match(action.action_trace.act.data.p21, @"^\d+$").Success)
             {
-                historyEntry.OfferPropId = long.Parse(action.action_trace.act.data.p21[1]);
+                historyEntry.OfferPropId = long.Parse(action.action_trace.act.data.p21);
                 historyEntry.AmountFiat = null;
                 historyEntry.Amount = null;
             }
@@ -1116,12 +1130,13 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
-            PlayUplandMeTransactionEntry transactionTrace = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.trx_id);
+            //PlayUplandMeTransactionEntry transactionTrace = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(action.action_trace.trx_id);
+            List<PlayUplandMeAction> transactionTrace = await _storeRepository.GetActionsByTransactionId<PlayUplandMeAction>(_playuplandme, action.action_trace.trx_id);
 
-            if (transactionTrace?.traces == null 
-                || transactionTrace.traces.Count == 0 
-                || !transactionTrace.traces.Any(t => t.act.name == "transfernft")
-                || transactionTrace.traces.Where(t => t.act.name == "transfernft").First().act.data.dgood_ids.Count > 1)
+            if (transactionTrace == null 
+                || transactionTrace.Count == 0 
+                || !transactionTrace.Any(t => t.ActionName == "transfernft")
+                || transactionTrace.Where(t => t.ActionName == "transfernft").First().action_trace.act.data.dgood_ids.Count > 1)
             {
                 _localDataManager.CreateErrorLog("PlayUplandMeSurfer.cs - ProcessPurchaseNFT - No Valid Transfer Found", string.Format("Trx_id: {2}", action.action_trace.trx_id));
                 return;
@@ -1137,7 +1152,7 @@ namespace Upland.BlockchainSurfer
             NFTSaleData saleData = new NFTSaleData
             {
                 Id = -1,
-                DGoodId = int.Parse(transactionTrace.traces.Where(t => t.act.name == "transfernft").First().act.data.dgood_ids.First()),
+                DGoodId = int.Parse(transactionTrace.Where(t => t.action_trace.act.name == "transfernft").First().action_trace.act.data.dgood_ids.First()),
                 SellerEOS = action.action_trace.act.data.p25,
                 BuyerEOS = action.action_trace.act.data.p14,
                 Amount = decimal.Parse(action.action_trace.act.data.p141.Split(" UPX")[0]),
@@ -1218,8 +1233,10 @@ namespace Upland.BlockchainSurfer
         {
             try
             {
-                PlayUplandMeTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(mintTrx);
-                long propId = long.Parse(mintTransaction.traces.Where(t => t.act.name == "a4").First().act.data.a45);
+                //PlayUplandMeTransactionEntry mintTransaction = await _blockchainManager.GetSingleTransactionById<PlayUplandMeTransactionEntry>(mintTrx);
+                List<PlayUplandMeAction> mintTransactions = await _storeRepository.GetActionsByTransactionId<PlayUplandMeAction>(_playuplandme, mintTrx);
+                //long propId = long.Parse(mintTransaction.traces.Where(t => t.act.name == "a4").First().act.data.a45);
+                long propId = long.Parse(mintTransactions.Where(t => t.ActionName == "a4").First().action_trace.act.data.a45);
                 return _localDataManager.GetProperty(propId);
             }
             catch (Exception ex)

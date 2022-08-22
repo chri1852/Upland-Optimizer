@@ -57,9 +57,9 @@ class Program
         BlockchainManager blockchainManager = new BlockchainManager();
 
         CachingProcessor cachingProcessor = new CachingProcessor(localDataManager, uplandApiManager);
-        PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
-        USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager);
-        UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager);
+        PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager, configuration);
+        USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager, configuration);
+        UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager, configuration);
         ForSaleProcessor forSaleProcessor = new ForSaleProcessor(localDataManager);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         //ProfileAppraiser profileAppraiser = new ProfileAppraiser(localDataManager, uplandApiManager, cachingProcessor);
@@ -72,8 +72,8 @@ class Program
         // Populate City
         //List<double> cityCoordinates = Upland.InformationProcessor.HelperFunctions.GetCityAreaCoordinates(16);
         //await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], 16, false);
-        //await localDataManager.PopulateNeighborhoods();
-        //await informationProcessor.LoadMissingCityProperties(36);
+       // await localDataManager.PopulateNeighborhoods();
+        await informationProcessor.LoadMissingCityProperties(37);
         //await localDataManager.PopulateDatabaseCollectionInfo(36);
 
         //await resyncProcessor.ResyncPropsList("EnclaveFix", "1");
@@ -90,7 +90,7 @@ class Program
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo(36);
-        await localDataManager.PopulateStreets();
+        //await localDataManager.PopulateStreets();
         //await informationProcessor.LoadMissingCityProperties(35);
 
         // Hunt Treasures
@@ -134,6 +134,9 @@ class Program
         foreach (NFTMetadata m in meta)
         {
             StructureMetadata s = JsonSerializer.Deserialize<StructureMetadata>(Encoding.UTF8.GetString(m.Metadata));
+            m.Metadata = Encoding.UTF8.GetBytes(JsonSerializer.Serialize<StructureMetadata>(s));
+
+            localDataManager.UpsertNftMetadata(m);
         }
     }
 
@@ -146,7 +149,7 @@ class Program
         //await DebugFunction(); return;
 
         //DEBUG FUNCTION Sync Local Database to the Blockchain
-        //await ResyncLocalDatabase(); return;
+        await ResyncLocalDatabase(); return;
         
         _configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -403,9 +406,9 @@ class Program
         UplandApiManager uplandApiManager = new UplandApiManager(uplandApiRepository);
         BlockchainManager blockchainManager = new BlockchainManager();
 
-        PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager);
-        USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager);
-        UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager);
+        PlayUplandMeSurfer playUplandMeSurfer = new PlayUplandMeSurfer(localDataManager, uplandApiManager, blockchainManager, configuration);
+        USPKTokenAccSurfer uspkTokenAccSurfer = new USPKTokenAccSurfer(localDataManager, blockchainManager, configuration);
+        UplandNFTActSurfer uplandNFTActSurfer = new UplandNFTActSurfer(localDataManager, uplandApiManager, blockchainManager, configuration);
         InformationProcessor informationProcessor = new InformationProcessor(localDataManager, uplandApiManager, blockchainManager);
         ResyncProcessor resyncProcessor = new ResyncProcessor(localDataManager, uplandApiManager, uplandNFTActSurfer);
 

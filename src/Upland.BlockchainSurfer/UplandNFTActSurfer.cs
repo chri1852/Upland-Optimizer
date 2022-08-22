@@ -1,14 +1,17 @@
-﻿using System;
+﻿using BlockchainStoreApi.Types;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Upland.BlockchainSurfer.BlockchainStoreApi;
 using Upland.Interfaces.BlockchainSurfers;
 using Upland.Interfaces.Managers;
 using Upland.Types;
-using Upland.Types.BlockchainTypes;
+using OGT = Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
 
 namespace Upland.BlockchainSurfer
@@ -18,24 +21,28 @@ namespace Upland.BlockchainSurfer
         private readonly ILocalDataManager _localDataManager;
         private readonly IBlockchainManager _blockchainManager;
         private readonly IUplandApiManager _uplandApiManager;
+        private readonly IConfiguration _configuration;
+        private readonly BlockchainStoreApiRepository _storeRepository;
         private readonly string _uplandnftact;
         private readonly string _playuplandme;
 
-        private List<SeriesTableEntry> _loadedSeries;
+        private List<OGT.SeriesTableEntry> _loadedSeries;
         private bool _isProcessing;
-        private List<dGood> _currentdGoodTable;
+        private List<OGT.dGood> _currentdGoodTable;
         private DateTime _dGoodTableExpirationDate;
 
-        public UplandNFTActSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager)
+        public UplandNFTActSurfer(ILocalDataManager localDataManager, IUplandApiManager uplandApiManager, IBlockchainManager blockchainManager, IConfiguration configuration)
         {
             _localDataManager = localDataManager;
             _uplandApiManager = uplandApiManager;
             _blockchainManager = blockchainManager;
             _uplandnftact = "uplandnftact";
             _playuplandme = "playuplandme";
+            _configuration = configuration;
+            _storeRepository = new BlockchainStoreApiRepository(_configuration);
 
             _isProcessing = false;
-            _loadedSeries = new List<SeriesTableEntry>();
+            _loadedSeries = new List<OGT.SeriesTableEntry>();
             _currentdGoodTable = null;
             _dGoodTableExpirationDate = DateTime.UtcNow.AddDays(-1);
         }
@@ -81,6 +88,7 @@ namespace Upland.BlockchainSurfer
                 bool retry = true;
                 while (retry)
                 {
+                    /*
                     try
                     {
                         Thread.Sleep(2000);
@@ -95,6 +103,18 @@ namespace Upland.BlockchainSurfer
                         }
                     }
                     catch (Exception ex)
+                    {
+                        Thread.Sleep(5000);
+                    }
+                    */
+                    List<UplandNFTActAction> newResponse = await _storeRepository.GetActionsFromSequenceNumber<UplandNFTActAction>(_uplandnftact, lastActionProcessed);
+
+                    if (newResponse != null && newResponse.Count > 0)
+                    {
+                        actions = newResponse;
+                        retry = false;
+                    }
+                    else
                     {
                         Thread.Sleep(5000);
                     }
@@ -453,7 +473,7 @@ namespace Upland.BlockchainSurfer
                 // Check to make sure the nft is fully loaded
                 if (transferingNft == null)
                 {
-                    dGood dGood = await GetDGoodFromTable(dGoodId);
+                    OGT.dGood dGood = await GetDGoodFromTable(dGoodId);
                     NFTMetadata metadata = _localDataManager.GetNftMetadataByNameAndCategory(dGood.token_name, dGood.category);
 
                     transferingNft = new NFT
@@ -487,7 +507,7 @@ namespace Upland.BlockchainSurfer
                 return "Unknown";
             }
 
-            SeriesTableEntry matchingEntry = _loadedSeries.FirstOrDefault(s => s.id == id);
+            OGT.SeriesTableEntry matchingEntry = _loadedSeries.FirstOrDefault(s => s.id == id);
 
             if (matchingEntry == null)
             {
@@ -505,7 +525,7 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
-            dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
+            OGT.dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
             BlockExplorer blockExplorer = null;
             bool useBlockExplorer = false;
 
@@ -579,7 +599,7 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
-            dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
+            OGT.dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
             NFLPALegit legit = null;
             bool useLegit = false;
 
@@ -765,7 +785,7 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
-            dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
+            OGT.dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
             SpiritLegit spiritLegit = null;
             bool useSpiritLegit = false;
 
@@ -837,7 +857,7 @@ namespace Upland.BlockchainSurfer
                 return;
             }
 
-            dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
+            OGT.dGood dGood = await GetDGoodFromTable(newNft.DGoodId);
             Decoration decoration = null;
             bool useDecoration = false;
 
@@ -1005,7 +1025,7 @@ namespace Upland.BlockchainSurfer
             }
         }
 
-        private async Task<dGood> GetDGoodFromTable(int dGoodId)
+        private async Task<OGT.dGood> GetDGoodFromTable(int dGoodId)
         {
             // IN Prod Get the DGoods Individually
             return await _blockchainManager.GetDGoodFromTable(dGoodId);

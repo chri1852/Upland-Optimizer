@@ -1,13 +1,16 @@
-﻿using System;
+﻿using BlockchainStoreApi.Types;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Upland.BlockchainSurfer.BlockchainStoreApi;
 using Upland.Interfaces.BlockchainSurfers;
 using Upland.Interfaces.Managers;
 using Upland.Types;
-using Upland.Types.BlockchainTypes;
+using OGBT = Upland.Types.BlockchainTypes;
 using Upland.Types.Types;
 
 namespace Upland.BlockchainSurfer
@@ -16,15 +19,19 @@ namespace Upland.BlockchainSurfer
     {
         private readonly ILocalDataManager _localDataManager;
         private readonly IBlockchainManager _blockchainManager;
+        private readonly IConfiguration _configuration;
+        private readonly BlockchainStoreApiRepository _storeRepository;
         private readonly string _uspktokenacc;
         private readonly string _playuplandme;
 
         private bool _isProcessing;
 
-        public USPKTokenAccSurfer(ILocalDataManager localDataManager, IBlockchainManager blockchainManager)
+        public USPKTokenAccSurfer(ILocalDataManager localDataManager, IBlockchainManager blockchainManager, IConfiguration configuration)
         {
             _localDataManager = localDataManager;
             _blockchainManager = blockchainManager;
+            _configuration = configuration;
+            _storeRepository = new BlockchainStoreApiRepository(_configuration);
             _uspktokenacc = "uspktokenacc";
             _playuplandme = "playuplandme";
 
@@ -72,6 +79,7 @@ namespace Upland.BlockchainSurfer
                 bool retry = true;
                 while (retry)
                 {
+                    /*
                     try
                     {
                         Thread.Sleep(2000);
@@ -86,6 +94,19 @@ namespace Upland.BlockchainSurfer
                         }
                     }
                     catch (Exception ex)
+                    {
+                        Thread.Sleep(5000);
+                    }
+                    */
+
+                    List<UspkTokenAccAction> newResponse = await _storeRepository.GetActionsFromSequenceNumber<UspkTokenAccAction>(_uspktokenacc, lastActionProcessed);
+
+                    if (newResponse != null && newResponse.Count > 0)
+                    {
+                        actions = newResponse;
+                        retry = false;
+                    }
+                    else
                     {
                         Thread.Sleep(5000);
                     }
@@ -343,7 +364,7 @@ namespace Upland.BlockchainSurfer
             }
 
 
-            UspkTokenAccTransactionEntry transaction = await GetTransactionWithRetry(action.action_trace.trx_id, 5);
+            List<UspkTokenAccAction> transaction = await GetTransactionWithRetry(action.action_trace.trx_id, 5);
 
             if (transaction == null)
             {
@@ -357,11 +378,11 @@ namespace Upland.BlockchainSurfer
                 throw new Exception();
             }
 
-            if (transaction.traces.Any(t => t.act.name == "n512"))
+            if (transaction.Any(t => t.ActionName == "n512"))
             {
                 try
                 {
-                    ProcessN512(action, amount, user, stakedSpark, transaction);
+                    ProcessN512(action, amount, user, stakedSpark, transaction.Where(t => t.ActionName == "n512").First());
                     return;
                 }
                 catch (Exception ex)
@@ -370,11 +391,11 @@ namespace Upland.BlockchainSurfer
                     throw ex;
                 }
             }
-            else if (transaction.traces.Any(t => t.act.name == "n511"))
+            else if (transaction.Any(t => t.ActionName == "n511"))
             {
                 try
                 {
-                    ProcessN511(action, amount, user, stakedSpark, transaction);
+                    ProcessN511(action, amount, user, stakedSpark, transaction.Where(t => t.ActionName == "n511").First());
                     return;
                 }
                 catch (Exception ex)
@@ -383,11 +404,11 @@ namespace Upland.BlockchainSurfer
                     throw ex;
                 }
             }
-            else if (transaction.traces.Any(t => t.act.name == "a32"))
+            else if (transaction.Any(t => t.ActionName == "a32"))
             {
                 try
                 {
-                    ProcessA32(action, amount, user, stakedSpark, transaction);
+                    ProcessA32(action, amount, user, stakedSpark, transaction.Where(t => t.ActionName == "a32").First());
                     return;
                 }
                 catch (Exception ex)
@@ -404,9 +425,9 @@ namespace Upland.BlockchainSurfer
             }
         }
 
-        private void ProcessN512(UspkTokenAccAction action, decimal amount, EOSUser user, List<SparkStaking> stakedSpark, UspkTokenAccTransactionEntry transaction)
+        private void ProcessN512(UspkTokenAccAction action, decimal amount, EOSUser user, List<SparkStaking> stakedSpark, UspkTokenAccAction transaction)
         {
-            SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "n512").First().act.data.p113)).FirstOrDefault();
+            SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.action_trace.act.data.p113)).FirstOrDefault();
 
             if (stake == null)
             {
@@ -434,14 +455,14 @@ namespace Upland.BlockchainSurfer
             _localDataManager.UpsertEOSUser(user);
         }
 
-        private void ProcessN511(UspkTokenAccAction action, decimal amount, EOSUser user, List<SparkStaking> stakedSpark, UspkTokenAccTransactionEntry transaction)
+        private void ProcessN511(UspkTokenAccAction action, decimal amount, EOSUser user, List<SparkStaking> stakedSpark, UspkTokenAccAction transaction)
         {
-            SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "n511").First().act.data.p113)).FirstOrDefault();
+            SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.action_trace.act.data.p113)).FirstOrDefault();
 
             if (stake == null)
             {
                 // Check to see if it is already closed
-                stake = stakedSpark.Where(s => s.End != null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "n511").First().act.data.p113)).FirstOrDefault();
+                stake = stakedSpark.Where(s => s.End != null && s.DGoodId == int.Parse(transaction.action_trace.act.data.p113)).FirstOrDefault();
 
                 if (stake.Amount == amount)
                 {
@@ -460,9 +481,9 @@ namespace Upland.BlockchainSurfer
             _localDataManager.UpsertEOSUser(user);
         }
 
-        private void ProcessA32(UspkTokenAccAction action, decimal amount, EOSUser user, List<SparkStaking> stakedSpark, UspkTokenAccTransactionEntry transaction)
+        private void ProcessA32(UspkTokenAccAction action, decimal amount, EOSUser user, List<SparkStaking> stakedSpark, UspkTokenAccAction transaction)
         {
-            SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.traces.Where(t => t.act.name == "a32").First().act.data.p115.First())).FirstOrDefault();
+            SparkStaking stake = stakedSpark.Where(s => s.End == null && s.DGoodId == int.Parse(transaction.action_trace.act.data.p115.First())).FirstOrDefault();
 
             if (stake == null)
             {
@@ -477,16 +498,18 @@ namespace Upland.BlockchainSurfer
             _localDataManager.UpsertEOSUser(user);
         }
 
-        private async Task<UspkTokenAccTransactionEntry> GetTransactionWithRetry(string transactionId, int retryCount)
+        private async Task<List<UspkTokenAccAction>> GetTransactionWithRetry(string transactionId, int retryCount)
         {
             int loop = 0;
             while (loop < retryCount)
             {
                 try
                 {
-                    UspkTokenAccTransactionEntry transaction = await _blockchainManager.GetSingleTransactionById<UspkTokenAccTransactionEntry>(transactionId);
-                    
-                    if (!(transaction == null || transaction.traces == null || transaction.traces.Count == 0))
+                    //UspkTokenAccTransactionEntry transaction = await _blockchainManager.GetSingleTransactionById<OGBT.UspkTokenAccTransactionEntry>(transactionId);
+
+                    List<UspkTokenAccAction> transaction = await _storeRepository.GetActionsByTransactionId<UspkTokenAccAction>(_uspktokenacc, transactionId);
+
+                    if (!(transaction == null || transaction.Count == 0))
                     {
                         return transaction;
                     }
