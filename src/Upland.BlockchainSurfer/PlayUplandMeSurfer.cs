@@ -627,51 +627,59 @@ namespace Upland.BlockchainSurfer
                 int propTwoCityId = 1;
                 string propOneAddress = "";
                 string propTwoAddress = "";
+                List<Property> propsOne = null;
+                List<Property> propsTwo = null;
 
-                if (Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                try
                 {
-                    propOneCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[1]);
-                    propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(", ")[0];
-
-                    propTwoCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[3]);
-                    propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(", ")[0];
-                }
-                else if (Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success || Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
-                {
-                    // First match 3 commas
-                    if (Regex.Match(action.action_trace.act.data.memo.Split(")")[1], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                    if (Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
                     {
-                        string cityName = action.action_trace.act.data.memo.Split(")")[1].Split(",")[2].Trim();
-                        propOneCityId = HelperFunctions.HelperFunctions.GetCityIdByName(cityName);
-                        propOneAddress = action.action_trace.act.data.memo.Split(")")[1].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
+                        propOneCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[1]);
+                        propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(", ")[0];
+
+                        propTwoCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(", ")[3]);
+                        propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(", ")[0];
+                    }
+                    else if (Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success || Regex.Match(action.action_trace.act.data.memo, "^[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                    {
+                        // First match 3 commas
+                        if (Regex.Match(action.action_trace.act.data.memo.Split(")")[1], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                        {
+                            string cityName = action.action_trace.act.data.memo.Split(")")[1].Split(",")[2].Trim();
+                            propOneCityId = HelperFunctions.HelperFunctions.GetCityIdByName(cityName);
+                            propOneAddress = action.action_trace.act.data.memo.Split(")")[1].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
+                        }
+                        else
+                        {
+                            propOneCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[1].Split(",")[1].Trim());
+                            propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(",")[0].Trim();
+                        }
+
+                        if (Regex.Match(action.action_trace.act.data.memo.Split(")")[3], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
+                        {
+                            string cityName = action.action_trace.act.data.memo.Split(")")[3].Split(",")[2].Trim();
+                            propTwoCityId = HelperFunctions.HelperFunctions.GetCityIdByName(cityName);
+                            propTwoAddress = action.action_trace.act.data.memo.Split(")")[3].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
+                        }
+                        else
+                        {
+                            propTwoCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[3].Split(",")[1].Trim());
+                            propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(",")[0].Trim();
+                        }
                     }
                     else
                     {
-                        propOneCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[1].Split(",")[1].Trim());
-                        propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(",")[0].Trim();
+                        propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(" (ini")[0];
+                        propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(" (ini")[0];
                     }
 
-                    if (Regex.Match(action.action_trace.act.data.memo.Split(")")[3], "^[^,]+,[^,]+,[^,]+,[^,]+$").Success)
-                    {
-                        string cityName = action.action_trace.act.data.memo.Split(")")[3].Split(",")[2].Trim();
-                        propTwoCityId = HelperFunctions.HelperFunctions.GetCityIdByName(cityName);
-                        propTwoAddress = action.action_trace.act.data.memo.Split(")")[3].Split(" owns ")[1].Split(string.Format(", {0}", cityName))[0];
-                    }
-                    else
-                    {
-                        propTwoCityId = HelperFunctions.HelperFunctions.GetCityIdByName(action.action_trace.act.data.memo.Split(")")[3].Split(",")[1].Trim());
-                        propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(",")[0].Trim();
-                    }
+                    propsOne = _localDataManager.GetPropertyByCityIdAndAddress(propOneCityId, propOneAddress);
+                    propsTwo = _localDataManager.GetPropertyByCityIdAndAddress(propTwoCityId, propTwoAddress);
                 }
-                else
+                catch
                 {
-                    propOneAddress = action.action_trace.act.data.memo.Split(" owns ")[1].Split(" (ini")[0];
-                    propTwoAddress = action.action_trace.act.data.memo.Split(" owns ")[2].Split(" (ini")[0];
+                    // just eat it
                 }
-
-
-                List<Property> propsOne = _localDataManager.GetPropertyByCityIdAndAddress(propOneCityId, propOneAddress);
-                List<Property> propsTwo = _localDataManager.GetPropertyByCityIdAndAddress(propTwoCityId, propTwoAddress);
 
                 Property propOne;
                 if (propsOne == null || propsOne.Count != 1)
