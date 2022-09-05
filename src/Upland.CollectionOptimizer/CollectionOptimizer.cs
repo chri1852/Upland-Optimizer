@@ -36,6 +36,9 @@ namespace Upland.CollectionOptimizer
         private const int CityProId = 21;
         private const int KingOfTheStreetId = 1;
 
+        private List<int> InvalidCities;
+        private List<int> InvalidCitiesNewbie;
+
         public CollectionOptimizer(ILocalDataManager localDataManager)
         {
             this.Properties = new Dictionary<long, Property>();
@@ -52,6 +55,11 @@ namespace Upland.CollectionOptimizer
 
             this.LocalDataManager = localDataManager;
             this.DebugMode = false;
+
+            IEnumerable<City> cities = this.LocalDataManager.GetCities();
+
+            this.InvalidCities = cities.Where(c => c.CityId == 38).Select(c => c.CityId).ToList();
+            this.InvalidCitiesNewbie = cities.Where(c => c.CountryCode != "USA").Select(c => c.CityId).ToList();
 
             this.timer = new Stopwatch();
         }
@@ -462,7 +470,7 @@ namespace Upland.CollectionOptimizer
                 SetFilledCollection(collectionToSlotId);
             }
 
-            BuildBestNewbieCoollection();
+            BuildBestNewbieCollection();
 
             this.timer.Stop();
         }
@@ -632,6 +640,7 @@ namespace Upland.CollectionOptimizer
         private void BuildAllCityProCollections()
         {
             IEnumerable<KeyValuePair<int, int>> cityList = this.Properties
+                .Where(p => !this.InvalidCities.Contains(p.Value.CityId))
                 .GroupBy(p => p.Value.CityId)
                 .Where(g => g.Count() >= 5)
                 .Select(group => new KeyValuePair<int, int>(group.Key, group.Count()));
@@ -658,6 +667,7 @@ namespace Upland.CollectionOptimizer
         private void BuildAllKingOfTheStreetCollections()
         {
             IEnumerable<KeyValuePair<int, int>> streetList = this.Properties
+                .Where(p => !this.InvalidCities.Contains(p.Value.CityId))
                 .GroupBy(p => p.Value.StreetId)
                 .Where(g => g.Count() >= 3)
                 .Select(group => new KeyValuePair<int, int>(group.Key, group.Count()));
@@ -815,7 +825,7 @@ namespace Upland.CollectionOptimizer
             return copiedCollections;
         }
 
-        private void BuildBestNewbieCoollection()
+        private void BuildBestNewbieCollection()
         {
             Collection newbie = new Collection
             {
@@ -828,7 +838,10 @@ namespace Upland.CollectionOptimizer
                 Category = 1
             };
 
-            Property largestUnslotted = this.Properties.Where(p => !this.SlottedPropertyIds.Contains(p.Value.Id))?.FirstOrDefault().Value;
+            Property largestUnslotted = this.Properties
+                .Where(p => !this.InvalidCities.Contains(p.Value.CityId))
+                .Where(p => !this.InvalidCitiesNewbie.Contains(p.Value.CityId))
+                .Where(p => !this.SlottedPropertyIds.Contains(p.Value.Id))?.FirstOrDefault().Value;
 
             if (largestUnslotted != null)
             {

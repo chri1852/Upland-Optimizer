@@ -1759,6 +1759,17 @@ namespace Upland.InformationProcessor
 
                     usedPropIds.Add(propToUse.Id);
 
+                    if (ownerProps != null && ownerProps[0] != null && propToUse.Id == ownerProps[0].Id)
+                    {
+                        foreach (Property prop in ownerProps)
+                        {
+                            if (prop.Id != propToUse.Id && GetDistance((double)propToUse.Longitude, (double)propToUse.Latitude, (double)prop.Longitude, (double)prop.Latitude) < 100)
+                            {
+                                usedPropIds.Add(prop.Id);
+                            }
+                        }
+                    }
+
                     // Some Hacky Shit to paste the Address to the clipboard
                     var powershell = new Process
                     {

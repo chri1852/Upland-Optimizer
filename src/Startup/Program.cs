@@ -77,11 +77,11 @@ class Program
         //await localDataManager.PopulateDatabaseCollectionInfo(36);
 
         //await resyncProcessor.ResyncPropsList("EnclaveFix", "1");
-        //await localDataManager.PopulateDatabaseCollectionInfo(10);
+        //await localDataManager.PopulateDatabaseCollectionInfo(37);
 
         /// Test Optimizer
-        //OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
-        //await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
+        OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
+        await collectionOptimizer.RunAutoOptimization(new RegisteredUser(), runRequest);
 
         // Test Appraiser
         //AppraisalResults results = await profileAppraiser.RunAppraisal(new RegisteredUser { Id = 1, UplandUsername = "hornbrod" });
@@ -90,14 +90,14 @@ class Program
         // Populate initial City Data
         //await localDataManager.PopulateNeighborhoods();
         //await localDataManager.PopulateDatabaseCollectionInfo(36);
-        await localDataManager.PopulateStreets();
-        //await informationProcessor.LoadMissingCityProperties(35);
+        //await localDataManager.PopulateStreets();
+        //await informationProcessor.LoadMissingCityProperties(36);
 
         // Hunt Treasures
         //await informationProcessor.HuntTreasures(4, "oqtr232h2c23", TreasureTypeEnum.Standard);
 
         // Test Information Processing Functions
-        List<string> output = new List<string>();
+        //List<string> output = new List<string>();
         //output = await informationProcessor.GetCollectionPropertiesForSale(177, "PRICE", "ALL", "TXT");
         //output = forSaleProcessor.GetCityPropertiesForSale(17, "Price", "All", "TXT");
         //output = await informationProcessor.GetNeighborhoodPropertiesForSale(235, "Price", "All");
@@ -134,6 +134,7 @@ class Program
         foreach (NFTMetadata m in meta)
         {
             StructureMetadata s = JsonSerializer.Deserialize<StructureMetadata>(Encoding.UTF8.GetString(m.Metadata));
+
         }
     }
 

@@ -302,7 +302,8 @@ namespace Upland.BlockchainSurfer
                     });
                     break;
                 default:
-                    throw new Exception("Unknown NFT Category Detected Stoping Updates");
+                    newMetadata.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata("");
+                    break;
             }
 
             _localDataManager.UpsertNftMetadata(newMetadata);
@@ -1051,7 +1052,7 @@ namespace Upland.BlockchainSurfer
                     await PopulateLandVehicleNFT(nft, metadata);
                     break;
                 default:
-                    throw new Exception("Unknown NFT Category Detected Stoping Updates");
+                    break;
             }
         }
     }
