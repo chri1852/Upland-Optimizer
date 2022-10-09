@@ -208,6 +208,16 @@ namespace Upland.Infrastructure.UplandApi
             return assets;
         }
 
+        public async Task<UplandAsset> GetFootballLegitsByDGoodId(int dGoodId)
+        {
+            UplandAsset assets;
+            string requestUri = @"https://nft.upland.me/assets/football/nft-id/" + dGoodId;
+
+            assets = await CallApi<UplandAsset>(requestUri, false);
+
+            return assets;
+        }
+
         public async Task<UplandAsset> GetSpiritLegitsByDGoodId(int dGoodId)
         {
             UplandAsset assets;

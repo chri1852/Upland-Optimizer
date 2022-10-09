@@ -73,11 +73,12 @@ class Program
         //List<double> cityCoordinates = Upland.InformationProcessor.HelperFunctions.GetCityAreaCoordinates(16);
         //await localDataManager.PopulateAllPropertiesInArea(cityCoordinates[0], cityCoordinates[1], cityCoordinates[2], cityCoordinates[3], 16, false);
         //await localDataManager.PopulateNeighborhoods();
-        //await informationProcessor.LoadMissingCityProperties(36);
-        //await localDataManager.PopulateDatabaseCollectionInfo(36);
+        //await localDataManager.PopulateStreets();
+        //await informationProcessor.LoadMissingCityProperties(37);
+        //await localDataManager.PopulateDatabaseCollectionInfo(37);
 
         //await resyncProcessor.ResyncPropsList("EnclaveFix", "1");
-        //await localDataManager.PopulateDatabaseCollectionInfo(37);
+        await localDataManager.PopulateDatabaseCollectionInfo(37);
 
         /// Test Optimizer
         OptimizerRunRequest runRequest = new OptimizerRunRequest("hornbrod", 7, true);
@@ -147,7 +148,7 @@ class Program
         //await DebugFunction(); return;
 
         //DEBUG FUNCTION Sync Local Database to the Blockchain
-        //await ResyncLocalDatabase(); return;
+        await ResyncLocalDatabase(); return;
         
         _configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())

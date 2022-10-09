@@ -81,6 +81,13 @@ namespace Upland.Infrastructure.UplandApi
             return UplandMapper.MapNFLPALegit(await _uplandApiRepository.GetNFLPALegitsByDGoodId(dGoodId));
         }
 
+        public async Task<NFLPALegit> GetFootballLegitsByDGoodId(int dGoodId)
+        {
+            // Fucking Upland Rate Limiting
+            // Thread.Sleep(1000);
+            return UplandMapper.MapNFLPALegit(await _uplandApiRepository.GetFootballLegitsByDGoodId(dGoodId));
+        }
+
         public async Task<SpiritLegit> GetSpiritLegitsByDGoodId(int dGoodId)
         {
             // Fucking Upland Rate Limiting

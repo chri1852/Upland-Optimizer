@@ -15,6 +15,7 @@ namespace Upland.Interfaces.Managers
         Task<List<Decoration>> GetDecorationsByUsername(string userName);
         Task<List<BlockExplorer>> GetBlockExplorersByUserName(string userName);
         Task<NFLPALegit> GetNFLPALegitsByDGoodId(int dGoodId);
+        Task<NFLPALegit> GetFootballLegitsByDGoodId(int dGoodId);
         Task<SpiritLegit> GetSpiritLegitsByDGoodId(int dGoodId);
         Task<Decoration> GetDecorationsByDGoodId(int dGoodId);
         Task<BlockExplorer> GetBlockExplorersByDGoodId(int dGoodId);

@@ -25,6 +25,7 @@ namespace Upland.Interfaces.Repositories
         Task<List<UplandAsset>> GetDecorationsByUserName(string username);
         Task<List<UplandAsset>> GetBlockExplorersByUserName(string username);
         Task<UplandAsset> GetNFLPALegitsByDGoodId(int dGoodId);
+        Task<UplandAsset> GetFootballLegitsByDGoodId(int dGoodId);
         Task<UplandAsset> GetSpiritLegitsByDGoodId(int dGoodId);
         Task<UplandAsset> GetDecorationsByDGoodId(int dGoodId);
         Task<UplandAsset> GetBlockExplorersByDGoodId(int dGoodId);

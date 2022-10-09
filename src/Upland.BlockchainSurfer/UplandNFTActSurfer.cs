@@ -111,8 +111,8 @@ namespace Upland.BlockchainSurfer
                 }
                 catch (Exception ex)
                 {
-                    _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
-                    Thread.Sleep(5000);
+                    //_localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - ProcessActions - Exception Bubbled Up Disable Blockchain Updates", ex.Message);
+                    //Thread.Sleep(5000);
                     //_localDataManager.UpsertConfigurationValue(Consts.CONFIG_ENABLEBLOCKCHAINUPDATES, false.ToString());
                     //continueLoad = false;
                 }
@@ -584,11 +584,21 @@ namespace Upland.BlockchainSurfer
             NFLPALegit legit = null;
             bool useLegit = false;
 
+            string displayName = HelperFunctions.HelperFunctions.DecodeMetadata<EssentialMetadata>(metadata.Metadata).DisplayName;
+
             try
             {
                 if (!metadata.FullyLoaded || dGood == null)
                 {
-                    legit = await _uplandApiManager.GetNFLPALegitsByDGoodId(newNft.DGoodId);
+
+                    if (displayName != null && Regex.IsMatch(displayName, @"^\d\d\d\d-\d\d "))
+                    {
+                        legit = await _uplandApiManager.GetFootballLegitsByDGoodId(newNft.DGoodId);
+                    }
+                    else
+                    {
+                        legit = await _uplandApiManager.GetNFLPALegitsByDGoodId(newNft.DGoodId);
+                    }
 
                     if (legit == null)
                     {
@@ -616,7 +626,6 @@ namespace Upland.BlockchainSurfer
                     newNft.SerialNumber = dGood.serial_number.Value;
                 }
 
-                string displayName = HelperFunctions.HelperFunctions.DecodeMetadata<EssentialMetadata>(metadata.Metadata).DisplayName;
                 newNft.FullyLoaded = true;
                 newNft.Metadata = HelperFunctions.HelperFunctions.EncodeMetadata(new EssentialSpecificMetadata
                 {
@@ -641,12 +650,14 @@ namespace Upland.BlockchainSurfer
                 {
                     _localDataManager.CreateErrorLog("UplandNFTActSurfer.cs - PopulateEssentialNFT", string.Format("Missing Metadata, DGoodId: {0}", newNft.DGoodId));
                 }
+                int yearResult = 1;
+                int.TryParse(legit.Year, out yearResult);
 
                 MementoMetadata currentMetadata = HelperFunctions.HelperFunctions.DecodeMetadata<MementoMetadata>(metadata.Metadata);
                 currentMetadata.Image = legit.Image;
                 currentMetadata.TeamName = legit.TeamName;
                 currentMetadata.FanPoints = legit.FanPoints;
-                currentMetadata.Season = int.Parse(legit.Year);
+                currentMetadata.Season = yearResult;
                 currentMetadata.ModelType = legit.LegitType;
                 currentMetadata.PlayerFullName = legit.PlayerName;
                 currentMetadata.PlayerPosition = legit.Position;
